@@ -1,12 +1,11 @@
-% 
-% Copyright (C) 2003-2013 Olivier Boudeville
+% Copyright (C) 2003-2014 Olivier Boudeville
 %
 % This file is part of the WOOPER library.
 %
 % This library is free software: you can redistribute it and/or modify
 % it under the terms of the GNU Lesser General Public License or
 % the GNU General Public License, as they are published by the Free Software
-% Foundation, either version 3 of these Licenses, or (at your option) 
+% Foundation, either version 3 of these Licenses, or (at your option)
 % any later version.
 % You can also redistribute it and/or modify it under the terms of the
 % Mozilla Public License, version 1.1 or later.
@@ -39,5 +38,5 @@
 % http://ceylan.sourceforge.net/main/documentation/wooper/index.html#license
 
 
-% The class manager name that will be registered :
--define(WooperClassManagerName,wooper_class_manager).
+% The class manager name that will be registered:
+-define( WooperClassManagerName, wooper_class_manager ).

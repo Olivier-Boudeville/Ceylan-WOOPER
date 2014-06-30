@@ -1,23 +1,32 @@
 WOOPER_TOP = .
 
 
-.PHONY: all send-release release release-zip release-bz2   \
-	prepare-release clean-release clean-archive
+.PHONY: all register-version-in-header                               \
+		send-release release release-zip release-bz2 release-xz      \
+		prepare-release clean-release clean-archive
 
 
 MODULES_DIRS = src doc examples
 
-WOOPER_RELEASES = $(WOOPER_RELEASE_ARCHIVE_BZ2) $(WOOPER_RELEASE_ARCHIVE_ZIP)
+
+# To override the 'all' default target with a parallel version:
+BASE_MAKEFILE = true
+
+
+WOOPER_RELEASES = $(WOOPER_RELEASE_ARCHIVE_BZ2) \
+				  $(WOOPER_RELEASE_ARCHIVE_ZIP) \
+				  $(WOOPER_RELEASE_ARCHIVE_XZ)
 
 
 SF_USER = wondersye
 
 
+# First target for default:
 all:
-	@echo "   Building all, in parallel over $(CORE_COUNT) core(s), from "$(PWD) #`basename $(PWD)`
-	@for m in $(MODULES_DIRS); do if ! ( if [ -d $$m ] ; then cd $$m &&  \
-	$(MAKE) -s all-recurse -j $(CORE_COUNT) && cd .. ; else echo "     (directory $$m skipped)" ; \
-	fi ) ; then exit 1; fi ; done
+
+
+register-version-in-header:
+	@echo "-define( wooper_version, \"$(WOOPER_VERSION)\" )." >> $(VERSION_FILE)
 
 
 # Note: the source archives are not produced in this directory, but in its
@@ -29,7 +38,7 @@ send-release: release
 	@cd .. && rsync -avP -e ssh $(WOOPER_RELEASES) $(SF_USER)@frs.sourceforge.net:uploads/
 
 
-release: release-zip release-bz2
+release: release-zip release-bz2 release-xz
 	@$(MAKE) clean-release
 
 
@@ -45,13 +54,20 @@ release-bz2: prepare-release
 	&& echo "     Archive $(WOOPER_RELEASE_ARCHIVE_BZ2) ready in "`pwd`
 
 
-# The '-L' option with cp is used so that symbolic links are replaced by
-# their actual target file, otherwise tar would include dead links in releases.
+release-xz: prepare-release
+	@echo "     Creating WOOPER release archive $(WOOPER_RELEASE_ARCHIVE_XZ)"
+	@cd .. && tar chvjf $(WOOPER_RELEASE_ARCHIVE_XZ) $(WOOPER_RELEASE_BASE) \
+	&& echo "     Archive $(WOOPER_RELEASE_ARCHIVE_XZ) ready in "`pwd`
+
+
+# The '-L' option with cp is used so that symbolic links are replaced by their
+# actual target file, otherwise tar would include dead links in releases.
 prepare-release: clean clean-release
 	@echo "     Preparing release archive for WOOPER $(WOOPER_VERSION)"
 	@cd .. && mkdir -p $(WOOPER_RELEASE_BASE) && /bin/cp -L -r common wooper $(WOOPER_RELEASE_BASE)
 	@cd ../$(WOOPER_RELEASE_BASE) && mv wooper/top-GNUmakefile-for-releases GNUmakefile
 	-@cd .. && find $(WOOPER_RELEASE_BASE) -type d -a -name '.svn' -exec /bin/rm -rf '{}' ';' 2>/dev/null
+	-@cd .. && find $(WOOPER_RELEASE_BASE) -type d -a -name '.git' -exec /bin/rm -rf '{}' ';' 2>/dev/null
 	-@cd .. && find $(WOOPER_RELEASE_BASE) -type f -a -name '*.beam' -exec /bin/rm -f '{}' ';' 2>/dev/null
 
 

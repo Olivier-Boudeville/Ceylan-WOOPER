@@ -1,6 +1,4 @@
-
-# This is the file that all WOOPER GNUmakefiles, and only them,
-# should include.
+# This is the file that all WOOPER GNUmakefiles, and only them, should include.
 
 # Prerequisite: WOOPER_TOP must be set.
 
@@ -16,4 +14,3 @@ include $(COMMON_TOP)/GNUmakevars.inc
 
 include $(WOOPER_TOP)/GNUmakerules.inc
 include $(COMMON_TOP)/GNUmakerules.inc
-

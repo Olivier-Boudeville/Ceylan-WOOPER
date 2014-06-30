@@ -1,5 +1,4 @@
-% 
-% Copyright (C) 2003-2013 Olivier Boudeville
+% Copyright (C) 2003-2014 Olivier Boudeville
 %
 % This file is part of the WOOPER examples.
 %
@@ -13,170 +12,148 @@
 
 -module(class_Reptile_test).
 
--export([run/0]).
 
--define(Tested_module,class_Reptile).
-
--define(Prefix,"--> ").
+-include("test_facilities.hrl").
 
 
-% Comment out to be able to use the interpreter after the test:
--define(ExitAfterTest,).
 
--ifdef(ExitAfterTest).
-
-testFinished() ->
-	erlang:halt().
-	
--else.
-
-testFinished() ->
-	io:format( "(interpreter still running)~n" ),
-	test_success.
-	
--endif.
-
-
-testFailed(Reason) ->
-	% For some reason erlang:error is unable to interpret strings as strings,
-	% they are always output as unreadable list.
-	io:format( "~n!!!! Test failed for module ~s, reason: ~s~n~n",
-		[ ?Tested_module, Reason ] ),
-	erlang:error( "Test failed" ).	
-
-
+-spec run() -> no_return().
 run() ->
-	io:format( ?Prefix "Testing module ~s.~n", [ ?Tested_module ] ),
-	io:format( ?Prefix "Debug mode: ~s.~n", 
-		[ class_Reptile:is_wooper_debug() ] ),	
-	io:format( ?Prefix "Statically, class name is ~s, superclasses are ~w.~n", 
-		[
-			class_Reptile:get_class_name(), 
+
+	test_facilities:start( ?MODULE ),
+
+	test_facilities:display( "Debug mode: ~s.",
+		[ class_Reptile:is_wooper_debug() ] ),
+
+	test_facilities:display(
+		"Statically, class name is ~s, superclasses are ~w.",
+		[	class_Reptile:get_class_name(),
 			class_Reptile:get_superclasses() ] ),
-	MyR = class_Reptile:new(1,male),
-	MyR ! {get_class_name,[],self()},
+
+	MyR = class_Reptile:new_link( 1, male ),
+
+	MyR ! { getClassName, [], self() },
 	receive
-	
-		{wooper_result,class_Reptile} ->
-			io:format( ?Prefix 
+
+		{ wooper_result, class_Reptile } ->
+			test_facilities:display(
 				"After constructor, get_class_name returned 'class_Reptile' "
-				"as expected.~n");
-				
-		{wooper_result,UnexpectedClass} -> 
-			testFailed( io_lib:format( "wrong class: ~p",
-				[ UnexpectedClass ] ) )
-			
+				"as expected." );
+
+		{ wooper_result, UnexpectedClass } ->
+			test_facilities:fail( "wrong class: ~p", [ UnexpectedClass ] )
+
 	end,
+
 	MyR ! {get_superclasses,[],self()},
 	receive
-	
-		{wooper_result, [class_Creature]} ->
-			io:format( ?Prefix 
-				"After constructor, get_superclasses returned [class_Creature] "
-				"as expected.~n");
 
-		{wooper_result,UnexpectedSuperclasses} -> 
-			testFailed( io_lib:format( "wrong superclasses: ~p", 
-				[ UnexpectedSuperclasses ] ) )
-	
+		{wooper_result, [class_Creature]} ->
+			test_facilities:display(
+				"After constructor, get_superclasses returned [class_Creature] "
+				"as expected." );
+
+		{wooper_result,UnexpectedSuperclasses} ->
+			test_facilities:fail( "wrong superclasses: ~p",
+				[ UnexpectedSuperclasses ] )
+
 	end,
 	MyR ! {getAge,[],self()},
 	receive
-	
-		{wooper_result,1} ->
-			io:format( ?Prefix 
-				"After constructor, getAge returned 1 as expected.~n");
 
-		{wooper_result,UnexpectedAge} -> 
-			testFailed( io_lib:format( "wrong age: ~p", 
-				[ UnexpectedAge ] ) )
-		
+		{wooper_result,1} ->
+			test_facilities:display(
+				"After constructor, getAge returned 1 as expected." );
+
+		{wooper_result,UnexpectedAge} ->
+			test_facilities:fail( "wrong age: ~p", [ UnexpectedAge ] )
+
 	end,
 	MyR ! {getGender,[],self()},
 	receive
-	
+
 		{wooper_result,male} ->
-			io:format( ?Prefix 
-				"After constructor, getGender returned male as expected.~n");
-	
-		{wooper_result,UnexpectedGender} -> 
-			testFailed( io_lib:format( "wrong gender: ~p", 
-				[ UnexpectedGender ] ) )
-			
+			test_facilities:display(
+				"After constructor, getGender returned male as expected." );
+
+		{wooper_result,UnexpectedGender} ->
+			test_facilities:fail( "wrong gender: ~p", [ UnexpectedGender ] )
+
 	end,
 	MyR ! {setAge,2},
 	MyR ! {getAge,[],self()},
 	receive
-	
+
 		{wooper_result,2}->
-			io:format(?Prefix 
-				"After setAge, getAge returned 2 as expected.~n");
-	
-		{wooper_result,UnexpectedNewAge} -> 
-			testFailed( io_lib:format( "wrong age: ~p", 
-				[ UnexpectedNewAge ] ) )
-			
-	end,	
+			test_facilities:display(
+				"After setAge, getAge returned 2 as expected." );
+
+		{wooper_result,UnexpectedNewAge} ->
+			test_facilities:fail( "wrong age: ~p", [ UnexpectedNewAge ] )
+
+	end,
 	MyR ! declareBirthday,
 	MyR ! {getAge,[],self()},
 	receive
-	
-		 {wooper_result,3}->
-			io:format(?Prefix 
-				"After declareBirthday, getAge returned 3 as expected.~n");
 
-		{wooper_result,UnexpectedLastAge} -> 
-			testFailed( io_lib:format( "wrong age: ~p", 
-				[ UnexpectedLastAge ] ) )
-	
-	end,	
+		 {wooper_result,3}->
+			test_facilities:display(
+				"After declareBirthday, getAge returned 3 as expected." );
+
+		{wooper_result,UnexpectedLastAge} ->
+			test_facilities:fail( "wrong age: ~p", [ UnexpectedLastAge ] )
+
+	end,
 	MyR ! declareBirthday,
 	MyR ! {isHotBlooded,[],self()},
 	receive
-	
-		{wooper_result,false}->
-			io:format(?Prefix 
-				"isHotBlooded returned false as expected.~n");
 
-		{wooper_result,UnexpectedBlood} -> 
-			testFailed( io_lib:format( "wrong blood type: ~p", 
-				[ UnexpectedBlood ] ) )
-	
-	end,	
+		{wooper_result,false}->
+			test_facilities:display(
+				"isHotBlooded returned false as expected." );
+
+		{wooper_result,UnexpectedBlood} ->
+			test_facilities:fail( "wrong blood type: ~p", [ UnexpectedBlood ] )
+
+	end,
 	MyR ! {canMoult,[],self()},
 	receive
-	
-		{wooper_result,true}->
-			io:format(?Prefix 
-				"canMoult returned true as expected.~n");
 
-		{wooper_result,UnexpectedMoultType} -> 
-			testFailed( io_lib:format( "wrong moult type: ~p", 
-				[ UnexpectedMoultType ] ) )
-	
+		{wooper_result,true}->
+			test_facilities:display(
+				"canMoult returned true as expected." );
+
+		{wooper_result,UnexpectedMoultType} ->
+			test_facilities:fail( "wrong moult type: ~p",
+				[ UnexpectedMoultType ] )
+
 	end,
-	case class_Reptile:is_wooper_debug() of 
+
+	case class_Reptile:is_wooper_debug() of
+
 		true ->
+
 			MyR ! { wooper_get_instance_description,[], self() },
 			receive
-			
+
 				{wooper_result,InspectString} ->
-					io:format( "~s~n", [ InspectString ] )
-			end ;		
+					test_facilities:display( "Instance description:~s",
+											[ InspectString ] )
+			end;
+
 		false ->
-			ok	
-	end,	
-	
+			ok
+
+	end,
+
 	% To check the result when using a faulty destructor:
-	io:format(?Prefix "synchronous deletion of the instance.~n" ),
-	MyR ! {synchronous_delete,self()},	
+	test_facilities:display( "synchronous deletion of the instance." ),
+	MyR ! {synchronous_delete,self()},
 	receive
-	
+
 		{deleted,MyR} ->
 			ok
-			
-	end,	
-		
-	io:format( ?Prefix "End of test for module ~s.~n", [ ?Tested_module ] ),
-	testFinished().
 
+	end,
+
+	test_facilities:stop().

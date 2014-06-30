@@ -1980,6 +1980,13 @@ Version 2.0 [cutting-edge, in SVN only]
 Not released yet (work-in-progress).
 
 
+Version 1.1 [next stable]
+----------------------------
+
+ - ``remote_synchronisable_new_link/2`` added for parallel yet synchronous creations
+ - type specifications added all over the place
+ - better output in case of crash, be it in a method, a constructor or a destructor
+
 
 Version 1.0 [current stable]
 ----------------------------

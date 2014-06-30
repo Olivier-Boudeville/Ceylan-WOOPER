@@ -20,15 +20,14 @@ full-doc:
 export-doc: doc
 	@echo "   Exporting WOOPER documentation to $(WOOPER_WEB_DIR)"
 	@/bin/cp -f $(DOC_FILES) $(WOOPER_WEB_DIR)
-	@/bin/cp -f $(WOOPER_WEB_DIR)/wooper.html $(WOOPER_WEB_DIR)/index.html 
+	@/bin/cp -f $(WOOPER_WEB_DIR)/wooper.html $(WOOPER_WEB_DIR)/index.html
 
 
 # For COMMON_TOP:
 include $(WOOPER_TOP)/GNUmakesettings.inc
 
-# Not used, for a better readability: 
+# Not used, for a better readability:
 #PROJECT_CSS = $(COMMON_TOP)/doc/Ceylan-docutils.css
 
 # Now included in the common general rules:
 #include $(COMMON_TOP)/doc/GNUmakerules-docutils.inc
-

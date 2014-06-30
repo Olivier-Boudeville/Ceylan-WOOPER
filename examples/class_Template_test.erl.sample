@@ -3,106 +3,79 @@
 
 -module(class_MYCLASS_test).
 
--export([run/0]).
 
--define(Tested_module,class_MYCLASS).
+-include("test_facilities.hrl").
 
--define(Prefix,"--> ").
-
-
-
-% Comment out to be able to use the interpreter after the test:
--define(ExitAfterTest,).
-
--ifdef(ExitAfterTest).
-
-testFinished() ->
-	erlang:halt().
-	
--else.
-
-testFinished() ->
-	io:format( "(interpreter still running)~n" ),
-	test_success.
-	
--endif.
-
-
-testFailed(Reason) ->
-	% For some reason erlang:error is unable to interpret strings as strings,
-	% they are always output as unreadable list.
-	io:format( "~n!!!! Test failed for module ~s, reason: ~s~n~n",
-		[ ?Tested_module, Reason ] ),
-	erlang:error( "Test failed" ).	
-		
 
 run() ->
-	io:format( ?Prefix "Testing module ~s.~n", [ ?Tested_module ] ),
-	io:format( ?Prefix "Debug mode: ~s.~n", 
-		[ class_MYCLASS:is_wooper_debug() ] ),	
-	
-		
+
+	test_facilities:start( ?MODULE ),
+
+	test_facilities:display( "Debug mode: ~s.",
+	   [ class_MYCLASS:is_wooper_debug() ] ),
+
+
 	% General tests.
-	
-	io:format( ?Prefix "Statically, class name is ~s, superclasses are ~w.~n", 
-		[
-			class_MYCLASS:get_class_name(), 
+
+	test_facilities:display( "Statically, class name is ~s, "
+		"superclasses are ~w.",
+		[	class_MYCLASS:get_class_name(),
 			class_MYCLASS:get_superclasses() ] ),
+
 	MyC = class_MYCLASS:new(X,Y,Z),
 	MyC ! {get_class_name,[],self()},
 	receive
-	
+
 		{wooper_result,class_MYCLASS} ->
-			io:format( ?Prefix 
+			test_facilities:display(
 				"After constructor, get_class_name returned 'class_MYCLASS' "
-				"as expected.~n");
-				
-		{wooper_result,UnexpectedClass} -> 
-			testFailed( io_lib:format( "wrong class: ~p",
-				[ UnexpectedClass ] ) )
-			
+				"as expected." );
+
+		{wooper_result,UnexpectedClass} ->
+			test_facilities:fail( "wrong class: ~p", [ UnexpectedClass ] )
+
 	end,
+
 	MyC ! {get_superclasses,[],self()},
 	receive
-	
+
 		{wooper_result, [class_X,class_Y]} ->
-			io:format( ?Prefix 
+			test_facilities:display(
 				"After constructor, get_superclasses returned "
-				"[class_X,class_Y] as expected.~n");
-				
-		{wooper_result,UnexpectedSuperclasses} -> 
-			testFailed( io_lib:format( "wrong superclasses: ~p", 
-				[ UnexpectedSuperclasses ] ) )
-	
+				"[class_X,class_Y] as expected." );
+
+		{wooper_result,UnexpectedSuperclasses} ->
+			test_facilities:fail( "wrong superclasses: ~p",
+				[ UnexpectedSuperclasses ] )
+
 	end,
-	
-	
+
+
 	% Tests related to XXXX.
-	
+
 	MyC ! {getX,[],self()},
 	receive
-	
-		{wooper_result,X} ->
-			io:format( ?Prefix getX returned X as expected.~n");
 
-		{wooper_result,UnexpectedX} -> 
-			testFailed( io_lib:format( "wrong X: ~p", 
-				[ UnexpectedAge ] ) )
-		
+		{wooper_result,X} ->
+			test_facilities:display( getX returned X as expected." );
+
+		{wooper_result,UnexpectedX} ->
+			test_facilities:fail( "wrong X: ~p", [ UnexpectedAge ] )
+
 	end,
-	
-	case class_MYCLASS:is_wooper_debug() of 
+
+	case class_MYCLASS:is_wooper_debug() of
 		true ->
 			MyC ! { wooper_get_instance_description,[], self() },
 			receive
-			
-				{wooper_result,InspectString} ->
-					io:format( "~s~n", [ InspectString ] )
-			end ;		
-		false ->
-			ok	
-	end,
-	MyC ! delete,				
-	io:format( ?Prefix "End of test for module ~s.~n", [ ?Tested_module ] ),
-	testFinished().
 
+				{wooper_result,InspectString} ->
+					test_facilities:display( "Instance description: ~s",
+					   [ InspectString ] )
+			end ;
+		false ->
+			ok
+	end,
+	MyC ! delete,
+
+	test_facilities:stop().

@@ -6,13 +6,13 @@
 -define( wooper_superclasses, [] ).
 
 
-% Parameters taken by the constructor ('construct'). 
+% Parameters taken by the constructor ('construct').
 -define( wooper_construct_parameters, ).
 
 
 % Declaring all variations of WOOPER standard life-cycle operations:
 % (template pasted, two replacements performed to update arities)
--define( wooper_construct_export, new/X, new_link/X, 
+-define( wooper_construct_export, new/X, new_link/X,
 		synchronous_new/X, synchronous_new_link/X,
 		synchronous_timed_new/X, synchronous_timed_new_link/X,
 		remote_new/Y, remote_new_link/Y, remote_synchronous_new/Y,
@@ -37,18 +37,18 @@ construct( State, ?wooper_construct_parameters ) ->
 
 	% First the direct mother classes:
 	XState = class_:construct( State,  ),
-	
+
 	% Then the class-specific attributes:
 	setAttributes( XState, [
 		 {,},
 		 {,} ] ).
-	
-	
-	
+
+
+
 delete(State) ->
 
 	State.
-	
+
 	io:format( "Deleting cat ~w! (overridden destructor)~n", [self()] ),
 
 
@@ -60,5 +60,3 @@ delete(State) ->
 
 
 % Helper functions section.
-
-	
