@@ -70,7 +70,7 @@ construct( State, ?wooper_construct_parameters ) ->
 
 -spec delete( wooper_state() ) -> wooper_state().
 delete( State ) ->
-	io:format( "Deleting cat ~w! (overridden destructor)~n", [self()] ),
+	io:format( "Deleting cat ~w! (overridden destructor)~n", [ self() ] ),
 	State.
 
 

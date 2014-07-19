@@ -31,10 +31,24 @@
 -module(wooper).
 
 
+
+% Communication helpers:
+%
 -export([ send_request/3, wait_for_request_answers/2,
 		  wait_for_request_answers/3,
 		  send_and_wait_request/4, send_and_wait_request/5
 		]).
+
+
+% Creation helpers:
+%
+-export([
+
+		 create_blank_instance/0, create_blank_linked_instance/0,
+		 embody/0
+
+		]).
+
 
 
 % Not module(), which can be also a tuple():
@@ -63,6 +77,12 @@
 
 -export_type([ class_name/0, method_name/0, request_name/0, oneway_name/0,
 			   method_argument/0, method_arguments/0, requests_outcome/0 ]).
+
+
+
+
+
+% Section for communication helpers.
 
 
 
@@ -218,3 +238,67 @@ send_and_wait_request( RequestName, RequestArgs, TargetInstancePIDs,
 	send_request( RequestName, RequestArgs, TargetInstancePIDs ),
 
 	wait_for_request_answers( TargetInstancePIDs, Timeout, AckAtom ).
+
+
+
+
+
+% Section for creation helpers.
+
+
+
+% Creates a blank instance, i.e. a WOOPER process with a blank state, waiting to
+% be transformed into an actual of any class.
+%
+% This allows to create a process first, and to have its PID before it is ever
+% constructed, possibly later (useful for a multi-step creation).
+%
+-spec create_blank_instance() -> pid().
+create_blank_instance() ->
+
+	% Returns the PID of this newly created process:
+	%
+	spawn( fun embody/0 ).
+
+
+
+
+% Creates a blank linked instance, i.e. a WOOPER process with a blank state,
+% waiting to be transformed into an actual of any class.
+%
+% This allows to create a process first, and to have its PID before it is ever
+% constructed, possibly later (useful for a multi-step creation).
+%
+-spec create_blank_linked_instance() -> pid().
+create_blank_linked_instance() ->
+
+	% Returns the PID of this newly created process:
+	%
+	spawn_link( fun embody/0 ).
+
+
+
+
+% Waits for a request to embody an instance, based on specified cosntruction
+% information.
+%
+% Helper.
+%
+-spec embody() -> no_return(). % 'deleted'.
+embody() ->
+
+	receive
+
+		{ embody, [ Class, ConstructionParameters ], CallerPid } ->
+
+			ConstructionState = fixme,
+
+			io:format( "Process ~w became an instance of class '~s', "
+					   "constructed from parameters ~s.~n",
+					   [ self(), Class, ConstructionParameters ]
+									),
+			CallerPid ! { embodied, self() },
+
+			wooper:wooper_main_loop( ConstructionState )
+
+	end.

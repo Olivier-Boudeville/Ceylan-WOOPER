@@ -91,7 +91,7 @@ delete( _State ) ->
 
 % Request test.
 %
--spec test( wooper_state() ) -> request_return( test_ok ).
+-spec test( wooper_state() ) -> request_return( 'test_ok' ).
 test( State ) ->
 
 	test_facilities:display( "Testing attribute management." ),
@@ -222,6 +222,8 @@ not_crashing_test_hashtable( State ) ->
 % Actual test.
 -spec run() -> no_return().
 run() ->
+
+	test_facilities:display( "Running attribute test." ),
 
 	Tested = class_Wooper_attribute_test:new_link(),
 

@@ -203,7 +203,7 @@ loop( Tables ) ->
 		{ get_table, Module, Pid } ->
 			{ NewTables, TargetTable } = get_virtual_table_for( Module,
 															   Tables ),
-			Pid ! { virtual_table, Module, TargetTable },
+			Pid ! { virtual_table, TargetTable },
 			loop( NewTables );
 
 		display ->
@@ -355,11 +355,11 @@ create_local_method_table_for( Module ) ->
 	lists:foldl(
 
 		% Filter-out functions that should not be callable via RMI:
-		fun( {Name,Arity}, Hashtable ) ->
+		fun( { Name, Arity }, Hashtable ) ->
 			case select_function(  Name, Arity ) of
 
 				true ->
-					?wooper_hashtable_type:addEntry( {Name,Arity}, Module,
+					?wooper_hashtable_type:addEntry( { Name, Arity }, Module,
 													Hashtable );
 
 				false ->

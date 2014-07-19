@@ -122,6 +122,22 @@
 
 
 
+% A note about the MODULE macro:
+%
+% Its behaviour, similar to a global variable, induces issues, for example when
+% a process has to embody a new instance.
+%
+% For this reason, we shall rely as much as possible onto the 'actual_class' of
+% the state_holder record, rather than on ?MODULE.
+%
+% When such a state is not available, we are before the creation of the instance
+% (in a *new* operator), and we are in the code path for normal instance
+% creation where ?MODULE can be used.
+%
+% Otherwise an embodiment is performed, in which case the class name is a
+% parameter, and ?MODULE shall not be used.
+
+
 
 % Shared code.
 %
@@ -199,6 +215,8 @@
 		%
 		% (otherwise we could not, for example, report in an intermediate child
 		% class the actual class name of a deleted instance)
+		%
+		% To be used, instead of ?MODULE or alike.
 		%
 		actual_class     :: basic_utils:module_name(),
 
@@ -320,11 +338,8 @@
 
 
 % A list could be managed that would allow to discriminate the methods from the
-% other exported functions. As macros cannot be substitued in strings it would
+% other exported functions. As macros cannot be substitued in strings, it would
 % probably force the developer to list them twice.
-
-% The class name, as mapped to a module.
--define( className, ?MODULE ).
 
 
 % Approximate average attribute count for a given class instance, including
@@ -374,7 +389,7 @@
 
 % These methods/functions are defined for all classes:
 %
--define( WooperBaseMethods, get_class_name/0, getClassName/1,
+-define( WooperBaseMethods, get_class_name/0, get_class_name/1, getClassName/1,
 		 get_superclasses/0, get_superclasses/1,
 		 executeRequest/2, executeRequest/3,
 		 executeOneway/2, executeOneway/3,
@@ -482,6 +497,7 @@
 
 % On debug mode, methods will have to return an atom to ensure they respect the
 % right format:
+%
 -ifdef(wooper_debug).
 
 
@@ -518,11 +534,11 @@
 	%-define(wooper_log_wanted,).
 
 	-ifdef(wooper_log_wanted).
-		-define(wooper_log(Msg),io:format(Msg)).
-		-define(wooper_log_format(Msg,Format),io:format(Msg,Format)).
+		-define( wooper_log( Msg ), io:format( Msg ) ).
+		-define( wooper_log_format( Msg, Format ), io:format( Msg, Format ) ).
 	-else.
-		-define(wooper_log(Msg),no_wooper_log).
-		-define(wooper_log_format(Msg,Format),no_wooper_log).
+		-define( wooper_log( Msg ),no_wooper_log).
+		-define( wooper_log_format( Msg, Format ), no_wooper_log ).
 	-endif.
 
 
@@ -537,8 +553,8 @@
 	wooper_display_loop_state(_) ->
 		debug_no_activated.
 
-	-define(wooper_log(Msg),no_wooper_log).
-	-define(wooper_log_format(Msg,Format),no_wooper_log).
+	-define( wooper_log( Msg ), no_wooper_log ).
+	-define( wooper_log_format( Msg, Format ), no_wooper_log ).
 
 
 -endif.
@@ -603,8 +619,8 @@
 %
 % (no wooper_result atom added any more in debug mode)
 %
--define(wooper_return_state_result(State,Result),{State,Result}).
--define(wooper_return_state_only(State), State).
+-define( wooper_return_state_result( State, Result ), { State, Result } ).
+-define( wooper_return_state_only( State ), State ).
 
 
 
@@ -671,16 +687,29 @@ wooper_debug_listen( Pid, RequestName, Arguments ) ->
 
 
 
-% "Static method" (only a function) which returns the name of the class.
+% Static method (only a function) which attempts to return the name of the
+% class.
 %
 % Note: this function might return the name of a super-class if called from a
-% destructor or an inherited, non-overridden method.
+% destructor or an inherited, non-overridden method. As this static method is
+% inherently error-prone, one should preferably try not to use it. Usually
+% class-depending execution is better handled by overriding methods.
 %
 % See also: getClassName/1 for a more reliable counterpart.
 %
 -spec get_class_name() -> class_name().
 get_class_name() ->
-	?className.
+	?MODULE.
+
+
+
+% Returns the actual class name of the current instance.
+%
+% (helper)
+%
+-spec get_class_name( wooper_state() ) -> class_name().
+get_class_name( State ) ->
+	State#state_holder.actual_class.
 
 
 
@@ -1549,6 +1578,58 @@ remote_synchronous_timed_new_link( Node ) ->
 
 
 
+
+% Returns the state of a blank WOOPER instance.
+%
+% (helper)
+%
+-spec get_blank_state( class_name() ) -> wooper_state().
+get_blank_state( Classname ) ->
+
+	#state_holder{
+
+		virtual_table   = wooper_retrieve_virtual_table( Classname ),
+
+		attribute_table = ?wooper_hashtable_type:new(
+									?WooperAttributeCountUpperBound ),
+
+		actual_class    = Classname,
+
+		request_sender  = undefined
+
+	}.
+
+
+
+% Triggers specified error (notify and throw).
+%
+% (helper)
+%
+-spec trigger_error( 'throw' | 'exit' | 'error', term(), list() ) ->
+						   no_return().
+trigger_error( Reason, ErrorTerm, ParameterList ) ->
+
+	% Construction failed:
+	% (error term would often be unreadable with ~p)
+
+	error_logger:error_msg( "~nWOOPER error for PID ~w, "
+		"constructor (~s:construct/~B) failed (cause: ~p):~n~n"
+		" - with error term:~n~p~n~n"
+		" - stack trace was (latest calls first):~n~p~n~n"
+		" - for parameters:~n~p~n~n",
+		[ self(), ?MODULE, length( ParameterList ) + 1, Reason,
+				 ErrorTerm, erlang:get_stacktrace(), ParameterList ] ),
+
+	% Wait a bit as error_msg seems asynchronous:
+	timer:sleep( ?error_display_waiting ),
+
+	% Terminates the process:
+	throw( { wooper_constructor_failed, self(), ?MODULE,
+			 length( ParameterList ) + 1, ParameterList, ErrorTerm } ).
+
+
+
+
 % Type specifications must not depend on debug mode:
 
 -spec wooper_construct_and_run( list() ) -> no_return().
@@ -1567,22 +1648,11 @@ remote_synchronous_timed_new_link( Node ) ->
 wooper_construct_and_run( ParameterList ) ->
 
 	%io:format("wooper_construct_and_run called with parameters ~w, "
-	%	"whose length is ~B.~n", [ ParameterList, length(ParameterList) ] ),
+	%	"whose length is ~B.~n", [ ParameterList, length( ParameterList ) ] ),
 
-	BlankTable = #state_holder{
+	BlankState = get_blank_state( ?MODULE ),
 
-		virtual_table   = wooper_retrieve_virtual_table(),
-
-		attribute_table = ?wooper_hashtable_type:new(
-									?WooperAttributeCountUpperBound ),
-
-		actual_class    = ?MODULE,
-
-		request_sender  = undefined
-
-	},
-
-	try apply( ?MODULE, construct, [ BlankTable | ParameterList ] ) of
+	try apply( ?MODULE, construct, [ BlankState | ParameterList ] ) of
 
 		ConstructState when is_record( ConstructState, state_holder ) ->
 
@@ -1607,24 +1677,7 @@ wooper_construct_and_run( ParameterList ) ->
 	catch
 
 		Reason:ErrorTerm ->
-
-			% Construction failed:
-			% (error term would often be unreadable with ~p)
-
-			error_logger:error_msg( "~nWOOPER error for PID ~w, "
-					"constructor (~s:construct/~B) failed (cause: ~p):~n~n"
-					" - with error term:~n~p~n~n"
-					" - stack trace was (latest calls first):~n~p~n~n",
-					" - for parameters:~n~p~n~n",
-					[ self(), ?MODULE, length( ParameterList ) + 1, Reason,
-					 ErrorTerm, erlang:get_stacktrace(), ParameterList ] ),
-
-					% Wait a bit as error_msg seems asynchronous:
-					timer:sleep( ?error_display_waiting ),
-
-					% Terminates the process:
-					throw( { wooper_constructor_failed, self(), ?MODULE,
-						length( ParameterList ) + 1, ParameterList, ErrorTerm } )
+			trigger_error( Reason, ErrorTerm, ParameterList )
 
 	end.
 
@@ -1636,21 +1689,11 @@ wooper_construct_and_run( ParameterList ) ->
 wooper_construct_and_run_synchronous( ParameterList, SpawnerPid ) ->
 
 	%io:format("wooper_construct_and_run called with parameters ~w, "
-	%	"whose length is ~B.~n",[ParameterList,length(ParameterList)]),
-	BlankTable = #state_holder{
+	%	"whose length is ~B.~n", [ ParameterList, length( ParameterList ) ] ),
 
-		virtual_table   = wooper_retrieve_virtual_table(),
+	BlankState = get_blank_state( ?MODULE ),
 
-		attribute_table = ?wooper_hashtable_type:new(
-										 ?WooperAttributeCountUpperBound ),
-
-		actual_class    = ?MODULE,
-
-		request_sender  = undefined
-
-	},
-
-	try apply( ?MODULE, construct, [ BlankTable | ParameterList ] ) of
+	try apply( ?MODULE, construct, [ BlankState | ParameterList ] ) of
 
 		ConstructState when is_record(ConstructState,state_holder) ->
 
@@ -1678,27 +1721,9 @@ wooper_construct_and_run_synchronous( ParameterList, SpawnerPid ) ->
 	catch
 
 		Reason:ErrorTerm ->
-
-			% Construction failed:
-			% (error term would often be unreadable with ~p)
-
-			error_logger:error_msg( "~nWOOPER error for PID ~w, "
-					"constructor (~s:construct/~B) failed (cause: ~p):~n~n"
-					" - with error term:~n~p~n~n"
-					" - stack trace was (latest calls first):~n~p~n~n"
-					" - for parameters:~n~p~n~n",
-					[ self(), ?MODULE, length( ParameterList ) + 1, Reason,
-					 ErrorTerm, erlang:get_stacktrace(), ParameterList ] ),
-
-					% Wait a bit as error_msg seems asynchronous:
-					timer:sleep( ?error_display_waiting ),
-
-					% Terminates the process:
-					throw( { wooper_constructor_failed, self(), ?MODULE,
-						length( ParameterList ) + 1, ParameterList, ErrorTerm } )
+			trigger_error( Reason, ErrorTerm, ParameterList )
 
 	end.
-
 
 
 -else.
@@ -1715,44 +1740,16 @@ wooper_construct_and_run( ParameterList ) ->
 	%io:format("wooper_construct_and_run called with parameters ~w, "
 	%	"whose length is ~B.~n",[ParameterList,length(ParameterList)]),
 
-	BlankTable = #state_holder{
-
-		virtual_table   = wooper_retrieve_virtual_table(),
-
-		attribute_table = ?wooper_hashtable_type:new(
-										?WooperAttributeCountUpperBound ),
-
-		actual_class    = ?MODULE,
-
-		request_sender  = undefined
-
-	},
+	BlankState = get_blank_state( ?MODULE ),
 
 	ConstructState = try
 
-		apply( ?MODULE, construct, [ BlankTable | ParameterList ] )
+		apply( ?MODULE, construct, [ BlankState | ParameterList ] )
 
 	catch
 
 		Reason:ErrorTerm ->
-
-			% Construction failed:
-			% (error term would often be unreadable with ~p)
-
-			error_logger:error_msg( "~nWOOPER error for PID ~w, "
-					"constructor (~s:construct/~B) failed (cause: ~p):~n~n"
-					" - with error term:~n~p~n~n"
-					" - stack trace was (latest calls first):~n~p~n~n"
-					" - for parameters:~n~p~n~n",
-					[ self(), ?MODULE, length( ParameterList ) + 1, Reason,
-					 ErrorTerm, erlang:get_stacktrace(), ParameterList ] ),
-
-					% Wait a bit as error_msg seems asynchronous:
-					timer:sleep( ?error_display_waiting ),
-
-					% Terminates the process:
-					throw( { wooper_constructor_failed, self(), ?MODULE,
-						length( ParameterList ) + 1, ParameterList, ErrorTerm } )
+			trigger_error( Reason, ErrorTerm, ParameterList )
 
 	end,
 
@@ -1774,44 +1771,16 @@ wooper_construct_and_run_synchronous( ParameterList, SpawnerPid ) ->
 	%io:format("wooper_construct_and_run called with parameters ~w, "
 	%	"whose length is ~B.~n",[ParameterList,length(ParameterList)]),
 
-	BlankTable = #state_holder{
-
-		virtual_table   = wooper_retrieve_virtual_table(),
-
-		attribute_table = ?wooper_hashtable_type:new(
-										?WooperAttributeCountUpperBound ),
-
-		actual_class    = ?MODULE,
-
-		request_sender  = undefined
-
-	},
+	BlankState = get_blank_state( ?MODULE ),
 
 	ConstructState = try
 
-			 apply( ?MODULE, construct, [ BlankTable | ParameterList ] )
+			 apply( ?MODULE, construct, [ BlankState | ParameterList ] )
 
 	catch
 
 		Reason:ErrorTerm ->
-
-			% Construction failed:
-			% (error term would often be unreadable with ~p)
-
-			error_logger:error_msg( "~nWOOPER error for PID ~w, "
-					"constructor (~s:construct/~B) failed (cause: ~p):~n~n"
-					" - with error term:~n~p~n~n"
-					" - stack trace was (latest calls first):~n~p~n~n"
-					" - for parameters:~n~p~n~n",
-					[ self(), ?MODULE, length( ParameterList ) + 1, Reason,
-					 ErrorTerm, erlang:get_stacktrace(), ParameterList ] ),
-
-					% Wait a bit as error_msg seems asynchronous:
-					timer:sleep( ?error_display_waiting ),
-
-					% Terminates the process:
-					throw( { wooper_constructor_failed, self(), ?MODULE,
-						length( ParameterList ) + 1, ParameterList, ErrorTerm } )
+			trigger_error( Reason, ErrorTerm, ParameterList )
 
 	end,
 
@@ -1828,6 +1797,7 @@ wooper_construct_and_run_synchronous( ParameterList, SpawnerPid ) ->
 
 
 -endif.
+
 
 
 
@@ -2607,8 +2577,9 @@ wooper_check_undefined( State, Attribute ) ->
 		exit:{ { badmatch, UnexpectedValue }, Stack } ->
 
 			% Attribute value was not equal to 'undefined':
-			throw( { attribute_was_not_undefined, { Attribute, UnexpectedValue },
-				Stack } );
+			throw( { attribute_was_not_undefined,
+					 { Attribute, UnexpectedValue },
+					 Stack } );
 
 		exit:Error ->
 			% Other error (ex: unknown attribute):
@@ -2644,7 +2615,7 @@ wooper_get_class_manager() ->
 			?WooperClassManagerName;
 
 		_ ->
-			spawn( ?WooperClassManagerName, start, [self()] ),
+			spawn( ?WooperClassManagerName, start, [ self() ] ),
 			% Only dealing with registered managers (instead of using directly
 			% their PID) allows to be sure only one instance (singleton) is
 			% being used, to avoid the case of two managers being launched at
@@ -2752,7 +2723,7 @@ wooper_instance_toString( State ) ->
 %
 -spec wooper_display_state( wooper_state() ) -> basic_utils:void().
 wooper_display_state( State ) ->
-	error_logger:info_msg( "~s~n", [ wooper_state_toString(State) ] ).
+	error_logger:info_msg( "~s~n", [ wooper_state_toString( State ) ] ).
 
 
 
@@ -2769,7 +2740,7 @@ wooper_display_virtual_table( State ) ->
 %
 -spec wooper_display_instance( wooper_state() ) -> basic_utils:void().
 wooper_display_instance( State ) ->
-	error_logger:info_msg( "~s~n", [ wooper_instance_toString(State) ] ).
+	error_logger:info_msg( "~s~n", [ wooper_instance_toString( State ) ] ).
 
 
 
@@ -2800,7 +2771,8 @@ wooper_get_state_description( State ) ->
 % (const request)
 %
 wooper_get_virtual_table_description( State ) ->
-	?wooper_return_state_result( State, wooper_virtual_table_toString( State ) ).
+	?wooper_return_state_result( State,
+								 wooper_virtual_table_toString( State ) ).
 
 
 
@@ -2882,7 +2854,7 @@ handle_oneway_execution( MethodAtom, State, ArgumentList ) ->
 wooper_default_exit_handler( State, Pid, ExitType ) ->
 
 	error_logger:warning_msg( "WOOPER default EXIT handler of the ~w "
-	  "instance ~w ignored following EXIT message from ~w:~n~p.~n~n",
+	  "instance ~w ignored followling EXIT message from ~w:~n~p.~n~n",
 	  [ State#state_holder.actual_class, self(), Pid, ExitType ] ),
 
 	State.
@@ -2890,7 +2862,7 @@ wooper_default_exit_handler( State, Pid, ExitType ) ->
 
 
 % Waits for incoming method calls and serves them.
--spec wooper_main_loop( wooper_state() ) -> no_return().
+-spec wooper_main_loop( wooper_state() ) -> 'deleted'. % no_return().
 wooper_main_loop( State ) ->
 
 	%?wooper_log( "wooper_main_loop start.~n" ),
@@ -2905,7 +2877,7 @@ wooper_main_loop( State ) ->
 		% Instance PID could be sent back as well to discriminate received
 		% answers on the caller side.
 		{ MethodAtom, ArgumentList, CallerPid }
-				when is_pid(CallerPid) and is_list(ArgumentList) ->
+				when is_pid( CallerPid ) and is_list( ArgumentList ) ->
 
 			?wooper_log_format( "Main loop (case A) for ~w: "
 				"request '~s' with argument list ~w for ~w.~n",
@@ -3040,7 +3012,7 @@ wooper_main_loop( State ) ->
 
 		delete ->
 
-			?wooper_log("Main loop: oneway delete.~n"),
+			?wooper_log( "Main loop: oneway delete.~n" ),
 
 			% Triggers the recursive call of destructors in the inheritance
 			% graph (bottom-up):
@@ -3112,17 +3084,18 @@ wooper_main_loop( State ) ->
 
 
 
-% Returns the virtual table corresponding to this class.
--spec wooper_retrieve_virtual_table() ->
+% Returns the virtual table corresponding to the specified class.
+%
+-spec wooper_retrieve_virtual_table( class_name() ) ->
 				   ?wooper_hashtable_type:?wooper_hashtable_type().
-wooper_retrieve_virtual_table() ->
+wooper_retrieve_virtual_table( Classname ) ->
 
 	% For per-instance virtual table: wooper_create_method_table_for(?MODULE).
-	wooper_get_class_manager() ! { get_table, ?MODULE, self() },
+	wooper_get_class_manager() ! { get_table, Classname, self() },
 	receive
 
-		{ virtual_table, ?MODULE, Table } ->
-			%?wooper_hashtable_type:display(Table),
+		{ virtual_table, Table } ->
+			%?wooper_hashtable_type:display( Table ),
 			Table
 
 	end.
@@ -3152,9 +3125,16 @@ wooper_destruct( State ) ->
 	DeletedState = case lists:member( {delete,1}, module_info(exports) ) of
 
 		true ->
+
 			% All destructors, including user-defined ones, must return a
 			% (possibly updated) state:
-			try ?MODULE:delete( State ) of
+
+			ActualClassname = get_class_name( State ),
+
+			% There are cases where ?MODULE is not the real class name:
+			%
+			% try ?MODULE:delete( State ) of
+			try apply( ActualClassname, delete, [ State ] ) of
 
 				ReturnedState when is_record( ReturnedState, state_holder ) ->
 					ReturnedState;
@@ -3165,34 +3145,17 @@ wooper_destruct( State ) ->
 						"~nWOOPER error for PID ~w of class ~s: "
 						"user-defined destructor did not return a state, "
 						"but returned '~p' instead.~n",
-						[ self(), ?MODULE, Other ] ),
+						[ self(), ActualClassname, Other ] ),
 
 					% Wait a bit as error_msg seems asynchronous:
 					timer:sleep( ?error_display_waiting ),
-					throw( { invalid_destructor, ?MODULE } )
+					throw( { invalid_destructor, ActualClassname } )
 
 			catch
 
 				Reason:ErrorTerm ->
+					trigger_destruct_error( Reason, ErrorTerm, State )
 
-					% Destruction failed:
-					% (error term would often be unreadable with ~p)
-
-					error_logger:error_msg( "~nWOOPER error for PID ~w, "
-						"destructor (~s:delete/1) failed (cause: ~p):~n~n"
-						" - with error term:~n~p~n~n"
-						" - stack trace was (latest calls first):~n~p~n~n"
-						" - instance state was: ~s~n~n",
-						[ self(), ?MODULE, Reason, ErrorTerm,
-						 erlang:get_stacktrace(), wooper_state_toString( State )
-						 ] ),
-
-					% Wait a bit as error_msg seems asynchronous:
-					timer:sleep( ?error_display_waiting ),
-
-					% Terminates the process:
-					throw( { wooper_destructor_failed, self(), ?MODULE,
-						ErrorTerm } )
 			end;
 
 		false ->
@@ -3204,16 +3167,7 @@ wooper_destruct( State ) ->
 
 	end,
 
-	% Then automatically call the direct mother destructors.
-	%
-	% Using foldr, not foldl: the destructors of mother classes are called in
-	% the reverse order compared to the order that was used for construction,
-	% for the sake of symmetry.
-	%
-	% Final state is dropped.
-	lists:foldr(
-		fun(Class,NewState) -> apply( Class, wooper_destruct, [NewState] ) end,
-		DeletedState, get_superclasses() ).
+	chain_parent_destructors( DeletedState ).
 
 
 
@@ -3224,41 +3178,33 @@ wooper_destruct( State ) ->
 % Each wooper_destruct function is purely local to the current module.
 %
 wooper_destruct( State ) ->
+
 	% If a class-specific delete is defined, execute it, otherwise do
 	% nothing. Then recurse with higher-level destructors (maybe just storing
 	% delete/1 in the method table would be more efficient, see
 	% wooper_class_manager:get_virtual_table_for):
+	%
 	DeletedState = case lists:member( {delete,1}, module_info(exports) ) of
 
 		true ->
+
 			% All destructors, included user-defined ones, must return a
 			% (possibly updated) state:
+
+			ActualClassname = get_class_name( State ),
+
+			% There are cases where ?MODULE is not the real class name:
+			%
+			% try ?MODULE:delete( State ) of
 			try
 
-				?MODULE:delete( State )
+				apply( ActualClassname, delete, [ State ] )
 
 			catch
 
 				Reason:ErrorTerm ->
+					trigger_destruct_error( Reason, ErrorTerm, State )
 
-					% Destruction failed:
-					% (error term would often be unreadable with ~p)
-
-					error_logger:error_msg( "~nWOOPER error for PID ~w, "
-						"destructor (~s:delete/1) failed (cause: ~p):~n~n"
-						" - with error term:~n~p~n~n"
-						" - stack trace was (latest calls first):~n~p~n~n"
-						" - instance state was: ~s~n~n",
-						[ self(), ?MODULE, Reason, ErrorTerm,
-						 erlang:get_stacktrace(), wooper_state_toString( State )
-						 ] ),
-
-					% Wait a bit as error_msg seems asynchronous:
-					timer:sleep( ?error_display_waiting ),
-
-					% Terminates the process:
-					throw( { wooper_destructor_failed, self(), ?MODULE,
-						ErrorTerm } )
 			end;
 
 		false ->
@@ -3269,6 +3215,53 @@ wooper_destruct( State ) ->
 			State
 
 	end,
+
+	chain_parent_destructors( DeletedState ).
+
+
+-endif.
+
+
+
+
+% Triggers a destruction-related error.
+%
+% (helper)
+%
+-spec trigger_destruct_error( 'throw' | 'exit' | 'error', term(),
+							  wooper_state() ) -> no_return().
+trigger_destruct_error( Reason, ErrorTerm, State ) ->
+
+	% Destruction failed:
+	% (error term would often be unreadable with ~p)
+
+	ActualClassname = get_class_name( State ),
+
+	error_logger:error_msg( "~nWOOPER error for PID ~w, "
+							"destructor (~s:delete/1) failed (cause: ~p):~n~n"
+							" - with error term:~n~p~n~n"
+							" - stack trace was (latest calls first):~n~p~n~n"
+							" - instance state was: ~s~n~n",
+							[ self(), ActualClassname, Reason, ErrorTerm,
+							  erlang:get_stacktrace(),
+							  wooper_state_toString( State )
+							] ),
+
+	% Wait a bit as error_msg seems asynchronous:
+	timer:sleep( ?error_display_waiting ),
+
+	% Terminates the process:
+	throw( { wooper_destructor_failed, self(), ActualClassname, ErrorTerm } ).
+
+
+
+% Calls recursively the destructor of direct superclasses.
+%
+% (helper)
+%
+-spec chain_parent_destructors( wooper_state() ) -> wooper_state().
+chain_parent_destructors( State ) ->
+
 	% Then automatically call the direct mother destructors.
 	%
 	% Using foldr, not foldl: the destructors of mother classes are called in
@@ -3279,9 +3272,8 @@ wooper_destruct( State ) ->
 	lists:foldr(
 		fun( Class, NewState ) -> apply( Class, wooper_destruct,
 										[ NewState ] ) end,
-		DeletedState, get_superclasses() ).
+		State, get_superclasses() ).
 
--endif.
 
 
 
@@ -3704,7 +3696,7 @@ executeRequest( StateError, RequestAtomError ) ->
 %
 executeRequest( State, RequestAtom, ArgumentList ) when
 		is_record( State, state_holder ) andalso is_atom( RequestAtom )
-		andalso is_list(ArgumentList) ->
+		andalso is_list( ArgumentList ) ->
 
 	%io:format("executeRequest/3 with list: executing ~s(~w) from ~s.~n",
 	%	[ RequestAtom, ArgumentList, State#state_holder.actual_class ]),
@@ -3741,7 +3733,7 @@ executeRequest( State, RequestAtom, StandaloneArgument ) when
 
 % Catches all errors:
 executeRequest( StateError, RequestAtom, _LastArg )
-		when is_atom(RequestAtom) ->
+		when is_atom( RequestAtom ) ->
 
 	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
 		"when executing request ~p: "
@@ -3771,8 +3763,8 @@ executeRequest( _State, RequestAtomError, _LastArg ) ->
 % specified class.
 %
 executeRequestWith( State, ClassName, RequestAtom )
-	when is_record(State,state_holder) andalso is_atom(ClassName)
-		andalso is_atom(RequestAtom) ->
+	when is_record( State, state_holder ) andalso is_atom( ClassName )
+		andalso is_atom( RequestAtom ) ->
 
 	%io:format("executeRequestWith/3: executing ~s() from ~s with ~s.~n",
 	%	[ RequestAtom, State#state_holder.actual_class, ClassName ]),
@@ -3789,7 +3781,7 @@ executeRequestWith( State, ClassName, RequestAtom )
 
 
 executeRequestWith( StateError, ClassName, RequestAtom )
-		when is_atom(ClassName) andalso is_atom(RequestAtom) ->
+		when is_atom( ClassName ) andalso is_atom( RequestAtom ) ->
 
 	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
 		"when executing request ~p in the context of class ~s: "
@@ -3824,8 +3816,8 @@ executeRequestWith( _State, ClassNameError, RequestAtomError ) ->
 % Note: Stripped-down version of wooper_main_loop.
 %
 executeRequestWith( State, ClassName, RequestAtom, ArgumentList ) when
-		is_record( State, state_holder ) andalso is_atom(ClassName)
-		andalso is_atom(RequestAtom) andalso is_list(ArgumentList) ->
+		is_record( State, state_holder ) andalso is_atom( ClassName )
+		andalso is_atom( RequestAtom ) andalso is_list( ArgumentList ) ->
 
 	%io:format("executeRequestWith/4 with list: executing ~s(~w) from ~s "
 	%  "with ~s.~n", [ RequestAtom, ArgumentList,
@@ -3844,8 +3836,8 @@ executeRequestWith( State, ClassName, RequestAtom, ArgumentList ) when
 
 % Here the third parameter is not a list:
 executeRequestWith( State, ClassName, RequestAtom, StandaloneArgument ) when
-		is_record( State, state_holder ) andalso is_atom(ClassName)
-		andalso is_atom(RequestAtom) ->
+		is_record( State, state_holder ) andalso is_atom( ClassName )
+		andalso is_atom( RequestAtom ) ->
 
 	%io:format("executeRequestWith/3 with standalone argument: "
 	%	"executing ~s(~w) from ~s with ~s.~n",
@@ -3865,7 +3857,7 @@ executeRequestWith( State, ClassName, RequestAtom, StandaloneArgument ) when
 
 % Error cases below:
 executeRequestWith( StateError, ClassName, RequestAtom, _LastArg )
-		when is_atom(ClassName) andalso is_atom(RequestAtom) ->
+		when is_atom( ClassName ) andalso is_atom( RequestAtom ) ->
 
 	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
 		"when executing request ~p: "
@@ -3961,8 +3953,8 @@ executeOneway( StateError, OnewayError ) ->
 % Note: Stripped-down version of wooper_main_loop.
 %
 executeOneway( State, OnewayAtom, ArgumentList ) when
-		is_record( State, state_holder ) andalso is_atom(OnewayAtom)
-		andalso is_list(ArgumentList) ->
+		is_record( State, state_holder ) andalso is_atom( OnewayAtom )
+		andalso is_list( ArgumentList ) ->
 
 	%io:format("executeOneway/3 with list: executing ~s(~w) from ~s.~n",
 	%	[ OnewayAtom, ArgumentList, State#state_holder.actual_class ]),
@@ -3979,7 +3971,7 @@ executeOneway( State, OnewayAtom, ArgumentList ) when
 
 % Here third parameter is not a list:
 executeOneway( State, OnewayAtom, StandaloneArgument ) when
-		is_record( State, state_holder ) andalso is_atom(OnewayAtom) ->
+		is_record( State, state_holder ) andalso is_atom( OnewayAtom ) ->
 
 	%io:format("executeOneway/3 with standalone argument: "
 	%	"executing ~s(~w) from ~s.~n",
@@ -3996,7 +3988,7 @@ executeOneway( State, OnewayAtom, StandaloneArgument ) when
 
 
 % All errors caught below:
-executeOneway( StateError, OnewayAtom, _LastArg ) when is_atom(OnewayAtom) ->
+executeOneway( StateError, OnewayAtom, _LastArg ) when is_atom( OnewayAtom ) ->
 
 	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
 		"when executing oneway ~p: "
@@ -4037,8 +4029,8 @@ executeOneway( _State, OnewayAtomError, _LastArg ) ->
 % Parameter-less oneway, relying on the specified actual class to be used,
 % instead of determining it from the instance virtual table.
 executeOnewayWith( State, ClassName, OnewayAtom )
-		when is_record(State,state_holder) andalso is_atom(ClassName)
-			andalso is_atom(OnewayAtom) ->
+		when is_record( State, state_holder ) andalso is_atom( ClassName )
+			andalso is_atom( OnewayAtom ) ->
 
 	%io:format("executeOnewayWith/3: executing ~s() from ~s.~n",
 	%	[ OnewayAtom, State#state_holder.actual_class ]),
@@ -4091,8 +4083,8 @@ executeOnewayWith( StateError, ClassName, OnewayAtom ) ->
 % Note: Stripped-down version of wooper_main_loop.
 %
 executeOnewayWith( State, ClassName, OnewayAtom, ArgumentList ) when
-		is_record( State, state_holder ) andalso is_atom(ClassName)
-		andalso is_atom(OnewayAtom) andalso is_list(ArgumentList) ->
+		is_record( State, state_holder ) andalso is_atom( ClassName )
+		andalso is_atom( OnewayAtom ) andalso is_list( ArgumentList ) ->
 
 	%io:format("executeOneway/4 with list: executing ~s(~w) from ~s with ~s.~n",
 	%	[ OnewayAtom, ArgumentList, State#state_holder.actual_class,
@@ -4110,8 +4102,8 @@ executeOnewayWith( State, ClassName, OnewayAtom, ArgumentList ) when
 
 % Here third parameter is not a list:
 executeOnewayWith( State, ClassName, OnewayAtom, StandaloneArgument ) when
-		is_record( State, state_holder ) andalso is_atom(ClassName)
-		andalso is_atom(OnewayAtom) ->
+		is_record( State, state_holder ) andalso is_atom( ClassName )
+		andalso is_atom( OnewayAtom ) ->
 
 	%io:format("executeOneway/4 with standalone argument: "
 	%	"executing ~s(~w) from ~s with ~s.~n",
@@ -4129,7 +4121,7 @@ executeOnewayWith( State, ClassName, OnewayAtom, StandaloneArgument ) when
 
 
 executeOnewayWith( StateError, ClassName, OnewayAtom, _LastArg )
-		when is_atom(ClassName) andalso is_atom(OnewayAtom) ->
+		when is_atom( ClassName ) andalso is_atom( OnewayAtom ) ->
 
 	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
 		"when executing oneway ~p with ~s: "
@@ -5398,10 +5390,10 @@ wooper_deserialise( SerialisedEntries, EntryTransformer, UserData,
 	end,
 
 
-	% Deferred wooper_retrieve_virtual_table/0 answer:
+	% Deferred get_table answer:
 	VirtualTable = receive
 
-		{ virtual_table, ?MODULE, Table } ->
+		{ virtual_table, Table } ->
 			Table
 
 	end,
