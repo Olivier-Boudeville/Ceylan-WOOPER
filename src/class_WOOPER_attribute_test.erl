@@ -28,7 +28,7 @@
 
 % Basic testing of WOOPER attribute management.
 %
--module(class_Wooper_attribute_test).
+-module(class_WOOPER_attribute_test).
 
 
 -include("test_facilities.hrl").
@@ -72,7 +72,7 @@
 
 
 % Constructs a new test instance.
--spec construct( wooper_state() ) -> wooper_state().
+-spec construct( wooper:state() ) -> wooper:state().
 construct( State ) ->
 
 	% Class-specific attributes:
@@ -83,7 +83,7 @@ construct( State ) ->
 % Overridden destructor, totally useless except that allows to avoid that
 % Dialyzer, based on the wooper.hrl, complains about a missing
 % class_Wooper_attribute_test:delete/1:
--spec delete( wooper_state() ) -> wooper_state().
+-spec delete( wooper:state() ) -> wooper:state().
 delete( _State ) ->
 	throw( unexpected_call_to_destructor ).
 
@@ -91,7 +91,7 @@ delete( _State ) ->
 
 % Request test.
 %
--spec test( wooper_state() ) -> request_return( 'test_ok' ).
+-spec test( wooper:state() ) -> request_return( 'test_ok' ).
 test( State ) ->
 
 	test_facilities:display( "Testing attribute management." ),
@@ -110,7 +110,7 @@ test( State ) ->
 	MultiState  = setAttributes( NewSetState,[
 		{ test_attribute, false }, { another_attribute, 42 } ] ),
 	false       = getAttribute( MultiState, test_attribute ),
-	42          = getAttribute( MultiState,another_attribute ),
+	42          = getAttribute( MultiState, another_attribute ),
 
 
 	RevertState = toggleAttribute(MultiState, test_attribute ),
@@ -146,7 +146,7 @@ test( State ) ->
 
 
 
--spec not_crashing_examples( wooper_state() ) -> request_return( test_ok ).
+-spec not_crashing_examples( wooper:state() ) -> request_return( test_ok ).
 not_crashing_examples( State ) ->
 
 	NewState = removeAttribute( State, non_existing ),
@@ -162,7 +162,7 @@ not_crashing_examples( State ) ->
 
 
 % Usually operations are commented-out as we do not want to fail on purpose:
--spec crashing_examples( wooper_state() ) -> request_return( test_ok ).
+-spec crashing_examples( wooper:state() ) -> request_return( test_ok ).
 crashing_examples( State ) ->
 
 	%toggleAttribute( State, non_existing ),
@@ -199,7 +199,7 @@ crashing_test_undefined( State ) ->
 
 
 
--spec not_crashing_test_hashtable( wooper_state() ) -> 'test_ok'.
+-spec not_crashing_test_hashtable( wooper:state() ) -> 'test_ok'.
 not_crashing_test_hashtable( State ) ->
 
 	% Let's have an (empty) hashtable first:
@@ -225,7 +225,7 @@ run() ->
 
 	test_facilities:display( "Running attribute test." ),
 
-	Tested = class_Wooper_attribute_test:new_link(),
+	Tested = class_WOOPER_attribute_test:new_link(),
 
 	Tested ! { test, [], self() },
 

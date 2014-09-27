@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2014 Olivier Boudeville
+% Copyright (C) 2007-2014 Olivier Boudeville
 %
 % This file is part of the WOOPER library.
 %
@@ -22,16 +22,13 @@
 % If not, see <http://www.gnu.org/licenses/> and
 % <http://www.mozilla.org/MPL/>.
 %
+% Creation date: Friday, July 12, 2007.
 % Author: Olivier Boudeville (olivier.boudeville@esperide.com)
 
 
 
 % Module of the WOOPER class manager.
 %
--module(wooper_class_manager).
-
-
-
 % The purpose of this process is, on a per-node basis, to create and notably to
 % serve to instances the virtual table corresponding to the actual class they
 % are corresponding to.
@@ -41,6 +38,9 @@
 % given class just refer to a common virtual table stored by this manager, and
 % each virtual table and the table of virtual tables itself are optimised, with
 % regard to their respective load factor.
+%
+-module(wooper_class_manager).
+
 
 
 % See documentation at:
@@ -48,30 +48,23 @@
 
 
 
-% Creation date: Friday, July 12, 2007.
-% Author: Olivier Boudeville (olivier.boudeville@esperide.com).
-
-% Licensed under a disjunctive tri-license: MPL/GPL/LGPL, see:
-% http://ceylan.sourceforge.net/main/documentation/wooper/index.html#license
-
-
-
 -export([ start/1, ping/1 ]).
 
 
-% For WooperClassManagerName:
+% For wooper_class_manager_name:
 -include("wooper_class_manager.hrl").
 
 
-% This define must match with the one of wooper.hrl:
--define( wooper_hashtable_type, hashtable ).
+% For wooper_hashtable_type:
+-include("wooper_defines_exports.hrl").
+
 
 
 % Approximate average method count for a given class, including inherited ones.
 %
 % (ideally should be slightly above the maximum number of actual methods)
 %
--define( WooperMethodCountUpperBound, 32 ).
+-define( wooper_method_count_upper_bound, 32 ).
 
 
 
@@ -80,14 +73,14 @@
 % (ideally should be slightly above the maximum number of actual classes being
 % instanciated)
 %
--define( WooperClassCountUpperBound, 128 ).
+-define( wooper_class_count_upper_bound, 128 ).
 
 
 % Comment/uncomment to respectively disable and enable debug mode:
 %-define(debug,).
 
 
--define(Log_prefix, "[WOOPER Class manager] ").
+-define(log_prefix, "[WOOPER Class manager] ").
 
 
 % To avoid warnings (note: display/1 is apparently a BIF, renamed to
@@ -111,31 +104,31 @@
 
 
 display_state( Tables ) ->
-	error_logger:info_msg( ?Log_prefix "Storing now ~B table(s).~n",
-							[ ?wooper_hashtable_type:getEntryCount(Tables) ] ).
+	error_logger:info_msg( ?log_prefix "Storing now ~B table(s).~n",
+					[ ?wooper_hashtable_type:getEntryCount( Tables ) ] ).
 
 
 display_table_creation( Module ) ->
-	error_logger:info_msg( ?Log_prefix "Creating a virtual table "
+	error_logger:info_msg( ?log_prefix "Creating a virtual table "
 							"for module ~s.~n", [ Module ] ).
 
 
 display_msg( String ) ->
 
-	Message = io_lib:format( ?Log_prefix "~s.~n", [ String ] ),
+	Message = io_lib:format( ?log_prefix "~s.~n", [ String ] ),
 	error_logger:info_msg( Message ).
 
 
 -else.
 
 
-display_state( _ ) ->
+display_state( _Tables ) ->
 	ok.
 
-display_table_creation( _ ) ->
+display_table_creation( _Module ) ->
 	ok.
 
-display_msg( _ ) ->
+display_msg( _String ) ->
 	ok.
 
 
@@ -168,16 +161,21 @@ start( ClientPID ) ->
 	% In a distributed context, there should be exactly one class manager per
 	% node.
 	%
-	case catch register( ?WooperClassManagerName, self() ) of
+	case catch register( ?wooper_class_manager_name, self() ) of
 
 		true ->
 			ClientPID ! class_manager_registered,
-			loop( ?wooper_hashtable_type:new( ?WooperClassCountUpperBound ) );
+
+			EmptyClassTable = ?wooper_hashtable_type:new(
+								 ?wooper_class_count_upper_bound ),
+
+			loop( EmptyClassTable );
+
 
 		% A manager is already registered, let it be the only one and stop:
 		{ 'EXIT', { badarg,_ } } ->
 
-			display_msg( ?Log_prefix
+			display_msg( ?log_prefix
 						"Already a manager available, terminating" ),
 
 			% Let's notify the client nevertheless:
@@ -207,12 +205,12 @@ loop( Tables ) ->
 			loop( NewTables );
 
 		display ->
-			error_logger:info_msg( ?Log_prefix "Internal state is: ~s~n",
+			error_logger:info_msg( ?log_prefix "Internal state is: ~s~n",
 				[ ?wooper_hashtable_type:toString( Tables ) ] ),
 			loop( Tables );
 
 		stop ->
-			unregister( ?WooperClassManagerName ),
+			unregister( ?wooper_class_manager_name ),
 			display_msg( "Stopped on request" )
 
 	end.
@@ -368,7 +366,7 @@ create_local_method_table_for( Module ) ->
 			end
 		end,
 
-		?wooper_hashtable_type:new( ?WooperMethodCountUpperBound ),
+		?wooper_hashtable_type:new( ?wooper_method_count_upper_bound ),
 
 		Module:module_info( exports ) ).
 

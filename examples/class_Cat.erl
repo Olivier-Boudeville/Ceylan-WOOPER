@@ -7,6 +7,10 @@
 % Author: Olivier Boudeville (olivier.boudeville@esperide.com)
 
 
+% Cat-based example.
+%
+% Guaranteed to be implemented by a cat.
+%
 -module(class_Cat).
 
 
@@ -55,8 +59,8 @@
 
 
 % Constructs a new Cat.
--spec construct( wooper_state(), age(), gender(), fur_color(), whisker_color() )
-			   -> wooper_state().
+-spec construct( wooper:state(), age(), gender(), fur_color(), whisker_color() )
+			   -> wooper:state().
 construct( State, ?wooper_construct_parameters ) ->
 
 	% First the direct mother classes:
@@ -68,21 +72,26 @@ construct( State, ?wooper_construct_parameters ) ->
 
 
 
--spec delete( wooper_state() ) -> wooper_state().
+-spec delete( wooper:state() ) -> wooper:state().
 delete( State ) ->
+
 	io:format( "Deleting cat ~w! (overridden destructor)~n", [ self() ] ),
+
+	% To test:
+	% basic_utils:crash(),
+
 	State.
 
 
 
 % No guarantee on biological fidelity:
--spec getTeatCount( wooper_state() ) -> request_return( teat_count() ).
+-spec getTeatCount( wooper:state() ) -> request_return( teat_count() ).
 getTeatCount( State ) ->
 	?wooper_return_state_result( State, 6 ).
 
 
 % Cats are supposed carnivorous though:
--spec canEat( wooper_state(), food() ) -> request_return( boolean() ).
+-spec canEat( wooper:state(), food() ) -> request_return( boolean() ).
 canEat( State, soup ) ->
 	?wooper_return_state_result( State, true );
 
@@ -100,15 +109,15 @@ canEat( State, _OtherFood ) ->
 
 
 % Const request:
--spec getWhiskerColor( wooper_state() ) -> request_return( color() ).
+-spec getWhiskerColor( wooper:state() ) -> request_return( color() ).
 getWhiskerColor( State )->
 	?wooper_return_state_result( State, ?getAttr(whisker_color) ).
 
 
--spec toString( wooper_state() ) -> request_return( string() ).
+-spec toString( wooper:state() ) -> request_return( string() ).
 toString( State ) ->
 
-	Description = wooper_instance_toString( State ),
+	Description = wooper:instance_to_string( State ),
 
 	?wooper_return_state_result( State, Description ).
 

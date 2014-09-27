@@ -45,7 +45,7 @@
 
 % Triggered just before serialisation.
 %
--spec pre_serialise_hook( wooper_state() ) -> wooper_state().
+-spec pre_serialise_hook( wooper:state() ) -> wooper:state().
 pre_serialise_hook( State ) ->
 	io:format( "Pre-serialising a reptile!~n" ),
 	State.
@@ -56,8 +56,9 @@ pre_serialise_hook( State ) ->
 %
 % (using WOOPER default hook implementation augmented of an io:format)
 %
--spec post_serialise_hook( class_name(), term_serialisation(), wooper_state() )
-						 -> term().
+-spec post_serialise_hook( class_name(),
+						   wooper_serialisation:term_serialisation(),
+						   wooper:state() ) -> term().
 post_serialise_hook( Classname, Entries, _State ) ->
 	io:format( "Post-serialising a reptile!~n" ),
 	{ Classname, Entries }.
@@ -67,7 +68,7 @@ post_serialise_hook( Classname, Entries, _State ) ->
 % Triggered just before deserialisation.
 %
 -spec pre_deserialise_hook( term(), basic_utils:user_data() ) ->
-								  term_serialisation().
+							wooper_serialisation:term_serialisation().
 pre_deserialise_hook( _SerialisedEntries={ _Classname, Entries }, _UserData ) ->
 	io:format( "Pre-deserialising a reptile!~n" ),
 	Entries.
@@ -76,7 +77,7 @@ pre_deserialise_hook( _SerialisedEntries={ _Classname, Entries }, _UserData ) ->
 
 % Triggered just after deserialisation.
 %
--spec post_deserialise_hook( wooper_state() ) -> wooper_state().
+-spec post_deserialise_hook( wooper:state() ) -> wooper:state().
 post_deserialise_hook( State ) ->
 	io:format( "Post-deserialising a reptile!~n" ),
 	State.
@@ -89,7 +90,7 @@ post_deserialise_hook( State ) ->
 
 
 % Constructs a new Reptile.
--spec construct( wooper_state(), age(), gender() ) -> wooper_state().
+-spec construct( wooper:state(), age(), gender() ) -> wooper:state().
 construct( State, ?wooper_construct_parameters ) ->
 	class_Creature:construct( State, Age, Gender ).
 	% To test constructor checking:
@@ -97,7 +98,7 @@ construct( State, ?wooper_construct_parameters ) ->
 
 
 % Overridden destructor
--spec delete( wooper_state() ) -> wooper_state().
+-spec delete( wooper:state() ) -> wooper:state().
 delete( State ) ->
 	io:format( "Deleting a Reptile." ),
 	State.
@@ -117,7 +118,7 @@ delete( State ) ->
 %
 % (oneway)
 %
--spec setAge( wooper_state(), age() ) -> oneway_return().
+-spec setAge( wooper:state(), age() ) -> oneway_return().
 setAge( State, NewAge ) ->
 	%throw( exception_throw_test_from_oneway ),
 	%exit( exception_exit_test_from_oneway ),
@@ -131,7 +132,7 @@ setAge( State, NewAge ) ->
 %
 % (const request)
 %
--spec isHotBlooded( wooper_state() ) -> request_return( boolean() ).
+-spec isHotBlooded( wooper:state() ) -> request_return( boolean() ).
 isHotBlooded( State ) ->
 	%throw( exception_throw_test_from_request ),
 	%exit( exception_exit_test_from_request ),
@@ -142,6 +143,6 @@ isHotBlooded( State ) ->
 %
 % (const request)
 %
--spec canMoult( wooper_state() ) -> request_return( boolean() ).
+-spec canMoult( wooper:state() ) -> request_return( boolean() ).
 canMoult( State ) ->
 	?wooper_return_state_result( State, true ).

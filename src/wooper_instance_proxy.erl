@@ -26,6 +26,7 @@
 
 
 % Module to create WOOPER instance proxies.
+%
 -module(wooper_instance_proxy).
 
 
@@ -47,7 +48,7 @@
 start( TargetInstancePid ) ->
 
 	io:format( "Starting proxy for WOOPER instance ~w.~n",
-			  [TargetInstancePid] ),
+			   [ TargetInstancePid ] ),
 
 	spawn( fun() -> proxy_main_loop( TargetInstancePid ) end ).
 
@@ -57,7 +58,7 @@ start( TargetInstancePid ) ->
 start_link( TargetInstancePid ) ->
 
 	io:format( "Starting linked proxy for WOOPER instance ~w.~n",
-			  [TargetInstancePid] ),
+			   [ TargetInstancePid ] ),
 
 	spawn_link( fun() -> proxy_main_loop( TargetInstancePid ) end ).
 
@@ -68,18 +69,19 @@ start_link( TargetInstancePid ) ->
 proxy_main_loop( TargetInstancePid ) ->
 
 	io:format( "Proxy ~w waiting for a call to WOOPER target instance ~w.~n",
-			  [self(),TargetInstancePid] ),
+			   [ self(), TargetInstancePid ] ),
 
 
 	% This proxy is expected to receive either requests or oneways:
+	%
 	receive
 
-		{RequestName,Args,SenderPid} ->
+		{ RequestName, Args, SenderPid } ->
 
 			io:format( "Proxy ~w processing request ~p.~n",
-					  [ self(), {RequestName,Args,SenderPid} ] ),
+					   [ self(), { RequestName, Args, SenderPid } ] ),
 
-			TargetInstancePid ! {RequestName,Args,self()},
+			TargetInstancePid ! { RequestName, Args, self() },
 			receive
 
 				R ->
@@ -93,27 +95,29 @@ proxy_main_loop( TargetInstancePid ) ->
 			proxy_main_loop( TargetInstancePid ) ;
 
 
-		{OnewayName,Args} ->
+		{ OnewayName, Args } ->
 
 			io:format( "Proxy ~w processing oneway ~p.~n",
-					  [ self(), {OnewayName,Args} ] ),
-			TargetInstancePid ! {OnewayName,Args},
+					   [ self(), { OnewayName, Args } ] ),
+
+			TargetInstancePid ! { OnewayName, Args },
+
 			proxy_main_loop( TargetInstancePid );
 
 
 		delete ->
 
 			io:format( "Deleting proxy ~w for WOOPER target instance ~w.~n",
-			  [self(),TargetInstancePid] ),
+					   [ self(), TargetInstancePid ] ),
 
 			% No looping here:
 			TargetInstancePid ! delete;
 
 
-		OnewayName when is_atom(OnewayName) ->
+		OnewayName when is_atom( OnewayName ) ->
 
 			io:format( "Proxy ~w processing oneway ~p.~n",
-					  [ self(), OnewayName ] ),
+					   [ self(), OnewayName ] ),
 
 			TargetInstancePid ! OnewayName,
 			proxy_main_loop( TargetInstancePid );
@@ -122,8 +126,8 @@ proxy_main_loop( TargetInstancePid ) ->
 		Other ->
 
 			io:format( "Warning: WOOPER instance proxy (~w) for ~w ignored "
-					  "following message: ~p.~n",
-					  [self(),TargetInstancePid,Other] ),
+					   "following message: ~p.~n",
+					   [ self(), TargetInstancePid, Other ] ),
 
 			proxy_main_loop( TargetInstancePid )
 

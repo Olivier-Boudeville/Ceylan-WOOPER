@@ -63,11 +63,11 @@ run() ->
 
 	MyC ! { serialise, [ TextTransformer, ActualUserData ], self() },
 
-	{ SerialisedState, Classname } = receive
+	CatBinSerialisation = receive
 
 		{ wooper_result, { Bin, UserData } } ->
 
-			{ Class, TransformedEntries } = binary_to_term( Bin ),
+			{ Class, _TransformedEntries } = binary_to_term( Bin ),
 
 			test_facilities:display( "Text transformer returned:~n"
 									 " - class name: ~p~n"
@@ -76,7 +76,7 @@ run() ->
 									 " - user data: ~p~n",
 									 [ Class, Bin, size( Bin ), UserData ] ),
 
-			{ TransformedEntries, Class }
+			Bin
 
 	end,
 
@@ -93,16 +93,16 @@ run() ->
 	test_facilities:display( "Testing also serialisation hooks, "
 							 "with a reptile." ),
 
-	MyR = class_Reptile:new_link( 39, female ),
+	MyR = class_Reptile:new_link( 35, female ),
 
 	MyR ! { serialise, [ _TextTransformer=undefined,
 						_ActualUserData=undefined ], self() },
 
-	{ _ReptileSerialisedState, _ReptileClassname } = receive
+	receive
 
 		{ wooper_result, { ReptileBin, ReptileUserData } } ->
 
-			{ ReptileClass, ReptileEntries } = binary_to_term( ReptileBin ),
+			{ ReptileClass, _ReptileEntries } = binary_to_term( ReptileBin ),
 
 			test_facilities:display( "Text transformer returned:~n"
 									 " - class name: ~p~n"
@@ -110,16 +110,14 @@ run() ->
 									 " - binary size: ~B bytes~n"
 									 " - user data: ~p~n",
 									 [ ReptileClass, ReptileBin,
-									  size( ReptileBin ),  ReptileUserData ] ),
-
-			{ ReptileEntries, ReptileClass }
+									  size( ReptileBin ),  ReptileUserData ] )
 
 	end,
 
 	test_facilities:display( "Recreating an instance corresponding to "
 							 "previous information." ),
 
-	NewC = apply( Classname, load_link, [ SerialisedState ] ),
+	NewC = wooper_serialisation:load_link( CatBinSerialisation ),
 
 	NewC ! { toString, [], self() },
 

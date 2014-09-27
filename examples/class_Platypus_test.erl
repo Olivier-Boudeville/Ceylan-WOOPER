@@ -18,9 +18,16 @@
 -include("test_facilities.hrl").
 
 
+-export([ run/1 ]).
+
 
 -spec run() -> no_return().
 run() ->
+	run( class_Platypus:is_wooper_debug() ).
+
+
+-spec run( boolean() ) -> no_return().
+run( IsDebug ) ->
 
 	test_facilities:start( ?MODULE ),
 
@@ -30,10 +37,6 @@ run() ->
 
 	% General tests.
 
-	test_facilities:display(
-		"Statically, class name is ~s, superclasses are ~w.",
-		[	class_Platypus:get_class_name(),
-			class_Platypus:get_superclasses() ] ),
 
 	MyP = class_Platypus:new_link( 4, male, brown, black ),
 
@@ -50,13 +53,13 @@ run() ->
 
 	end,
 
-	MyP ! { get_superclasses, [], self() },
+	MyP ! { getSuperclasses, [], self() },
 	receive
 
-		{ wooper_result,  [class_Mammal,class_OvoviviparousBeing] } ->
+		{ wooper_result, [ class_Mammal, class_OvoviviparousBeing ] } ->
 			test_facilities:display(
-				"After constructor, get_superclasses returned "
-				"[class_Creature,class_OvoviviparousBeing] as expected." );
+				"After constructor, getSuperclasses returned "
+				"class_Creature and class_OvoviviparousBeing as expected." );
 
 		{ wooper_result, UnexpectedSuperclasses } ->
 			test_facilities:fail( "wrong superclasses: ~p",
@@ -78,6 +81,7 @@ run() ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedAge ] )
 
 	end,
+
 	MyP ! { getGender, [], self() },
 	receive
 
@@ -89,7 +93,9 @@ run() ->
 			test_facilities:fail( "wrong gender: ~p", [ UnexpectedGender ] )
 
 	end,
+
 	MyP ! { setAge, 5 },
+
 	MyP ! { getAge, [], self() },
 	receive
 
@@ -101,7 +107,9 @@ run() ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedNewAge ] )
 
 	end,
+
 	MyP ! declareBirthday,
+
 	MyP ! { getAge, [], self() },
 	receive
 
@@ -113,7 +121,9 @@ run() ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedLastAge ] )
 
 	end,
+
 	MyP ! declareBirthday,
+
 	MyP ! { isHotBlooded, [], self() },
 	receive
 
@@ -125,6 +135,7 @@ run() ->
 			test_facilities:fail( "wrong blood type: ~p", [ UnexpectedBlood ] )
 
 	end,
+
 	MyP ! { getFurColor, [], self() },
 	receive
 
@@ -154,6 +165,7 @@ run() ->
 
 
 	end,
+
 	MyP ! { getEggsLaidCount, [], self() },
 	receive
 
@@ -167,7 +179,9 @@ run() ->
 				[ UnexpectedFirstCount ] )
 
 	end,
+
 	MyP ! { layEggs, 1 },
+
 	MyP ! { getEggsLaidCount, [], self() },
 	receive
 
@@ -277,7 +291,7 @@ run() ->
 	MySyncP ! { getNozzleColor, [], self() },
 	receive
 
-		 { wooper_result, grey } ->
+		{ wooper_result, grey } ->
 			test_facilities:display(
 				"This synchronous Platypus has a grey nozzle, as expected." );
 
@@ -287,7 +301,7 @@ run() ->
 
 	end,
 
-	case class_Platypus:is_wooper_debug() of
+	case IsDebug of
 
 		true ->
 

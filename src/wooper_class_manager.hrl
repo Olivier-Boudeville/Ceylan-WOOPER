@@ -39,4 +39,4 @@
 
 
 % The class manager name that will be registered:
--define( WooperClassManagerName, wooper_class_manager ).
+-define( wooper_class_manager_name, wooper_class_manager ).

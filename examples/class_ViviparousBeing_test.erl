@@ -16,21 +16,24 @@
 -include("test_facilities.hrl").
 
 
+-export([ run/1 ]).
+
 
 -spec run() -> no_return().
 run() ->
+	run( class_ViviparousBeing:is_wooper_debug() ).
+
+
+-spec run( boolean() ) -> no_return().
+run( IsDebug ) ->
 
 	test_facilities:start( ?MODULE ),
 
 	test_facilities:display( "Debug mode: ~s.",
 		[ class_ViviparousBeing:is_wooper_debug() ] ),
 
-	test_facilities:display(
-		"Statically, class name is ~s, superclasses are ~w.",
-		[	class_ViviparousBeing:get_class_name(),
-			class_ViviparousBeing:get_superclasses() ] ),
-
 	MyV = class_ViviparousBeing:new_link(),
+
 	MyV ! { getClassName, [], self() },
 	receive
 
@@ -44,76 +47,78 @@ run() ->
 
 	end,
 
-	MyV ! { get_superclasses, [], self() },
+	MyV ! { getSuperclasses, [], self() },
 	receive
 
-		{wooper_result, []} ->
-			test_facilities:display(
-				"After constructor, get_superclasses returned [] "
-				"as expected.");
+		{ wooper_result, [] } ->
+			test_facilities:display( "After constructor, "
+							 "getSuperclasses returned [] as expected." );
 
-		{wooper_result,UnexpectedSuperclasses} ->
+		{ wooper_result, UnexpectedSuperclasses } ->
 			test_facilities:fail( "wrong superclasses: ~p",
 				[ UnexpectedSuperclasses ] )
 
 	end,
-	MyV ! {getMeanChildrenCount,[],self()},
+
+	MyV ! { getMeanChildrenCount, [], self() },
 	receive
 
-		{wooper_result,4} ->
+		{ wooper_result, 4 } ->
 			test_facilities:display(
 				"After constructor, getMeanChildrenCount returned 4 "
-				"as expected.");
+				"as expected." );
 
-		{wooper_result,UnexpectedMeanCount} ->
+		{ wooper_result, UnexpectedMeanCount } ->
 			test_facilities:fail( "wrong mean children count: ~p",
 				[ UnexpectedMeanCount ] )
 
 
 	end,
-	MyV ! {getBirthGivenCount,[],self()},
+
+	MyV ! { getBirthGivenCount, [], self() },
 	receive
 
-		{wooper_result,0} ->
-			test_facilities:display(
-				"After constructor, getBirthGivenCount returned 0 "
-				"as expected.");
+		{ wooper_result,0 } ->
+			test_facilities:display( "After constructor, getBirthGivenCount "
+									 "returned 0 as expected." );
 
-		{wooper_result,UnexpectedFirstCount} ->
+		{ wooper_result, UnexpectedFirstCount } ->
 			test_facilities:fail( "wrong first children count: ~p",
 				[ UnexpectedFirstCount ] )
 
 	end,
-	MyV ! {giveBirth,7},
-	MyV ! {getBirthGivenCount,[],self()},
+
+	MyV ! { giveBirth, 7 },
+
+	MyV ! { getBirthGivenCount, [], self() },
 	receive
 
-		 {wooper_result,7}->
-			test_facilities:display(
-				"After giveBirth, getBirthGivenCount returned 7 "
-				"as expected." );
+		{ wooper_result, 7 }->
+			test_facilities:display( "After giveBirth, getBirthGivenCount "
+									 "returned 7 as expected." );
 
-		{wooper_result,UnexpectedSecondCount} ->
-			test_facilities:fail(  "wrong second children count: ~p",
-				[ UnexpectedSecondCount ] )
+		{ wooper_result, UnexpectedSecondCount } ->
+			test_facilities:fail( "wrong second children count: ~p",
+								  [ UnexpectedSecondCount ] )
 
 	end,
 
-	case class_ViviparousBeing:is_wooper_debug() of
+	case IsDebug of
 
 		true ->
-			MyV ! { wooper_get_instance_description,[], self() },
+			MyV ! { wooper_get_instance_description, [], self() },
 			receive
 
-				{wooper_result,InspectString} ->
+				{ wooper_result, InspectString } ->
 					test_facilities:display( "Instance description: ~s",
-											[ InspectString ] )
+											 [ InspectString ] )
 			end;
 
 		false ->
 			ok
 
 	end,
+
 	MyV ! delete,
 
 	test_facilities:stop().

@@ -18,9 +18,16 @@
 -include("test_facilities.hrl" ).
 
 
+-export([ run/1 ]).
+
 
 -spec run() -> no_return().
 run() ->
+	run( class_Cat:is_wooper_debug() ).
+
+
+-spec run( boolean() ) -> no_return().
+run( IsDebug ) ->
 
 	test_facilities:start( ?MODULE ),
 
@@ -28,11 +35,6 @@ run() ->
 							[ class_Cat:is_wooper_debug() ] ),
 
 	% General tests.
-
-	test_facilities:display(
-		"Statically, class name is ~s, superclasses are ~w.",
-		[	class_Cat:get_class_name(),
-			class_Cat:get_superclasses() ] ),
 
 	MyC = class_Cat:new_link( 3, female, sand, white ),
 
@@ -49,7 +51,7 @@ run() ->
 
 	end,
 
-	MyC ! { get_superclasses, [], self() },
+	MyC ! { getSuperclasses, [], self() },
 	receive
 
 		{ wooper_result, Classes=[ class_Mammal, class_ViviparousBeing ] } ->
@@ -248,9 +250,10 @@ run() ->
 
 	end,
 
-	case class_Cat:is_wooper_debug() of
+	case IsDebug of
 
 		true ->
+
 			MyC ! { wooper_get_instance_description,[], self() },
 			receive
 
@@ -267,6 +270,7 @@ run() ->
 	% Some waiting could be needed in cases where the interpreter is to stop
 	% immediately afterwards, so that the actions performed in the destructor
 	% can be performed:
+	%
 	MyC ! delete,
 
 	MyOtherC = class_Cat:new_link( 3, male, black, white ),

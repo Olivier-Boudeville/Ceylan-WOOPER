@@ -9,7 +9,7 @@
 
 % Unit tests for the Creature class implementation.
 % See the class_Creature.erl tested module.
-
+%
 -module(class_Creature_test).
 
 
@@ -26,55 +26,59 @@ run() ->
 	test_facilities:display( "Debug mode: ~s.",
 							[ class_Creature:is_wooper_debug() ] ),
 
-	test_facilities:display( "Class name is ~s, superclasses are ~w.", [
-		class_Creature:get_class_name(), class_Creature:get_superclasses() ] ),
+	test_facilities:display( "Class name is , superclasses are ~w.", [
+ class_Creature:get_superclasses() ] ),
 
-	MyC = class_Creature:new( 30, male ),
-	MyC ! {getAge,[],self()},
+	MyC = class_Creature:new_link( 30, male ),
+
+	MyC ! { getAge, [], self() },
 	receive
 
-		{wooper_result,30} ->
+		{ wooper_result, 30 } ->
 			test_facilities:display(
 				"After constructor, getAge returned 30 as expected." );
 
-		{wooper_result,UnexpectedAge} ->
+		{ wooper_result, UnexpectedAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedAge ] )
 
 	end,
-	MyC ! {getGender,[],self()},
+
+	MyC ! { getGender, [], self() },
 	receive
 
-		{wooper_result,male} ->
+		{ wooper_result, male } ->
 			test_facilities:display(
 				"After constructor, getGender returned male as expected." );
 
-		{wooper_result,UnexpectedGender} ->
+		{ wooper_result, UnexpectedGender } ->
 			test_facilities:fail( "wrong gender: ~p", [ UnexpectedGender ] )
 
 	end,
-	MyC ! {setAge,5},
-	% class_Creature:setAge returns always 36 for executeRequest test purposes:
-	MyC ! {getAge,[],self()},
+
+	MyC ! { setAge, 5 },
+
+	% class_Creature:getAge returns always 36 for executeRequest test purposes:
+	MyC ! { getAge, [], self() },
 	receive
 
-		{wooper_result,36}->
+		{ wooper_result, 36 } ->
 			test_facilities:display(
 				"After setAge, getAge returned 36 as expected.");
 
-		{wooper_result,UnexpectedNewAge} ->
-			test_facilities:fail("wrong age: ~p", [ UnexpectedNewAge ] )
+		{ wooper_result, UnexpectedNewAge } ->
+			test_facilities:fail( "wrong age: ~p", [ UnexpectedNewAge ] )
 
 	end,
 	MyC ! declareBirthday,
 
-	MyC ! {getAge,[],self()},
+	MyC ! { getAge, [], self() },
 	receive
 
-		 {wooper_result,37}->
+		{ wooper_result, 37 }->
 			test_facilities:display(
-				"After declareBirthday, getAge returned 37 as expected.");
+				"After declareBirthday, getAge returned 37 as expected." );
 
-		{wooper_result,UnexpectedLastAge} ->
+		{ wooper_result, UnexpectedLastAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedLastAge ] )
 
 	end,
@@ -85,7 +89,7 @@ run() ->
 	% Some more technical checkings:
 
 	% Note to be called here, otherwise will fail:
-	%MyC ! {testDirectMethodExecution,36},
+	%MyC ! { testDirectMethodExecution, 36 },
 
 	MyC ! testSingleExecution,
 
@@ -94,7 +98,7 @@ run() ->
 	MyC ! { synchronous_delete, self() },
 	receive
 
-		{deleted,MyC} ->
+		{ deleted, MyC } ->
 			test_facilities:display( "Synchronous deletion succeedeed." )
 
 	end,

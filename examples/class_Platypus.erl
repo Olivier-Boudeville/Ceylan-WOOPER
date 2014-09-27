@@ -5,13 +5,12 @@
 % It has been placed in the public domain.
 %
 % Author: Olivier Boudeville (olivier.boudeville@esperide.com)
-
-
+%
 -module(class_Platypus).
 
 
 % Determines what are the mother classes of this class (if any):
--define(wooper_superclasses,[ class_Mammal, class_OvoviviparousBeing ]).
+-define( wooper_superclasses, [ class_Mammal, class_OvoviviparousBeing ] ).
 
 
 % Parameters taken by the constructor ('construct').
@@ -52,8 +51,8 @@
 
 % Constructs a new Platypus.
 %
--spec construct( wooper_state(), age(), gender(), fur_color(), nozzle_color() )
-			   -> wooper_state().
+-spec construct( wooper:state(), age(), gender(), fur_color(), nozzle_color() )
+			   -> wooper:state().
 construct( State, ?wooper_construct_parameters ) ->
 
 	% First the direct mother classes:
@@ -78,13 +77,13 @@ construct( State, ?wooper_construct_parameters ) ->
 % able to determine that this function will never be called, as WOOPER performs
 % the appropriate test is made beforehand):
 %
--spec delete( wooper_state() ) -> wooper_state().
+-spec delete( wooper:state() ) -> wooper:state().
 delete( State ) ->
 	State.
 
 
 
--spec getMeanEggsCount( wooper_state() ) -> request_return( egg_count() ).
+-spec getMeanEggsCount( wooper:state() ) -> request_return( egg_count() ).
 getMeanEggsCount( State ) ->
 	?wooper_return_state_result( State, 2 ).
 
@@ -96,7 +95,7 @@ getMeanEggsCount( State ) ->
 %
 % It is a mammal, though!
 %
--spec getTeatCount( wooper_state() ) -> request_return( teat_count() ).
+-spec getTeatCount( wooper:state() ) -> request_return( teat_count() ).
 getTeatCount( State ) ->
 	?wooper_return_state_result( State, 0 ).
 
@@ -107,7 +106,7 @@ getTeatCount( State ) ->
 % (request)
 %
 % Platypuses are supposed carnivorous though:
--spec canEat( wooper_state(), food() ) -> request_return( boolean() ).
+-spec canEat( wooper:state(), food() ) -> request_return( boolean() ).
 canEat( State, leaf ) ->
 	?wooper_return_state_result( State, true );
 
@@ -129,7 +128,7 @@ canEat( State, _OtherFood ) ->
 %
 % (request)
 %
--spec getNozzleColor( wooper_state() ) -> request_return( nozzle_color() ).
+-spec getNozzleColor( wooper:state() ) -> request_return( nozzle_color() ).
 getNozzleColor( State )->
 
 	% If needing to test the crash of a request:
@@ -145,7 +144,7 @@ getNozzleColor( State )->
 %
 % (request)
 %
--spec getAlternateNames( wooper_state() ) -> request_return( [atom()] ).
+-spec getAlternateNames( wooper:state() ) -> request_return( [atom()] ).
 getAlternateNames( State ) ->
 	?wooper_return_state_result( State, ?getAttr(alternate_names) ).
 
@@ -155,7 +154,7 @@ getAlternateNames( State ) ->
 %
 % (request)
 %
--spec popFirstAlternateName( wooper_state() ) -> request_return( atom() ).
+-spec popFirstAlternateName( wooper:state() ) -> request_return( atom() ).
 popFirstAlternateName( State ) ->
 	{ NewState, Name } = popFromAttribute( State, alternate_names ),
 	?wooper_return_state_result( NewState, Name ).
@@ -169,7 +168,7 @@ popFirstAlternateName( State ) ->
 testCreationDeletion( State ) ->
 
 	% Initially do-nothing:
-	FirstState = delete_synchronously_any_instance_referenced_in( [],
+	FirstState = wooper:delete_synchronously_any_instance_referenced_in( [],
 																  State ),
 
 	CatPid = class_Cat:synchronous_new_link( _Age=1, _Gender=male,
@@ -181,8 +180,8 @@ testCreationDeletion( State ) ->
 
 	io:format( "Deleting cat ~p created from platypus.~n", [ CatPid ] ),
 
-	DeleteState = delete_synchronously_any_instance_referenced_in( [ cat_pid ],
-																   CatState ),
+	DeleteState = wooper:delete_synchronously_any_instance_referenced_in(
+						   [ cat_pid ], CatState ),
 
 	undefined = getAttribute( DeleteState, cat_pid ),
 

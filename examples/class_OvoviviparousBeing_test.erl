@@ -16,20 +16,22 @@
 -include("test_facilities.hrl").
 
 
+-export([ run/1 ]).
+
 
 -spec run() -> no_return().
 run() ->
+	run( class_OvoviviparousBeing:is_wooper_debug() ).
+
+
+-spec run( boolean() ) -> no_return().
+run( IsDebug ) ->
 
 	test_facilities:start( ?MODULE ),
 
 	test_facilities:display( "Debug mode: ~s.",
 		[ class_OvoviviparousBeing:is_wooper_debug() ] ),
 
-	test_facilities:display(
-		"Statically, class name is ~s, superclasses are ~w.",
-		[
-			class_OvoviviparousBeing:get_class_name(),
-			class_OvoviviparousBeing:get_superclasses() ] ),
 
 	MyV = class_OvoviviparousBeing:synchronous_new(),
 
@@ -46,7 +48,7 @@ run() ->
 
 	end,
 
-	MyV ! { get_superclasses, [], self() },
+	MyV ! { getSuperclasses, [], self() },
 	receive
 
 		{ wooper_result, [] } ->
@@ -60,56 +62,58 @@ run() ->
 
 	end,
 
-	MyV ! {getMeanEggsCount,[],self()},
+	MyV ! { getMeanEggsCount, [], self() },
 	receive
 
-		{wooper_result,1000} ->
+		{ wooper_result, 1000 } ->
 			test_facilities:display(
 				"After constructor, getMeanEggsCount returned 1000 "
 				"as expected." );
 
-		{wooper_result,UnexpectedMeanCount} ->
+		{ wooper_result, UnexpectedMeanCount } ->
 			test_facilities:fail( "wrong mean egg count: ~p",
 				[ UnexpectedMeanCount ] )
 
 
 	end,
 
-	MyV ! {getEggsLaidCount,[],self()},
+	MyV ! { getEggsLaidCount, [], self() },
 	receive
 
-		{wooper_result,0} ->
+		{ wooper_result, 0 } ->
 			test_facilities:display(
 				"After constructor, getEggsLaidCount returned 0 "
 				"as expected." );
 
-		{wooper_result,UnexpectedFirstCount} ->
+		{ wooper_result, UnexpectedFirstCount } ->
 			test_facilities:fail( "wrong first egg count: ~p",
 				[ UnexpectedFirstCount ] )
 
 	end,
-	MyV ! {layEggs,747},
-	MyV ! {getEggsLaidCount,[],self()},
+
+	MyV ! { layEggs, 747 },
+
+	MyV ! { getEggsLaidCount, [], self() },
 	receive
 
-		 {wooper_result,747}->
+		{ wooper_result, 747 }->
 			test_facilities:display(
 				"After giveBirth, getEggsLaidCount returned 747 "
 				"as expected." );
 
-		{wooper_result,UnexpectedSecondCount} ->
+		{ wooper_result, UnexpectedSecondCount } ->
 			test_facilities:fail( "wrong second egg count: ~p",
 				[ UnexpectedSecondCount ] )
 
 	end,
 
-	case class_OvoviviparousBeing:is_wooper_debug() of
+	case IsDebug of
 
 		true ->
-			MyV ! { wooper_get_instance_description,[], self() },
+			MyV ! { wooper_get_instance_description, [], self() },
 			receive
 
-				{wooper_result,InspectString} ->
+				{ wooper_result, InspectString } ->
 					test_facilities:display( "Instance description: ~s",
 											[ InspectString ] )
 			end;

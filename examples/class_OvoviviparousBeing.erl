@@ -16,14 +16,14 @@
 
 
 % Declaring all variations of WOOPER standard life-cycle operations:
-% (template pasted, two replacements performed to update arities)
+% 
 -define( wooper_construct_export, new/0, new_link/0,
-	synchronous_new/0, synchronous_new_link/0,
-	synchronous_timed_new/0, synchronous_timed_new_link/0,
-	remote_new/1, remote_new_link/1, remote_synchronous_new/1,
-	remote_synchronous_new_link/1, remote_synchronisable_new_link/1,
-	remote_synchronous_timed_new/1, remote_synchronous_timed_new_link/1,
-	construct/1, delete/1 ).
+		 synchronous_new/0, synchronous_new_link/0,
+		 synchronous_timed_new/0, synchronous_timed_new_link/0,
+		 remote_new/1, remote_new_link/1, remote_synchronous_new/1,
+		 remote_synchronous_new_link/1, remote_synchronisable_new_link/1,
+		 remote_synchronous_timed_new/1, remote_synchronous_timed_new_link/1,
+		 construct/1, delete/1 ).
 
 
 
@@ -41,7 +41,7 @@
 
 
 % Constructs a new Ovoviviparous being (parameter-less constructor).
--spec construct( wooper_state() ) -> wooper_state() .
+-spec construct( wooper:state() ) -> wooper:state() .
 construct( State ) ->
 
 	% In order to test the crash of a constructor: non_existing:crash(),
@@ -53,7 +53,7 @@ construct( State ) ->
 % This useless destructor overriding was made to silence Dialyzer (which is not
 % able to determine that this function will never be called, as WOOPER performs
 % the appropriate test is made beforehand):
--spec delete( wooper_state() ) -> wooper_state().
+-spec delete( wooper:state() ) -> wooper:state().
 delete( State ) ->
 
 	% In order to test the crash of a destructor: non_existing:crash(),
@@ -66,20 +66,19 @@ delete( State ) ->
 
 % Let's say an average means something here:
 % (this ought to be a static method, as it does not depend on a state)
--spec getMeanEggsCount( wooper_state() ) -> request_return( egg_count() ).
+-spec getMeanEggsCount( wooper:state() ) -> request_return( egg_count() ).
 getMeanEggsCount( State ) ->
 	?wooper_return_state_result( State, 1000 ).
 
 
 % Returns the number of eggs this ovoviviparous laid:
--spec getEggsLaidCount( wooper_state() ) -> request_return( egg_count() ).
+-spec getEggsLaidCount( wooper:state() ) -> request_return( egg_count() ).
 getEggsLaidCount( State ) ->
-	?wooper_return_state_result( State,
-		getAttribute(State,eggs_count) ).
+	?wooper_return_state_result( State, ?getAttr(eggs_count) ).
 
 
-% Increase the number of eggs this ovoviviparous laid:
--spec layEggs( wooper_state(), egg_count() ) -> oneway_return().
+% Increases the number of eggs that this ovoviviparous being laid:
+-spec layEggs( wooper:state(), egg_count() ) -> oneway_return().
 layEggs( State, NumberOfNewEggs ) ->
 	?wooper_return_state_only( setAttribute( State, eggs_count,
-		getAttribute(State,eggs_count) + NumberOfNewEggs ) ).
+		?getAttr(eggs_count) + NumberOfNewEggs ) ).

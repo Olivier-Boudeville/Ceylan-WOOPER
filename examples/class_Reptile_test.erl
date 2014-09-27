@@ -8,27 +8,31 @@
 
 
 % Unit tests for the Reptile class implementation.
+%
 % See the class_Reptile.erl tested module.
-
+%
 -module(class_Reptile_test).
 
 
 -include("test_facilities.hrl").
 
 
+-export([ run/1 ]).
+
 
 -spec run() -> no_return().
 run() ->
+	run( class_Reptile:is_wooper_debug() ).
+
+
+-spec run( boolean() ) -> no_return().
+run( IsDebug ) ->
 
 	test_facilities:start( ?MODULE ),
 
 	test_facilities:display( "Debug mode: ~s.",
 		[ class_Reptile:is_wooper_debug() ] ),
 
-	test_facilities:display(
-		"Statically, class name is ~s, superclasses are ~w.",
-		[	class_Reptile:get_class_name(),
-			class_Reptile:get_superclasses() ] ),
 
 	MyR = class_Reptile:new_link( 1, male ),
 
@@ -45,98 +49,107 @@ run() ->
 
 	end,
 
-	MyR ! {get_superclasses,[],self()},
+	MyR ! { getSuperclasses, [], self() },
 	receive
 
-		{wooper_result, [class_Creature]} ->
+		{ wooper_result, [ class_Creature ] } ->
 			test_facilities:display(
-				"After constructor, get_superclasses returned [class_Creature] "
+				"After constructor, getSuperclasses returned class_Creature "
 				"as expected." );
 
-		{wooper_result,UnexpectedSuperclasses} ->
+		{ wooper_result, UnexpectedSuperclasses } ->
 			test_facilities:fail( "wrong superclasses: ~p",
 				[ UnexpectedSuperclasses ] )
 
 	end,
-	MyR ! {getAge,[],self()},
+
+	MyR ! { getAge, [], self() },
 	receive
 
-		{wooper_result,1} ->
+		{ wooper_result, 1 } ->
 			test_facilities:display(
 				"After constructor, getAge returned 1 as expected." );
 
-		{wooper_result,UnexpectedAge} ->
+		{ wooper_result, UnexpectedAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedAge ] )
 
 	end,
-	MyR ! {getGender,[],self()},
+
+	MyR ! { getGender, [], self() },
 	receive
 
-		{wooper_result,male} ->
+		{ wooper_result, male } ->
 			test_facilities:display(
 				"After constructor, getGender returned male as expected." );
 
-		{wooper_result,UnexpectedGender} ->
+		{ wooper_result, UnexpectedGender } ->
 			test_facilities:fail( "wrong gender: ~p", [ UnexpectedGender ] )
 
 	end,
-	MyR ! {setAge,2},
-	MyR ! {getAge,[],self()},
+
+	MyR ! { setAge, 2 },
+
+	MyR ! { getAge, [], self() },
 	receive
 
-		{wooper_result,2}->
+		{ wooper_result, 2 }->
 			test_facilities:display(
 				"After setAge, getAge returned 2 as expected." );
 
-		{wooper_result,UnexpectedNewAge} ->
+		{ wooper_result, UnexpectedNewAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedNewAge ] )
 
 	end,
+
 	MyR ! declareBirthday,
-	MyR ! {getAge,[],self()},
+
+	MyR ! { getAge, [], self() },
 	receive
 
-		 {wooper_result,3}->
+		{ wooper_result, 3 }->
 			test_facilities:display(
 				"After declareBirthday, getAge returned 3 as expected." );
 
-		{wooper_result,UnexpectedLastAge} ->
+		{ wooper_result, UnexpectedLastAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedLastAge ] )
 
 	end,
+
 	MyR ! declareBirthday,
-	MyR ! {isHotBlooded,[],self()},
+
+	MyR ! { isHotBlooded, [], self() },
 	receive
 
-		{wooper_result,false}->
+		{ wooper_result, false }->
 			test_facilities:display(
 				"isHotBlooded returned false as expected." );
 
-		{wooper_result,UnexpectedBlood} ->
+		{ wooper_result, UnexpectedBlood } ->
 			test_facilities:fail( "wrong blood type: ~p", [ UnexpectedBlood ] )
 
 	end,
-	MyR ! {canMoult,[],self()},
+
+	MyR ! { canMoult, [], self() },
 	receive
 
-		{wooper_result,true}->
+		{ wooper_result, true }->
 			test_facilities:display(
 				"canMoult returned true as expected." );
 
-		{wooper_result,UnexpectedMoultType} ->
+		{ wooper_result, UnexpectedMoultType } ->
 			test_facilities:fail( "wrong moult type: ~p",
 				[ UnexpectedMoultType ] )
 
 	end,
 
-	case class_Reptile:is_wooper_debug() of
+	case IsDebug of
 
 		true ->
 
-			MyR ! { wooper_get_instance_description,[], self() },
+			MyR ! { wooper_get_instance_description, [], self() },
 			receive
 
-				{wooper_result,InspectString} ->
+				{ wooper_result, InspectString } ->
 					test_facilities:display( "Instance description:~s",
 											[ InspectString ] )
 			end;
@@ -148,10 +161,11 @@ run() ->
 
 	% To check the result when using a faulty destructor:
 	test_facilities:display( "synchronous deletion of the instance." ),
-	MyR ! {synchronous_delete,self()},
+
+	MyR ! { synchronous_delete, self() },
 	receive
 
-		{deleted,MyR} ->
+		{ deleted, MyR } ->
 			ok
 
 	end,

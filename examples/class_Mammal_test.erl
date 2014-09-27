@@ -16,19 +16,22 @@
 -include("test_facilities.hrl").
 
 
+-export([ run/1 ]).
+
 
 -spec run() -> no_return().
 run() ->
+	run( class_Mammal:is_wooper_debug() ).
+
+
+-spec run( boolean() ) -> no_return().
+run( IsDebug ) ->
 
 	test_facilities:start( ?MODULE ),
 
 	test_facilities:display( "Debug mode: ~s.",
 		[ class_Mammal:is_wooper_debug() ] ),
 
-	test_facilities:display(
-		"Statically, class name is ~s, superclasses are ~w.",
-		[	class_Mammal:get_class_name(),
-			class_Mammal:get_superclasses() ] ),
 
 	MyM = class_Mammal:synchronous_new_link( 30, male, brown ),
 	MyM ! { getClassName, [], self() },
@@ -44,12 +47,12 @@ run() ->
 
 	end,
 
-	MyM ! { get_superclasses, [], self() },
+	MyM ! { getSuperclasses, [], self() },
 	receive
 
-		{ wooper_result, [class_Creature] } ->
+		{ wooper_result, [ class_Creature ] } ->
 			test_facilities:display(
-				"After constructor, get_superclasses returned [class_Creature] "
+				"After constructor, getSuperclasses returned: class_Creature "
 				"as expected.");
 
 		{ wooper_result, UnexpectedSuperclasses } ->
@@ -57,61 +60,69 @@ run() ->
 				[ UnexpectedSuperclasses ] )
 
 	end,
-	MyM ! {getAge,[],self()},
+
+	MyM ! { getAge, [], self() },
 	receive
 
-		{wooper_result,30} ->
+		{ wooper_result, 30 } ->
 			test_facilities:display(
 				"After constructor, getAge returned 30 as expected.");
 
-		{wooper_result,UnexpectedAge} ->
+		{ wooper_result, UnexpectedAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedAge ] )
 
 	end,
-	MyM ! {getGender,[],self()},
+
+	MyM ! { getGender, [], self() },
 	receive
 
-		{wooper_result,male} ->
+		{ wooper_result, male } ->
 			test_facilities:display(
-				"After constructor, getGender returned male as expected.");
+				"After constructor, getGender returned male as expected." );
 
-		{wooper_result,UnexpectedGender} ->
+		{ wooper_result, UnexpectedGender } ->
 			test_facilities:fail( "wrong gender: ~p", [ UnexpectedGender ] )
 
 	end,
-	MyM ! {setAge,5},
-	MyM ! {getAge,[],self()},
+
+	MyM ! { setAge, 5 },
+
+	MyM ! { getAge, [], self() },
 	receive
 
-		 {wooper_result,5}->
+		 { wooper_result, 5 }->
 			test_facilities:display(
-				"After setAge, getAge returned 5 as expected.");
+				"After setAge, getAge returned 5 as expected." );
 
-		{wooper_result,UnexpectedNewAge} ->
+		{ wooper_result, UnexpectedNewAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedNewAge ] )
 
 	end,
+
 	MyM ! declareBirthday,
-	MyM ! {getAge,[],self()},
+
+	MyM ! { getAge, [], self() },
 	receive
 
-		 {wooper_result,6}->
+		 { wooper_result, 6 }->
 			test_facilities:display(
-				"After declareBirthday, getAge returned 6 as expected.");
+				"After declareBirthday, getAge returned 6 as expected." );
 
-		{wooper_result,UnexpectedLastAge} ->
+		{ wooper_result, UnexpectedLastAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedLastAge ] )
 
 	end,
+
 	MyM ! declareBirthday,
-	MyM ! {isHotBlooded,[],self()},
+
+	MyM ! { isHotBlooded, [], self() },
 	receive
 
-		 {wooper_result,true}->
+		 { wooper_result, true }->
 			test_facilities:display(
-				"isHotBlooded returned true as expected.");
+				"isHotBlooded returned true as expected." );
 
-		{wooper_result,UnexpectedBlood} ->
+		{ wooper_result, UnexpectedBlood } ->
 			test_facilities:fail( "wrong blood type: ~p",
 				[ UnexpectedBlood ] )
 
@@ -121,32 +132,32 @@ run() ->
 	test_facilities:display( "Testing direct method invocation." ),
 
 	% Inherited from Creature:
-	MyM ! {testDirectMethodExecution,347},
+	MyM ! { testDirectMethodExecution, 347 },
 
 	MyM ! testExplicitClassSelection,
 
-	MyM ! {getFurColor,[],self()},
+	MyM ! { getFurColor, [], self() },
 	receive
 
-		 {wooper_result,brown}->
+		 { wooper_result, brown }->
 			test_facilities:display(
-				"getFurColor returned brown as expected.");
+				"getFurColor returned brown as expected." );
 
-		{wooper_result,UnexpectedFurColor} ->
+		{ wooper_result, UnexpectedFurColor } ->
 			test_facilities:fail( "wrong fur color: ~p",
 				[ UnexpectedFurColor ] )
 
 	end,
 
 
-	case class_Mammal:is_wooper_debug() of
+	case IsDebug of
 
 		true ->
 
-			MyM ! { wooper_get_instance_description,[], self() },
+			MyM ! { wooper_get_instance_description, [], self() },
 			receive
 
-				{wooper_result,InspectString} ->
+				{ wooper_result, InspectString } ->
 					test_facilities:display( "Instance description: ~s",
 											[ InspectString ] )
 			end;

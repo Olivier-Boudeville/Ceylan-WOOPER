@@ -34,7 +34,7 @@
 -include("test_facilities.hrl").
 
 
-% For WooperClassManagerName:
+% For wooper_class_manager_name:
 -include("wooper_class_manager.hrl").
 
 
@@ -53,7 +53,7 @@ run() ->
 
 		class_manager_registered ->
 			test_facilities:display( "Requesting its state display." ),
-			?WooperClassManagerName ! display
+			?wooper_class_manager_name ! display
 
 	% 10-second time-out:
 	after 10000 ->
@@ -64,7 +64,7 @@ run() ->
 
 	test_facilities:display( "Requesting it to stop." ),
 
-	?WooperClassManagerName ! stop,
+	?wooper_class_manager_name ! stop,
 
 	% Probably, if ExitAfterTest is set, the test will stop before the manager
 	% itself.

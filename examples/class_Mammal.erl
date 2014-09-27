@@ -5,13 +5,12 @@
 % It has been placed in the public domain.
 %
 % Author: Olivier Boudeville (olivier.boudeville@esperide.com)
-
-
+%
 -module(class_Mammal).
 
 
 % Determines what are the mother classes of this class (if any):
--define( wooper_superclasses, [class_Creature] ).
+-define( wooper_superclasses, [ class_Creature ] ).
 
 
 % Parameters taken by the constructor ('construct').
@@ -22,17 +21,17 @@
 % Declaring all variations of WOOPER standard life-cycle operations:
 % (template pasted, two replacements performed to update arities)
 -define( wooper_construct_export, new/3, new_link/3,
-	synchronous_new/3, synchronous_new_link/3,
-	synchronous_timed_new/3, synchronous_timed_new_link/3,
-	remote_new/4, remote_new_link/4, remote_synchronous_new/4,
-	remote_synchronous_new_link/4, remote_synchronisable_new_link/4,
-	remote_synchronous_timed_new/4, remote_synchronous_timed_new_link/4,
-	construct/4, delete/1 ).
+		 synchronous_new/3, synchronous_new_link/3,
+		 synchronous_timed_new/3, synchronous_timed_new_link/3,
+		 remote_new/4, remote_new_link/4, remote_synchronous_new/4,
+		 remote_synchronous_new_link/4, remote_synchronisable_new_link/4,
+		 remote_synchronous_timed_new/4, remote_synchronous_timed_new_link/4,
+		 construct/4, delete/1 ).
 
 
 % Declarations of class-specific methods (besides inherited ones).
 -define(wooper_method_export, setAge/2, isHotBlooded/1, getFurColor/1,
-	getArbitraryNumber/1, testExplicitClassSelection/1 ).
+		getArbitraryNumber/1, testExplicitClassSelection/1 ).
 
 
 
@@ -45,8 +44,8 @@
 
 
 % Constructs a new Mammal.
--spec construct( wooper_state(), age(), gender(), fur_color() ) ->
-					   wooper_state().
+-spec construct( wooper:state(), age(), gender(), fur_color() ) ->
+					   wooper:state().
 construct( State, ?wooper_construct_parameters ) ->
 
 	CreatureState = class_Creature:construct( State, Age, Gender ),
@@ -56,6 +55,7 @@ construct( State, ?wooper_construct_parameters ) ->
 
 	% Even when constructing a cat, we should see the right class (class_Cat)
 	% and not the current class (class_Mammal):
+	%
 	io:format( "Actual class from constructor: ~s.~n", [ ActualClass ] ),
 
 	setAttribute( RequestedState, fur_color, FurColor ).
@@ -65,7 +65,7 @@ construct( State, ?wooper_construct_parameters ) ->
 % Overriding default destructor: state should be returned, and destructors
 % should be called in leaf-to-root order in inheritance tree.
 %
--spec delete( wooper_state() ) -> wooper_state().
+-spec delete( wooper:state() ) -> wooper:state().
 delete( State ) ->
 
 	{ RequestedState, ActualClass } = executeRequest( State,
@@ -76,6 +76,7 @@ delete( State ) ->
 	io:format( "Actual class from destructor: ~s.~n", [ ActualClass ] ),
 
 	io:format( "Deleting mammal ~w! (overridden destructor)~n", [ self() ] ),
+
 	RequestedState.
 
 
@@ -90,7 +91,7 @@ delete( State ) ->
 %
 % (oneway)
 %
--spec setAge( wooper_state(), age() ) -> oneway_return().
+-spec setAge( wooper:state(), age() ) -> oneway_return().
 setAge( State, NewAge ) ->
 
 	% If needing to test the crash of a oneway:
@@ -106,7 +107,7 @@ setAge( State, NewAge ) ->
 %
 % (request)
 %
--spec isHotBlooded( wooper_state() ) -> request_return( boolean() ).
+-spec isHotBlooded( wooper:state() ) -> request_return( boolean() ).
 isHotBlooded( State ) ->
 	?wooper_return_state_result( State, true ).
 
@@ -117,9 +118,9 @@ isHotBlooded( State ) ->
 %
 % (request)
 %
--spec getFurColor( wooper_state() ) -> request_return( fur_color() ).
+-spec getFurColor( wooper:state() ) -> request_return( fur_color() ).
 getFurColor( State ) ->
-	?wooper_return_state_result( State, getAttribute(State,fur_color) ).
+	?wooper_return_state_result( State, ?getAttr(fur_color) ).
 
 
 
@@ -128,7 +129,7 @@ getFurColor( State ) ->
 %
 % (request)
 %
--spec getArbitraryNumber( wooper_state() ) -> request_return( number() ).
+-spec getArbitraryNumber( wooper:state() ) -> request_return( number() ).
 getArbitraryNumber( State ) ->
 
 	{ RequestedState, ActualClass } = executeRequest( State,
@@ -136,6 +137,7 @@ getArbitraryNumber( State ) ->
 
 	% Even when constructing a cat, we should see the right class (class_Cat)
 	% and not the current class (class_Mammal):
+	%
 	io:format( "Actual class from non-overridden method: ~s.~n",
 			  [ ActualClass ] ),
 
@@ -150,8 +152,9 @@ getArbitraryNumber( State ) ->
 %
 % (oneway)
 %
--spec testExplicitClassSelection( wooper_state() ) -> oneway_return().
+-spec testExplicitClassSelection( wooper:state() ) -> oneway_return().
 testExplicitClassSelection( State ) ->
+
 	% Using just executeOneway( State, setAge, 20 ) would call the class_Mammal
 	% version, we call the class_Creature version instead, which sets the age to
 	% 36 regardless of the specified one:
