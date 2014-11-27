@@ -51,7 +51,7 @@
 		 remote_new/1, remote_new_link/1, remote_synchronous_new/1,
 		 remote_synchronous_new_link/1, remote_synchronisable_new_link/1,
 		 remote_synchronous_timed_new/1, remote_synchronous_timed_new_link/1,
-		 construct/1, delete/1 ).
+		 construct/1, destruct/1 ).
 
 
 
@@ -82,9 +82,9 @@ construct( State ) ->
 
 % Overridden destructor, totally useless except that allows to avoid that
 % Dialyzer, based on the wooper.hrl, complains about a missing
-% class_Wooper_attribute_test:delete/1:
--spec delete( wooper:state() ) -> wooper:state().
-delete( _State ) ->
+% class_Wooper_attribute_test:destruct/1:
+-spec destruct( wooper:state() ) -> wooper:state().
+destruct( _State ) ->
 	throw( unexpected_call_to_destructor ).
 
 

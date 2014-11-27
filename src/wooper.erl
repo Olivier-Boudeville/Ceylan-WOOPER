@@ -694,13 +694,13 @@ get_class_manager() ->
 %
 % Returns an updated state.
 %
-% Can be overridden by defining or inheriting the onWooperExitReceived/3 method.
+% Can be overridden by defining or inheriting the onWOOPERExitReceived/3 method.
 %
 -spec default_exit_handler( wooper:state(), pid(), any() ) -> wooper:state().
 default_exit_handler( State, Pid, ExitType ) ->
 
 	error_logger:warning_msg( "WOOPER default EXIT handler of the ~w "
-	  "instance ~w ignored following EXIT message from ~w:~n~p.~n~n",
+	  "instance ~w ignored following EXIT message from ~w:~n'~p'.~n~n",
 	  [ State#state_holder.actual_class, self(), Pid, ExitType ] ),
 
 	State.
@@ -1096,7 +1096,7 @@ delete_pid_from( [ Attr | T ], DeleteMessage, State, AccAttr, AccPid ) ->
 
 % Deletes specified instance synchronously.
 %
-% Will wait forever the effective termination of specified instance.
+% Will wait forever the effective termination of the specified instance.
 %
 -spec delete_synchronously_instance( pid() ) -> basic_utils:void().
 delete_synchronously_instance( InstancePid ) ->
@@ -1161,14 +1161,20 @@ wait_for_deletion_ack( WaitedPids ) ->
 	% Note that this time-out is reset at each ack:
 	after ?synchronous_time_out ->
 
-			NewWaitedPids = examine_waited_deletions( WaitedPids, _Acc=[] ),
+			case examine_waited_deletions( WaitedPids, _Acc=[] ) of
 
-			io:format( "(still waiting for the synchronous deletion of "
-					   "following live WOOPER instance(s): ~p)~n",
-					   [ NewWaitedPids ] ),
+				[] ->
+					ok;
 
-			% Warns, but does not trigger failures:
-			wait_for_deletion_ack( NewWaitedPids )
+				NewWaitedPids ->
+					io:format( "(still waiting for the synchronous deletion of "
+							   "following live WOOPER instance(s): ~p)~n",
+							   [ NewWaitedPids ] ),
+
+					% Warns, but does not trigger failures:
+					wait_for_deletion_ack( NewWaitedPids )
+
+			end
 
 	end.
 

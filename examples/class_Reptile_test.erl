@@ -162,12 +162,6 @@ run( IsDebug ) ->
 	% To check the result when using a faulty destructor:
 	test_facilities:display( "synchronous deletion of the instance." ),
 
-	MyR ! { synchronous_delete, self() },
-	receive
-
-		{ deleted, MyR } ->
-			ok
-
-	end,
+	wooper:delete_synchronously_instance( MyR ),
 
 	test_facilities:stop().

@@ -1,4 +1,5 @@
 % Add your standard header here.
+%
 -module(class_).
 
 
@@ -17,7 +18,7 @@
 		synchronous_timed_new/X, synchronous_timed_new_link/X,
 		remote_new/Y, remote_new_link/Y, remote_synchronous_new/Y,
 		remote_synchronous_new_link/Y, remote_synchronous_timed_new/Y,
-		remote_synchronous_timed_new_link/Y, construct/Y, delete/1 ).
+		remote_synchronous_timed_new_link/Y, construct/Y, destruct/1 ).
 
 
 % Member method declarations.
@@ -45,11 +46,11 @@ construct( State, ?wooper_construct_parameters ) ->
 
 
 
-delete(State) ->
+destruct( State ) ->
 
 	State.
 
-	io:format( "Deleting cat ~w! (overridden destructor)~n", [self()] ),
+	io:format( "Deleting cat ~w! (overridden destructor)~n", [ self() ] ),
 
 
 

@@ -21,7 +21,7 @@
 		 remote_new/1, remote_new_link/1, remote_synchronous_new/1,
 		 remote_synchronous_new_link/1, remote_synchronisable_new_link/1,
 		 remote_synchronous_timed_new/1, remote_synchronous_timed_new_link/1,
-		 construct/1, delete/1 ).
+		 construct/1, destruct/1 ).
 
 
 
@@ -50,8 +50,8 @@ construct( State ) ->
 % able to determine that this function will never be called, as WOOPER performs
 % the appropriate test is made beforehand):
 %
--spec delete( wooper:state() ) -> wooper:state().
-delete( State ) ->
+-spec destruct( wooper:state() ) -> wooper:state().
+destruct( State ) ->
 	State.
 
 

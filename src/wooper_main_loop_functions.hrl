@@ -213,16 +213,19 @@ wooper_main_loop( State ) ->
 				[ self(), { Pid, ExitType } ] ),
 
 			case ?wooper_hashtable_type:lookupEntry(
-					{ _Name=onWooperExitReceived, _Arity=3 },
+					{ _Name=onWOOPERExitReceived, _Arity=3 },
 					State#state_holder.virtual_table ) of
 
 				{ value, _Key } ->
 
 					% Reusing safe execution facilities rather than directly
-					% 'apply( LocatedModule,onWooperExitReceived,...)':
+					% 'apply( LocatedModule, onWOOPERExitReceived,...)':
+
+					% Will thus call 'onWOOPERExitReceived( State, Pid, ExitType
+					% )', where ExitType is typically a stack trace:
 
 					{ NewState, _ } = wooper_execute_method(
-						onWooperExitReceived, State, [ Pid, ExitType ] ),
+						onWOOPERExitReceived, State, [ Pid, ExitType ] ),
 
 					%?wooper_log( "Main loop (case G) ended.~n" ),
 					wooper_main_loop( NewState );

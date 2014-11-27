@@ -26,7 +26,7 @@
 		 remote_new/3, remote_new_link/3, remote_synchronous_new/3,
 		 remote_synchronous_new_link/3, remote_synchronisable_new_link/3,
 		 remote_synchronous_timed_new/3, remote_synchronous_timed_new_link/3,
-		 construct/3, delete/1 ).
+		 construct/3, destruct/1 ).
 
 
 
@@ -60,8 +60,9 @@ construct( State, ?wooper_construct_parameters ) ->
 % This useless destructor overriding was made to silence Dialyzer (which is not
 % able to determine that this function will never be called, as WOOPER performs
 % the appropriate test is made beforehand):
--spec delete( wooper:state() ) -> wooper:state().
-delete( State ) ->
+%
+-spec destruct( wooper:state() ) -> wooper:state().
+destruct( State ) ->
 	State.
 
 

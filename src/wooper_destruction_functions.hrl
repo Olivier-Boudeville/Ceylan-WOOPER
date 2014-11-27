@@ -10,17 +10,17 @@
 
 % Calls recursively the destructors through the inheritance tree.
 %
-% Each wooper_destruct function is purely local to the current module.
+% Each destructor (destruct/1 function) is purely local to the current module.
 %
 % Initial specified state is always valid (comes from the main loop), but states
 % returned by user-defined destructors must be checked in debug mode.
 %
 wooper_destruct( State ) ->
 
-	% If a class-specific delete is defined, executes it, otherwise does
+	% If a class-specific destruct/1 is defined, executes it, otherwise does
 	% nothing.
 	%
-	% Then recurses with higher-level destructors (maybe just storing delete/1
+	% Then recurses with higher-level destructors (maybe just storing destruct/1
 	% in the method table would be more efficient, see
 	% wooper_class_manager:get_virtual_table_for):
 
@@ -33,7 +33,7 @@ wooper_destruct( State ) ->
 	%io:format( "**** Deleting ~w (destructor for class ~w/~w).~n",
 	%		   [ self(), ?MODULE, wooper:get_class_name( State ) ] ),
 
-	DeletedState = case lists:member( { delete, 1 }, Exports ) of
+	DestructedState = case lists:member( { destruct, 1 }, Exports ) of
 
 		true ->
 
@@ -46,8 +46,8 @@ wooper_destruct( State ) ->
 
 			% ?MODULE is always the real class name here:
 			%
-			%try apply( ActualClassname, delete, [ State ] ) of
-			try ?MODULE:delete( State ) of
+			%try apply( ActualClassname, destruct, [ State ] ) of
+			try ?MODULE:destruct( State ) of
 
 				ReturnedState when is_record( ReturnedState, state_holder ) ->
 					ReturnedState;
@@ -83,7 +83,7 @@ wooper_destruct( State ) ->
 
 	end,
 
-	chain_parent_destructors( DeletedState ).
+	chain_parent_destructors( DestructedState ).
 
 
 
@@ -93,18 +93,19 @@ wooper_destruct( State ) ->
 
 % Calls recursively the destructors through the inheritance tree.
 %
-% Each wooper_destruct function is purely local to the current module.
+% Each destructor (destruct/1 function) is purely local to the current module.
 %
 wooper_destruct( State ) ->
 
-	% If a class-specific delete is defined, executes it, otherwise does
+	% If a class-specific destruct is defined, executes it, otherwise does
 	% nothing.
 	%
-	% Then recurses with higher-level destructors (maybe just storing delete/1
+	% Then recurses with higher-level destructors (maybe just storing destruct/1
 	% in the method table would be more efficient, see
 	% wooper_class_manager:get_virtual_table_for):
 	%
-	DeletedState = case lists:member( {delete,1}, module_info(exports) ) of
+	DestructedState = case lists:member( { destruct, 1 },
+										 module_info( exports ) ) of
 
 		true ->
 
@@ -114,7 +115,8 @@ wooper_destruct( State ) ->
 
 			try
 
-				apply( ?MODULE, delete, [ State ] )
+				%apply( ?MODULE, destruct, [ State ] )
+				?MODULE:destruct( State )
 
 			catch
 
@@ -135,7 +137,7 @@ wooper_destruct( State ) ->
 
 	end,
 
-	chain_parent_destructors( DeletedState ).
+	chain_parent_destructors( DestructedState ).
 
 
 -endif. % wooper_debug
@@ -157,7 +159,7 @@ trigger_destruct_error( Reason, ErrorTerm, State ) ->
 	ActualClassname = wooper:get_class_name( State ),
 
 	error_logger:error_msg( "~nWOOPER error for PID ~w, "
-							"destructor (~s:delete/1) failed (cause: ~p):~n~n"
+							"destructor (~s:destruct/1) failed (cause: ~p):~n~n"
 							" - with error term:~n~p~n~n"
 							" - stack trace was (latest calls first):~n~p~n~n"
 							" - instance state was: ~s~n~n",
@@ -199,7 +201,10 @@ chain_parent_destructors( State ) ->
 	lists:foldr(
 
 		fun( Class, NewState ) ->
-				apply( Class, wooper_destruct, [ NewState ] )
+
+				% More efficient than using apply/3:
+				Class:wooper_destruct( NewState )
+
 		end,
 
 		_InitialAcc=State,

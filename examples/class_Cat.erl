@@ -37,12 +37,12 @@
 		 remote_new/5, remote_new_link/5, remote_synchronous_new/5,
 		 remote_synchronous_new_link/5, remote_synchronisable_new_link/5,
 		 remote_synchronous_timed_new/5, remote_synchronous_timed_new_link/5,
-		 construct/5, delete/1 ).
+		 construct/5, destruct/1 ).
 
 
 % Member method declarations.
 -define( wooper_method_export, getTeatCount/1, canEat/2, getWhiskerColor/1,
-		 toString/1 ).
+		 terminate/2, toString/1 ).
 
 
 % Static method declarations.
@@ -72,8 +72,8 @@ construct( State, ?wooper_construct_parameters ) ->
 
 
 
--spec delete( wooper:state() ) -> wooper:state().
-delete( State ) ->
+-spec destruct( wooper:state() ) -> wooper:state().
+destruct( State ) ->
 
 	io:format( "Deleting cat ~w! (overridden destructor)~n", [ self() ] ),
 
@@ -114,10 +114,28 @@ getWhiskerColor( State )->
 	?wooper_return_state_result( State, ?getAttr(whisker_color) ).
 
 
+
+% Requests this cat to terminate, based on specified halting procedure.
+%
+% (oneway)
+%
+-spec terminate( wooper:state(), 'crash' ) -> no_return().
+terminate( State, crash ) ->
+
+	basic_utils:crash(),
+
+	?wooper_return_state_only( State ).
+
+
+
 -spec toString( wooper:state() ) -> request_return( string() ).
 toString( State ) ->
 
-	Description = wooper:instance_to_string( State ),
+	% Would be available only on debug mode:
+	%Description = wooper:instance_to_string( State ),
+
+	Description = text_utils:format( "cat instance with whiskers of color ~p.",
+									 [ ?getAttr(whisker_color) ] ),
 
 	?wooper_return_state_result( State, Description ).
 

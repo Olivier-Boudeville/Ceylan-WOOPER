@@ -26,7 +26,7 @@
 		 remote_new/4, remote_new_link/4, remote_synchronous_new/4,
 		 remote_synchronous_new_link/4, remote_synchronisable_new_link/4,
 		 remote_synchronous_timed_new/4, remote_synchronous_timed_new_link/4,
-		 construct/4, delete/1 ).
+		 construct/4, destruct/1 ).
 
 
 % Declarations of class-specific methods (besides inherited ones).
@@ -65,8 +65,8 @@ construct( State, ?wooper_construct_parameters ) ->
 % Overriding default destructor: state should be returned, and destructors
 % should be called in leaf-to-root order in inheritance tree.
 %
--spec delete( wooper:state() ) -> wooper:state().
-delete( State ) ->
+-spec destruct( wooper:state() ) -> wooper:state().
+destruct( State ) ->
 
 	{ RequestedState, ActualClass } = executeRequest( State,
 													 getClassName ),
@@ -133,13 +133,13 @@ getFurColor( State ) ->
 getArbitraryNumber( State ) ->
 
 	{ RequestedState, ActualClass } = executeRequest( State,
-													 getClassName ),
+													  getClassName ),
 
 	% Even when constructing a cat, we should see the right class (class_Cat)
 	% and not the current class (class_Mammal):
 	%
 	io:format( "Actual class from non-overridden method: ~s.~n",
-			  [ ActualClass ] ),
+			   [ ActualClass ] ),
 
 	% Interesting test for the stack trace, when called from the Mammal test:
 	%throw( exception_throw_test_from_request ),
@@ -158,7 +158,9 @@ testExplicitClassSelection( State ) ->
 	% Using just executeOneway( State, setAge, 20 ) would call the class_Mammal
 	% version, we call the class_Creature version instead, which sets the age to
 	% 36 regardless of the specified one:
+	%
 	NewState = executeOnewayWith( State, class_Creature, setAge, 20 ),
+
 	36 = getAttribute( NewState, age ),
 
 	?wooper_return_state_only( NewState ).

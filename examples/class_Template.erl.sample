@@ -2,11 +2,11 @@
 
 
 % Determines what are the mother classes of this class (if any):
--define(wooper_superclasses,[]).
+-define( wooper_superclasses, [] ).
 
 
 % Parameters taken by the constructor ('construct'):
--define(wooper_construct_parameters,PARAM1,PARAM2).
+-define( wooper_construct_parameters, PARAM1, PARAM2 ).
 
 
 % If using the default do-nothing destructor:
@@ -14,11 +14,11 @@
 % Declaring all variations of WOOPER-defined standard life-cycle operations:
 % (template pasted, just two replacements performed to update arities)
 -define( wooper_construct_export, new/A, new_link/A,
-   synchronous_new/A, synchronous_new_link/A,
-   synchronous_timed_new/A, synchronous_timed_new_link/A,
-   remote_new/B, remote_new_link/B, remote_synchronous_new/B,
-   remote_synchronous_new_link/B, remote_synchronous_timed_new/B,
-   remote_synchronous_timed_new_link/B, construct/B ).
+		 synchronous_new/A, synchronous_new_link/A,
+		 synchronous_timed_new/A, synchronous_timed_new_link/A,
+		 remote_new/B, remote_new_link/B, remote_synchronous_new/B,
+		 remote_synchronous_new_link/B, remote_synchronous_timed_new/B,
+		 remote_synchronous_timed_new_link/B, construct/B ).
 
 
 
@@ -27,11 +27,11 @@
 % Declaring all variations of WOOPER-defined standard life-cycle operations:
 % (template pasted, just two replacements performed to update arities)
 -define( wooper_construct_export, new/A, new_link/A,
-   synchronous_new/A, synchronous_new_link/A,
-   synchronous_timed_new/A, synchronous_timed_new_link/A,
-   remote_new/B, remote_new_link/B, remote_synchronous_new/B,
-   remote_synchronous_new_link/B, remote_synchronous_timed_new/B,
-   remote_synchronous_timed_new_link/B, construct/B, delete/1 ).
+		 synchronous_new/A, synchronous_new_link/A,
+		 synchronous_timed_new/A, synchronous_timed_new_link/A,
+		 remote_new/B, remote_new_link/B, remote_synchronous_new/B,
+		 remote_synchronous_new_link/B, remote_synchronous_timed_new/B,
+		 remote_synchronous_timed_new_link/B, construct/B, destruct/1 ).
 
 
 
@@ -42,8 +42,10 @@
 -include("wooper.hrl").
 
 
-% Constructs a new MYCLASS.
-construct(State,?wooper_construct_parameters) ->
+% Constructs a new instance of MYCLASS.
+%
+construct( State, ?wooper_construct_parameters ) ->
+
 	% Note: when constructing the initial state thanks to intermediate ones,
 	% always build newer state from the result of last update. Reusing an
 	% already updated state will loose all the changes made in-between, ex:
@@ -57,23 +59,26 @@ construct(State,?wooper_construct_parameters) ->
 	% Then the class-specific attributes:
 
 
+
 % Overriden destructor.
-delete(State) ->
+destruct( State ) ->
 	% Class-specific actions:
 
 	% Then call the direct mother class counterparts, and allow chaining:
-	DeletedActorState.
+	DestructedActorState.
 
 
 %
 % (request)
-M1(State,ARG1) ->
+%
+M1( State, ARG1 ) ->
 	...
 	?wooper_return_state_result( A_STATE, A_RESULT ).
 
 
 %
 % (oneway)
-M2(State,ARG1,ARG2) ->
+%
+M2( State, ARG1, ARG2 ) ->
 	...
 	?wooper_return_state_only( A_STATE ).

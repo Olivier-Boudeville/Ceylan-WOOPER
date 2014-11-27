@@ -275,13 +275,10 @@ run( IsDebug ) ->
 
 	MyOtherC = class_Cat:new_link( 3, male, black, white ),
 
-	MyOtherC ! { synchronous_delete, self() },
-	receive
+	% No race condition with the end of this test process:
+	wooper:delete_synchronously_instance( MyOtherC ),
 
-		{ deleted, MyOtherC } ->
-			test_facilities:display( "This cat could be created and "
-					"be synchronously deleted, as expected." )
-
-	end,
+	test_facilities:display( "This cat could be created and "
+							 "be synchronously deleted, as expected." ),
 
 	test_facilities:stop().

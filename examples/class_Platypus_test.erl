@@ -318,6 +318,6 @@ run( IsDebug ) ->
 
 	end,
 
-	MyP ! delete,
+	wooper:delete_synchronously_instance( MyP ),
 
 	test_facilities:stop().

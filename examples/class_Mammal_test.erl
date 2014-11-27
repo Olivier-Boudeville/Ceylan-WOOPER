@@ -8,8 +8,9 @@
 
 
 % Unit tests for the Mammal class implementation.
+%
 % See the class_Mammal.erl tested module.
-
+%
 -module(class_Mammal_test).
 
 
@@ -168,6 +169,6 @@ run( IsDebug ) ->
 	end,
 
 
-	MyM ! delete,
+	wooper:delete_synchronously_instance( MyM ),
 
 	test_facilities:stop().

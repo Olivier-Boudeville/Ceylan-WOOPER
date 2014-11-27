@@ -250,7 +250,7 @@ get_virtual_table_for( Module, Tables ) ->
 			OptimisedModuleTable = ?wooper_hashtable_type:optimise(
 															   ModuleTable ),
 
-			% Here the table could be patched with delete/1, if defined.
+			% Here the table could be patched with destruct/1, if defined.
 			ClassTable = ?wooper_hashtable_type:addEntry( Module,
 											 OptimisedModuleTable, Tables ),
 
@@ -316,7 +316,7 @@ select_function( remote_synchronous_new_link,_ )                      -> false ;
 select_function( remote_synchronous_timed_new,_ )                     -> false ;
 select_function( remote_synchronous_timed_new_link,_ )                -> false ;
 select_function( construct,_ )                                        -> false ;
-select_function( delete,1 )                                           -> false ;
+select_function( destruct,1 )                                         -> false ;
 select_function( delete_any_instance_referenced_in,_ )                -> false ;
 select_function( delete_synchronously_any_instance_referenced_in,_ )  -> false ;
 select_function( delete_synchronously_instances,_ )                   -> false ;

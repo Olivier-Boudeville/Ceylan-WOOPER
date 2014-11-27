@@ -79,7 +79,7 @@ The WOOPER OOP concepts translate into Erlang constructs according to the follow
   instance                process
   instance reference      process identifier (PID)
   new operators           WOOPER-provided functions, making use of user-defined ``construct/N`` functions (a.k.a. the constructors)
-  delete operators        WOOPER-provided functions, unless user-specified (a.k.a. the destructor)
+  delete operator         WOOPER-provided function, making use of any user-defined ``destruct/1`` (a.k.a. the destructor)
   method definition       module function that respects some conventions
   method invocation       sending of an appropriate inter-process message
   method look-up          class-specific virtual table taking into account inheritance transparently
@@ -120,7 +120,7 @@ Here is a simple example of how WOOPER instances can be managed. This shows ``ne
 	synchronous_timed_new/4, synchronous_timed_new_link/4,
 	remote_new/5, remote_new_link/5, remote_synchronous_new/5,
 	remote_synchronous_new_link/5, remote_synchronous_timed_new/5,
-	remote_synchronous_timed_new_link/5, construct/5, delete/1 ).
+	remote_synchronous_timed_new_link/5, construct/5, destruct/1 ).
 
   % Member method declarations:
   -define( wooper_member_method_export,getWhiskerColor/1,setWhiskerColor/2,
@@ -140,7 +140,7 @@ Here is a simple example of how WOOPER instances can be managed. This shows ``ne
   	% Then the class-specific attributes; returns an updated state:
   	setAttributes( ViviparousMammalState, whisker_color, WhiskerColor ).
 
-  delete(State) ->
+  destruct(State) ->
 	io:format( "Deleting cat ~w! (overridden destructor)~n", [self()] ),
 	State.
 
@@ -1532,19 +1532,19 @@ _________________________________
 
 We saw that, when implementing a constructor (``construct/N``), like in all other OOP approaches the constructors of the direct mother classes have to be explicitly called, so that they can be given the proper parameters, as determined by the class developer.
 
-Conversely, with WOOPER, when defining a destructor for a class (``delete/1``), one only has to specify what are the *specific* operations and state changes (if any) that are required so that an instance of that class is deleted: the proper calling of the destructors of mother classes across the inheritance graph is automatically taken in charge by WOOPER.
+Conversely, with WOOPER, when defining a destructor for a class (``destruct/1``), one only has to specify what are the *specific* operations and state changes (if any) that are required so that an instance of that class is deleted: the proper calling of the destructors of mother classes across the inheritance graph is automatically taken in charge by WOOPER.
 
 Once the user-specified actions have been processed by the destructor (ex: releasing a resource, unsubscribing from a registry, deleting other instances, closing properly a file, etc.), it is expected to return an updated state, which will be given to the destructors of the instance superclasses.
 
 WOOPER will automatically export and make use of any user-defined destructor.
 
 
-Asynchronous Destructor: ``delete/1``
+Asynchronous Destructor: ``destruct/1``
 _____________________________________
 
-More precisely, either the class implementer does not define at all a ``delete/1`` operator (and therefore uses the default do-nothing destructor), or it defines it explicitly, like in::
+More precisely, either the class implementer does not define at all a ``destruct/1`` operator (and therefore uses the default do-nothing destructor), or it defines it explicitly, like in::
 
-  delete(State) ->
+  destruct(State) ->
 	io:format("An instance of class ~w is being deleted now!", [?MODULE] ),
 	% Quite often the destructor does not need to modify the instance state:
 	State.
@@ -1571,7 +1571,7 @@ WOOPER automatically defines a way of deleting *synchronously* a given instance:
   end.
 
 
-The class implementer does not have to do anything to support this feature, as the synchronous deletion is automatically built by WOOPER on top of the usual asynchronous one (``delete/1``).
+The class implementer does not have to do anything to support this feature, as the synchronous deletion is automatically built by WOOPER on top of the usual asynchronous one (``destruct/1``).
 
 
 
@@ -1614,13 +1614,13 @@ A class instance may receive EXIT messages from other processes.
 
 A given class can process these EXIT notifications:
 
- - either by defining and exporting the ``onWooperExitReceived/3`` oneway
+ - either by defining and exporting the ``onWOOPERExitReceived/3`` oneway
  - or by inheriting it
 
 For example::
 
-  onWooperExitReceived(State,Pid,ExitType) ->
-	io:format( "MyClass EXIT handler ignored signal '~w'"
+  onWOOPERExitReceived(State,Pid,ExitType) ->
+	io:format( "MyClass EXIT handler ignored signal '~p'"
 	  " from ~w.~n", [ExitType,Pid] ),
 	?wooper_return_state_only(State).
 
@@ -2016,7 +2016,7 @@ Main changes are:
 
  - destructors are automatically chained as appropriate, and they can be overridden at will
 
- - incoming EXIT messages are caught by a default WOOPER handler which can be overridden on a per-class basis by the user-specified ``onWooperExitReceived/3`` method
+ - incoming EXIT messages are caught by a default WOOPER handler which can be overridden on a per-class basis by the user-specified ``onWOOPERExitReceived/3`` method
 
  - direct method invocation supported, thanks to the ``executeRequest`` and ``executeOneway`` constructs, and ``wooper_result`` no more appended to the result tuple
 

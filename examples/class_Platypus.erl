@@ -30,13 +30,13 @@
 		 remote_new/5, remote_new_link/5, remote_synchronous_new/5,
 		 remote_synchronous_new_link/5, remote_synchronisable_new_link/5,
 		 remote_synchronous_timed_new/5, remote_synchronous_timed_new_link/5,
-		 construct/5, delete/1 ).
+		 construct/5, destruct/1 ).
 
 
 % Method declarations.
 -define( wooper_method_export, getMeanEggsCount/1, getTeatCount/1, canEat/2,
 		 getNozzleColor/1, getAlternateNames/1, popFirstAlternateName/1,
-		 testCreationDeletion/1 ).
+		 testCreationDeletion/1, onWOOPERExitReceived/3 ).
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -58,6 +58,9 @@ construct( State, ?wooper_construct_parameters ) ->
 	% First the direct mother classes:
 	MammalState = class_Mammal:construct( State, Age, Gender, FurColor ),
 
+	% To test onWOOPERExitReceived/3 (comment to check that the test fails):
+	process_flag( trap_exit, true ),
+
 	OvoviviparousMammalState = class_OvoviviparousBeing:construct(
 		MammalState ),
 
@@ -77,8 +80,8 @@ construct( State, ?wooper_construct_parameters ) ->
 % able to determine that this function will never be called, as WOOPER performs
 % the appropriate test is made beforehand):
 %
--spec delete( wooper:state() ) -> wooper:state().
-delete( State ) ->
+-spec destruct( wooper:state() ) -> wooper:state().
+destruct( State ) ->
 	State.
 
 
@@ -178,6 +181,11 @@ testCreationDeletion( State ) ->
 
 	CatState = setAttribute( FirstState, cat_pid, CatPid ),
 
+	% Comment in order to test normal exits (should not trigger the default or
+	% user-defined EXIT handler):
+	%
+	CatPid ! { terminate, crash },
+
 	io:format( "Deleting cat ~p created from platypus.~n", [ CatPid ] ),
 
 	DeleteState = wooper:delete_synchronously_any_instance_referenced_in(
@@ -186,3 +194,23 @@ testCreationDeletion( State ) ->
 	undefined = getAttribute( DeleteState, cat_pid ),
 
 	?wooper_return_state_only( DeleteState ).
+
+
+
+% Callback triggered, as we trap exits, whenever a linked process stops (here,
+% the created cat instance).
+%
+% (oneway)
+%
+onWOOPERExitReceived( State, Pid, ExitType ) ->
+
+	% Typically: "Received exit message '{{nocatch,
+	%						{wooper_oneway_failed,<0.44.0>,class_Cat,
+	%							terminate,2,
+	%							[crash],
+	%							badarith}},
+	% [...]"
+
+	io:format( "Received exit message '~p' from ~w.~n", [ ExitType, Pid ] ),
+
+	?wooper_return_state_only( State ).

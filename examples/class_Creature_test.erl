@@ -95,12 +95,8 @@ run() ->
 
 
 	% Ensures a synchronous ending:
-	MyC ! { synchronous_delete, self() },
-	receive
+	wooper:delete_synchronously_instance( MyC ),
 
-		{ deleted, MyC } ->
-			test_facilities:display( "Synchronous deletion succeedeed." )
-
-	end,
+	test_facilities:display( "Synchronous deletion succeedeed." ),
 
 	test_facilities:stop().

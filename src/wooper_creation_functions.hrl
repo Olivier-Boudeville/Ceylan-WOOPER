@@ -42,10 +42,10 @@
 %	remote_new/B, remote_new_link/B, remote_synchronous_new/B,
 %	remote_synchronous_new_link/B, remote_synchronisable_new_link/B,
 %   remote_synchronous_timed_new/B, remote_synchronous_timed_new_link/B,
-%   construct/B, delete/1 ).
+%   construct/B, destruct/1 ).
 
 
-% Note: delete/1 can be removed from the export list above if no specific
+% Note: destruct/1 can be removed from the export list above if no specific
 % destructor is to be defined.
 
 

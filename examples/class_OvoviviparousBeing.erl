@@ -16,14 +16,14 @@
 
 
 % Declaring all variations of WOOPER standard life-cycle operations:
-% 
+%
 -define( wooper_construct_export, new/0, new_link/0,
 		 synchronous_new/0, synchronous_new_link/0,
 		 synchronous_timed_new/0, synchronous_timed_new_link/0,
 		 remote_new/1, remote_new_link/1, remote_synchronous_new/1,
 		 remote_synchronous_new_link/1, remote_synchronisable_new_link/1,
 		 remote_synchronous_timed_new/1, remote_synchronous_timed_new_link/1,
-		 construct/1, delete/1 ).
+		 construct/1, destruct/1 ).
 
 
 
@@ -53,8 +53,9 @@ construct( State ) ->
 % This useless destructor overriding was made to silence Dialyzer (which is not
 % able to determine that this function will never be called, as WOOPER performs
 % the appropriate test is made beforehand):
--spec delete( wooper:state() ) -> wooper:state().
-delete( State ) ->
+%
+-spec destruct( wooper:state() ) -> wooper:state().
+destruct( State ) ->
 
 	% In order to test the crash of a destructor: non_existing:crash(),
 
@@ -80,5 +81,8 @@ getEggsLaidCount( State ) ->
 % Increases the number of eggs that this ovoviviparous being laid:
 -spec layEggs( wooper:state(), egg_count() ) -> oneway_return().
 layEggs( State, NumberOfNewEggs ) ->
-	?wooper_return_state_only( setAttribute( State, eggs_count,
-		?getAttr(eggs_count) + NumberOfNewEggs ) ).
+
+	NewEggCount = ?getAttr(eggs_count) + NumberOfNewEggs,
+
+	?wooper_return_state_only(
+	   setAttribute( State, eggs_count, NewEggCount ) ).

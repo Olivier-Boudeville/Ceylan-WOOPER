@@ -123,6 +123,6 @@ run( IsDebug ) ->
 
 	end,
 
-	MyV ! delete,
+	wooper:delete_synchronously_instance( MyV ),
 
 	test_facilities:stop().
