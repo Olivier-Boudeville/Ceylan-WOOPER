@@ -124,11 +124,29 @@ else
 endif
 
 
-ERLANG_COMPILER_OPT += $(ENABLE_WOOPER_DEBUG_OPT)
+ERLANG_COMPILER_OPT += $(ENABLE_WOOPER_DEBUG_OPT) -pz $(WOOPER_TOP)/src
+
+
+WOOPER_PARSE_TRANSFORM = $(WOOPER_TOP)/src/wooper_parse_transform.beam
+
+LAYER_PARSE_TRANSFORMS += $(WOOPER_PARSE_TRANSFORM)
+
+
+# Here the WOOPER parse transform will be run *instead* of the Common one (which
+#  was set in that variable), however the WOOPER transform will call by itself
+#  (from Erlang) that Common transform):
+
+ifndef ERLANG_COMPILER_PARSE_TRANSFORM_OPT
+
+ERLANG_COMPILER_PARSE_TRANSFORM_OPT = \
+									"+{parse_transform,wooper_parse_transform}"
+
+endif
 
 
 # For later reuse in the next layer of the software stack:
 WOOPER_PLT_FILE := $(WOOPER_TOP)/wooper.plt
+
 
 # This is the merged PLT of the level just below in the software stack.
 # For 'WOOPER', it is the PLT of 'Common':
