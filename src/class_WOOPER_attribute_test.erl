@@ -155,7 +155,7 @@ not_crashing_examples( State ) ->
 
 	[ 8 | true ] = getAttribute( OtherNewState, test_attribute ),
 	not_crashing_test_undefined( State ),
-	not_crashing_test_hashtable( State ),
+	not_crashing_test_table( State ),
 
 	?wooper_return_state_result( OtherNewState, test_ok ).
 
@@ -199,21 +199,19 @@ crashing_test_undefined( State ) ->
 
 
 
--spec not_crashing_test_hashtable( wooper:state() ) -> 'test_ok'.
-not_crashing_test_hashtable( State ) ->
+-spec not_crashing_test_table( wooper:state() ) -> 'test_ok'.
+not_crashing_test_table( State ) ->
 
-	% Let's have an (empty) hashtable first:
-	WithTableState = setAttribute( State, test_hashtable,
-								  ?wooper_hashtable_type:new() ),
+	% Let's have an (empty) table first:
+	WithTableState = setAttribute( State, test_table, table:new() ),
 
-	EntrySetState = addKeyValueToAttribute( WithTableState, test_hashtable,
-		my_key, my_value ),
+	EntrySetState = addKeyValueToAttribute( WithTableState, test_table,
+											my_key, my_value ),
 
 	% Check was registered indeed:
-	ReadTable = getAttribute( EntrySetState, test_hashtable ),
+	ReadTable = getAttribute( EntrySetState, test_table ),
 
-	{ value, my_value } = ?wooper_hashtable_type:lookupEntry( my_key,
-															 ReadTable ),
+	{ value, my_value } = table:lookupEntry( my_key, ReadTable ),
 
 	test_ok.
 

@@ -55,10 +55,6 @@
 -include("wooper_class_manager.hrl").
 
 
-% For wooper_hashtable_type:
--include("wooper_defines_exports.hrl").
-
-
 
 % Approximate average method count for a given class, including inherited ones.
 %
@@ -94,8 +90,7 @@
 % Uncomment to activate debug mode:
 %-define(wooper_debug_class_manager,).
 
--spec display_state( ?wooper_hashtable_type:?wooper_hashtable_type() ) ->
-						   basic_utils:void().
+-spec display_state( table:table() ) -> basic_utils:void().
 -spec display_table_creation( basic_utils:module_name() ) -> basic_utils:void().
 -spec display_msg( string() ) -> basic_utils:void().
 
@@ -105,12 +100,12 @@
 
 display_state( Tables ) ->
 	error_logger:info_msg( ?log_prefix "Storing now ~B table(s).~n",
-					[ ?wooper_hashtable_type:getEntryCount( Tables ) ] ).
+						   [ table:getEntryCount( Tables ) ] ).
 
 
 display_table_creation( Module ) ->
 	error_logger:info_msg( ?log_prefix "Creating a virtual table "
-							"for module ~s.~n", [ Module ] ).
+						   "for module ~s.~n", [ Module ] ).
 
 
 display_msg( String ) ->
@@ -119,7 +114,7 @@ display_msg( String ) ->
 	error_logger:info_msg( Message ).
 
 
--else.
+-else. % wooper_debug_class_manager
 
 
 display_state( _Tables ) ->
@@ -132,7 +127,7 @@ display_msg( _String ) ->
 	ok.
 
 
--endif.
+-endif. % wooper_debug_class_manager
 
 
 
@@ -142,7 +137,7 @@ display_msg( _String ) ->
 start( ClientPID ) ->
 
 	display_msg( io_lib:format( "Starting WOOPER class manager "
-						"on node ~s (PID: ~w)", [ node(), self() ] ) ),
+								"on node ~s (PID: ~w)", [ node(), self() ] ) ),
 
 	% Two first instances being created nearly at the same time might trigger
 	% the creation of two class managers, if the second instance detects no
@@ -166,17 +161,16 @@ start( ClientPID ) ->
 		true ->
 			ClientPID ! class_manager_registered,
 
-			EmptyClassTable = ?wooper_hashtable_type:new(
-								 ?wooper_class_count_upper_bound ),
+			EmptyClassTable = table:new( ?wooper_class_count_upper_bound ),
 
 			loop( EmptyClassTable );
 
 
 		% A manager is already registered, let it be the only one and stop:
-		{ 'EXIT', { badarg,_ } } ->
+		{ 'EXIT', { badarg, _ } } ->
 
 			display_msg( ?log_prefix
-						"Already a manager available, terminating" ),
+						 "Already a manager available, terminating" ),
 
 			% Let's notify the client nevertheless:
 			ClientPID ! class_manager_registered
@@ -190,8 +184,7 @@ start( ClientPID ) ->
 % Manager main loop, serves virtual tables on request (mostly on instances
 % creation).
 %
--spec loop( ?wooper_hashtable_type:?wooper_hashtable_type() ) ->
-				  no_return() | 'ok' .
+-spec loop( table:table() ) -> no_return() | 'ok' .
 loop( Tables ) ->
 
 	display_state( Tables ),
@@ -200,13 +193,13 @@ loop( Tables ) ->
 
 		{ get_table, Module, Pid } ->
 			{ NewTables, TargetTable } = get_virtual_table_for( Module,
-															   Tables ),
+																Tables ),
 			Pid ! { virtual_table, TargetTable },
 			loop( NewTables );
 
 		display ->
-			error_logger:info_msg( ?log_prefix "Internal state is: ~s~n",
-				[ ?wooper_hashtable_type:toString( Tables ) ] ),
+			%error_logger:info_msg( ?log_prefix "Internal state is: ~s~n",
+			%					   [ table:toString( Tables ) ] ),
 			loop( Tables );
 
 		stop ->
@@ -222,42 +215,40 @@ loop( Tables ) ->
 % If found, returns it immediately, otherwise constructs it, stores the result
 % and returns it as well.
 %
-% Virtual tables are stored in a ?wooper_hashtable_type.
+% Virtual tables are stored in a table.
 %
 % Returns a pair formed of the new set of virtual tables and of the requested
 % table.
 %
 -spec get_virtual_table_for( basic_utils:module_name(),
-							?wooper_hashtable_type:?wooper_hashtable_type() )
-		-> { ?wooper_hashtable_type:?wooper_hashtable_type(),
-			 ?wooper_hashtable_type:?wooper_hashtable_type() }.
+							table:table() )
+		-> { table:table(),
+			 table:table() }.
 get_virtual_table_for( Module, Tables ) ->
 
-	case ?wooper_hashtable_type:lookupEntry( Module, Tables ) of
+	case table:lookupEntry( Module, Tables ) of
 
 		{ value, Table } ->
 
 			% Cache hit, no change in internal data:
 			{ Tables, Table };
 
-		hashtable_key_not_found ->
+		key_not_found ->
 
 			% Time to create this virtual table and to store it:
 			display_table_creation( Module ),
 			ModuleTable = create_method_table_for( Module ),
 
 			% Each class has its virtual table optimised:
-			OptimisedModuleTable = ?wooper_hashtable_type:optimise(
-															   ModuleTable ),
+			OptimisedModuleTable = table:optimise( ModuleTable ),
 
 			% Here the table could be patched with destruct/1, if defined.
-			ClassTable = ?wooper_hashtable_type:addEntry( Module,
-											 OptimisedModuleTable, Tables ),
+			ClassTable = table:addEntry( Module, OptimisedModuleTable, Tables ),
 
 			% And the table of virtual tables is itself optimised each time a
 			% new class is introduced:
-			{ ?wooper_hashtable_type:optimise( ClassTable ),
-			 OptimisedModuleTable }
+			{ table:optimise( ClassTable ),
+			  OptimisedModuleTable }
 
 	end.
 
@@ -268,13 +259,13 @@ get_virtual_table_for( Module, Tables ) ->
 % virtual table corresponding to specified module.
 %
 -spec create_method_table_for( basic_utils:module_name() ) ->
-						?wooper_hashtable_type:?wooper_hashtable_type().
+									 table:table().
 create_method_table_for( TargetModule ) ->
 
 	lists:foldl(
 
-		fun( Module, Hashtable ) ->
-			update_method_table_with( Module, Hashtable )
+		fun( Module, Table ) ->
+			update_method_table_with( Module, Table )
 		end,
 
 		create_local_method_table_for( TargetModule ),
@@ -286,16 +277,15 @@ create_method_table_for( TargetModule ) ->
 % Updates specified virtual table with the method of specified module
 % (i.e. precomputes the virtual table for the related class).
 %
-% In case of key collision, the values specified in ?Wooper_Hashtable_Type have
+% In case of key collision, the values specified in table have
 % priority over the ones relative to Module. Hence methods redefined in child
 % classes are selected, rather than the ones of the mother class.
 %
 -spec update_method_table_with( basic_utils:module_name(),
-		  ?wooper_hashtable_type:?wooper_hashtable_type() ) ->
-						  ?wooper_hashtable_type:?wooper_hashtable_type().
-update_method_table_with( Module, Hashtable ) ->
-	?wooper_hashtable_type:merge( Hashtable,
-								 create_method_table_for( Module ) ).
+		  table:table() ) ->
+						  table:table().
+update_method_table_with( Module, Table ) ->
+	table:merge( Table, create_method_table_for( Module ) ).
 
 
 
@@ -344,29 +334,30 @@ select_function( _, _ )                                               -> true.
 
 
 
-% Returns an hashtable appropriate for method look-up, for the specified module.
+% Returns a table appropriate for method look-up, for the specified module.
+%
 -spec create_local_method_table_for( basic_utils:module_name() ) ->
-							   ?wooper_hashtable_type:?wooper_hashtable_type().
+										   table:table().
 create_local_method_table_for( Module ) ->
 
 	% Filter-out functions that should not be callable via RMI:
 	lists:foldl(
 
 		% Filter-out functions that should not be callable via RMI:
-		fun( { Name, Arity }, Hashtable ) ->
+		fun( { Name, Arity }, Table ) ->
+
 			case select_function(  Name, Arity ) of
 
 				true ->
-					?wooper_hashtable_type:addEntry( { Name, Arity }, Module,
-													Hashtable );
+					table:addEntry( { Name, Arity }, Module, Table );
 
 				false ->
-					Hashtable
+					Table
 
 			end
 		end,
 
-		?wooper_hashtable_type:new( ?wooper_method_count_upper_bound ),
+		table:new( ?wooper_method_count_upper_bound ),
 
 		Module:module_info( exports ) ).
 

@@ -77,7 +77,7 @@ serialise( State, _EntryTransformer=undefined, UserData ) ->
 	% cleaner):
 	%
 	Entries = lists:sort( [ RandomAttribute |
-					   ?wooper_hashtable_type:enumerate( AttributeTable )  ] ),
+							table:enumerate( AttributeTable )  ] ),
 
 	% By default returns { Classname, Entries }:
 	FullContent = post_serialise_hook( Classname, Entries, PreState ),
@@ -127,7 +127,7 @@ serialise( State, EntryTransformer, UserData ) ->
 	% cleaner):
 	%
 	Entries = lists:sort( [ RandomAttribute |
-					   ?wooper_hashtable_type:enumerate( AttributeTable )  ] ),
+							table:enumerate( AttributeTable )  ] ),
 
 	%io:format( "Original entries:~n~p~n", [ Entries ] ),
 

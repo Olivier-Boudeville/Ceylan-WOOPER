@@ -151,7 +151,7 @@
 %
 %-define( setAttribute( State, AttributeName, AttributeValue ),
 %	(State)#state_holder{
-%		attribute_table = ?wooper_hashtable_type:addEntry(
+%		attribute_table = table:addEntry(
 %			(AttributeName),
 %			(AttributeValue),
 %			(State)#state_holder.attribute_table )
@@ -183,7 +183,7 @@
 %
 %-define( setAttributes( State, ListOfAttributePairs ),
 %	(State)#state_holder{
-%		attribute_table = ?wooper_hashtable_type:addEntries(
+%		attribute_table = table:addEntries(
 %			(ListOfAttributePairs),
 %			(State)#state_holder.attribute_table )
 %	}
@@ -211,7 +211,7 @@
 % good practise is respected.
 %
 %-define( hasAttribute( State, AttributeName ),
-%	?wooper_hashtable_type:hasEntry( (AttributeName),
+%	table:hasEntry( (AttributeName),
 %		(State)#state_holder.attribute_table ) ).
 
 
@@ -234,7 +234,7 @@
 % See also: the getAttr/1 shorthand.
 %
 %-define( getAttribute( State, AttributeName ),
-%	?wooper_hashtable_type:getEntry( (AttributeName),
+%	table:getEntry( (AttributeName),
 %		(State)#state_holder.attribute_table ) ).
 
 
@@ -253,7 +253,7 @@
 %
 %-define( removeAttribute( State, AttributeName ),
 %	(State)#state_holder{
-%		attribute_table = ?wooper_hashtable_type:removeEntry( (AttributeName),
+%		attribute_table = table:removeEntry( (AttributeName),
 %			(State)#state_holder.attribute_table )
 %	}
 %).
@@ -275,7 +275,7 @@
 % triggered if no addition can be performed on the attribute value.
 %-define( addToAttribute( State, AttributeName, Value ),
 %	(State)#state_holder{
-%		attribute_table = ?wooper_hashtable_type:addToEntry(
+%		attribute_table = table:addToEntry(
 %			(AttributeName),
 %			(Value),
 %			(State)#state_holder.attribute_table )
@@ -300,7 +300,7 @@
 %
 %-define( subtractFromAttribute( State, AttributeName, Value ),
 %	(State)#state_holder{
-%		attribute_table = ?wooper_hashtable_type:subtractFromEntry(
+%		attribute_table = table:subtractFromEntry(
 %			(AttributeName),
 %			(Value),
 %			(State)#state_holder.attribute_table )
@@ -324,7 +324,7 @@
 % boolean value.
 %-define( toggleAttribute( State, BooleanAttributeName ),
 %	(State)#state_holder{
-%		attribute_table = ?wooper_hashtable_type:toggleEntry(
+%		attribute_table = table:toggleEntry(
 %			(BooleanAttributeName),
 %			(State)#state_holder.attribute_table )
 %	}
@@ -350,7 +350,7 @@
 %-define( appendToAttribute( State, AttributeName, Element ),
 %
 %	(State)#state_holder{
-%		attribute_table = ?wooper_hashtable_type:appendToEntry(
+%		attribute_table = table:appendToEntry(
 %			(AttributeName),
 %			(Element),
 %			(State)#state_holder.attribute_table )
@@ -379,7 +379,7 @@
 %-define( deleteFromAttribute( State, AttributeName, Element ),
 %
 %	(State)#state_holder{
-%		attribute_table = ?wooper_hashtable_type:deleteFromEntry(
+%		attribute_table = table:deleteFromEntry(
 %			(AttributeName),
 %			(Element),
 %			(State)#state_holder.attribute_table )
@@ -397,18 +397,18 @@
 
 % Faulty macro (risk of side-effects being executed more than once):
 
-% Assumes the specified attribute is a hashtable and adds the specified
-% key/value pair to it.
+% Assumes the specified attribute is a table and adds the specified key/value
+% pair to it.
 %
 % Several lines compacted into a bit impressive one-liner.
 %
 %-define( addKeyValueToAttribute( State, AttributeName, Key, Value ),
 %
 %	(State)#state_holder{
-%		attribute_table = ?wooper_hashtable_type:addEntry(
+%		attribute_table = table:addEntry(
 %			(AttributeName),
-%			?wooper_hashtable_type:addEntry( (Key), (Value),
-%				?wooper_hashtable_type:getEntry( (AttributeName),
+%			table:addEntry( (Key), (Value),
+%				table:getEntry( (AttributeName),
 %					(State)#state_holder.attribute_table ) ),
 %			(State)#state_holder.attribute_table )
 %	}
