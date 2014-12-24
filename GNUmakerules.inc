@@ -8,23 +8,23 @@
 
 class_%.beam: class_%.erl class_%.hrl class_%_dependencies
 	@echo "		Compiling WOOPER class with header $<"
-	@$(ERLANG_COMPILER) $(ERLANG_COMPILER_OPT) -o $@ $<
+	@$(ERLANG_COMPILER) $(WOOPER_COMPILER_OPT) -o $@ $<
 
 
 class_%.beam: class_%.erl class_%_dependencies
 	@echo "		Compiling WOOPER class $<"
-	@$(ERLANG_COMPILER) $(ERLANG_COMPILER_OPT) -o $@ $<
+	@$(ERLANG_COMPILER) $(WOOPER_COMPILER_OPT) -o $@ $<
 
 
 class_%.beam: class_%.erl class_%.hrl
 	@echo "		Compiling WOOPER no-dependency class with header $<"
-	@$(ERLANG_COMPILER) $(ERLANG_COMPILER_OPT) -o $@ $<
+	@$(ERLANG_COMPILER) $(WOOPER_COMPILER_OPT) -o $@ $<
 
 
 # Most frequently-used rule:
 class_%.beam: class_%.erl
 	@echo "		Compiling WOOPER no-dependency class $<"
-	@$(ERLANG_COMPILER) $(ERLANG_COMPILER_OPT) -o $@ $<
+	@$(ERLANG_COMPILER) $(WOOPER_COMPILER_OPT) -o $@ $<
 
 
 # Allows for example 'make:files([class_XXX]).' or 'make:all().':
