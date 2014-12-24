@@ -125,8 +125,22 @@
 %-opaque state() :: #state_holder{}.
 -type state() :: #state_holder{}.
 
+
+
+% Describes access qualifiers that apply to classes and attributes:
+-type access_qualifier() :: 'public' | 'protected' | 'private'.
+
+
+% Describes the qualifiers that apply to attributes:
+-type attribute_qualifier() :: access_qualifier() | 'const' | 'final'.
+
+
+% Describes the qualifiers that apply to inherited classes:
+-type inherited_class_qualifier() :: access_qualifier().
+
+
 % We prefer having it prefixed by wooper:
--export_type([ state/0 ]).
+-export_type([ state/0, attribute_qualifier/0, inherited_class_qualifier/0 ]).
 
 
 
