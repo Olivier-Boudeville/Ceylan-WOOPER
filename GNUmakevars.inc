@@ -124,6 +124,17 @@ else
 endif
 
 
+# We do not define ERLANG_COMPILER_PARSE_TRANSFORM_OPT here, as we want to apply
+# the default Common transforms onto non-class modules as well.
+
+
+# Defined to compile classes (ex: not the other non-class WOOPER modules):
+#
+WOOPER_COMPILER_OPT = $(ERLANG_COMPILER_OPT_NO_PT)                 \
+					  "+{parse_transform,wooper_parse_transform}"
+
+
+# Used only for non-class modules:
 ERLANG_COMPILER_OPT += $(ENABLE_WOOPER_DEBUG_OPT) -pz $(WOOPER_TOP)/src
 
 
@@ -131,17 +142,6 @@ WOOPER_PARSE_TRANSFORM = $(WOOPER_TOP)/src/wooper_parse_transform.beam
 
 LAYER_PARSE_TRANSFORMS += $(WOOPER_PARSE_TRANSFORM)
 
-
-# Here the WOOPER parse transform will be run *instead* of the Common one (which
-#  was set in that variable), however the WOOPER transform will call by itself
-#  (from Erlang) that Common transform):
-
-ifndef ERLANG_COMPILER_PARSE_TRANSFORM_OPT
-
-ERLANG_COMPILER_PARSE_TRANSFORM_OPT = \
-									"+{parse_transform,wooper_parse_transform}"
-
-endif
 
 
 # For later reuse in the next layer of the software stack:
