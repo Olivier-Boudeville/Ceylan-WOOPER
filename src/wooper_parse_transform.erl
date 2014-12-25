@@ -44,7 +44,8 @@
 % a compiled module called by the parse transform (ex: text_utils.beam) will not
 % be found (hence even if the transform itself is available).
 
--export([ parse_transform/2, transform/1, info_to_string/1 ]).
+-export([ parse_transform/2, transform/1, generate_ast/1,
+		  class_info_to_string/1 ]).
 
 
 % Describe a member attribute of the state of a given class:
@@ -75,13 +76,13 @@
 -spec parse_transform( ast(), list() ) -> ast().
 parse_transform( AST, Options ) ->
 
-	%io:format( "  (applying parse transform '~p')~n", [ ?MODULE ] ),
+	io:format( "  (applying parse transform '~p')~n", [ ?MODULE ] ),
 
 	%io:format( "Input AST:~n~p~n", [ AST ] ),
 
-	{ WOOPERAST, Info } = transform( AST ),
+	{ WOOPERAST, _ClassInfo } = transform( AST ),
 
-	io:format( "~s~n", [ info_to_string( Info ) ] ),
+	%io:format( "~s~n", [ class_info_to_string( ClassInfo ) ] ),
 
 	OutputAST = common_parse_transform:parse_transform( WOOPERAST, Options ),
 
@@ -110,11 +111,17 @@ parse_transform( AST, Options ) ->
 % '-define( wooper_superclasses, [ class_A, class_B ] ).'.
 %
 % Now they are defined with the optional:
+
 % '-wooper_superclasses( [ class_A, class_B ] ).
 
 
 
-% A record to store information gathered about an AST.
+% A record to store and centralise information gathered about an AST.
+%
+% Allows to perform checkings and to reorder the returned version of it.
+%
+% We preserve the forms whenever possible, for example to preserver line
+% numbers.
 %
 -record( class_info, {
 
@@ -123,15 +130,26 @@ parse_transform( AST, Options ) ->
 		class = undefined :: wooper:class_name(),
 
 
+		% Module definition:
+		module_definition = undefined :: ast(),
+
+
 		% Ordered list of the superclasses of this class:
 		superclasses = undefined :: [ wooper:class_name() ],
 
 
 		% Parse-level attributes (ex: '-my_attribute( my_value ).'):
-		attributes = [] :: [ meta_utils:attribute() ],
+		parse_attributes = [] :: [ meta_utils:attribute() ],
+
+		% Parse attribute definitions:
+		parse_attribute_defs = [] :: [ ast() ],
 
 
 		% Include files (typically *.hrl files):
+		%
+		% (expected to remain empty, as the preprocessor is supposed to have
+		% already been run)
+		%
 		includes = [] :: [ file_utils:file_name() ],
 
 
@@ -188,78 +206,113 @@ parse_transform( AST, Options ) ->
 transform( AST ) ->
 
 	% Starts with blank information:
-	{ Info, RevAST } = get_info( AST ),
+	ClassInfo = get_class_info( AST ),
 
-	LastLine = Info#class_info.last_line,
+	%io:format( "~n~s~n", [ class_info_to_string( ClassInfo ) ] ),
 
-	ExpForm = meta_utils:form_to_ast( io_lib:format( "-export([ f/0 ]).", [] ),
-									  LastLine + 1 ),
+	%LastLine = Info#class_info.last_line,
 
-	FunForm = meta_utils:form_to_ast( io_lib:format( "f() -> 4.", [] ),
-									  LastLine + 1 ),
+	%ExpForm = meta_utils:form_to_ast( io_lib:format( "-export([ f/0 ]).", [] ),
+	%								  LastLine + 1 ),
 
-	NewRevAST = [ { eof, LastLine + 1 }, FunForm | RevAST ],
+	%FunForm = meta_utils:form_to_ast( io_lib:format( "f() -> 4.", [] ),
+	%								  LastLine + 1 ),
 
-	NewAST =  [ ExpForm | lists:reverse( NewRevAST ) ],
+	%NewRevAST = [ { eof, LastLine + 1 }, FunForm | RevAST ],
 
-	{ NewAST, Info }.
+	%ExpForm = undefined,
+
+	%NewAST =  [ ExpForm | lists:reverse( RevAST ) ],
+
+	%NewAST = generate_ast( Info ),
+
+	NewAST = AST,
+
+	{ NewAST, ClassInfo }.
 
 
 
 
 
 
-% Returns a reversed AST with no eof tuple, and the class information that were
-% gathered.
+
+% Returns the class information that were gathered.
 %
 % (here we simply examine the list of the top-level forms - no specific
 % recursing)
 %
+get_class_info( AST ) ->
+	get_info( AST, #class_info{} ).
+
+
 
 % Class/module section:
 
 % Any invalid or duplicated module declaration will be caught by the compiler
 % anyway:
 %
-get_info( AST ) ->
-	get_info( AST, #class_info{}, _Acc=[] ).
-
-
 get_info( _AST=[ F={ attribute, _Line, module, Module } | T ],
-		  W=#class_info{ class=undefined }, Acc ) ->
+		  W=#class_info{ class=undefined, module_definition=undefined } ) ->
+
 	check_class_name( Module ),
-	get_info( T, W#class_info{ class=Module }, [ F | Acc ] );
+
+	get_info( T, W#class_info{ class=Module, module_definition=F } );
 
 
 % Superclasses section:
 %
 get_info( _AST=[ F={ attribute, _Line, wooper_superclasses, Classes } | T ],
-		  W=#class_info{ superclasses=undefined }, Acc )
+		  W=#class_info{ superclasses=undefined,
+						 parse_attributes=Attributes,
+						 parse_attribute_defs=AttributeDefs } )
   when is_list( Classes ) ->
 
 	[ check_class_name( C ) || C <- Classes ],
 
-	get_info( T, W#class_info{ superclasses=Classes }, [ F | Acc ] );
+	get_info( T, W#class_info{
+				   superclasses=Classes,
+				   % We record this attribute as well:
+				   parse_attributes=[ { wooper_superclasses, Classes }
+									  | Attributes ],
+				   parse_attribute_defs=[ F | AttributeDefs ] } );
 
 
 get_info( _AST=[ { attribute, Line, wooper_superclasses, Classes } | _T ],
-		  #class_info{ superclasses=undefined }, _Acc )
-  when is_list( Classes ) ->
+		  #class_info{ superclasses=undefined } ) when is_list( Classes ) ->
 	meta_utils:raise_error( { invalid_superclasses_definition, { line, Line },
 							  Classes } );
 
 get_info( _AST=[ { attribute, Line, wooper_superclasses, Classes } | _T ],
-		  #class_info.superclasses=OtherClasses, _Acc ) ->
+		  #class_info.superclasses=OtherClasses ) ->
 	meta_utils:raise_error( { multiple_superclasses_definition, { line, Line },
 							  Classes,OtherClasses  } );
 
-% Expected to be defined once, and not kept as will be added back later:
-get_info( _AST=[ _F={ eof, Line } ], W=#class_info{ last_line=undefined },
-		Acc ) ->
-	{ W#class_info{ last_line=Line }, Acc };
 
-get_info( _AST=[ H | T ], Infos, Acc ) ->
-	get_info( T, Infos, [ H | Acc ] ).
+% Spec attributes:
+%get_info( _AST=[ F={ attribute, _Line, spec, _FunSpec } | T ],
+%		  W=#class_info{ parse_attributes=Attributes,
+%						 parse_attribute_defs=AttributeDefs } ) ->
+	
+% Other non-WOOPER attribute section:
+%
+get_info( _AST=[ F={ attribute, _Line, AttributeName, AttributeValue } | T ],
+		  W=#class_info{ parse_attributes=Attributes,
+						 parse_attribute_defs=AttributeDefs } ) ->
+
+	get_info( T, W#class_info{
+				   parse_attributes=[ { AttributeName, AttributeValue }
+									  | Attributes ],
+				   parse_attribute_defs=[ F | AttributeDefs ] } );
+
+
+% Expected to be defined once, and not kept as will be added back later:
+get_info( _AST=[ _F={ eof, Line } ], W=#class_info{ last_line=undefined } ) ->
+	W#class_info{ last_line=Line };
+
+get_info( _AST=[ _H | T ], Infos ) ->
+	%io:format( "WARNING: ~p not managed.~n", [ H ] ),
+	%meta_utils:raise_error( { unhandled_form, H } ),
+	get_info( T, Infos ).
 
 % Useless because of eof:
 %get_info( _AST=[], Infos, Acc ) ->
@@ -287,14 +340,83 @@ check_class_name( Name ) ->
 	end.
 
 
+% Returns a full AST from specified class information.
+%
+generate_ast( #class_info{
 
--spec info_to_string( class_info() ) -> text_utils:ustring().
-info_to_string( #class_info{ class=Class, superclasses=Classes,
-							 last_line=LastLine } ) ->
+				 %class=Class,
+				 module_definition=ModuleDef,
+				 %superclasses=Superclasses,
+				 %parse_attributes=ParseAttributes,
+				 parse_attribute_defs=_ParseAttributeDefs,
+				 %includes=Includes,
+				 function_exports=_FunctionExports,
+				 type_exports=_TypeExports,
+				 class_specific_attributes=_ClassSpecificAttributes,
+				 inherited_attributes=_InheritedAttributes,
+				 constructor_definitions=_ConstructorDefs,
+				 destructor_definition=_DestructorDef,
+				 member_method_definitions=_MemberMethodDefs,
+				 static_method_definitions=_StaticMethodDefs,
+				 function_definitions=_FunctionDefs,
+				 last_line=LastLine } ) ->
 
-	Infos = [ text_utils:format( "superclasses: ~p", [ Classes ] ),
+	% Let's start by writing the module declaration; nothing found in erl_syntax
+	% for that, but rather than doing it by hand we can reuse it directly:
+	ModuleForm = [ ModuleDef ],
+
+
+	NewLastLine = LastLine,
+
+	FinalForm = [ NewLastLine | ModuleForm ],
+
+	lists:reverse( FinalForm ).
+
+
+
+
+
+
+-spec class_info_to_string( class_info() ) -> text_utils:ustring().
+class_info_to_string( #class_info{ class=Class,
+							 module_definition=ModuleDef,
+							 superclasses=Classes,
+							 parse_attributes=_ParseAttributes,
+							 parse_attribute_defs=ParseAttributeDefs,
+							 includes=Includes,
+							 function_exports=FunctionExports,
+							 type_exports=TypeExports,
+							 class_specific_attributes=ClassAttributes,
+							 inherited_attributes=InheritedAttributes,
+							 constructor_definitions=ConstructorDefs,
+							 destructor_definition=DestructorDef,
+							 member_method_definitions=MemberMethodDefs,
+							 static_method_definitions=StaticMethodDefs,
+							 function_definitions=FunctionDefs,
+							 last_line=LastLine
+						   } ) ->
+
+	Infos = [
+
+			  text_utils:format( "module definition: ~p", [ ModuleDef ] ),
+			  text_utils:format( "superclasses: ~p", [ Classes ] ),
+			  %text_utils:format( "parse attributes: ~p", [ ParseAttributes ] ),
+			  text_utils:format( "parse attribute definitions: ~p",
+								 [ ParseAttributeDefs ] ),
+			  text_utils:format( "includes: ~p", [ Includes ] ),
+			  text_utils:format( "function exports: ~p", [ FunctionExports ] ),
+			  text_utils:format( "type exports: ~p", [ TypeExports ] ),
+			  text_utils:format( "class-specific attributes: ~p",
+								 [ ClassAttributes ] ),
+			  text_utils:format( "inherited attributes: ~p",
+								 [ InheritedAttributes ] ),
+			  text_utils:format( "constructors: ~p", [ ConstructorDefs ] ),
+			  text_utils:format( "destructor: ~p", [ DestructorDef ] ),
+			  text_utils:format( "member methods: ~p", [ MemberMethodDefs ] ),
+			  text_utils:format( "static methods: ~p", [ StaticMethodDefs ] ),
+			  text_utils:format( "functions: ~p", [ FunctionDefs ] ),
 			  text_utils:format( "line count: ~B", [ LastLine ] )
 			  ],
 
-	text_utils:format( "~s information:~s", [ Class,
-							text_utils:strings_to_string( Infos ) ] ).
+	text_utils:format( "Information about class '~s':~s", [ Class,
+								   text_utils:strings_to_string( Infos ) ] ).
