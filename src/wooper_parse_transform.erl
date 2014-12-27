@@ -80,9 +80,9 @@ parse_transform( AST, Options ) ->
 
 	%io:format( "Input AST:~n~p~n", [ AST ] ),
 
-	{ WOOPERAST, _ClassInfo } = transform( AST ),
+	{ WOOPERAST, ClassInfo } = transform( AST ),
 
-	%io:format( "~s~n", [ class_info_to_string( ClassInfo ) ] ),
+	io:format( "~s~n", [ class_info_to_string( ClassInfo ) ] ),
 
 	OutputAST = common_parse_transform:parse_transform( WOOPERAST, Options ),
 
@@ -120,8 +120,8 @@ parse_transform( AST, Options ) ->
 %
 % Allows to perform checkings and to reorder the returned version of it.
 %
-% We preserve the forms whenever possible, for example to preserver line
-% numbers.
+% We preserve the forms whenever possible (in *_def* counterpart fields),
+% notably to keep line numbers.
 %
 -record( class_info, {
 
@@ -129,68 +129,100 @@ parse_transform( AST, Options ) ->
 		% Name of that class:
 		class = undefined :: wooper:class_name(),
 
+		% Module (class name) definition:
+		class_def = undefined :: ast(),
 
-		% Module definition:
-		module_definition = undefined :: ast(),
 
-
-		% Ordered list of the superclasses of this class:
+		% Ordered list of the superclasses of this class (corresponding form
+		% will be stripped):
+		%
 		superclasses = undefined :: [ wooper:class_name() ],
 
+		% Superclass definition (one attribute):
+		%
+		superclass_def = undefined :: ast(),
 
-		% Parse-level attributes (ex: '-my_attribute( my_value ).'):
+
+		% Parse-level attributes (ex: '-my_attribute( my_value ).') not
+		% corresponding to other fields of interest:
+		%
 		parse_attributes = [] :: [ meta_utils:attribute() ],
 
 		% Parse attribute definitions:
+		%
 		parse_attribute_defs = [] :: [ ast() ],
 
 
-		% Include files (typically *.hrl files):
+		% Include files (typically *.hrl files, but also includes the .erl
+		% source module):
 		%
 		% (expected to remain empty, as the preprocessor is supposed to have
 		% already been run)
 		%
 		includes = [] :: [ file_utils:file_name() ],
 
-
-		% All function exports (including methods):
-		function_exports = [] :: [ { meta_utils:function_name(), arity() } ],
+		% Include definitions:
+		%
+		include_defs = [] :: [ ast() ],
 
 
 		% All type exports:
 		type_exports = [] :: [ { meta_utils:type_name(),
 								 meta_utils:type_arity() } ],
 
+		% Type export definitions:
+		type_export_defs = [] :: [ ast() ],
 
-		% The class-specific attribute definitions:
+
+		% Whether a function (possibly any kind of method) is exported is
+		% recorded primarily in its respective function_info record through a
+		% boolean, while the forms for the exports of all functions (including
+		% methods) are recorded here (better that way, as an export attribute
+		% may define any number of exports and we want to record its line):
+		%
+		function_exports = [] :: [ ast() ],
+
+
+		% The class-specific attribute definitions (AST forms stripped, hence
+		% not kept):
+		%
 		class_specific_attributes = [] :: [ attribute_info() ],
 
 
 		% All inherited attribute definitions for this class:
+		%
 		inherited_attributes = [] :: [ attribute_info() ],
 
 
-		% Definitions of the constructors of that class:
-		constructor_definitions = [] :: [ meta_utils:function_info() ],
+		% All information about the constructor(s) of that class:
+		%
+		constructors = [] :: [ meta_utils:function_info() ],
 
 
-		% Definitions of the destructor (if any) of that class:
-		destructor_definition = undefined :: meta_utils:function_info(),
+		% All information about the destructor (if any) of that class:
+		%
+		destructor = undefined :: meta_utils:function_info(),
 
 
-		% Definitions of the member methods of that class:
-		member_method_definitions = [] :: [ meta_utils:function_info() ],
+		% All information about the class-specific member methods of that class:
+		%
+		member_methods = [] :: [ meta_utils:function_info() ],
 
 
-		% Definitions of the static methods of that class:
-		static_method_definitions = [] :: [ meta_utils:function_info() ],
+		% All information about the static methods of that class:
+		%
+		static_methods = [] :: [ meta_utils:function_info() ],
 
 
-		% Definitions of the other functions of that class:
-		function_definitions = [] :: [ meta_utils:function_info() ],
+		% All informatilon about the other functions of that class:
+		%
+		functions = [] :: [ meta_utils:function_info() ],
 
 
 		% The number of the last line in the original source file:
+		%
+		% (added code will be put afterwards)
+		%
 		last_line :: basic_utils:count()
 
 } ).
@@ -252,29 +284,24 @@ get_class_info( AST ) ->
 % anyway:
 %
 get_info( _AST=[ F={ attribute, _Line, module, Module } | T ],
-		  W=#class_info{ class=undefined, module_definition=undefined } ) ->
+		  W=#class_info{ class=undefined, class_def=undefined } ) ->
 
 	check_class_name( Module ),
 
-	get_info( T, W#class_info{ class=Module, module_definition=F } );
+	get_info( T, W#class_info{ class=Module, class_def=F } );
 
 
 % Superclasses section:
 %
 get_info( _AST=[ F={ attribute, _Line, wooper_superclasses, Classes } | T ],
 		  W=#class_info{ superclasses=undefined,
-						 parse_attributes=Attributes,
-						 parse_attribute_defs=AttributeDefs } )
-  when is_list( Classes ) ->
+						 superclass_def=undefined } ) when is_list( Classes ) ->
 
 	[ check_class_name( C ) || C <- Classes ],
 
 	get_info( T, W#class_info{
 				   superclasses=Classes,
-				   % We record this attribute as well:
-				   parse_attributes=[ { wooper_superclasses, Classes }
-									  | Attributes ],
-				   parse_attribute_defs=[ F | AttributeDefs ] } );
+				   superclass_def=F } );
 
 
 get_info( _AST=[ { attribute, Line, wooper_superclasses, Classes } | _T ],
@@ -288,11 +315,37 @@ get_info( _AST=[ { attribute, Line, wooper_superclasses, Classes } | _T ],
 							  Classes,OtherClasses  } );
 
 
+% Include section:
+%
+get_info( _AST=[ F={ attribute, _Line, file, Filename } | T ],
+		  W=#class_info{ includes=Inc, include_defs=IncDefs } ) ->
+	get_info( T, W#class_info{ includes=[ Filename | Inc ],
+							   include_defs=[ F | IncDefs ]
+							 } );
+
+
+% Type section:
+%
+get_info( _AST=[ F={ attribute, _Line, type,
+					 { TypeName, TypeDef, _SubTypeList } } | T ],
+		  W=#class_info{ type_exports=Types, type_export_defs=TypeDefs } ) ->
+	get_info( T, W#class_info{ type_exports=[ { TypeName, TypeDef } | Types ],
+							   type_export_defs=[ F | TypeDefs ]
+							 } );
+
+
+% Function export section:
+%
+get_info( _AST=[ F={ attribute, _Line, export, _Filenames } | T ],
+		  W=#class_info{ function_exports=FunExports } ) ->
+	get_info( T, W#class_info{ function_exports=[ F | FunExports ] } );
+
+
 % Spec attributes:
 %get_info( _AST=[ F={ attribute, _Line, spec, _FunSpec } | T ],
 %		  W=#class_info{ parse_attributes=Attributes,
 %						 parse_attribute_defs=AttributeDefs } ) ->
-	
+
 % Other non-WOOPER attribute section:
 %
 get_info( _AST=[ F={ attribute, _Line, AttributeName, AttributeValue } | T ],
@@ -345,25 +398,28 @@ check_class_name( Name ) ->
 generate_ast( #class_info{
 
 				 %class=Class,
-				 module_definition=ModuleDef,
+				 class_def=ClassDef,
 				 %superclasses=Superclasses,
+				 %superclass_def=SuperclassDef,
 				 %parse_attributes=ParseAttributes,
 				 parse_attribute_defs=_ParseAttributeDefs,
 				 %includes=Includes,
-				 function_exports=_FunctionExports,
+				 %include_defs=IncludeDefs,
 				 type_exports=_TypeExports,
+				 %type_export_defs=TypeExportDefs,
+				 function_exports=_FunctionExports,
 				 class_specific_attributes=_ClassSpecificAttributes,
 				 inherited_attributes=_InheritedAttributes,
-				 constructor_definitions=_ConstructorDefs,
-				 destructor_definition=_DestructorDef,
-				 member_method_definitions=_MemberMethodDefs,
-				 static_method_definitions=_StaticMethodDefs,
-				 function_definitions=_FunctionDefs,
+				 constructors=_Constructors,
+				 destructor=_Destructor,
+				 member_methods=_MemberMethods,
+				 static_methods=_StaticMethods,
+				 functions=_Functions,
 				 last_line=LastLine } ) ->
 
 	% Let's start by writing the module declaration; nothing found in erl_syntax
 	% for that, but rather than doing it by hand we can reuse it directly:
-	ModuleForm = [ ModuleDef ],
+	ModuleForm = [ ClassDef ],
 
 
 	NewLastLine = LastLine,
@@ -378,45 +434,82 @@ generate_ast( #class_info{
 
 
 -spec class_info_to_string( class_info() ) -> text_utils:ustring().
-class_info_to_string( #class_info{ class=Class,
-							 module_definition=ModuleDef,
-							 superclasses=Classes,
-							 parse_attributes=_ParseAttributes,
-							 parse_attribute_defs=ParseAttributeDefs,
-							 includes=Includes,
-							 function_exports=FunctionExports,
-							 type_exports=TypeExports,
-							 class_specific_attributes=ClassAttributes,
-							 inherited_attributes=InheritedAttributes,
-							 constructor_definitions=ConstructorDefs,
-							 destructor_definition=DestructorDef,
-							 member_method_definitions=MemberMethodDefs,
-							 static_method_definitions=StaticMethodDefs,
-							 function_definitions=FunctionDefs,
-							 last_line=LastLine
-						   } ) ->
+class_info_to_string( #class_info{
+						 class=Class,
+						 class_def=ClassDef,
+						 superclasses=Superclasses,
+						 superclass_def=SuperclassesDef,
+						 parse_attributes=ParseAttributes,
+						 parse_attribute_defs=ParseAttributeDefs,
+						 includes=Includes,
+						 include_defs=IncludeDefs,
+						 type_exports=TypeExports,
+						 type_export_defs=TypeExportDefs,
+						 function_exports=FunctionExports,
+						 class_specific_attributes=ClassAttributes,
+						 inherited_attributes=InheritedAttributes,
+						 constructors=Constructors,
+						 destructor=Destructor,
+						 member_methods=MemberMethods,
+						 static_methods=StaticMethods,
+						 functions=Functions,
+						 last_line=LastLine
+						} ) ->
 
 	Infos = [
 
-			  text_utils:format( "module definition: ~p", [ ModuleDef ] ),
-			  text_utils:format( "superclasses: ~p", [ Classes ] ),
-			  %text_utils:format( "parse attributes: ~p", [ ParseAttributes ] ),
-			  text_utils:format( "parse attribute definitions: ~p",
+			  text_utils:format( "class: ~p~n", [ Class ] ),
+			  text_utils:format( "module definition: ~p~n", [ ClassDef ] ),
+
+			  text_utils:format( "~B superclasses: ~p~n",
+								 [ length( Superclasses ), Superclasses ] ),
+
+			  text_utils:format( "superclasses definition: ~p~n",
+								 [ SuperclassesDef ] ),
+
+			  text_utils:format( "~B parse attributes: ~p~n",
+								 [ length( ParseAttributes ),
+								   ParseAttributes ] ),
+
+			  text_utils:format( "parse attribute definitions: ~p~n",
 								 [ ParseAttributeDefs ] ),
-			  text_utils:format( "includes: ~p", [ Includes ] ),
-			  text_utils:format( "function exports: ~p", [ FunctionExports ] ),
-			  text_utils:format( "type exports: ~p", [ TypeExports ] ),
-			  text_utils:format( "class-specific attributes: ~p",
-								 [ ClassAttributes ] ),
-			  text_utils:format( "inherited attributes: ~p",
-								 [ InheritedAttributes ] ),
-			  text_utils:format( "constructors: ~p", [ ConstructorDefs ] ),
-			  text_utils:format( "destructor: ~p", [ DestructorDef ] ),
-			  text_utils:format( "member methods: ~p", [ MemberMethodDefs ] ),
-			  text_utils:format( "static methods: ~p", [ StaticMethodDefs ] ),
-			  text_utils:format( "functions: ~p", [ FunctionDefs ] ),
+
+			  text_utils:format( "~B includes: ~p~n",
+								 [ length( Includes ), Includes ] ),
+			  text_utils:format( "include definitions: ~p~n", [ IncludeDefs ] ),
+
+			  text_utils:format( "~B type exports: ~p~n",
+								 [ length( TypeExports ), TypeExports ] ),
+
+			  text_utils:format( "type export definitions: ~p~n",
+								 [ TypeExportDefs ] ),
+
+			  text_utils:format( "~B function exports: ~p~n",
+					 [ length( FunctionExports ), FunctionExports ] ),
+
+			  text_utils:format( "~B class-specific attributes: ~p~n",
+					 [ length( ClassAttributes ), ClassAttributes ] ),
+
+			  text_utils:format( "~B inherited attributes: ~p~n",
+					 [ length( InheritedAttributes ), InheritedAttributes ] ),
+
+			  text_utils:format( "~B constructors: ~p~n",
+								 [ length( Constructors ), Constructors ] ),
+
+			  text_utils:format( "destructor: ~p~n", [ Destructor ] ),
+
+			  text_utils:format( "~B member methods: ~p~n",
+								 [ length( MemberMethods ), MemberMethods ] ),
+
+			  text_utils:format( "~B static methods: ~p~n",
+								 [ length( StaticMethods ), StaticMethods ] ),
+
+			  text_utils:format( "~B functions: ~p~n",
+								 [ length( Functions ), Functions ] ),
+
 			  text_utils:format( "line count: ~B", [ LastLine ] )
+
 			  ],
 
-	text_utils:format( "Information about class '~s':~s", [ Class,
+	text_utils:format( "Information about class '~s':~n~s", [ Class,
 								   text_utils:strings_to_string( Infos ) ] ).
