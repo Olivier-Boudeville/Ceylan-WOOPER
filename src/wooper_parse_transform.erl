@@ -36,13 +36,32 @@
 
 
 % Implementation notes:
-%
+
 % Calls in turn the common parse transform, once WOOPER-level operations have
 % been done.
 %
 % One will get: 'undefined parse transform 'wooper_parse_transform'' as soon as
 % a compiled module called by the parse transform (ex: text_utils.beam) will not
-% be found (hence even if the transform itself is available).
+% be found (hence even if the transform itself is available) or a non-exported
+% (or even not existing) function is called (ex: text_utils:format/1).
+
+% We must discriminate between methods and functions, and identify among methods
+% the requests, the oneways and the static ones.
+%
+% For that we can rely either on the type specs (if any - but we decided that
+% they should better be mandatory) or on the function definition itself (relying
+% then on the wooper return primitives).
+%
+% More precisely, both for the type spec and the actual code (all clauses):
+%
+% - a request shall return its state and value thanks to wooper:request_return/2
+%
+% - a oneway shall return its state thanks to wooper:oneway_return/1
+%
+% - a static method (as opposed to the previous two member methods) shall return
+% this value thanks to wooper:static_return/1
+
+
 
 -export([ parse_transform/2, transform/1, generate_ast/1,
 		  class_info_to_string/1 ]).
@@ -68,6 +87,26 @@
 
 -type ast() :: meta_utils:ast().
 
+
+% AST subpart of a clause of a function:
+%
+-type clause() :: any().
+
+
+
+% The WOOPER type of an Erlang function:
+%
+-type function_type() :: 'constructor' | 'destructor'
+					   | 'request' | 'oneway' | 'static' | 'function'.
+
+
+
+% For function_info:
+-include("meta_utils.hrl").
+
+
+% For debugging:
+-export([ get_info/2, get_class_info/1, check_class_info/1 ]).
 
 
 % The parse transform itself, transforming the specified Abstract Format code
@@ -129,7 +168,7 @@ parse_transform( AST, Options ) ->
 		% Name of that class:
 		class = undefined :: wooper:class_name(),
 
-		% Module (class name) definition:
+		% Classname (module) definition:
 		class_def = undefined :: ast(),
 
 
@@ -141,6 +180,12 @@ parse_transform( AST, Options ) ->
 		% Superclass definition (one attribute):
 		%
 		superclass_def = undefined :: ast(),
+
+
+		% We merely touch compilation options (ex: '{compile, { inline, [ {
+		% FunName, Arity } ] } }'):
+		%
+		compilation_option_defs = [] :: [ ast() ],
 
 
 		% Parse-level attributes (ex: '-my_attribute( my_value ).') not
@@ -164,6 +209,19 @@ parse_transform( AST, Options ) ->
 		% Include definitions:
 		%
 		include_defs = [] :: [ ast() ],
+
+
+		% Type definitions:
+		%
+		% (few information gathered)
+		%
+		type_definitions = [] :: [ { meta_utils:type_name(),
+									 meta_utils:type_arity() } ],
+
+
+		% The abstract forms corresponding to type definitions:
+		%
+		type_definition_defs = [] :: [ ast() ],
 
 
 		% All type exports:
@@ -196,7 +254,7 @@ parse_transform( AST, Options ) ->
 
 		% All information about the constructor(s) of that class:
 		%
-		constructors = [] :: [ meta_utils:function_info() ],
+		constructors :: table:table( arity(), meta_utils:function_info() ),
 
 
 		% All information about the destructor (if any) of that class:
@@ -204,19 +262,31 @@ parse_transform( AST, Options ) ->
 		destructor = undefined :: meta_utils:function_info(),
 
 
-		% All information about the class-specific member methods of that class:
+		% All information about the class-specific (member) request methods of
+		% that class:
 		%
-		member_methods = [] :: [ meta_utils:function_info() ],
+		requests = table:table( meta_utils:function_id(),
+								meta_utils:function_info() ),
+
+
+		% All information about the class-specific (member) oneway methods of
+		% that class:
+		%
+		oneways = table:table( meta_utils:function_id(),
+							   meta_utils:function_info() ),
 
 
 		% All information about the static methods of that class:
 		%
-		static_methods = [] :: [ meta_utils:function_info() ],
+		statics = table:table( meta_utils:function_id(),
+							   meta_utils:function_info() ),
 
 
-		% All informatilon about the other functions of that class:
+
+		% All information about the other, plain functions of that class:
 		%
-		functions = [] :: [ meta_utils:function_info() ],
+		functions = table:table( meta_utils:function_id(),
+								 meta_utils:function_info() ),
 
 
 		% The number of the last line in the original source file:
@@ -239,6 +309,7 @@ transform( AST ) ->
 
 	% Starts with blank information:
 	ClassInfo = get_class_info( AST ),
+	%ClassInfo = ok,
 
 	%io:format( "~n~s~n", [ class_info_to_string( ClassInfo ) ] ),
 
@@ -274,7 +345,24 @@ transform( AST ) ->
 % recursing)
 %
 get_class_info( AST ) ->
-	get_info( AST, #class_info{} ).
+
+	InitClassInfo = #class_info{
+
+					   constructors = table:new(),
+					   destructor = undefined,
+					   requests = table:new(),
+					   oneways = table:new(),
+					   statics = table:new(),
+					   functions = table:new()
+
+					  },
+
+	ReadClassInfo = get_info( AST, InitClassInfo ),
+
+	check_class_info( ReadClassInfo ),
+
+	ReadClassInfo.
+
 
 
 
@@ -283,12 +371,22 @@ get_class_info( AST ) ->
 % Any invalid or duplicated module declaration will be caught by the compiler
 % anyway:
 %
-get_info( _AST=[ F={ attribute, _Line, module, Module } | T ],
+% (we wanted to tell the users to use -wooper_classname(my_name) instead of
+% -module(my_name) but apparently -module must be found before the
+% parse-transform is triggered, so that the preprocessor can rely on the ?MODULE
+% macro, otherwise the input AST contains:
+% '{error,{L,epp,{undefined,'MODULE',none}}}'). So we finally stick to -module.
+%
+%get_info( _AST=[ { attribute, Line, wooper_classname, Classname } | T ],
+get_info( _AST=[ F={ attribute, _Line, module, Classname } | T ],
 		  W=#class_info{ class=undefined, class_def=undefined } ) ->
 
-	check_class_name( Module ),
+	check_class_name( Classname ),
 
-	get_info( T, W#class_info{ class=Module, class_def=F } );
+	% Transforms that in a standard module definition:
+	%NewDef = { attribute, Line, module, Classname },
+
+	get_info( T, W#class_info{ class=Classname, class_def=F } );
 
 
 % Superclasses section:
@@ -315,6 +413,14 @@ get_info( _AST=[ { attribute, Line, wooper_superclasses, Classes } | _T ],
 							  Classes,OtherClasses  } );
 
 
+% Compilation options section:
+%
+get_info( _AST=[ F={ attribute, _Line, compile, _Options } | T ],
+		  W=#class_info{ compilation_option_defs=Opts } ) ->
+
+	get_info( T, W#class_info{ compilation_option_defs=[ F | Opts ] } );
+
+
 % Include section:
 %
 get_info( _AST=[ F={ attribute, _Line, file, Filename } | T ],
@@ -324,14 +430,28 @@ get_info( _AST=[ F={ attribute, _Line, file, Filename } | T ],
 							 } );
 
 
-% Type section:
+% Type definition section:
 %
 get_info( _AST=[ F={ attribute, _Line, type,
 					 { TypeName, TypeDef, _SubTypeList } } | T ],
-		  W=#class_info{ type_exports=Types, type_export_defs=TypeDefs } ) ->
-	get_info( T, W#class_info{ type_exports=[ { TypeName, TypeDef } | Types ],
-							   type_export_defs=[ F | TypeDefs ]
+		  W=#class_info{ type_definitions=TypeDefs,
+						 type_definition_defs=TypeDefsDefs } ) ->
+	get_info( T, W#class_info{
+				   type_definitions =[ { TypeName, TypeDef } | TypeDefs ],
+				   type_definition_defs =[ F | TypeDefsDefs ]
 							 } );
+
+
+% Type export section:
+%
+get_info( _AST=[ F={ attribute, _Line, export_type, DeclaredTypes } | T ],
+		  W=#class_info{ type_exports=TypeExports,
+						 type_export_defs=TypeExportDefs } )
+  when is_list( DeclaredTypes ) ->
+	get_info( T, W#class_info{
+				   type_exports= DeclaredTypes ++ TypeExports,
+				   type_export_defs=[ F | TypeExportDefs ]
+				  } );
 
 
 % Function export section:
@@ -341,10 +461,66 @@ get_info( _AST=[ F={ attribute, _Line, export, _Filenames } | T ],
 	get_info( T, W#class_info{ function_exports=[ F | FunExports ] } );
 
 
+% Function definition section:
+%
+get_info( _AST=[ Form={ function, _Line, Name, Arity, Clauses } | T ],
+		  W=#class_info{
+
+			   %constructors=Constructors,
+			   %destructor=Destructor,
+			   %requests=Requests,
+			   %oneways=Oneways,
+			   %statics=Statics,
+			   functions=Functions
+
+			  } ) ->
+
+	% Other clauses could be checked as well:
+	%
+	% (when adding a function-like element, we may not check if ever there was a
+	% pre-existing one - multiple definitions will be rejected by the compiler
+	% anyway)
+	%
+	NewClassInfo = case identify_function( Name, Arity, hd( Clauses ) ) of
+
+		function ->
+			NewFunctions = add_function( Name, Arity, Form, Functions ),
+			W#class_info{ functions=NewFunctions }
+
+		%% constructor ->
+		%%	NewConstructors = add_constructor( Arity, Form, Constructors ),
+		%%	W#class_info{ constructors=NewConstructors };
+
+		%% destructor ->
+		%%	NewDestructor = register_destructor( Form, Destructor ),
+		%%	W#class_info{ destructor=NewDestructor };
+
+		%% request ->
+		%%	NewRequests = add_request( Name, Arity, Form, Requests ),
+		%%	W#class_info{ requests=NewRequests };
+
+		%% oneway ->
+		%%	NewOneways = add_oneway( Name, Arity, Form, Oneways ),
+		%%	W#class_info{ oneways=NewOneways };
+
+		%% static ->
+		%%	NewStatics = add_static( Name, Arity, Form, Statics ),
+		%%	W#class_info{ statics=NewStatics }
+
+	end,
+
+	io:format( "function ~s/~B with ~B clauses registered.~n",
+			   [ Name, Arity, length( Clauses ) ] ),
+
+	get_info( T, NewClassInfo );
+
+
 % Spec attributes:
-%get_info( _AST=[ F={ attribute, _Line, spec, _FunSpec } | T ],
-%		  W=#class_info{ parse_attributes=Attributes,
-%						 parse_attribute_defs=AttributeDefs } ) ->
+get_info( _AST=[ _F={ attribute, _Line, spec, _FunSpec } | T ],
+		  W ) ->
+	% Currently dropped!
+	get_info( T, W );
+
 
 % Other non-WOOPER attribute section:
 %
@@ -362,8 +538,8 @@ get_info( _AST=[ F={ attribute, _Line, AttributeName, AttributeValue } | T ],
 get_info( _AST=[ _F={ eof, Line } ], W=#class_info{ last_line=undefined } ) ->
 	W#class_info{ last_line=Line };
 
-get_info( _AST=[ _H | T ], Infos ) ->
-	%io:format( "WARNING: ~p not managed.~n", [ H ] ),
+get_info( _AST=[ H | T ], Infos ) ->
+	io:format( "WARNING: ~p not managed.~n", [ H ] ),
 	%meta_utils:raise_error( { unhandled_form, H } ),
 	get_info( T, Infos ).
 
@@ -376,6 +552,45 @@ get_info( _AST=[ _H | T ], Infos ) ->
 %% -spec get_superclasses() -> [ class_name() ].
 %% get_superclasses() ->
 %%	?wooper_superclasses.
+
+
+
+add_function( Name, Arity, Form, FunctionTable ) ->
+
+	FunId = { Name, Arity },
+
+	% Its spec might have been found before its definition:
+
+	FunInfo = case table:lookupEntry( FunId, FunctionTable ) of
+
+		key_not_found ->
+					  % New entry then:
+					  #function_info{
+						 name=Name,
+						 arity=Arity,
+						 definition=Form
+						 % Implicit:
+						 %spec=undefined
+						};
+
+		{ value, F=#function_info{ definition=undefined } } ->
+					  % Just add the form then:
+					  F#function_info{ definition=Form };
+
+		% Here a definition was already set:
+		_ ->
+					  meta_utils:raise_error(
+						{ multiple_definition_for, FunId } )
+
+	end,
+
+	io:format( "Adding: ~s~n", [ meta_utils:function_info_to_string( FunInfo ) ] ),
+
+	table:addEntry( _K=FunId, _V=FunInfo, FunctionTable ).
+
+
+
+
 
 
 % Ensures that specified name is a legit class name.
@@ -393,6 +608,7 @@ check_class_name( Name ) ->
 	end.
 
 
+
 % Returns a full AST from specified class information.
 %
 generate_ast( #class_info{
@@ -401,10 +617,13 @@ generate_ast( #class_info{
 				 class_def=ClassDef,
 				 %superclasses=Superclasses,
 				 %superclass_def=SuperclassDef,
+				 %compilation_option_defs=CompileOptDefs,
 				 %parse_attributes=ParseAttributes,
 				 parse_attribute_defs=_ParseAttributeDefs,
 				 %includes=Includes,
 				 %include_defs=IncludeDefs,
+				 %type_definitions=TypeDefs,
+				 %type_definition_defs=TypeDefDefs
 				 type_exports=_TypeExports,
 				 %type_export_defs=TypeExportDefs,
 				 function_exports=_FunctionExports,
@@ -412,8 +631,9 @@ generate_ast( #class_info{
 				 inherited_attributes=_InheritedAttributes,
 				 constructors=_Constructors,
 				 destructor=_Destructor,
-				 member_methods=_MemberMethods,
-				 static_methods=_StaticMethods,
+				 requests=_Requests,
+				 oneways=_Oneways,
+				 statics=_Statics,
 				 functions=_Functions,
 				 last_line=LastLine } ) ->
 
@@ -430,6 +650,183 @@ generate_ast( #class_info{
 
 
 
+% Tells whether specified clause belongs to a request, a oneway, a constuctor,
+% etc.
+%
+-spec identify_function( basic_utils:function_name(), arity(), clause() ) ->
+							   function_type().
+identify_function( _Name=construct, _Arity, _Clause ) ->
+	constructor;
+
+identify_function( _Name=destruct, _Arity=1, _Clause ) ->
+	destructor;
+
+identify_function( _Name=destruct, Arity, _Clause ) ->
+	meta_utils:raise_error( { destructor_arity_must_be_one, Arity } );
+
+identify_function( Name, _Arity,
+				   _Clause={ clause, _Line, _Vars, _, AST } ) ->
+
+	case lists:member( Name, get_new_variation_names() ) of
+
+		true ->
+			%meta_utils:raise_error( { new_variations_are_reserved, Name } );
+			fixme;
+
+		false ->
+			ok
+
+	end,
+
+	StringName = text_utils:atom_to_string( Name ),
+
+	case StringName of
+
+		"wooper" ++ _ ->
+			%meta_utils:raise_error( { wooper_prefix_is_reserved, Name } );
+			fixme;
+
+		_ ->
+			ok
+
+	end,
+
+	%io:format( "Inferring ~p:~p:~n", [ Name, Arity ] ),
+
+	% We have here either a function, a request, a oneway or a static method. To
+	% discriminate, we simply rely on how values are returned:
+	infer_function_type( AST ).
+
+
+
+% Infers the type of a function based on the code of one of its clauses.
+%
+% Note that a method *must* return:
+%
+% 1. with an appropriate WOOPER construct (ex: wooper:oneway_result/1)
+%
+% 2. directly from its body (not from an helper function being called)
+%
+infer_function_type( AST ) ->
+
+	%io:format( "Inferring from code : ~p~n", [ AST ] ),
+
+	% If no wooper return pseudo-call is detected, by default it will be a
+	% function:
+	%
+	{ _SameAST, FunType } = meta_utils:traverse_term( _TargetTerm=AST,
+									 _TypeDescription=tuple,
+									 _TermTransformer=fun infer_fun_type/2,
+									 _UserData=function ),
+
+	FunType.
+
+
+
+% A meta_utils:term_transformer():
+%
+% We simply look-up elements like:
+%
+% { call, L1,
+%         { remote, L2,
+%                  { atom, L3, wooper },
+%                  { atom, L4, oneway_return }
+%         },
+%         [ { var, L5, 'AState' } ]
+% }
+% and determine the type from, here, oneway_return.
+%
+-spec infer_fun_type( term(), basic_utils:user_data() ) ->
+								   { term(), basic_utils:user_data() }.
+infer_fun_type( Term={ call, CallLine,
+		 { remote, _L2,
+				  { atom, _L3, wooper },
+				  { atom, _L4, Return }
+		 },
+		 ArgList }, CurrentType )->
+
+	Len = length( ArgList ),
+
+	DetectedType = case Return of
+
+		request_return when Len =:= 2 ->
+						   request;
+
+		oneway_return when Len =:= 1 ->
+						   oneway;
+
+		static_return ->
+						   static;
+
+		_OtherFunction ->
+						   CurrentType
+
+	end,
+
+	% As we do not have a way to stop the traversal, we take advantage of that
+	% to check consistency:
+	NewType = case CurrentType of
+
+				  % Possibly overriding defaults:
+				  function ->
+					  DetectedType;
+
+				  % Matches, confirms detection:
+				  DetectedType ->
+					  DetectedType;
+
+				  OtherType ->
+					  meta_utils:raise_error( { inconsistent_function_type,
+											CurrentType, OtherType, CallLine } )
+
+	end,
+
+	{ Term, NewType };
+
+
+infer_fun_type( Term, CurrentType ) ->
+	{ Term, CurrentType }.
+
+
+
+
+% Ensures that the described class respects appropriate constraints for WOOPER
+% generation, besides the ones checked during the AST exploration and the ones
+% that will be checked by the compiler.
+%
+-spec check_class_info( class_info() ) -> basic_utils:void().
+check_class_info( #class_info{
+
+						 constructors=Constructors
+
+					 } ) ->
+
+	case table:isEmpty( Constructors ) of
+
+		true ->
+			meta_utils:raise_error( no_constructor_defined );
+
+		false ->
+			ok
+
+	end.
+
+	% For each clause of each constructor, we should check that the constructors
+	% of direct superclasses have all a fair chance of being called.
+
+
+
+% Returns a list of the names of the class_X:*new* operators that are generated
+% by WOOPER to branch on the construct/N and thus shall not be defined by the
+% user.
+%
+get_new_variation_names() ->
+	[ new_link, synchronous_new, synchronous_new_link, synchronous_timed_new,
+	  synchronous_timed_new_link, remote_new, remote_new_link,
+	  remote_synchronous_new, remote_synchronous_new_link,
+	  remote_synchronisable_new_link, remote_synchronous_timed_new,
+	  remote_synchronous_timed_new_link ].
+
 
 
 
@@ -439,10 +836,13 @@ class_info_to_string( #class_info{
 						 class_def=ClassDef,
 						 superclasses=Superclasses,
 						 superclass_def=SuperclassesDef,
+						 compilation_option_defs=CompileOptDefs,
 						 parse_attributes=ParseAttributes,
 						 parse_attribute_defs=ParseAttributeDefs,
 						 includes=Includes,
 						 include_defs=IncludeDefs,
+						 type_definitions=TypeDefs,
+						 type_definition_defs=TypeDefsDefs,
 						 type_exports=TypeExports,
 						 type_export_defs=TypeExportDefs,
 						 function_exports=FunctionExports,
@@ -450,22 +850,40 @@ class_info_to_string( #class_info{
 						 inherited_attributes=InheritedAttributes,
 						 constructors=Constructors,
 						 destructor=Destructor,
-						 member_methods=MemberMethods,
-						 static_methods=StaticMethods,
+						 requests=Requests,
+						 oneways=Oneways,
+						 statics=Statics,
 						 functions=Functions,
 						 last_line=LastLine
 						} ) ->
 
+	SuperclassStrings = case Superclasses of
+
+						   undefined ->
+							   [ text_utils:format( "no superclass~n", [] ) ];
+
+							Superclasses ->
+								[
+
+								 text_utils:format( "~B superclasses: ~p~n",
+									[ length( Superclasses ), Superclasses ] ),
+
+								 text_utils:format(
+								   "superclasses definition: ~p~n",
+								   [ SuperclassesDef ] )
+								]
+	end,
+
+
 	Infos = [
 
 			  text_utils:format( "class: ~p~n", [ Class ] ),
-			  text_utils:format( "module definition: ~p~n", [ ClassDef ] ),
+			  text_utils:format( "module definition: ~p~n", [ ClassDef ] )
 
-			  text_utils:format( "~B superclasses: ~p~n",
-								 [ length( Superclasses ), Superclasses ] ),
+			 ] ++ SuperclassStrings ++ [
 
-			  text_utils:format( "superclasses definition: ~p~n",
-								 [ SuperclassesDef ] ),
+			  text_utils:format( "~B compile option definitions: ~p~n",
+								 [ length( CompileOptDefs ), CompileOptDefs ] ),
 
 			  text_utils:format( "~B parse attributes: ~p~n",
 								 [ length( ParseAttributes ),
@@ -477,6 +895,12 @@ class_info_to_string( #class_info{
 			  text_utils:format( "~B includes: ~p~n",
 								 [ length( Includes ), Includes ] ),
 			  text_utils:format( "include definitions: ~p~n", [ IncludeDefs ] ),
+
+			  text_utils:format( "~B type definitions: ~p~n",
+								 [ length( TypeDefs ), TypeDefs ] ),
+
+			  text_utils:format( "type definitions: ~p~n",
+								 [ TypeDefsDefs ] ),
 
 			  text_utils:format( "~B type exports: ~p~n",
 								 [ length( TypeExports ), TypeExports ] ),
@@ -493,19 +917,27 @@ class_info_to_string( #class_info{
 			  text_utils:format( "~B inherited attributes: ~p~n",
 					 [ length( InheritedAttributes ), InheritedAttributes ] ),
 
-			  text_utils:format( "~B constructors: ~p~n",
-								 [ length( Constructors ), Constructors ] ),
+			  text_utils:format( "~B constructors, with arities: ~p~n",
+								 [ table:size( Constructors ),
+								   table:keys( Constructors ) ] ),
 
 			  text_utils:format( "destructor: ~p~n", [ Destructor ] ),
 
-			  text_utils:format( "~B member methods: ~p~n",
-								 [ length( MemberMethods ), MemberMethods ] ),
+			  text_utils:format( "~B request methods: ~p~n",
+								 [ table:size( Requests ),
+								   table:keys( Requests ) ] ),
+
+			  text_utils:format( "~B oneway methodss: ~p~n",
+								 [ table:size( Oneways ),
+								   table:keys( Oneways ) ] ),
 
 			  text_utils:format( "~B static methods: ~p~n",
-								 [ length( StaticMethods ), StaticMethods ] ),
+								 [ table:size( Statics ),
+								   table:keys( Statics ) ] ),
 
-			  text_utils:format( "~B functions: ~p~n",
-								 [ length( Functions ), Functions ] ),
+			  text_utils:format( "~B plain functions: ~p~n",
+								 [ table:size( Functions ),
+								   table:keys( Functions ) ] ),
 
 			  text_utils:format( "line count: ~B", [ LastLine ] )
 
