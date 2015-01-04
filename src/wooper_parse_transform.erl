@@ -466,11 +466,11 @@ get_info( _AST=[ F={ attribute, _Line, export, _Filenames } | T ],
 get_info( _AST=[ Form={ function, _Line, Name, Arity, Clauses } | T ],
 		  W=#class_info{
 
-			   %constructors=Constructors,
-			   %destructor=Destructor,
-			   %requests=Requests,
-			   %oneways=Oneways,
-			   %statics=Statics,
+			   constructors=Constructors,
+			   destructor=Destructor,
+			   requests=Requests,
+			   oneways=Oneways,
+			   statics=Statics,
 			   functions=Functions
 
 			  } ) ->
@@ -485,27 +485,27 @@ get_info( _AST=[ Form={ function, _Line, Name, Arity, Clauses } | T ],
 
 		function ->
 			NewFunctions = add_function( Name, Arity, Form, Functions ),
-			W#class_info{ functions=NewFunctions }
+			W#class_info{ functions=NewFunctions };
 
-		%% constructor ->
-		%%	NewConstructors = add_constructor( Arity, Form, Constructors ),
-		%%	W#class_info{ constructors=NewConstructors };
+		constructor ->
+			NewConstructors = add_constructor( Arity, Form, Constructors ),
+			W#class_info{ constructors=NewConstructors };
 
-		%% destructor ->
-		%%	NewDestructor = register_destructor( Form, Destructor ),
-		%%	W#class_info{ destructor=NewDestructor };
+		destructor ->
+			NewDestructor = register_destructor( Form, Destructor ),
+			W#class_info{ destructor=NewDestructor };
 
-		%% request ->
-		%%	NewRequests = add_request( Name, Arity, Form, Requests ),
-		%%	W#class_info{ requests=NewRequests };
+		request ->
+			NewRequests = add_request( Name, Arity, Form, Requests ),
+			W#class_info{ requests=NewRequests };
 
-		%% oneway ->
-		%%	NewOneways = add_oneway( Name, Arity, Form, Oneways ),
-		%%	W#class_info{ oneways=NewOneways };
+		oneway ->
+			NewOneways = add_oneway( Name, Arity, Form, Oneways ),
+			W#class_info{ oneways=NewOneways };
 
-		%% static ->
-		%%	NewStatics = add_static( Name, Arity, Form, Statics ),
-		%%	W#class_info{ statics=NewStatics }
+		static ->
+			NewStatics = add_static( Name, Arity, Form, Statics ),
+			W#class_info{ statics=NewStatics }
 
 	end,
 
@@ -555,6 +555,8 @@ get_info( _AST=[ H | T ], Infos ) ->
 
 
 
+% Adds specified function into the corresponding table.
+%
 add_function( Name, Arity, Form, FunctionTable ) ->
 
 	FunId = { Name, Arity },
@@ -584,12 +586,161 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 
 	end,
 
-	io:format( "Adding: ~s~n", [ meta_utils:function_info_to_string( FunInfo ) ] ),
-
 	table:addEntry( _K=FunId, _V=FunInfo, FunctionTable ).
 
 
 
+% Adds specified constructor into the corresponding table.
+%
+add_constructor( Arity, Form, ConstructorTable ) ->
+
+	% Its spec might have been found before its definition:
+
+	FunInfo = case table:lookupEntry( Arity, ConstructorTable ) of
+
+		key_not_found ->
+					  % New entry then:
+					  #function_info{
+						 name=construct,
+						 arity=Arity,
+						 definition=Form
+						 % Implicit:
+						 %spec=undefined
+						};
+
+		{ value, F=#function_info{ definition=undefined } } ->
+					  % Just add the form then:
+					  F#function_info{ definition=Form };
+
+		% Here a definition was already set:
+		_ ->
+					  meta_utils:raise_error(
+						{ multiple_definition_for_constructor, Arity } )
+
+	end,
+
+	table:addEntry( _K=Arity, _V=FunInfo, ConstructorTable ).
+
+
+
+% Registers specified destructor.
+%
+register_destructor( Form, undefined ) ->
+	% No spec:
+	#function_info{ name=destruct, arity=1, definition=Form };
+
+register_destructor( Form, F=#function_info{ definition=undefined } ) ->
+	% Already a spec:
+	F#function_info{ definition=Form };
+
+register_destructor( _Form, _FunInfo ) ->
+	% Here a definition was already set:
+	meta_utils:raise_error( multiple_destructors_defined ).
+
+
+
+% Adds specified request into the corresponding table.
+%
+add_request( Name, Arity, Form, RequestTable ) ->
+
+	RequestId = { Name, Arity },
+
+	% Its spec might have been found before its definition:
+
+	RequestInfo = case table:lookupEntry( RequestId, RequestTable ) of
+
+		key_not_found ->
+					  % New entry then:
+					  #function_info{
+						 name=Name,
+						 arity=Arity,
+						 definition=Form
+						 % Implicit:
+						 %spec=undefined
+						};
+
+		{ value, F=#function_info{ definition=undefined } } ->
+					  % Just add the form then:
+					  F#function_info{ definition=Form };
+
+		% Here a definition was already set:
+		_ ->
+					  meta_utils:raise_error(
+						{ multiple_definition_for_request, RequestId } )
+
+	end,
+
+	table:addEntry( _K=RequestId, _V=RequestInfo, RequestTable ).
+
+
+
+% Adds specified oneway into the corresponding table.
+%
+add_oneway( Name, Arity, Form, OnewayTable ) ->
+
+	OnewayId = { Name, Arity },
+
+	% Its spec might have been found before its definition:
+
+	OnewayInfo = case table:lookupEntry( OnewayId, OnewayTable ) of
+
+		key_not_found ->
+					  % New entry then:
+					  #function_info{
+						 name=Name,
+						 arity=Arity,
+						 definition=Form
+						 % Implicit:
+						 %spec=undefined
+						};
+
+		{ value, F=#function_info{ definition=undefined } } ->
+					  % Just add the form then:
+					  F#function_info{ definition=Form };
+
+		% Here a definition was already set:
+		_ ->
+					  meta_utils:raise_error(
+						{ multiple_definition_for_oneway, OnewayId } )
+
+	end,
+
+	table:addEntry( _K=OnewayId, _V=OnewayInfo, OnewayTable ).
+
+
+
+% Adds specified static method into the corresponding table.
+%
+add_static( Name, Arity, Form, StaticTable ) ->
+
+	StaticId = { Name, Arity },
+
+	% Its spec might have been found before its definition:
+
+	StaticInfo = case table:lookupEntry( StaticId, StaticTable ) of
+
+		key_not_found ->
+					  % New entry then:
+					  #function_info{
+						 name=Name,
+						 arity=Arity,
+						 definition=Form
+						 % Implicit:
+						 %spec=undefined
+						};
+
+		{ value, F=#function_info{ definition=undefined } } ->
+					  % Just add the form then:
+					  F#function_info{ definition=Form };
+
+		% Here a definition was already set:
+		_ ->
+					  meta_utils:raise_error(
+						{ multiple_definition_for_static, StaticId } )
+
+	end,
+
+	table:addEntry( _K=StaticId, _V=StaticInfo, StaticTable ).
 
 
 
