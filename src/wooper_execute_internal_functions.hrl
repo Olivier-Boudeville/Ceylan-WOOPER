@@ -89,14 +89,14 @@ wooper_execute_method( MethodAtom, State, Parameters )
 
 		{ value, LocatedModule } ->
 
-			%io:format( "wooper_execute_method: executing ~s:~s(~w) from ~s.~n",
-			%   [ ?MODULE, MethodAtom, Parameters, LocatedModule ] ),
+			%io:format("wooper_execute_method: executing ~s:~s(~w) from ~s.~n",
+			%   [ ?MODULE, MethodAtom, Parameters, LocatedModule ]),
 
 			% Returns { NewState, PossibleResult }:
 			wooper_effective_method_execution( LocatedModule, MethodAtom,
 				State, Parameters );
 
-		key_not_found ->
+		hashtable_key_not_found ->
 
 			case State#state_holder.request_sender of
 
@@ -107,8 +107,8 @@ wooper_execute_method( MethodAtom, State, Parameters )
 					% elements, as if in a single string ("M/A"), the result
 					% is displayed as a list:
 					error_logger:error_msg( "~nWOOPER error for PID ~w, "
-											"oneway method ~s:~s/~B not found, "
-											"parameters were:~n~p~n",
+						"oneway method ~s:~s/~B not found, "
+						"parameters were:~n~p~n",
 						[ self(), State#state_holder.actual_class, MethodAtom,
 							length( Parameters ) + 1, Parameters ] ),
 
@@ -161,13 +161,13 @@ wooper_execute_method( MethodAtom, State, Parameters ) ->
 		{ value, LocatedModule } ->
 
 			%io:format("wooper_execute_method: executing ~s:~s(~w) from ~s.~n",
-			%   [ ?MODULE, MethodAtom, Parameters, LocatedModule ] ),
+			%   [ ?MODULE, MethodAtom, Parameters, LocatedModule ]),
 
 			wooper_effective_method_execution( LocatedModule, MethodAtom,
 				State, Parameters );
 
 
-		key_not_found ->
+		hashtable_key_not_found ->
 
 			case State#state_holder.request_sender of
 
@@ -181,7 +181,7 @@ wooper_execute_method( MethodAtom, State, Parameters ) ->
 						"oneway method ~s:~s/~B not found, "
 						"parameters were:~n~p~n",
 						[ self(), State#state_holder.actual_class, MethodAtom,
-						  length( Parameters ) + 1, Parameters ] ),
+							length( Parameters ) + 1, Parameters ] ),
 
 					% Wait a bit as error_msg seems asynchronous:
 					timer:sleep( ?wooper_error_display_waiting ),
@@ -221,17 +221,17 @@ wooper_execute_method( MethodAtom, State, Parameters ) ->
 % Looks-up specified method (Method/Arity, ex: toString/0) to be found in
 % heritance tree and returns either { 'value', Module } with Module
 % corresponding to the class that implements that method, or
-% 'key_not_found'.
+% 'hashtable_key_not_found'.
 %
 % Note: uses the pre-built virtual table for this class.
 %
 % (helper)
 %
 -spec wooper_lookup_method( wooper:state(), method_name(), arity() ) ->
-		   { 'value', class_name() } | 'key_not_found'.
+		   { 'value', class_name() } | 'hashtable_key_not_found'.
 wooper_lookup_method( State, MethodAtom, Arity ) ->
-	table:lookupEntry( { MethodAtom, Arity }, 
-					   State#state_holder.virtual_table ).
+	?wooper_hashtable_type:lookupEntry( { MethodAtom, Arity },
+		State#state_holder.virtual_table ).
 
 
 
@@ -251,7 +251,7 @@ wooper_execute_method_with( ClassName, MethodAtom, State, Parameters )
 	% (direct or not) of the actual class.
 	%
 	wooper_effective_method_execution( ClassName, MethodAtom, State,
-									   Parameters ).
+		Parameters ).
 
 
 
@@ -266,7 +266,7 @@ wooper_execute_method_with( ClassName, MethodAtom, State, Parameters )
 
 
 wooper_effective_method_execution( SelectedModule, MethodAtom, State,
-								   Parameters ) ->
+		Parameters ) ->
 
 	%io:format( "WOOPER: effective execution of ~p:~p.~n",
 	%		  [ SelectedModule, MethodAtom ] ),

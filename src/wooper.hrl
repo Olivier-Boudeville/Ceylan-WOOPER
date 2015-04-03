@@ -64,10 +64,11 @@
 % Instance state is maintained thanks to a per-instance attribute table, storing
 % all its attributes, including all the inherited ones.
 %
-% The table type, as dictated by the common parse transform, is used at all
-% levels: per-instance (for the attribute table), per-class (for the so-called
-% virtual table), per-node (for the class manager).
-
+% The hashtable type, defined in hashtable.erl, is used at all levels:
+% per-instance (for the attribute table), per-class (for the so-called virtual
+% table), per-node (for the class manager).
+%
+% The proplist module could be used instead.
 
 % When an exported function is called as a method (i.e. it is listed in the
 % wooper_method_export variable, see below) the list of parameters being

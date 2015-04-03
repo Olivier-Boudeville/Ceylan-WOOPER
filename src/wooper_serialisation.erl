@@ -511,9 +511,10 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 
 	% We need to bypass any constructor here.
 
-	AttributeTable = table:addEntries( TransformedEntries, table:new() ),
+	AttributeTable = ?wooper_hashtable_type:addEntries( TransformedEntries,
+										?wooper_hashtable_type:new() ),
 
-	OptimisedAttributeTable = table:optimise( AttributeTable ),
+	OptimisedAttributeTable = ?wooper_hashtable_type:optimise( AttributeTable ),
 
 	% Must be restored as well:
 	case RandomState of
@@ -628,7 +629,7 @@ mute_attributes( AttributeNameList, State ) ->
 
 								_ ->
 									setAttribute( AccState, AttrName,
-												  ?term_restoration_marker )
+												 ?term_restoration_marker )
 
 							end;
 
@@ -653,11 +654,11 @@ mute_attributes( AttributeNameList, State ) ->
 -spec check_attributes_equal( [ attribute_name() ],
 		 [ attribute_entry() ], wooper:state() ) -> basic_utils:void().
 check_attributes_equal( _AttributeNames=[], _AttributeEntries,
-						_State ) ->
+							  _State ) ->
 	ok;
 
 check_attributes_equal( _AttributeNames=[ AttributeName | T ],
-						AttributeEntries, State ) ->
+							  AttributeEntries, State ) ->
 
 	{ AttributeValue, RemainingEntries } = option_list:extract(
 								 _K=AttributeName, AttributeEntries ),
@@ -733,7 +734,7 @@ replace_attributes( AttributeNames, AttributeEntries, State ) ->
 merge_list_for( AttributeName, AttributeEntries, State ) ->
 
 	{ ToMergeValue, RemainingEntries } = option_list:extract( _K=AttributeName,
-											AttributeEntries ),
+										AttributeEntries ),
 
 	InitialValue = ?getAttr(AttributeName),
 

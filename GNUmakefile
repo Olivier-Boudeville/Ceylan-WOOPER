@@ -75,7 +75,7 @@ clean: clean-release clean-archive
 
 
 clean-release:
-	@echo "    Cleaning release archive for WOOPER"
+	@echo "     Cleaning release archive for WOOPER"
 	-@cd .. && /bin/rm -rf $(WOOPER_RELEASE_BASE)
 
 

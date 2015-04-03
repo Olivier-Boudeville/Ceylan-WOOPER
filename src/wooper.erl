@@ -102,7 +102,7 @@
 
 
 % For the name of the registered process that keeps the per-class method
-% tables:
+% hashtables:
 %
 -include("wooper_class_manager.hrl").
 
@@ -125,22 +125,8 @@
 %-opaque state() :: #state_holder{}.
 -type state() :: #state_holder{}.
 
-
-
-% Describes access qualifiers that apply to classes and attributes:
--type access_qualifier() :: 'public' | 'protected' | 'private'.
-
-
-% Describes the qualifiers that apply to attributes:
--type attribute_qualifier() :: access_qualifier() | 'const' | 'final'.
-
-
-% Describes the qualifiers that apply to inherited classes:
--type inherited_class_qualifier() :: access_qualifier().
-
-
 % We prefer having it prefixed by wooper:
--export_type([ state/0, attribute_qualifier/0, inherited_class_qualifier/0 ]).
+-export_type([ state/0 ]).
 
 
 
@@ -199,7 +185,7 @@ send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
 								   [ pid() ], atom() ) -> basic_utils:void().
 send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
-							 AckAtom ) ->
+					AckAtom ) ->
 
 	send_requests( RequestName, RequestArgs, TargetInstancePIDs ),
 
@@ -215,7 +201,7 @@ send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 				[ pid() ], basic_utils:time_out(), atom() ) ->
 										 requests_outcome().
 send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
-							 Timeout, AckAtom ) ->
+					   Timeout, AckAtom ) ->
 
 	send_requests( RequestName, RequestArgs, TargetInstancePIDs ),
 
@@ -417,7 +403,7 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 
 				% Never returns:
 				construct_and_run_synchronous( Class, ConstructionParameters,
-											   ToNotifyPid )
+											ToNotifyPid )
 
 		end
 
@@ -450,11 +436,11 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 		ConstructState when is_record( ConstructState, state_holder ) ->
 
-			% Enforces a closer-to-ideal load factor of the table if needed,
+			% Enforces a closer-to-ideal load factor of the hashtable if needed,
 			% as by convention no attribute should be introduced outside of the
 			% constructor:
 			%
-			TunedTable = table:optimise(
+			TunedTable = ?wooper_hashtable_type:optimise(
 							ConstructState#state_holder.attribute_table ),
 
 			ReadyState = ConstructState#state_holder{
@@ -507,10 +493,10 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 	end,
 
-	% Enforces a closer-to-ideal load factor of the table if needed, as by
+	% Enforces a closer-to-ideal load factor of the hashtable if needed, as by
 	% convention no attribute should be introduced outside of the constructor:
 	%
-	TunedTable = table:optimise(
+	TunedTable = ?wooper_hashtable_type:optimise(
 							ConstructState#state_holder.attribute_table ),
 
 
@@ -553,11 +539,11 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 			% Notify early:
 			SpawnerPid ! { spawn_successful, self() },
 
-			% Enforces a closer-to-ideal load factor of the table if needed,
+			% Enforces a closer-to-ideal load factor of the hashtable if needed,
 			% as by convention no attribute should be introduced outside of the
 			% constructor:
 			%
-			TunedTable = table:optimise(
+			TunedTable = ?wooper_hashtable_type:optimise(
 							ConstructState#state_holder.attribute_table ),
 
 			ReadyState = ConstructState#state_holder{
@@ -619,10 +605,10 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 	% Notify early:
 	SpawnerPid ! { spawn_successful, self() },
 
-	% Enforces a closer-to-ideal load factor of the table if needed, as by
+	% Enforces a closer-to-ideal load factor of the hashtable if needed, as by
 	% convention no attribute should be introduced outside of the constructor:
 	%
-	TunedTable = table:optimise(
+	TunedTable = ?wooper_hashtable_type:optimise(
 							ConstructState#state_holder.attribute_table ),
 
 	ReadyState = ConstructState#state_holder{ attribute_table=TunedTable },
@@ -653,7 +639,8 @@ get_blank_state( Classname ) ->
 
 		virtual_table   = retrieve_virtual_table( Classname ),
 
-		attribute_table = table:new( ?wooper_attribute_count_upper_bound ),
+		attribute_table = ?wooper_hashtable_type:new(
+									?wooper_attribute_count_upper_bound ),
 
 		actual_class    = Classname,
 
@@ -726,7 +713,7 @@ default_exit_handler( State, Pid, ExitType ) ->
 % (helper)
 %
 -spec retrieve_virtual_table( class_name() ) ->
-				   table:table().
+				   ?wooper_hashtable_type:?wooper_hashtable_type().
 retrieve_virtual_table( Classname ) ->
 
 	% For per-instance virtual table: wooper_create_method_table_for(?MODULE).
@@ -734,7 +721,7 @@ retrieve_virtual_table( Classname ) ->
 	receive
 
 		{ virtual_table, Table } ->
-			%table:display( Table ),
+			%?wooper_hashtable_type:display( Table ),
 			Table
 
 	end.
@@ -795,7 +782,8 @@ get_class_name( State ) ->
 -spec state_to_string( wooper:state() ) -> string().
 state_to_string( State ) ->
 
-	Attributes = table:enumerate( State#state_holder.attribute_table ),
+	Attributes = ?wooper_hashtable_type:enumerate(
+								   State#state_holder.attribute_table ),
 
 	% We prefer having the attributes sorted by their name, in alphabetical
 	% order:
@@ -810,7 +798,7 @@ state_to_string( State ) ->
 				[
 					text_utils:term_to_string( AttName ),
 					text_utils:term_to_string( AttrValue, _MaxDepth=16,
-											   _MaxLength=100 )
+											_MaxLength=100 )
 				] )
 
 		end,
@@ -837,14 +825,14 @@ virtual_table_to_string( State ) ->
 
 		fun( { { Name, Arity }, Module }, String ) ->
 			String ++ io_lib:format( "     * ~s/~B -> ~s~n",
-									 [ Name, Arity, Module ] )
+				[ Name, Arity, Module ] )
 		end,
 
 		io_lib:format( "Virtual table of ~w:~n"
 					   "(method name/arity -> module defining that method)~n",
 					   [ self() ] ),
 
-		table:enumerate( State#state_holder.virtual_table ) ).
+		?wooper_hashtable_type:enumerate( State#state_holder.virtual_table ) ).
 
 
 
@@ -857,7 +845,7 @@ virtual_table_to_string( State ) ->
 instance_to_string( State ) ->
 	io_lib:format( "Inspection of instance ~w:~n~n  + ~s~n  + ~s",
 		[ self(), state_to_string( State ),
-		  virtual_table_to_string( State ) ] ).
+			virtual_table_to_string( State ) ] ).
 
 
 
@@ -897,9 +885,9 @@ display_instance( State ) ->
 % AttributeValue } pairs.
 %
 -spec get_all_attributes( wooper:state() ) ->
-									   table:entries().
+									   ?wooper_hashtable_type:entries().
 get_all_attributes( State ) ->
-	table:enumerate( State#state_holder.attribute_table ).
+	?wooper_hashtable_type:enumerate( State#state_holder.attribute_table ).
 
 
 

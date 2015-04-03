@@ -53,7 +53,7 @@
 -spec construct( wooper:state(), age(), gender() ) -> wooper:state().
 construct( State, ?wooper_construct_parameters ) ->
 	% No mother class.
-	setAttributes( State, [ { age, Age }, { gender, Gender } ] ).
+	setAttributes(State, [ { age, Age }, { gender, Gender } ] ).
 
 
 
@@ -89,7 +89,7 @@ setAge( State, _NewAge ) ->
 -spec declareBirthday( wooper:state() ) -> oneway_return().
 declareBirthday( State ) ->
 	?wooper_return_state_only(
-		setAttribute( State, age, ?getAttr(age) + 1 ) ).
+		setAttribute( State, age, ?getAttr(age)+1 ) ).
 
 
 
@@ -163,7 +163,7 @@ testDirectMethodExecution( State, NewAge ) ->
 -spec testSingleExecution( wooper:state() ) -> oneway_return().
 testSingleExecution( State ) ->
 	?wooper_return_state_only( setAttribute( side_effect_function( State ),
-											 age, 10 ) ).
+		age, 10 ) ).
 
 
 
@@ -188,7 +188,6 @@ example_fun() ->
 % This looks like a method, but it is not (returning only a string):
 %
 % (function)
-%
 -spec toString( wooper:state() ) -> string().
 toString( State ) ->
-	table:toString( State#state_holder.attribute_table ).
+	hashtable:toString( State#state_holder.attribute_table ).

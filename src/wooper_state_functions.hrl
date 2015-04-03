@@ -66,7 +66,7 @@ is_wooper_debug() ->
 						wooper:state().
 setAttribute( State, AttributeName, AttributeValue ) ->
    State#state_holder{
-	   attribute_table = table:addEntry(
+	   attribute_table = ?wooper_hashtable_type:addEntry(
 		   AttributeName,
 		   AttributeValue,
 		   State#state_holder.attribute_table )
@@ -91,7 +91,7 @@ setAttribute( State, AttributeName, AttributeValue ) ->
 setAttributes( State, ListOfAttributePairs ) ->
 
    State#state_holder{
-	   attribute_table = table:addEntries(
+	   attribute_table = ?wooper_hashtable_type:addEntries(
 		   ListOfAttributePairs,
 		   State#state_holder.attribute_table )
    }.
@@ -110,7 +110,8 @@ setAttributes( State, ListOfAttributePairs ) ->
 %
 -spec hasAttribute( wooper:state(), attribute_name() ) -> boolean().
 hasAttribute( State, AttributeName ) ->
-	table:hasEntry( AttributeName, State#state_holder.attribute_table ).
+	?wooper_hashtable_type:hasEntry( AttributeName,
+									State#state_holder.attribute_table ).
 
 
 
@@ -125,7 +126,8 @@ hasAttribute( State, AttributeName ) ->
 %
 -spec getAttribute( wooper:state(), attribute_name() ) -> attribute_value().
 getAttribute( State, AttributeName ) ->
-	table:getEntry( AttributeName, State#state_holder.attribute_table ).
+	?wooper_hashtable_type:getEntry( AttributeName,
+									 State#state_holder.attribute_table ).
 
 
 
@@ -139,7 +141,7 @@ getAttribute( State, AttributeName ) ->
 removeAttribute( State, AttributeName ) ->
 
 	State#state_holder{
-		attribute_table = table:removeEntry( AttributeName,
+		attribute_table = ?wooper_hashtable_type:removeEntry( AttributeName,
 			State#state_holder.attribute_table )
 	}.
 
@@ -157,7 +159,7 @@ removeAttribute( State, AttributeName ) ->
 addToAttribute( State, AttributeName, Value ) ->
 
 	State#state_holder{
-		attribute_table = table:addToEntry(
+		attribute_table = ?wooper_hashtable_type:addToEntry(
 			AttributeName,
 			Value,
 			State#state_holder.attribute_table )
@@ -177,7 +179,7 @@ addToAttribute( State, AttributeName, Value ) ->
 subtractFromAttribute( State, AttributeName, Value ) ->
 
 	State#state_holder{
-		attribute_table = table:subtractFromEntry(
+		attribute_table = ?wooper_hashtable_type:subtractFromEntry(
 			AttributeName,
 			Value,
 			State#state_holder.attribute_table )
@@ -197,7 +199,7 @@ subtractFromAttribute( State, AttributeName, Value ) ->
 incrementAttribute( State, AttributeName ) ->
 
 	State#state_holder{
-		attribute_table = table:addToEntry(
+		attribute_table = ?wooper_hashtable_type:addToEntry(
 			AttributeName,
 			_Value=1,
 			State#state_holder.attribute_table )
@@ -217,7 +219,7 @@ incrementAttribute( State, AttributeName ) ->
 decrementAttribute( State, AttributeName ) ->
 
 	State#state_holder{
-		attribute_table = table:addToEntry(
+		attribute_table = ?wooper_hashtable_type:addToEntry(
 			AttributeName,
 			_Value=-1,
 			State#state_holder.attribute_table )
@@ -235,7 +237,7 @@ decrementAttribute( State, AttributeName ) ->
 toggleAttribute( State, BooleanAttributeName ) ->
 
 	State#state_holder{
-		attribute_table = table:toggleEntry(
+		attribute_table = ?wooper_hashtable_type:toggleEntry(
 			BooleanAttributeName,
 			State#state_holder.attribute_table )
 	}.
@@ -255,7 +257,7 @@ toggleAttribute( State, BooleanAttributeName ) ->
 appendToAttribute( State, AttributeName, Element ) ->
 
 	State#state_holder{
-		attribute_table = table:appendToEntry(
+		attribute_table = ?wooper_hashtable_type:appendToEntry(
 			AttributeName,
 			Element,
 			State#state_holder.attribute_table )
@@ -276,7 +278,7 @@ appendToAttribute( State, AttributeName, Element ) ->
 deleteFromAttribute( State, AttributeName, Element ) ->
 
 	State#state_holder{
-		attribute_table = table:deleteFromEntry(
+		attribute_table = ?wooper_hashtable_type:deleteFromEntry(
 			AttributeName,
 			Element,
 			State#state_holder.attribute_table )
@@ -284,27 +286,29 @@ deleteFromAttribute( State, AttributeName, Element ) ->
 
 
 
-% Assumes the specified attribute is a table and adds the specified key/value
-% pair to it.
+% Assumes the specified attribute is a hashtable and adds the specified
+% key/value pair to it.
 %
 % Returns an updated state.
 %
 % Several lines compacted into a bit impressive one-liner.
 %
-% Note: to be used with much caution, as a class may use a type of table
+% Note: to be used with much caution, as a class may use a type of hashtable
 % unrelated to the one used by WOOPER (on the other hand we do not want to force
-% all classes to define 'table_type' or alike).
+% all classes to define 'hashtable_type').
 %
 -spec addKeyValueToAttribute( wooper:state(), attribute_name(),
-			table:key(), table:value() ) -> wooper:state().
+			?wooper_hashtable_type:key(), ?wooper_hashtable_type:value() ) ->
+									wooper:state().
 addKeyValueToAttribute( State, AttributeName, Key, Value ) ->
 
 	State#state_holder{
-		attribute_table = table:addEntry(
+		attribute_table = ?wooper_hashtable_type:addEntry(
 
 			AttributeName,
 
-			table:addEntry( Key, Value, table:getEntry( AttributeName,
+			?wooper_hashtable_type:addEntry( Key, Value,
+				?wooper_hashtable_type:getEntry( AttributeName,
 					State#state_holder.attribute_table ) ),
 
 			State#state_holder.attribute_table )
@@ -323,11 +327,11 @@ addKeyValueToAttribute( State, AttributeName, Key, Value ) ->
 % A case clause is triggered if the attribute did not exist.
 %
 -spec popFromAttribute( wooper:state(), attribute_name() ) ->
-							  { wooper:state(), attribute_value() }.
+							{ wooper:state(), attribute_value() }.
 popFromAttribute( State, AttributeName ) ->
 
-	{ Head, PoppedAttributeTable } = table:popFromEntry( AttributeName,
-										   State#state_holder.attribute_table ),
+	{ Head, PoppedAttributeTable } = ?wooper_hashtable_type:popFromEntry(
+				  AttributeName, State#state_holder.attribute_table ),
 
 	{ State#state_holder{ attribute_table = PoppedAttributeTable },
 		Head }.
@@ -337,7 +341,7 @@ popFromAttribute( State, AttributeName ) ->
 % Helper function for the checkUndefined macro.
 %
 -spec wooper_check_undefined( wooper:state(), attribute_name() ) ->
-									basic_utils:void().
+							basic_utils:void().
 wooper_check_undefined( State, Attribute ) ->
 
 	try
@@ -350,7 +354,8 @@ wooper_check_undefined( State, Attribute ) ->
 
 			% Attribute value was not equal to 'undefined':
 			throw( { attribute_was_not_undefined,
-					 { Attribute, UnexpectedValue }, Stack } );
+					 { Attribute, UnexpectedValue },
+					 Stack } );
 
 		exit:Error ->
 			% Other error (ex: unknown attribute):

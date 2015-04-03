@@ -80,8 +80,8 @@ wooper_main_loop( State ) ->
 		{ MethodAtom, Argument, CallerPid } when is_pid( CallerPid ) ->
 
 			?wooper_log_format( "Main loop (case B) for ~w: "
-								"request '~s' with argument ~w for ~w.~n",
-								[ self(), MethodAtom, Argument, CallerPid ] ),
+				"request '~s' with argument ~w for ~w.~n",
+				[ self(), MethodAtom, Argument, CallerPid ] ),
 
 			SenderAwareState = State#state_holder{ request_sender=CallerPid },
 
@@ -125,11 +125,11 @@ wooper_main_loop( State ) ->
 		{ MethodAtom, ArgumentList } when is_list( ArgumentList ) ->
 
 			?wooper_log_format( "Main loop (case C) for ~w: "
-								"oneway '~s' with argument list ~w.~n",
-								[ self(), MethodAtom, ArgumentList ] ),
+				"oneway '~s' with argument list ~w.~n",
+				[ self(), MethodAtom, ArgumentList ] ),
 
 			NewState = wooper_handle_oneway_execution( MethodAtom, State,
-													   ArgumentList ),
+												ArgumentList ),
 
 			%?wooper_log( "Main loop (case C) ended.~n" ),
 
@@ -155,7 +155,7 @@ wooper_main_loop( State ) ->
 		{ ping, CallerPid } ->
 
 			?wooper_log_format( "Main loop (case D) for ~w: oneway ping.~n",
-								[ self() ] ),
+				[ self() ] ),
 
 			CallerPid ! { pong, self() },
 
@@ -168,11 +168,11 @@ wooper_main_loop( State ) ->
 		{ MethodAtom, Argument } ->
 
 			?wooper_log_format( "Main loop (case E) for ~w: "
-								"oneway '~s' with argument ~w.~n",
-								[ self(), MethodAtom, Argument ] ),
+				"oneway '~s' with argument ~w.~n",
+				[ self(), MethodAtom, Argument ] ),
 
 			NewState = wooper_handle_oneway_execution( MethodAtom, State,
-													   [ Argument ] ),
+											[ Argument ] ),
 
 			%?wooper_log( "Main loop (case E) ended.~n" ),
 
@@ -200,7 +200,7 @@ wooper_main_loop( State ) ->
 
 			% Any result should be ignored, only the updated state is kept:
 			NewState = wooper_handle_oneway_execution( MethodAtom, State,
-													   _ArgumentList=[] ),
+												_ArgumentList=[] ),
 
 			%?wooper_log( "Main loop (case F) ended.~n" ),
 			wooper_main_loop( NewState );
@@ -212,8 +212,9 @@ wooper_main_loop( State ) ->
 			?wooper_log_format( "Main loop (case G) for ~w: exit with ~w.~n",
 				[ self(), { Pid, ExitType } ] ),
 
-			case table:lookupEntry( { _Name=onWOOPERExitReceived, _Arity=3 },
-									State#state_holder.virtual_table ) of
+			case ?wooper_hashtable_type:lookupEntry(
+					{ _Name=onWOOPERExitReceived, _Arity=3 },
+					State#state_holder.virtual_table ) of
 
 				{ value, _Key } ->
 

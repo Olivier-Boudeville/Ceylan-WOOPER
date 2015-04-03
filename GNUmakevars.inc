@@ -124,48 +124,11 @@ else
 endif
 
 
-
-## Parse-transform related section.
-
-
-# List here all the directories expected to contain parse transforms:
-PARSE_TRANSFORM_DIRS = $(WOOPER_TOP)/src
-
-
-# We do not define ERLANG_COMPILER_PARSE_TRANSFORM_OPT here, as we want to apply
-# the default Common transforms onto non-class modules as well.
-
-# Contrary to what is implied in the doc, a single '-pz' option applies only to
-# one directory:
-#
-PZ_PATH_OPT = $(foreach dir,$(BEAM_DIRS), -pz $(dir))
-
-
-# Defined to compile classes (ex: not the other non-class WOOPER modules):
-#
-WOOPER_COMPILER_OPT = $(ERLANG_COMPILER_OPT_NO_PT) $(PZ_PATH_OPT) \
-					"+{parse_transform,wooper_parse_transform}"
-
-
-# Used to compile the WOOPER parse transform: specifies the Common parse
-# transform and the -pz paths that may be needed:
-#
-ERLANG_COMPILER_OPT_FOR_PT += $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT) $(PZ_PATH_OPT)
-
-
-# Used only for non-class modules:
-ERLANG_COMPILER_OPT += $(ENABLE_WOOPER_DEBUG_OPT) -pz $(WOOPER_TOP)/src
-
-
-WOOPER_PARSE_TRANSFORM = $(WOOPER_TOP)/src/wooper_parse_transform.beam
-
-LAYER_PARSE_TRANSFORMS += $(WOOPER_PARSE_TRANSFORM)
-
+ERLANG_COMPILER_OPT += $(ENABLE_WOOPER_DEBUG_OPT)
 
 
 # For later reuse in the next layer of the software stack:
 WOOPER_PLT_FILE := $(WOOPER_TOP)/wooper.plt
-
 
 # This is the merged PLT of the level just below in the software stack.
 # For 'WOOPER', it is the PLT of 'Common':

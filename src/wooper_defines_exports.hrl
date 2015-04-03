@@ -4,6 +4,16 @@
 % Note: types are defined here but exported in wooper.erl.
 
 
+
+% Note: the hashtable type used by WOOPER (not the one exposed as a potential
+% attribute) should be a preprocessor define
+%
+% The 'hashtable' choice should be the best one here, as we precisely know when
+% to optimise the table (once for all).
+%
+-define( wooper_hashtable_type, hashtable ).
+
+
 % Approximate average attribute count for a given class instance, including
 % inherited ones (ideally should be slightly above the maximum number of actual
 % attributes for a given class)
@@ -33,8 +43,8 @@
 % instances rather than deep copy).
 %
 % The virtual table holds the method name to module mapping for a given class.
-% The attribute table (an associative table) records all the data members of a
-% given instance, including all the inherited ones.
+% The attribute table (a hashtable) records all the data members of a given
+% instance, including all the inherited ones.
 %
 % The request sender member is used internally by WOOPER so that a request
 % method have a way of retrieving the corresponding caller PID. This avoids the
@@ -53,9 +63,11 @@
 %
 -record( state_holder, {
 
-		virtual_table    :: 'undefined' | table:table(),
+		virtual_table    :: 'undefined' |
+							?wooper_hashtable_type:?wooper_hashtable_type(),
 
-		attribute_table  :: 'undefined' | table:table(),
+		attribute_table  :: 'undefined' |
+							?wooper_hashtable_type:?wooper_hashtable_type(),
 
 		% Only means we know to access the actual class name:
 		%
