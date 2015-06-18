@@ -96,7 +96,7 @@ wooper_execute_method( MethodAtom, State, Parameters )
 			wooper_effective_method_execution( LocatedModule, MethodAtom,
 				State, Parameters );
 
-		hashtable_key_not_found ->
+		key_not_found ->
 
 			case State#state_holder.request_sender of
 
@@ -167,7 +167,7 @@ wooper_execute_method( MethodAtom, State, Parameters ) ->
 				State, Parameters );
 
 
-		hashtable_key_not_found ->
+		key_not_found ->
 
 			case State#state_holder.request_sender of
 
@@ -221,14 +221,14 @@ wooper_execute_method( MethodAtom, State, Parameters ) ->
 % Looks-up specified method (Method/Arity, ex: toString/0) to be found in
 % heritance tree and returns either { 'value', Module } with Module
 % corresponding to the class that implements that method, or
-% 'hashtable_key_not_found'.
+% 'key_not_found'.
 %
 % Note: uses the pre-built virtual table for this class.
 %
 % (helper)
 %
 -spec wooper_lookup_method( wooper:state(), method_name(), arity() ) ->
-		   { 'value', class_name() } | 'hashtable_key_not_found'.
+		   { 'value', class_name() } | 'key_not_found'.
 wooper_lookup_method( State, MethodAtom, Arity ) ->
 	?wooper_hashtable_type:lookupEntry( { MethodAtom, Arity },
 		State#state_holder.virtual_table ).

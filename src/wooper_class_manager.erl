@@ -1,4 +1,4 @@
-% Copyright (C) 2007-2014 Olivier Boudeville
+% Copyright (C) 2007-2015 Olivier Boudeville
 %
 % This file is part of the WOOPER library.
 %
@@ -240,7 +240,7 @@ get_virtual_table_for( Module, Tables ) ->
 			% Cache hit, no change in internal data:
 			{ Tables, Table };
 
-		hashtable_key_not_found ->
+		key_not_found ->
 
 			% Time to create this virtual table and to store it:
 			display_table_creation( Module ),

@@ -8,10 +8,7 @@
 % Note: the hashtable type used by WOOPER (not the one exposed as a potential
 % attribute) should be a preprocessor define
 %
-% The 'hashtable' choice should be the best one here, as we precisely know when
-% to optimise the table (once for all).
-%
--define( wooper_hashtable_type, hashtable ).
+-define( wooper_hashtable_type, table ).
 
 
 % Approximate average attribute count for a given class instance, including

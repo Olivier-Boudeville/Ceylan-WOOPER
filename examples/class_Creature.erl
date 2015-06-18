@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2014 Olivier Boudeville
+% Copyright (C) 2003-2015 Olivier Boudeville
 %
 % This file is part of the WOOPER examples.
 %
@@ -190,4 +190,4 @@ example_fun() ->
 % (function)
 -spec toString( wooper:state() ) -> string().
 toString( State ) ->
-	hashtable:toString( State#state_holder.attribute_table ).
+	table:toString( State#state_holder.attribute_table ).
