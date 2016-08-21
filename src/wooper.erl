@@ -1,4 +1,4 @@
-% Copyright (C) 2012-2015 Olivier Boudeville
+% Copyright (C) 2012-2016 Olivier Boudeville
 %
 % This file is part of the WOOPER library.
 %
@@ -76,6 +76,15 @@
 
 
 
+% For log and error reporting:
+%
+-export([ log_info/1, log_info/2,
+		  log_warning/1, log_warning/2,
+		  log_error/1, log_error/2, log_error/3,
+		  on_failed_request/6, on_failed_oneway/5
+		]).
+
+
 -ifdef(wooper_debug).
 
 % State-related helpers (only available in debug mode):
@@ -133,8 +142,11 @@
 % For getAttr and al:
 -include("wooper_state_exports.hrl").
 
+
 % Otherwise executeRequest/3 and all reported as unused:
 -include("wooper_execute_exports.hrl").
+
+%-include("wooper_execute_internal_exports.hrl").
 
 
 % Now, function definitions:
@@ -166,7 +178,7 @@
 % (helper)
 %
 -spec send_requests( request_name(), method_arguments(), [ pid() ] ) ->
-						  basic_utils:void().
+						   basic_utils:void().
 send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 
 	Request = { RequestName, RequestArgs, self() },
@@ -185,7 +197,7 @@ send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
 								   [ pid() ], atom() ) -> basic_utils:void().
 send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
-					AckAtom ) ->
+							 AckAtom ) ->
 
 	send_requests( RequestName, RequestArgs, TargetInstancePIDs ),
 
@@ -198,10 +210,10 @@ send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 % whether it succeeded or if some instances triggered a time-out.
 %
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
-				[ pid() ], basic_utils:time_out(), atom() ) ->
+								   [ pid() ], time_utils:time_out(), atom() ) ->
 										 requests_outcome().
 send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
-					   Timeout, AckAtom ) ->
+							 Timeout, AckAtom ) ->
 
 	send_requests( RequestName, RequestArgs, TargetInstancePIDs ),
 
@@ -233,14 +245,14 @@ wait_for_request_answers( RequestedPidList, AckAtom ) ->
 %
 % (helper)
 %
--spec wait_for_request_answers( [ pid() ], basic_utils:time_out(), atom() ) ->
-					  requests_outcome().
+-spec wait_for_request_answers( [ pid() ], time_utils:time_out(), atom() ) ->
+									  requests_outcome().
 wait_for_request_answers( RequestedPidList, _Timeout=infinity, AckAtom ) ->
 	wait_indefinitively_for_request_answers( RequestedPidList, AckAtom );
 
 wait_for_request_answers( RequestedPidList, Timeout, AckAtom ) ->
 
-	InitialTimestamp = basic_utils:get_timestamp(),
+	InitialTimestamp = time_utils:get_timestamp(),
 
 	wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
 							  AckAtom ).
@@ -301,8 +313,7 @@ wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
 
 	after PollDuration ->
 
-			NewDuration = basic_utils:get_duration( InitialTimestamp,
-											  basic_utils:get_timestamp() ),
+			NewDuration = time_utils:get_duration_since( InitialTimestamp ),
 
 			case NewDuration > Timeout of
 
@@ -332,7 +343,7 @@ wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
 % (exported helper)
 %
 -spec obtain_results_for_requests( request_name(), method_arguments(),
-						  [ pid() ] ) -> [ any() ].
+								   [ pid() ] ) -> [ any() ].
 obtain_results_for_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 
 	send_requests( RequestName, RequestArgs, TargetInstancePIDs ),
@@ -403,7 +414,7 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 
 				% Never returns:
 				construct_and_run_synchronous( Class, ConstructionParameters,
-											ToNotifyPid )
+											   ToNotifyPid )
 
 		end
 
@@ -454,13 +465,10 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 		Other ->
 
-			error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s: "
+			log_error( "~nWOOPER error for PID ~w of class ~s: "
 				"constructor did not return a state, but returned '~p' instead."
-				" Construction parameters were:~n~p.~n",
+				" Construction parameters were:~n~p.",
 				[ self(), Classname, Other, ConstructionParameters ] ),
-
-			% Wait a bit as error_msg seems asynchronous:
-			timer:sleep( ?wooper_error_display_waiting ),
 
 			throw( { invalid_constructor, Classname } )
 
@@ -560,13 +568,10 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 
 		Other ->
 
-			error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s: "
-				"constructor did not return a state, but returned '~p' instead."
-				" Construction parameters were:~n~p.~n",
-				[ self(), Classname, Other, ConstructionParameters ] ),
-
-			% Wait a bit as error_msg seems asynchronous:
-			timer:sleep( ?wooper_error_display_waiting ),
+			log_error( "~nWOOPER error for PID ~w of class ~s: "
+					   "constructor did not return a state, but returned '~p' "
+					   "instead. Construction parameters were:~n~p.~n",
+					   [ self(), Classname, Other, ConstructionParameters ] ),
 
 			throw( { invalid_constructor, Classname } )
 
@@ -677,10 +682,11 @@ get_class_manager() ->
 			% 10-second time-out:
 			after 10000 ->
 
-				error_logger:error_msg( "wooper:get_class_manager: "
+				log_error( "wooper:get_class_manager: "
 					"unable to find WOOPER class manager after 10 seconds.~n"
-					"Please check that WOOPER has been compiled beforehand.~n"
+					"Please check that WOOPER has been compiled beforehand."
 				),
+
 				undefined
 
 			end
@@ -699,9 +705,11 @@ get_class_manager() ->
 -spec default_exit_handler( wooper:state(), pid(), any() ) -> wooper:state().
 default_exit_handler( State, Pid, ExitType ) ->
 
-	error_logger:warning_msg( "WOOPER default EXIT handler of the ~w "
-	  "instance ~w ignored following EXIT message from ~w:~n'~p'.~n~n",
-	  [ State#state_holder.actual_class, self(), Pid, ExitType ] ),
+	wooper:log_warning( "WOOPER default EXIT handler of the ~w "
+						"instance ~w ignored the following EXIT message "
+						"from ~w:~n'~p'.~n",
+						[ State#state_holder.actual_class, self(), Pid,
+						  ExitType ] ),
 
 	State.
 
@@ -732,7 +740,7 @@ retrieve_virtual_table( Classname ) ->
 %
 % (helper)
 %
--spec trigger_error( 'throw' | 'exit' | 'error', term(), class_name(),
+-spec trigger_error( basic_utils:exception_class(), term(), class_name(),
 					 [ method_arguments() ] ) -> no_return().
 trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters ) ->
 
@@ -741,18 +749,14 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters ) ->
 
 	Arity = length( ConstructionParameters ) + 1,
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w, "
-		"constructor (~s:construct/~B) failed (cause: ~p):~n~n"
-		" - with error term:~n~p~n~n"
-		" - stack trace was (latest calls first):~n~p~n~n"
-		" - for parameters:~n~p~n~n",
-		[ self(), Classname, Arity, Reason, ErrorTerm, erlang:get_stacktrace(),
-		  ConstructionParameters ] ),
+	log_error( "~nWOOPER error for PID ~w, "
+			   "constructor (~s:construct/~B) failed (cause: ~p):~n~n"
+			   " - with error term:~n  ~p~n~n"
+			   " - stack trace was (latest calls first):~n~s~n"
+			   " - for parameters:~n  ~p~n",
+			   [ self(), Classname, Arity, Reason, ErrorTerm,
+				 code_utils:interpret_stacktrace(), ConstructionParameters ] ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-
-	% Terminates the process:
 	throw( { wooper_constructor_failed, self(), Classname, Arity,
 			 ConstructionParameters, ErrorTerm } ).
 
@@ -798,7 +802,7 @@ state_to_string( State ) ->
 				[
 					text_utils:term_to_string( AttName ),
 					text_utils:term_to_string( AttrValue, _MaxDepth=16,
-											_MaxLength=100 )
+											   _MaxLength=100 )
 				] )
 
 		end,
@@ -824,8 +828,8 @@ virtual_table_to_string( State ) ->
 	lists:foldl(
 
 		fun( { { Name, Arity }, Module }, String ) ->
-			String ++ io_lib:format( "     * ~s/~B -> ~s~n",
-				[ Name, Arity, Module ] )
+				String ++ io_lib:format( "     * ~s/~B -> ~s~n",
+									 [ Name, Arity, Module ] )
 		end,
 
 		io_lib:format( "Virtual table of ~w:~n"
@@ -844,8 +848,8 @@ virtual_table_to_string( State ) ->
 -spec instance_to_string( wooper:state() ) -> string().
 instance_to_string( State ) ->
 	io_lib:format( "Inspection of instance ~w:~n~n  + ~s~n  + ~s",
-		[ self(), state_to_string( State ),
-			virtual_table_to_string( State ) ] ).
+				   [ self(), state_to_string( State ),
+					 virtual_table_to_string( State ) ] ).
 
 
 
@@ -885,9 +889,207 @@ display_instance( State ) ->
 % AttributeValue } pairs.
 %
 -spec get_all_attributes( wooper:state() ) ->
-									   ?wooper_hashtable_type:entries().
+								?wooper_hashtable_type:entries().
 get_all_attributes( State ) ->
 	?wooper_hashtable_type:enumerate( State#state_holder.attribute_table ).
+
+
+
+% Log section.
+
+
+% Reports (on a best-effort basis) the specified information to the user,
+% typically by displaying an information report on the console.
+%
+-spec log_info( string() ) -> basic_utils:void().
+log_info( String ) ->
+	error_logger:info_msg( String ++ "\n" ).
+
+
+% Reports (on a best-effort basis) the specified information to the user,
+% typically by displaying an information report on the console.
+%
+-spec log_info( text_utils:format_string(), [ term() ] ) ->
+					  basic_utils:void().
+log_info( FormatString, ValueList ) ->
+	error_logger:info_msg( FormatString ++ "\n", ValueList ).
+
+
+
+% Reports (on a best-effort basis) the specified warning to the user,
+% typically by displaying a warning report on the console.
+%
+-spec log_warning( string() ) -> basic_utils:void().
+log_warning( String ) ->
+	error_logger:warning_msg( String ++ "\n" ),
+
+	% Wait a bit, as error_msg seems asynchronous:
+	system_utils:await_output_completion( ?wooper_warning_display_waiting ).
+
+
+% Reports (on a best-effort basis) the specified warning to the user,
+% typically by displaying a warning report on the console.
+%
+-spec log_warning( text_utils:format_string(), [ term() ] ) ->
+					  basic_utils:void().
+log_warning( FormatString, ValueList ) ->
+	error_logger:warning_msg( FormatString ++ "\n", ValueList ),
+
+	% Wait a bit, as error_msg seems asynchronous:
+	system_utils:await_output_completion( ?wooper_warning_display_waiting ).
+
+
+
+% Reports (as synchronously as possible, in order to avoid loosing this
+% notification) the specified error to the user, typically by displaying an
+% error report on the console (non-halting function, ex: no exception thrown).
+%
+-spec log_error( string() ) -> basic_utils:void().
+log_error( Message ) ->
+
+	error_logger:error_msg( Message ++ "\n" ),
+
+	% Wait a bit, as error_msg seems asynchronous:
+	system_utils:await_output_completion( ?wooper_error_display_waiting ).
+
+
+
+% Reports (as synchronously as possible, in order to avoid loosing this
+% notification) the specified error to the user, typically by displaying an
+% error report on the console (non-halting function, ex: no exception thrown).
+%
+-spec log_error( text_utils:format_string(), [ term() ] ) ->
+						   basic_utils:void().
+log_error( FormatString, ValueList ) ->
+
+	error_logger:error_msg( FormatString
+							++ "=END OF WOOPER ERROR REPORT FOR ~w ===~n~n~n",
+							ValueList ++ [ self() ] ),
+
+	% Wait a bit, as error_msg seems asynchronous:
+	system_utils:await_output_completion( ?wooper_error_display_waiting ).
+
+
+
+% Reports (as synchronously as possible, in order to avoid loosing this
+% notification) the specified error about the current WOOPER instance
+% (preferably thanks to its state, otherwise with the current executed module,
+% so with fewer information) to the user, typically by displaying an error
+% report on the console (non-halting function, ex: no exception thrown).
+%
+-spec log_error( text_utils:format_string(), [ term() ],
+		 wooper:state() | basic_utils:module_name() ) -> basic_utils:void().
+log_error( FormatString, ValueList, State )
+  when is_record( State, state_holder ) ->
+	io:format( "~n", [] ),
+
+	% Node information distracting:
+	%log_error( "WOOPER error for ~s instance of PID ~w on node ~s"
+	%		   ++ FormatString,
+	%		   [ State#state_holder.actual_class, self(), node() | ValueList ] );
+	log_error( "WOOPER error for ~s instance of PID ~w"
+			   ++ FormatString,
+			   [ State#state_holder.actual_class, self() | ValueList ] );
+
+log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
+	io:format( "~n", [] ),
+	% Node information distracting:
+	%log_error( "WOOPER error for instance of PID ~w on node ~s triggered "
+	%		   "in module ~s" ++ FormatString,
+	%		   [ self(), ModuleName, node() | ValueList ] ).
+	log_error( "WOOPER error for instance of PID ~w triggered "
+			   "in module ~s" ++ FormatString,
+			   [ self(), ModuleName | ValueList ] ).
+
+
+
+
+% Called by WOOPER whenever a request fails, to report it on the console and to
+% the caller, and have the process instance exit.
+%
+-spec on_failed_request( request_name(), method_arguments(), pid(),
+						 atom(), term(), wooper:state() ) -> no_return().
+on_failed_request( RequestAtom, ArgumentList, CallerPid, Reason, ErrorTerm,
+				   State ) ->
+
+	Arity = length( ArgumentList ) + 1,
+
+	ModulePrefix = lookup_method_prefix( RequestAtom, Arity, State ),
+
+	log_error( ": request ~s~s/~B failed (cause: ~s):~n~n"
+			   " - with error term:~n  ~p~n~n"
+			   " - stack trace was (latest calls first):~n~s~n"
+			   " - for parameters:~n  ~p~n",
+			   [ ModulePrefix, RequestAtom, Arity, Reason, ErrorTerm,
+				  code_utils:interpret_stacktrace(), ArgumentList ], State ),
+
+			% ArgumentList and actual method module not propagated back to the
+			% caller:
+			%
+			ErrorReason = { request_failed, State#state_holder.actual_class,
+							self(), RequestAtom, { Reason, ErrorTerm } },
+
+			CallerPid ! { wooper_error, ErrorReason },
+
+			% We do not want a duplicate error message, yet we cannot use
+			% 'normal' as linked processes would not be triggered:
+			%
+			exit( request_failed ).
+
+
+
+% Called by WOOPER whenever a oneway fails, to report it on the console and to
+% the caller, and have the process instance exit.
+%
+-spec on_failed_oneway( oneway_name(), method_arguments(), atom(), term(),
+						wooper:state() ) -> no_return().
+on_failed_oneway( OnewayAtom, ArgumentList, Reason, ErrorTerm, State ) ->
+
+	Arity = length( ArgumentList ) + 1,
+
+	ModulePrefix = lookup_method_prefix( OnewayAtom, Arity, State ),
+
+	log_error( ": oneway ~s~s/~B failed (cause: ~s):~n~n"
+			   " - with error term:~n  ~p~n~n"
+			   " - stack trace was (latest calls first):~n~s~n"
+			   " - for parameters:~n  ~p~n",
+			   [ ModulePrefix, OnewayAtom, Arity, Reason, ErrorTerm,
+				  code_utils:interpret_stacktrace(), ArgumentList ], State ),
+
+			% No caller to notify, for oneways.
+
+			% We do not want a duplicate error message, yet we cannot use
+			% 'normal' as linked processes would not be triggered:
+			%
+			exit( oneway_failed ).
+
+
+
+% Looks up the module defining specified method, and returns a textual prefix
+% specifying it, if found.
+%
+% Used for error management, hence designed not to fail.
+%
+% (helper)
+%
+-spec lookup_method_prefix( method_name(), arity(), wooper:state() ) ->
+						   string().
+lookup_method_prefix( MethodAtom, Arity, State ) ->
+
+	try wooper_lookup_method( State, MethodAtom, Arity ) of
+
+								{ value, Module } ->
+									text_utils:format( "~s:", [ Module ] );
+
+								key_not_found ->
+									""
+
+						  catch
+
+							  _:_ ->
+								  ""
+
+	end.
 
 
 
@@ -1041,7 +1243,7 @@ delete_synchronously_any_instance_referenced_in( Attributes, State )
 
 delete_synchronously_any_instance_referenced_in( Attribute, State ) ->
 
-	case ?getAttr(Attribute) of
+	case ?getAttr( Attribute ) of
 
 		undefined ->
 			State;
@@ -1069,7 +1271,7 @@ delete_pid_from( Attributes, State ) ->
 	DeleteMessage = { synchronous_delete, self() },
 
 	delete_pid_from( Attributes, DeleteMessage, State, _AccAttr=[],
-					_AccPid=[] ).
+					 _AccPid=[] ).
 
 
 delete_pid_from( _Attributes=[], _DeleteMessage, _State, AccAttr, AccPid ) ->
@@ -1082,13 +1284,13 @@ delete_pid_from( [ Attr | T ], DeleteMessage, State, AccAttr, AccPid ) ->
 		undefined ->
 			delete_pid_from( T, DeleteMessage, State, AccAttr, AccPid ) ;
 
-		Pid when is_pid(Pid) ->
+		Pid when is_pid( Pid ) ->
 
 			%io:format( "Deleting now ~s (PID: ~w).~n", [ Attr, Pid ] ),
 
 			Pid ! DeleteMessage,
 			delete_pid_from( T, DeleteMessage, State, [ Attr | AccAttr ],
-					[ Pid | AccPid ] )
+							 [ Pid | AccPid ] )
 
 	end.
 

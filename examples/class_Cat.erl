@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2015 Olivier Boudeville
+% Copyright (C) 2003-2016 Olivier Boudeville
 %
 % This file is part of the WOOPER examples.
 %
@@ -111,6 +111,9 @@ canEat( State, _OtherFood ) ->
 % Const request:
 -spec getWhiskerColor( wooper:state() ) -> request_return( color() ).
 getWhiskerColor( State )->
+
+	io:format( "getWhiskerColor/1 request called by ~w.~n", [ ?getSender() ] ),
+
 	?wooper_return_state_result( State, ?getAttr(whisker_color) ).
 
 

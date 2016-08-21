@@ -1,3 +1,30 @@
+% Copyright (C) 2003-2016 Olivier Boudeville
+%
+% This file is part of the WOOPER library.
+%
+% This library is free software: you can redistribute it and/or modify
+% it under the terms of the GNU Lesser General Public License or
+% the GNU General Public License, as they are published by the Free Software
+% Foundation, either version 3 of these Licenses, or (at your option)
+% any later version.
+% You can also redistribute it and/or modify it under the terms of the
+% Mozilla Public License, version 1.1 or later.
+%
+% This library is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+% GNU Lesser General Public License and the GNU General Public License
+% for more details.
+%
+% You should have received a copy of the GNU Lesser General Public
+% License, of the GNU General Public License and of the Mozilla Public License
+% along with this library.
+% If not, see <http://www.gnu.org/licenses/> and
+% <http://www.mozilla.org/MPL/>.
+%
+% Author: Olivier Boudeville (olivier.boudeville@esperide.com)
+
+
 % Modular WOOPER header gathering all general-purposes defines.
 
 
@@ -18,13 +45,22 @@
 -define( wooper_attribute_count_upper_bound, 16 ).
 
 
-% Number of milliseconds to wait for, in order to be sure that the error message
-% could be written to the console, knowing that the operation is asynchronous
-% and thus may not be performed should the VM halt immediately:
+% Number of milliseconds to wait for, in order to be reasonably sure that the
+% warning message could be written to the console, knowing that the operation is
+% asynchronous and thus may not be performed should the VM halt immediately:
 %
 % (otherwise you will not see any stacktrace)
 %
--define( wooper_error_display_waiting, 400 ).
+-define( wooper_warning_display_waiting, 200 ).
+
+
+% Number of milliseconds to wait for, in order to be reasonably sure that the
+% error message could be written to the console, knowing that the operation is
+% asynchronous and thus may not be performed should the VM halt immediately:
+%
+% (otherwise you will not see any stacktrace)
+%
+-define( wooper_error_display_waiting, 500 ).
 
 
 
@@ -73,11 +109,11 @@
 		%
 		% To be used, instead of ?MODULE or alike.
 		%
-		actual_class     :: basic_utils:module_name(),
+		actual_class :: basic_utils:module_name(),
 
-		request_sender   :: pid() | 'undefined'
+		request_sender :: pid() | 'undefined'
 
-} ).
+}).
 
 
 

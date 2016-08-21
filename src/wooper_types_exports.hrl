@@ -1,3 +1,30 @@
+% Copyright (C) 2003-2016 Olivier Boudeville
+%
+% This file is part of the WOOPER library.
+%
+% This library is free software: you can redistribute it and/or modify
+% it under the terms of the GNU Lesser General Public License or
+% the GNU General Public License, as they are published by the Free Software
+% Foundation, either version 3 of these Licenses, or (at your option)
+% any later version.
+% You can also redistribute it and/or modify it under the terms of the
+% Mozilla Public License, version 1.1 or later.
+%
+% This library is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+% GNU Lesser General Public License and the GNU General Public License
+% for more details.
+%
+% You should have received a copy of the GNU Lesser General Public
+% License, of the GNU General Public License and of the Mozilla Public License
+% along with this library.
+% If not, see <http://www.gnu.org/licenses/> and
+% <http://www.mozilla.org/MPL/>.
+%
+% Author: Olivier Boudeville (olivier.boudeville@esperide.com)
+
+
 % Modular WOOPER header gathering the main types of interest.
 
 
@@ -49,6 +76,9 @@
 -type attribute_entry() :: { attribute_name(), attribute_value() }.
 
 
+% PID of a WOOPER instance.
+-type instance_pid() :: pid().
+
 
 % A request is typically:
 %
@@ -63,10 +93,12 @@
 
 
 % We prefer defining these types into an header file (this one) rather than in
-% the wooper module, to lighten the syntax:
+% the wooper module, to lighten the syntax (no prefix module):
 %
 -export_type([ class_name/0, method_name/0, request_name/0, oneway_name/0,
 			   method_argument/0, method_arguments/0, requests_outcome/0 ]).
 
 -export_type([ request_result/1, request_return/1, oneway_return/0,
 			   attribute_name/0, attribute_value/0, attribute_entry/0 ]).
+
+-export_type([ instance_pid/0 ]).

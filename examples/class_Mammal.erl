@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2015 Olivier Boudeville
+% Copyright (C) 2003-2016 Olivier Boudeville
 %
 % This file is part of the WOOPER examples.
 %
@@ -51,7 +51,7 @@ construct( State, ?wooper_construct_parameters ) ->
 	CreatureState = class_Creature:construct( State, Age, Gender ),
 
 	{ RequestedState, ActualClass } = executeRequest( CreatureState,
-													 getClassName ),
+													  getClassName ),
 
 	% Even when constructing a cat, we should see the right class (class_Cat)
 	% and not the current class (class_Mammal):
@@ -69,7 +69,7 @@ construct( State, ?wooper_construct_parameters ) ->
 destruct( State ) ->
 
 	{ RequestedState, ActualClass } = executeRequest( State,
-													 getClassName ),
+													  getClassName ),
 
 	% Even when constructing a cat, we should see the right class (class_Cat)
 	% and not the current class (class_Mammal):
@@ -143,6 +143,7 @@ getArbitraryNumber( State ) ->
 
 	% Interesting test for the stack trace, when called from the Mammal test:
 	%throw( exception_throw_test_from_request ),
+
 	?wooper_return_state_result( RequestedState, 15 ).
 
 

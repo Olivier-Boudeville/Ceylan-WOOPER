@@ -1,48 +1,54 @@
-% Modular WOOPER header gathering all execute{Request,Oneway}* primitives
-% provided to write methods (function definitions here).
+% Copyright (C) 2003-2016 Olivier Boudeville
+%
+% This file is part of the WOOPER library.
+%
+% This library is free software: you can redistribute it and/or modify
+% it under the terms of the GNU Lesser General Public License or
+% the GNU General Public License, as they are published by the Free Software
+% Foundation, either version 3 of these Licenses, or (at your option)
+% any later version.
+% You can also redistribute it and/or modify it under the terms of the
+% Mozilla Public License, version 1.1 or later.
+%
+% This library is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+% GNU Lesser General Public License and the GNU General Public License
+% for more details.
+%
+% You should have received a copy of the GNU Lesser General Public
+% License, of the GNU General Public License and of the Mozilla Public License
+% along with this library.
+% If not, see <http://www.gnu.org/licenses/> and
+% <http://www.mozilla.org/MPL/>.
+%
+% Author: Olivier Boudeville (olivier.boudeville@esperide.com)
 
 
-% Request specs.
-
--spec executeRequest( wooper:state(), request_name() ) ->
-	{ wooper:state(), method_internal_result() }.
-
-
--spec executeRequest( wooper:state(), request_name(), method_arguments() ) ->
-	{ wooper:state(), method_internal_result() }.
+% Modular WOOPER header gathering all execute{Request,Oneway}* primitives that
+% shall be (explicitly) used when having to call a method of this class from
+% this class (i.e. when implementing methods calling other methods).
 
 
--spec executeRequestWith( wooper:state(), class_name(), request_name() ) ->
-	{ wooper:state(), method_internal_result() }.
-
-
--spec executeRequestWith( wooper:state(), class_name(), request_name(),
-			method_arguments() ) ->
-	{ wooper:state(), method_internal_result() }.
-
-
-
-% Oneway specs.
-
--spec executeOneway( wooper:state(), oneway_name() ) -> wooper:state().
-
-
--spec executeOneway( wooper:state(), oneway_name(), method_arguments() ) ->
-						   wooper:state().
-
-
-
--spec executeOnewayWith( wooper:state(), class_name(), oneway_name() ) ->
-							   wooper:state().
-
-
--spec executeOnewayWith( wooper:state(), class_name(), oneway_name(),
-				method_arguments() ) -> wooper:state().
-
+% Implementation notes:
+%
+% The initial request_sender field shall be preserved; for example, the body of
+% a request might include a executeOneway call; if nothing was done, the oneway
+% would detect a request/oneway mismatch; if request_sender was set to
+% 'undefined', then the request would have lost the memory of its caller. Hence
+% that field must be saved and restored in each execute* call, to allow nesting.
 
 
 
--ifdef(wooper_debug).
+% TODO: rename execute*With to execute*As.
+
+
+
+% Implementation section (debug mode managed in the called wooper_* helpers)
+
+
+
+% Section for requests.
 
 
 
@@ -51,58 +57,43 @@
 %
 % Returns an updated state.
 %
+-spec executeRequest( wooper:state(), request_name() ) ->
+							{ wooper:state(), method_internal_result() }.
+
 executeRequest( State, RequestAtom ) when is_record( State, state_holder )
-		andalso is_atom(RequestAtom) ->
+										  andalso is_atom( RequestAtom ) ->
 
-	%io:format("executeRequest/2: executing ~s() from ~s.~n",
-	%	[ RequestAtom, State#state_holder.actual_class ]),
+	%io:format( "executeRequest/2: executing ~s() from ~s.~n",
+	%	[ RequestAtom, State#state_holder.actual_class ] ),
 
-	% Auto-calling method:
-	SenderAwareState = State#state_holder{ request_sender=self() },
-
-	% Correction checking by pattern-matching:
-	{ NewState, { wooper_result, Result } } = wooper_execute_method(
-									   RequestAtom, SenderAwareState, [] ),
-
-	% Returns:
-	{ NewState#state_holder{ request_sender=undefined }, Result };
-
+	wooper_handle_local_request_execution( RequestAtom, State,
+										   _ArgumentList=[] );
 
 executeRequest( State, RequestAtomError )
   when is_record( State, state_holder ) ->
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing request: '~p' is not an atom.~n",
-		[ self(), State#state_holder.actual_class, RequestAtomError ] ),
+	wooper:log_error( "when executing local request: '~p' is not an atom.",
+					  [ RequestAtomError ], State ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_request_call, RequestAtomError } );
+	throw( { wooper_invalid_request_call, RequestAtomError } );
 
 
 executeRequest( StateError, RequestAtom ) when is_atom( RequestAtom ) ->
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing request ~p: "
-		"first parameter should be a state, not '~p'.~n",
-		[ self(), ?MODULE, RequestAtom, StateError ] ),
+	wooper:log_error( "when executing request ~p: "
+					  "first parameter should be a state, not '~p'.",
+					  [ RequestAtom, StateError ], ?MODULE ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_request_call, RequestAtom } );
+	throw( { wooper_invalid_request_call, RequestAtom } );
 
 
 executeRequest( StateError, RequestAtomError ) ->
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-						   "when executing request: '~p' is not a state and "
-						   "'~p' is not an atom.~n",
-						   [ self(), ?MODULE, StateError, RequestAtomError ] ),
+	wooper:log_error( "when executing request: '~p' is not a state and "
+					  "'~p' is not an atom.",
+					  [ StateError, RequestAtomError ], ?MODULE ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_request_call, StateError, RequestAtomError } ).
-
+	throw( { wooper_invalid_request_call, StateError, RequestAtomError } ).
 
 
 
@@ -121,67 +112,57 @@ executeRequest( StateError, RequestAtomError ) ->
 %
 % Note: Stripped-down version of wooper_main_loop.
 %
+-spec executeRequest( wooper:state(), request_name(), method_arguments() ) ->
+							{ wooper:state(), method_internal_result() }.
 executeRequest( State, RequestAtom, ArgumentList ) when
-		is_record( State, state_holder ) andalso is_atom( RequestAtom )
-		andalso is_list( ArgumentList ) ->
+	  is_record( State, state_holder ) andalso is_atom( RequestAtom )
+	  andalso is_list( ArgumentList ) ->
 
-	%io:format("executeRequest/3 with list: executing ~s(~w) from ~s.~n",
-	%	[ RequestAtom, ArgumentList, State#state_holder.actual_class ]),
+	%io:format( "executeRequest/3 with list: executing ~s(~w) from ~s.~n",
+	%	[ RequestAtom, ArgumentList, State#state_holder.actual_class ] ),
 
-	% Auto-calling method:
-	SenderAwareState = State#state_holder{ request_sender=self() },
-
-	% Correction checking by pattern-matching:
-	{ NewState, { wooper_result, Result } } = wooper_execute_method(
-					   RequestAtom, SenderAwareState, ArgumentList ),
-
-	% Returns:
-	{ NewState#state_holder{ request_sender=undefined }, Result };
+	wooper_handle_local_request_execution( RequestAtom, State, ArgumentList );
 
 
 % Here the third parameter is not a list:
 executeRequest( State, RequestAtom, StandaloneArgument ) when
-		is_record( State, state_holder ) andalso is_atom( RequestAtom )->
+	  is_record( State, state_holder ) andalso is_atom( RequestAtom )->
 
-	%io:format("executeRequest/3 with standalone argument: "
+	%io:format( "executeRequest/3 with standalone argument: "
 	%	"executing ~s(~w) from ~s.~n",
-	%	[ RequestAtom, StandaloneArgument, State#state_holder.actual_class ]),
+	%	[ RequestAtom, StandaloneArgument, State#state_holder.actual_class ] ),
 
-	% Auto-calling method:
-	SenderAwareState = State#state_holder{ request_sender=self() },
-
-	% Correction checking by pattern-matching:
-	{ NewState, { wooper_result, Result } } = wooper_execute_method(
-						RequestAtom, SenderAwareState, [ StandaloneArgument ] ),
-
-	% Returns:
-	{ NewState#state_holder{ request_sender=undefined }, Result };
+	wooper_handle_local_request_execution( RequestAtom, State,
+							   _ArgumentList=[ StandaloneArgument ] );
 
 
 % Catches all errors:
 executeRequest( StateError, RequestAtom, _LastArg )
-		when is_atom( RequestAtom ) ->
+  when is_atom( RequestAtom ) ->
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing request ~p: "
-		"first parameter should be a state, not '~p'.~n",
-		[ self(), ?MODULE, RequestAtom, StateError ] ),
+	wooper:log_error( "when executing request ~p: "
+					  "first parameter should be a state, not '~p'.",
+					  [ RequestAtom, StateError ], ?MODULE ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_request_call, RequestAtom } );
+	throw( { wooper_invalid_request_call, RequestAtom } );
 
 
-executeRequest( _State, RequestAtomError, _LastArg ) ->
+executeRequest( State, RequestAtomError, _LastArg )
+  when is_record( State, state_holder ) ->
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing request: '~p' is not an atom.~n",
-		[ self(), ?MODULE, RequestAtomError] ),
+	wooper:log_error( "when executing request: '~p' is not an atom.",
+					  [ RequestAtomError ], State ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_request_call, RequestAtomError } ).
+	throw( { wooper_invalid_request_call, RequestAtomError } );
 
+
+executeRequest( StateError, RequestAtomError, _LastArg ) ->
+
+	wooper:log_error( "when executing request: first parameter should "
+					  "be a state, not '~p', and '~p' is not an atom.",
+					  [ StateError, RequestAtomError ], ?MODULE ),
+
+	throw( { wooper_invalid_request_call, RequestAtomError } ).
 
 
 
@@ -189,48 +170,36 @@ executeRequest( _State, RequestAtomError, _LastArg ) ->
 % Parameter-less request, calling the version of the method as defined in the
 % specified class.
 %
-executeRequestWith( State, ClassName, RequestAtom )
-	when is_record( State, state_holder ) andalso is_atom( ClassName )
-		andalso is_atom( RequestAtom ) ->
+-spec executeRequestWith( wooper:state(), class_name(), request_name() ) ->
+								{ wooper:state(), method_internal_result() }.
+executeRequestWith( State, Classname, RequestAtom )
+  when is_record( State, state_holder ) andalso is_atom( Classname )
+	   andalso is_atom( RequestAtom ) ->
 
-	%io:format("executeRequestWith/3: executing ~s() from ~s with ~s.~n",
-	%	[ RequestAtom, State#state_holder.actual_class, ClassName ]),
+	%io:format( "executeRequestWith/3: executing ~s() from ~s with ~s.~n",
+	%	[ RequestAtom, State#state_holder.actual_class, Classname ]),
 
-	% Auto-calling method:
-	SenderAwareState = State#state_holder{ request_sender=self() },
-
-	% Correction checking by pattern-matching:
-	{ NewState, { wooper_result, Result } } = wooper_execute_method_with(
-		ClassName, RequestAtom, SenderAwareState, [] ),
-
-	% Returns:
-	{ NewState#state_holder{ request_sender=undefined }, Result };
+	wooper_handle_local_request_execution_with( RequestAtom, State,
+							_ArgumentList=[], Classname );
 
 
-executeRequestWith( StateError, ClassName, RequestAtom )
-		when is_atom( ClassName ) andalso is_atom( RequestAtom ) ->
+executeRequestWith( StateError, Classname, RequestAtom )
+		when is_atom( Classname ) andalso is_atom( RequestAtom ) ->
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing request ~p in the context of class ~s: "
-		"first parameter should be a state, not '~p'.~n",
-		[ self(), ?MODULE, RequestAtom, ClassName, StateError ] ),
+	wooper:log_error( "when executing request ~p in the context of class ~s: "
+					  "first parameter should be a state, not '~p'.",
+					  [ RequestAtom, Classname, StateError ], ?MODULE ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_request_call, RequestAtom } );
+	throw( { wooper_invalid_request_call, RequestAtom } );
 
 
-executeRequestWith( _State, ClassNameError, RequestAtomError ) ->
+executeRequestWith( _State, ClassnameError, RequestAtomError ) ->
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing request in a class context: "
-		"'~p' and '~p' should both be atoms.~n",
-		[ self(), ?MODULE, ClassNameError, RequestAtomError ] ),
+	wooper:log_error( "when executing request in a class context: "
+					  "'~p' and '~p' should both be atoms.",
+					  [ ClassnameError, RequestAtomError ], ?MODULE ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_request_call, ClassNameError, RequestAtomError } ).
-
+	throw( { wooper_invalid_request_call, ClassnameError, RequestAtomError } ).
 
 
 
@@ -242,498 +211,154 @@ executeRequestWith( _State, ClassNameError, RequestAtomError ) ->
 %
 % Note: Stripped-down version of wooper_main_loop.
 %
-executeRequestWith( State, ClassName, RequestAtom, ArgumentList ) when
-		is_record( State, state_holder ) andalso is_atom( ClassName )
-		andalso is_atom( RequestAtom ) andalso is_list( ArgumentList ) ->
+-spec executeRequestWith( wooper:state(), class_name(), request_name(),
+						  method_arguments() ) ->
+								{ wooper:state(), method_internal_result() }.
+executeRequestWith( State, Classname, RequestAtom, ArgumentList ) when
+	  is_record( State, state_holder ) andalso is_atom( Classname )
+	  andalso is_atom( RequestAtom ) andalso is_list( ArgumentList ) ->
 
-	%io:format("executeRequestWith/4 with list: executing ~s(~w) from ~s "
+	%io:format( "executeRequestWith/4 with list: executing ~s(~w) from ~s "
 	%  "with ~s.~n", [ RequestAtom, ArgumentList,
-	% State#state_holder.actual_class, ClassName ]),
+	% State#state_holder.actual_class, Classname ] ),
 
-	% Auto-calling method:
-	SenderAwareState = State#state_holder{ request_sender=self() },
-
-	% Correction checking by pattern-matching:
-	{ NewState, { wooper_result, Result } } = wooper_execute_method_with(
-		ClassName, RequestAtom, SenderAwareState, ArgumentList ),
-
-	% Returns:
-	{ NewState#state_holder{ request_sender=undefined }, Result};
+	wooper_handle_local_request_execution_with( RequestAtom, State,
+												ArgumentList, Classname );
 
 
 % Here the third parameter is not a list:
-executeRequestWith( State, ClassName, RequestAtom, StandaloneArgument ) when
-		is_record( State, state_holder ) andalso is_atom( ClassName )
-		andalso is_atom( RequestAtom ) ->
+executeRequestWith( State, Classname, RequestAtom, StandaloneArgument ) when
+	  is_record( State, state_holder ) andalso is_atom( Classname )
+	  andalso is_atom( RequestAtom ) ->
 
-	%io:format("executeRequestWith/3 with standalone argument: "
+	%io:format( "executeRequestWith/3 with standalone argument: "
 	%	"executing ~s(~w) from ~s with ~s.~n",
 	%	[ RequestAtom, StandaloneArgument, State#state_holder.actual_class,
-	% ClassName ]),
+	% Classname ] ),
 
-	% Auto-calling method:
-	SenderAwareState = State#state_holder{ request_sender=self() },
-
-	% Correction checking by pattern-matching:
-	{ NewState, { wooper_result, Result } } = wooper_execute_method_with(
-		ClassName, RequestAtom, SenderAwareState, [StandaloneArgument] ),
-
-	% Returns:
-	{ NewState#state_holder{ request_sender=undefined }, Result };
+	wooper_handle_local_request_execution_with( RequestAtom, State,
+					_ArgumentList=[ StandaloneArgument ], Classname );
 
 
 % Error cases below:
-executeRequestWith( StateError, ClassName, RequestAtom, _LastArg )
-		when is_atom( ClassName ) andalso is_atom( RequestAtom ) ->
+executeRequestWith( StateError, Classname, RequestAtom, _LastArg )
+  when is_atom( Classname ) andalso is_atom( RequestAtom ) ->
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing request ~p: "
-		"first parameter should be a state, not '~p'.~n",
-		[ self(), ?MODULE, RequestAtom, StateError ] ),
+	wooper:log_error( "when executing request ~p: "
+					  "first parameter should be a state, not '~p'.",
+					  [ RequestAtom, StateError ], ?MODULE ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_request_call, RequestAtom } );
+	throw( { wooper_invalid_request_call, RequestAtom } );
 
 
 % Catches all remaining errors:
-executeRequestWith( _State, ClassNameError, RequestAtomError, _LastArg ) ->
+executeRequestWith( _State, ClassnameError, RequestAtomError, _LastArg ) ->
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing request: both '~p' (classn name) and "
-		"'~p' (request name) should be atoms.~n",
-		[ self(), ?MODULE, ClassNameError, RequestAtomError ] ),
+	wooper:log_error( "when executing request: both '~p' (classname) and "
+					  "'~p' (request name) should be atoms.",
+					  [ ClassnameError, RequestAtomError ], ?MODULE ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_request_call, ClassNameError, RequestAtomError } ).
+	throw( { wooper_invalid_request_call, ClassnameError, RequestAtomError } ).
+
+
+
+
+
+
+% Section for oneways:
 
 
 
 
 % Parameter-less oneway.
+%
+-spec executeOneway( wooper:state(), oneway_name() ) -> wooper:state().
 executeOneway( State, OnewayAtom ) when is_record( State, state_holder )
-		andalso is_atom( OnewayAtom ) ->
+										andalso is_atom( OnewayAtom ) ->
 
-	%io:format("executeOneway/2: executing ~s() from ~s.~n",
-	%   [ OnewayAtom, State#state_holder.actual_class ]),
+	%io:format( "executeOneway/2: executing ~s() from ~s.~n",
+	%   [ OnewayAtom, State#state_holder.actual_class ] ),
 
-	% No request_sender to change with oneways.
-
-	% Correction checking by pattern-matching:
-	{ NewState, wooper_method_returns_void } =
-		wooper_execute_method( OnewayAtom, State, [] ),
-
-	% Returns:
-	NewState;
+	wooper_handle_local_oneway_execution( OnewayAtom, State, _ArgumentList=[] );
 
 
 executeOneway( State, OnewayError ) when is_record( State, state_holder ) ->
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s: "
-		"the oneway name should be an atom, not '~p'.~n",
-		[ self(), State#state_holder.actual_class, OnewayError ] ),
+	wooper:log_error( "when executing a oneway: its name should be an atom, "
+					  "not '~p'.", [ OnewayError ], State ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_oneway_call, OnewayError } );
+	throw( { wooper_invalid_oneway_call, OnewayError } );
 
 
 executeOneway( StateError, OnewayAtom ) when is_atom( OnewayAtom ) ->
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing oneway ~p: "
-		"first parameter should be a state, not '~p'.~n",
-		[ self(), ?MODULE, OnewayAtom, StateError ] ),
+	wooper:log_error( "when executing oneway ~p: "
+					  "first parameter should be a state, not '~p'.",
+					  [ OnewayAtom, StateError ], ?MODULE ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_oneway_call, OnewayAtom } );
+	throw( { wooper_invalid_oneway_call, OnewayAtom } );
 
 
 executeOneway( StateError, OnewayError ) ->
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing oneway: '~s' is not a state and '~p' is not an atom.~n",
-		[ self(), ?MODULE, StateError, OnewayError ] ),
+	wooper:log_error( "when executing oneway: '~s' is not a state and "
+					  "'~p' is not an atom.",
+					  [ StateError, OnewayError ], ?MODULE ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_oneway_call, OnewayError } ).
+	throw( { wooper_invalid_oneway_call, OnewayError } ).
 
 
 
 
-
-% Allows to call synchronously from the code of a given class its actual
-% overridden methods (oneways, here), including from child classes.
-%
-% Example: If in a start method of a EngineVehicle class one wants to call the
-% (possibly overridden by, say, a class Car) startEngine method, then
-% executeOneway should be used: 'MyVehicle ! startEngine' would not be
-% synchronous, startEngine() would call EngineVehicle:startEngine instead of
-% Car:startEngine when called from a Car instance, and of course EngineVehicle
-% should know nothing from its Car child class.
-%
-% If no failure occurs, returns {wooper_result,NewState}.
-%
-% Note: Stripped-down version of wooper_main_loop.
+% Most classical oneway.
 %
 executeOneway( State, OnewayAtom, ArgumentList ) when
-		is_record( State, state_holder ) andalso is_atom( OnewayAtom )
-		andalso is_list( ArgumentList ) ->
+	  is_record( State, state_holder ) andalso is_atom( OnewayAtom )
+	  andalso is_list( ArgumentList ) ->
 
-	%io:format("executeOneway/3 with list: executing ~s(~w) from ~s.~n",
-	%	[ OnewayAtom, ArgumentList, State#state_holder.actual_class ]),
+	%io:format( "executeOneway/3 with list: executing ~s(~w) from ~s.~n",
+	%	[ OnewayAtom, ArgumentList, State#state_holder.actual_class ] ),
 
-	% No request_sender to change with oneways.
-
-	% Correction checking by pattern-matching:
-	{ NewState, wooper_method_returns_void } =
-		wooper_execute_method( OnewayAtom, State, ArgumentList ),
-
-	% Returns:
-	NewState;
+	wooper_handle_local_oneway_execution( OnewayAtom, State, ArgumentList );
 
 
 % Here third parameter is not a list:
 executeOneway( State, OnewayAtom, StandaloneArgument ) when
 		is_record( State, state_holder ) andalso is_atom( OnewayAtom ) ->
 
-	%io:format("executeOneway/3 with standalone argument: "
+	%io:format( "executeOneway/3 with standalone argument: "
 	%	"executing ~s(~w) from ~s.~n",
-	%	[ OnewayAtom, StandaloneArgument, State#state_holder.actual_class ]),
+	%	[ OnewayAtom, StandaloneArgument, State#state_holder.actual_class ] ),
 
-	% No request_sender to change with oneways.
-
-	% Correction checking by pattern-matching:
-	{ NewState, wooper_method_returns_void } =
-		wooper_execute_method( OnewayAtom, State, [ StandaloneArgument ] ),
-
-	% Returns:
-	NewState;
+	wooper_handle_local_oneway_execution( OnewayAtom, State,
+										  [ StandaloneArgument ] );
 
 
 % All errors caught below:
 executeOneway( StateError, OnewayAtom, _LastArg ) when is_atom( OnewayAtom ) ->
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing oneway ~p: "
-		"first parameter should be a state, not '~p'.~n",
-		[ self(), ?MODULE, OnewayAtom, StateError ] ),
+	wooper:log_error( "when executing oneway ~p: "
+					  "first parameter should be a state, not '~p'.",
+					  [ OnewayAtom, StateError ], ?MODULE ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_oneway_call, OnewayAtom } );
+	throw( { wooper_invalid_oneway_call, OnewayAtom } );
 
 
 executeOneway( State, OnewayAtomError, _LastArg )
   when is_record( State, state_holder ) ->
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing oneway: '~p' is not an atom.~n",
-		[ self(), State#state_holder.actual_class, OnewayAtomError ] ),
+	wooper:log_error( "when executing oneway: '~p' is not an atom.",
+					  [ OnewayAtomError ], State ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_oneway_call, OnewayAtomError } );
+	throw( { wooper_invalid_oneway_call, OnewayAtomError } );
+
 
 executeOneway( _State, OnewayAtomError, _LastArg ) ->
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing oneway: '~p' is not an atom.~n",
-		[ self(), ?MODULE, OnewayAtomError ] ),
+	wooper:log_error( "when executing oneway: '~p' is not an atom.",
+					  [ OnewayAtomError ], ?MODULE ),
 
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_oneway_call, OnewayAtomError } ).
-
-
-
-
-
-
-% Parameter-less oneway, relying on the specified actual class to be used,
-% instead of determining it from the instance virtual table.
-executeOnewayWith( State, ClassName, OnewayAtom )
-		when is_record( State, state_holder ) andalso is_atom( ClassName )
-			andalso is_atom( OnewayAtom ) ->
-
-	%io:format("executeOnewayWith/3: executing ~s() from ~s.~n",
-	%	[ OnewayAtom, State#state_holder.actual_class ]),
-
-	% No request_sender to change with oneways.
-
-	% Correction checking by pattern-matching:
-	{ NewState, wooper_method_returns_void } =
-		wooper_execute_method_with( ClassName, OnewayAtom, State, [] ),
-
-	% Returns:
-	NewState;
-
-
-executeOnewayWith( State, ClassName, OnewayAtom )
-  when is_record( State, state_holder ) ->
-
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing oneway: "
-		"'~p' (oneway name) and '~p' (class name) should be both atoms.~n",
-		[ self(), State#state_holder.actual_class, OnewayAtom, ClassName ] ),
-
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_oneway_call, OnewayAtom } );
-
-
-executeOnewayWith( StateError, ClassName, OnewayAtom ) ->
-
-	% Catches all:
-
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing oneway ~p with ~s: "
-		"first parameter should be a state, not '~p'.~n",
-		[ self(), ?MODULE, OnewayAtom, ClassName, StateError ] ),
-
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_oneway_call, OnewayAtom } ).
-
-
-
-
-
-% Allows to call synchronously from the code of a given class the oneway defined
-% in specified class, instead of determining it from the instance virtual table.
-%
-% If no failure occurs, returns {wooper_result,NewState}.
-%
-% Note: Stripped-down version of wooper_main_loop.
-%
-executeOnewayWith( State, ClassName, OnewayAtom, ArgumentList ) when
-		is_record( State, state_holder ) andalso is_atom( ClassName )
-		andalso is_atom( OnewayAtom ) andalso is_list( ArgumentList ) ->
-
-	%io:format("executeOneway/4 with list: executing ~s(~w) from ~s with ~s.~n",
-	%	[ OnewayAtom, ArgumentList, State#state_holder.actual_class,
-	% ClassName ]),
-
-	% No request_sender to change with oneways.
-
-	% Correction checking by pattern-matching:
-	{ NewState, wooper_method_returns_void } = wooper_execute_method_with(
-		ClassName, OnewayAtom, State, ArgumentList ),
-
-	% Returns:
-	NewState;
-
-
-% Here third parameter is not a list:
-executeOnewayWith( State, ClassName, OnewayAtom, StandaloneArgument ) when
-		is_record( State, state_holder ) andalso is_atom( ClassName )
-		andalso is_atom( OnewayAtom ) ->
-
-	%io:format("executeOneway/4 with standalone argument: "
-	%	"executing ~s(~w) from ~s with ~s.~n",
-	%	[ OnewayAtom, StandaloneArgument, State#state_holder.actual_class,
-	% ClassName ]),
-
-	% No request_sender to change with oneways.
-
-	% Correction checking by pattern-matching:
-	{ NewState, wooper_method_returns_void } = wooper_execute_method_with(
-		ClassName, OnewayAtom, State, [ StandaloneArgument ] ),
-
-	% Returns:
-	NewState;
-
-
-executeOnewayWith( StateError, ClassName, OnewayAtom, _LastArg )
-		when is_atom( ClassName ) andalso is_atom( OnewayAtom ) ->
-
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing oneway ~p with ~s: "
-		"first parameter should be a state, not '~p'.~n",
-		[ self(), ?MODULE, OnewayAtom, ClassName, StateError ] ),
-
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_oneway_call, OnewayAtom } );
-
-
-% Catches all remaining errors:
-executeOnewayWith( _State, ClassName, OnewayAtomError, _LastArg ) ->
-
-	error_logger:error_msg( "~nWOOPER error for PID ~w of class ~s "
-		"when executing oneway with ~s: both '~p' and '~p' should be atoms.~n",
-		[ self(), ?MODULE, ClassName, OnewayAtomError ] ),
-
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
-	throw( { invalid_oneway_call, OnewayAtomError } ).
-
-
-
-
-
-
--else. % wooper_debug
-
-
-
-
-
-% Not in debug mode here (wooper_debug not set):
-
-
-
-% Parameter-less request.
-executeRequest( State, RequestAtom ) ->
-
-	%io:format("executeRequest/2: executing ~s() from ~s.~n",
-	%	[ RequestAtom, State#state_holder.actual_class ]),
-
-	% Auto-calling method:
-	SenderAwareState = State#state_holder{ request_sender=self() },
-
-	% No special checking performed in release mode:
-	{ NewState, { wooper_result, Result } } = wooper_execute_method(
-							  RequestAtom, SenderAwareState, [] ),
-
-	% Returns:
-	{ NewState#state_holder{ request_sender=undefined }, Result }.
-
-
-
-% Allows to call synchronously from the code of a given class its actual
-% overridden methods (requests, here), including from child classes.
-%
-% Example: If in a start method of an EngineVehicle class one wants to call the
-% (possibly overridden by, say, a class Car) startEngine method, then
-% executeRequest should be used: 'MyVehicle ! startEngine' would not be
-% synchronous, startEngine() would call EngineVehicle:startEngine instead of
-% Car:startEngine when called from a Car instance, and of course EngineVehicle
-% should know nothing from its Car child class.
-%
-% If no failure occurs, returns {wooper_result,NewState,Result}.
-%
-% Note: Stripped-down version of wooper_main_loop.
-%
-executeRequest( State, RequestAtom, ArgumentList )
-  when is_list( ArgumentList ) ->
-
-	%io:format("executeRequest/3 with list: executing ~s(~w) from ~s.~n",
-	%	[ RequestAtom, ArgumentList, State#state_holder.actual_class ]),
-
-	% Auto-calling method:
-	SenderAwareState = State#state_holder{ request_sender=self() },
-
-	% No special checking performed in release mode:
-	{ NewState, { wooper_result, Result } } = wooper_execute_method(
-						 RequestAtom, SenderAwareState, ArgumentList ),
-
-	% Returns:
-	{ NewState#state_holder{ request_sender=undefined }, Result };
-
-
-
-% Here third parameter is not a list:
-executeRequest( State, RequestAtom, StandaloneArgument ) ->
-
-	%io:format("executeRequest/3 with standalone argument: "
-	%	"executing ~s(~w) from ~s.~n",
-	%	[ RequestAtom, StandaloneArgument,
-	% State#state_holder.actual_class ]),
-
-	% Auto-calling method:
-	SenderAwareState = State#state_holder{request_sender=self()},
-
-	% No special checking performed in release mode:
-	{ NewState, { wooper_result, Result } } = wooper_execute_method(
-				   RequestAtom,	SenderAwareState, [ StandaloneArgument ] ),
-
-	% Returns:
-	{ NewState#state_holder{ request_sender=undefined }, Result }.
-
-
-
-% Parameter-less request, calling the version of the method as defined in the
-% specified class.
-executeRequestWith( State, ClassName, RequestAtom ) ->
-
-	%io:format("executeRequestWith/3: executing ~s() from ~s with ~s.~n",
-	%	[ RequestAtom , State#state_holder.actual_class, ClassName ]),
-
-	% Auto-calling method:
-	SenderAwareState = State#state_holder{ request_sender=self() },
-
-	% Correction checking by pattern-matching:
-	{ NewState, { wooper_result, Result } } = wooper_execute_method_with(
-		ClassName, RequestAtom, SenderAwareState, [] ),
-
-	% Returns:
-	{ NewState#state_holder{ request_sender=undefined }, Result}.
-
-
-
-
-% Allows to call synchronously from the code of a given class overridden methods
-% (requests, here) as defined in specified classes.
-%
-% If no failure occurs, returns {wooper_result,NewState,Result}.
-%
-% Note: Stripped-down version of wooper_main_loop.
-%
-executeRequestWith( State, ClassName, RequestAtom, ArgumentList )
-  when is_list(ArgumentList) ->
-
-	%io:format("executeRequestWith/4 with list: executing ~s(~w) from ~s "
-	%  "with ~s.~n", [ RequestAtom, ArgumentList,
-	% State#state_holder.actual_class, ClassName ]),
-
-	% Auto-calling method:
-	SenderAwareState = State#state_holder{ request_sender=self() },
-
-	% Correction checking by pattern-matching:
-	{ NewState, { wooper_result, Result } } = wooper_execute_method_with(
-		ClassName, RequestAtom, SenderAwareState, ArgumentList ),
-
-	% Returns:
-	{ NewState#state_holder{ request_sender=undefined }, Result };
-
-
-% Here the third parameter is not a list:
-executeRequestWith( State, ClassName, RequestAtom, StandaloneArgument ) ->
-
-	%io:format("executeRequestWith/3 with standalone argument: "
-	%	"executing ~s(~w) from ~s with ~s.~n",
-	%	[ RequestAtom, StandaloneArgument, State#state_holder.actual_class,
-	% ClassName ]),
-
-	% Auto-calling method:
-	SenderAwareState = State#state_holder{ request_sender=self() },
-
-	% Correction checking by pattern-matching:
-	{ NewState, { wooper_result, Result } } = wooper_execute_method_with(
-		ClassName, RequestAtom, SenderAwareState, [ StandaloneArgument ] ),
-
-	% Returns:
-	{ NewState#state_holder{ request_sender=undefined }, Result }.
-
-
-
-% Parameter-less oneway.
-executeOneway( State, OnewayAtom ) ->
-
-	%io:format("executeOneway/2: executing ~s() from ~s.~n",
-	%	[ OnewayAtom, State#state_holder.actual_class ]),
-
-	% No request_sender to change with oneways.
-
-	% Less checking performed in release mode:
-	{ NewState, _VoidResult } = wooper_execute_method( OnewayAtom, State, [] ),
-
-	% Returns:
-	NewState.
+	throw( { wooper_invalid_oneway_call, OnewayAtomError } ).
 
 
 
@@ -749,58 +374,42 @@ executeOneway( State, OnewayAtom ) ->
 %
 % If no failure occurs, returns {wooper_result,NewState}.
 %
-% Note: Stripped-down version of wooper_main_loop.
-%
-executeOneway( State, OnewayAtom, ArgumentList ) when is_list(ArgumentList) ->
-
-	%io:format("executeOneway/3 with list: executing ~s(~w) from ~s.~n",
-	%	[ OnewayAtom, ArgumentList, State#state_holder.actual_class ]),
-
-	% No request_sender to change with oneways.
-
-	% Less checking performed in release mode:
-	{ NewState, _VoidResult } = wooper_execute_method( OnewayAtom,
-										  State, ArgumentList ),
-
-	% Returns:
-	NewState;
+-spec executeOneway( wooper:state(), oneway_name(), method_arguments() ) ->
+						   wooper:state().
 
 
-% Here third parameter is not a list:
-executeOneway( State, OnewayAtom, StandaloneArgument ) ->
+-spec executeOnewayWith( wooper:state(), class_name(), oneway_name() ) ->
+							   wooper:state().
+executeOnewayWith( State, Classname, OnewayAtom )
+  when is_record( State, state_holder ) andalso is_atom( Classname )
+	   andalso is_atom( OnewayAtom ) ->
 
-	%io:format("executeOneway/3 with standalone argument: "
-	%	"executing ~s(~w) from ~s.~n",
-	%	[ OnewayAtom, StandaloneArgument, State#state_holder.actual_class ]),
+	%io:format( "executeOnewayWith/3: executing ~s() from ~s.~n",
+	%	[ OnewayAtom, State#state_holder.actual_class ] ),
 
-	% No request_sender to change with oneways.
-
-	% Less checking performed in release mode:
-	{ NewState, _VoidResult } = wooper_execute_method( OnewayAtom,
-										  State, [ StandaloneArgument ] ),
-
-	% Returns:
-	NewState.
+	wooper_handle_local_oneway_execution_with( OnewayAtom, State,
+											   _ArgumentList=[], Classname );
 
 
 
+executeOnewayWith( State, Classname, OnewayAtom )
+  when is_record( State, state_holder ) ->
 
-% Parameter-less oneway, relying on the specified actual class to be used,
-% instead of determining it from the instance virtual table.
-%
-executeOnewayWith( State, ClassName, OnewayAtom ) ->
+	wooper:log_error( "when executing oneway: '~p' (oneway name) and "
+					  "'~p' (class name) should be both atoms.",
+					  [ OnewayAtom, Classname ] ),
 
-	%io:format("executeOnewayWith/3: executing ~s() from ~s.~n",
-	%	[ OnewayAtom, State#state_holder.actual_class ]),
+	throw( { wooper_invalid_oneway_call, OnewayAtom } );
 
-	% No request_sender to change with oneways.
 
-	% Correction checking by pattern-matching:
-	{ NewState, _VoidResult } = wooper_execute_method_with( ClassName,
-										  OnewayAtom, State, [] ),
+executeOnewayWith( StateError, Classname, OnewayAtom ) ->
 
-	% Returns:
-	NewState.
+	wooper:log_error( "when executing oneway ~p with ~s: "
+					  "first parameter should be a state, not '~p'.",
+					  [  OnewayAtom, Classname, StateError ] ),
+
+	throw( { wooper_invalid_oneway_call, OnewayAtom } ).
+
 
 
 
@@ -811,40 +420,51 @@ executeOnewayWith( State, ClassName, OnewayAtom ) ->
 %
 % Note: Stripped-down version of wooper_main_loop.
 %
-executeOnewayWith( State, ClassName, OnewayAtom, ArgumentList )
-  when is_list( ArgumentList ) ->
+-spec executeOnewayWith( wooper:state(), class_name(), oneway_name(),
+				method_arguments() ) -> wooper:state().
+executeOnewayWith( State, Classname, OnewayAtom, ArgumentList ) when
+	  is_record( State, state_holder ) andalso is_atom( Classname )
+	  andalso is_atom( OnewayAtom ) andalso is_list( ArgumentList ) ->
 
-	%io:format("executeOneway/4 with list: executing ~s(~w) from ~s with ~s.~n",
-	%	[ OnewayAtom, ArgumentList, State#state_holder.actual_class,
-	% ClassName ]),
+	%io:format( "executeOneway/4 with list: executing ~s(~w) from ~s "
+	%           "with ~s.~n",
+	%			 [ OnewayAtom, ArgumentList, State#state_holder.actual_class,
+	%               Classname ] ),
 
-	% No request_sender to change with oneways.
+	wooper_handle_local_oneway_execution_with( OnewayAtom, State,
+											   ArgumentList, Classname );
 
-	% Correction checking by pattern-matching:
-	{ NewState, _VoidResult } = wooper_execute_method_with(
-		ClassName, OnewayAtom, State, ArgumentList ),
-
-	% Returns:
-	NewState;
 
 
 % Here third parameter is not a list:
-executeOnewayWith( State, ClassName, OnewayAtom, StandaloneArgument ) ->
+executeOnewayWith( State, Classname, OnewayAtom, StandaloneArgument ) when
+	  is_record( State, state_holder ) andalso is_atom( Classname )
+	  andalso is_atom( OnewayAtom ) ->
 
-	% io:format("executeOneway/4 with standalone argument: "
+	%io:format( "executeOneway/4 with standalone argument: "
 	%	"executing ~s(~w) from ~s with ~s.~n",
 	%	[ OnewayAtom, StandaloneArgument, State#state_holder.actual_class,
-	% ClassName ]),
+	% Classname ] ),
 
-	% No request_sender to change with oneways.
-
-	% Correction checking by pattern-matching:
-	{ NewState, _VoidResult } = wooper_execute_method_with(
-		ClassName, OnewayAtom, State, [ StandaloneArgument ] ),
-
-	% Returns:
-	NewState.
+	wooper_handle_local_oneway_execution_with( OnewayAtom, State,
+			_ArgumentList=[ StandaloneArgument ], Classname );
 
 
+executeOnewayWith( StateError, Classname, OnewayAtom, _LastArg )
+  when is_atom( Classname ) andalso is_atom( OnewayAtom ) ->
 
--endif. % wooper_debug
+	wooper:log_error( "when executing oneway ~p with ~s: "
+					  "first parameter should be a state, not '~p'.",
+					  [ OnewayAtom, Classname, StateError ], ?MODULE ),
+
+	throw( { wooper_invalid_oneway_call, OnewayAtom } );
+
+
+% Catches all remaining errors:
+executeOnewayWith( _State, Classname, OnewayAtomError, _LastArg ) ->
+
+	wooper:log_error( "when executing oneway with ~s: both '~p' "
+					  "and '~p' should be atoms.",
+					  [ Classname, OnewayAtomError ], ?MODULE ),
+
+	throw( { wooper_invalid_oneway_call, OnewayAtomError } ).

@@ -1,7 +1,7 @@
 WOOPER_TOP = .
 
 
-.PHONY: all register-version-in-header                               \
+.PHONY: all register-version-in-header register-wooper               \
 		send-release release release-zip release-bz2 release-xz      \
 		prepare-release clean-release clean-archive
 
@@ -26,7 +26,14 @@ all:
 
 
 register-version-in-header:
+	@if [ -z "$(VERSION_FILE)" ] ; then \
+	echo "Error, no version file defined." 1>&2 ; exit 51 ; else \
+	$(MAKE) register-wooper ; fi
+
+
+register-wooper:
 	@echo "-define( wooper_version, \"$(WOOPER_VERSION)\" )." >> $(VERSION_FILE)
+
 
 
 # Note: the source archives are not produced in this directory, but in its
@@ -35,7 +42,8 @@ register-version-in-header:
 
 send-release: release
 	@echo "     Sending WOOPER releases $(WOOPER_RELEASES) to Sourceforge"
-	@cd .. && rsync -avP -e ssh $(WOOPER_RELEASES) $(SF_USER)@frs.sourceforge.net:uploads/
+	@cd .. && rsync -avP -e ssh $(WOOPER_RELEASES) \
+	$(SF_USER)@frs.sourceforge.net:uploads/
 
 
 release: release-zip release-bz2 release-xz

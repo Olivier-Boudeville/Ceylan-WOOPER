@@ -72,13 +72,15 @@ Latest stable WOOPER archives are:
 		3.3.5  Two Kinds of Methods
 		  3.3.5.1  Request Methods
 		  3.3.5.2  Oneway Methods
-		3.3.6  Method Results
+		3.3.6  Request Results
 		  3.3.6.1  Execution Success: ``{wooper_result,ActualResult}``
 		  3.3.6.2  Execution Failures
-			3.3.6.2.1  ``wooper_method_not_found``
-			3.3.6.2.2  ``wooper_method_failed``
-			3.3.6.2.3  ``wooper_method_faulty_return``
-			3.3.6.2.4  Caller-Side Error Management
+			3.3.6.2.1  ``request_not_found``
+			3.3.6.2.2  ``request_failed``
+			3.3.6.2.3  ``request_void_return``
+			3.3.6.2.4  ``request_faulty_return``
+			3.3.6.2.5  Caller-Side Error Management
+			3.3.6.2.6  Example of WOOPER error message
 		3.3.7  Method Definition
 		  3.3.7.1  For Requests
 		  3.3.7.2  For Oneways
@@ -451,7 +453,7 @@ Unless specified otherwise, just mentioning *method* by itself refers to a *memb
 
 Instances may declare **member methods** that can be publicly called, whether locally or remotely (i.e. on other networked computers, like with RMI or with CORBA, or directly from the same Erlang node). Distribution is seamlessly managed thanks to Erlang.
 
-Member ethods (either inherited or defined directly in the class) are mapped to specific Erlang functions, triggered by Erlang messages.
+Member methods (either inherited or defined directly in the class) are mapped to specific Erlang functions, triggered by Erlang messages.
 
 For example, our cat may define, among others, following member methods:
 
@@ -638,6 +640,7 @@ For example: ``MyCat ! {getAge,[],self()}`` or ``MyCalculator ! {sum,[1,2,4],sel
 
 The actual result ``R``, as determined by the method, is sent back as an Erlang message which is a ``{wooper_result,R}`` pair, to help the caller pattern-matching the messages in its mailbox.
 
+
 ``receive`` should then be used by the caller to retrieve the request result, like in the case of this example of a 2D point instance::
 
  MyPoint ! {getCoordinates,[],self()},
@@ -678,17 +681,17 @@ However, to help the debugging, an error message is then logged (using ``error_l
 
 
 
-Method Results
-..............
+Request Results
+...............
 
 
 
 Execution Success: ``{wooper_result,ActualResult}``
 ___________________________________________________
 
-If the execution of a method succeeded, and if it is a request (not a oneway, which would not return anything), then ``{wooper_result,ActualResult}`` will be sent back.
+If the execution of request succeeded (oneways do not return anything), then ``{wooper_result,ActualResult}`` is sent back.
 
-Otherwise one of the following error messages will be emitted.
+Otherwise, the request failed, and an error message in the form of ``{wooper_error,ErrorReason}`` is sent back to the caller.
 
 
 
@@ -696,70 +699,92 @@ Execution Failures
 __________________
 
 
-When the execution of a method fails, three main error results can be returned.
+When the execution of a request fails, three main error reasons can be returned.
+
+.. Note:: By default much instance-level information is returned, possibly
+		  disclosing the internals of the target instance, to help
+		  troubleshooting. A secure mode could be implemented, to return only
+		  controlled, less precise information.
+
 
 A summary could be:
 
-+-----------------------------------+----------------------------+------------------+
-| Error Result                      | Interpretation             | Guilty           |
-+===================================+============================+==================+
-| ``wooper_method_not_found``       | No such method exists in   | Caller           |
-|                                   | the target class.          |                  |
-+-----------------------------------+----------------------------+------------------+
-| ``wooper_method_failed``          | Method triggered a runtime | Called instance  |
-|                                   | error (it has a bug).      |                  |
-+-----------------------------------+----------------------------+------------------+
-| ``wooper_method_faulty_return``   | Method does not respect    | Called instance  |
-|                                   | the WOOPER return          |                  |
-|                                   | convention.                |                  |
-+-----------------------------------+----------------------------+------------------+
++-----------------------------------+----------------------------+--------------------------------+
+| Error Reasons                     | Interpretation             | Guilty                         |
++===================================+============================+================================+
+| ``request_not_found``             | No such request exists in  | Probably the caller            |
+|                                   | the target class.          |                                |
++-----------------------------------+----------------------------+--------------------------------+
+| ``request_failed``                | The request triggered a    | Either the caller supplied     |
+|                                   | runtime error.             | invalid arguments, or there    |
+|                                   |                            | is a bug in the implementation |
+|                                   |                            | of the request.                |
++-----------------------------------+----------------------------+--------------------------------+
+| ``request_void_return``           | The called request behaved | Faulty request implementation, |
+|                                   | as a oneway.               | or the caller triggered it as  |
+|                                   |                            | a oneway.                      |
++-----------------------------------+----------------------------+--------------------------------+
+| ``request_faulty_return``         | Method did not respect     | Faulty request implementation. |
+|                                   | the WOOPER return          |                                |
+|                                   | convention.                |                                |
++-----------------------------------+----------------------------+--------------------------------+
 
 
 
-``wooper_method_not_found``
-***************************
+``request_not_found``
+*********************
 
-The corresponding error message is ``{wooper_method_not_found, InstancePid, Classname, MethodName, MethodArity, ListOfActualParameters}``.
+The corresponding error message is ``{request_not_found, InstancePid, Classname, RequestName, RequestArity, ListOfActualParameters}``.
 
-For example ``{wooper_method_not_found, <0.30.0>, class_Cat, layEggs, 2, ...}``.
+For example ``{request_not_found, <0.30.0>, class_Cat, layEggs, 2, ...}``.
 
-Note that ``MethodArity`` counts the implied state parameter (that will be discussed later), i.e. here ``layEggs/2`` might be defined as ``layEggs(State,NumberOfNewEggs) -> [..]``.
+Note that ``RequestArity`` counts the implied state parameter (that will be discussed later), i.e. here ``layEggs/2`` might be defined as ``layEggs(State,NumberOfNewEggs) -> [..]``.
 
-This error occurs whenever a called method could not be found in the whole inheritance graph of the target class. It means this method is not implemented, at least not with the deduced arity.
+This error occurs whenever a called request could not be found in the whole inheritance graph of the target class. It means this request is not implemented - at least not with the deduced arity.
 
 More precisely, when a message ``{method_name,[Arg1,Arg2,..,Argn]...}`` (request or oneway) is received, ``method_name/n+1`` has be to called: WOOPER tries to find ``method_name(State,Arg1,..,Argn)``, and the method name and arity must match.
 
-If no method could be found, the ``wooper_method_not_found`` atom is returned (if the method is a request, otherwise the error is logged), and the object state will not change, nor the instance will crash, as this error is deemed a caller-side one (i.e. the instance has a priori nothing to do with the error).
+If a called request could be found, the ``request_not_found`` tuple is returned, an error is logged, but the instance state will not change, nor the instance will crash, as this error is deemed a caller-side one (i.e. the instance has a priori nothing to do with the error).
 
 
 
-``wooper_method_failed``
-************************
+``request_failed``
+******************
 
-The corresponding error message is ``{wooper_method_failed, InstancePid, Classname, MethodName, MethodArity, ListOfActualParameters, ErrorTerm}``.
+The corresponding error message is ``{request_failed, InstancePid, Classname, RequestName, RequestArity, ListOfActualParameters, ErrorReason}``.
 
-For example, ``{wooper_method_failed, <0.30.0>, class_Cat, myCrashingMethod, 1, [], {{badmatch,create_bug}, [..]]}``.
+For example, ``{request_failed, <0.30.0>, class_Cat, myCrashingRequest, 1, [], {{badmatch,create_bug}, [..]]}``.
 
-If the exit message sent by the method specifies a PID, it is prepended to ErrorTerm.
+If the exit message sent by the request specifies a PID, it is prepended to ErrorTerm.
 
-Such a method error means there is a runtime failure, it is generally deemed a instance-side issue (the caller should not be responsible for it, unless it sent incorrect parameters), thus the instance process logs that error, sends an error term to the caller (if and only if it is a request), and then exits with the same error term.
+Such an error means that there is a runtime failure, it is generally deemed an instance-side issue (the caller should not be responsible for it, unless it sent incorrect parameters), thus the instance process logs that error, sends an error term to the caller, and then throws an exception with the same error term.
+
+
+``request_void_return``
+***********************
+
+The corresponding error message is ``{request_void_return, InstancePid, Classname, RequestName, RequestArity, ListOfActualParameters}``.
+
+For example, ``{request_void_return, <0.30.0>, class_Cat, myOneway, 1, []}``.
+
+The method was called as a request yet behaved as a oneway. Either its implementation or this call is wrong.
+
+This is generally deemed a caller-side issue, thus the instance process logs that error, sends an error term to the caller, and goes on, with an unchanged state.
 
 
 
-``wooper_method_faulty_return``
-*******************************
+``request_faulty_return``
+*************************
 
-The corresponding error message is ``{wooper_method_faulty_return, InstancePid, Classname, MethodName, MethodArity, ListOfActualParameters, ActualReturn}``.
+The corresponding error message is ``{request_faulty_return, InstancePid, Classname, RequestName, RequestArity, ListOfActualParameters, ActualReturn}``.
 
-For example, ``{wooper_method_faulty_return, <0.30.0>, class_Cat, myFaultyMethod, 1, [], [{{state_holder,..]}``.
+For example, ``{request_faulty_return, <0.30.0>, class_Cat, myFaultyRequest, 1, [], [{{state_holder,..]}``.
 
-This error occurs only when being in debug mode.
+The main reason for this to happen is when debug mode is enabled and when a request implementation did not respect the expected return convention (based on ``wooper_return_state_result``).  Note that oneways are similarly checked for ``wooper_return_state_only`` returns.
 
-The main reason for this to happen is when debug mode is set and when a method implementation did not respect the expected method return convention (neither ``wooper_return_state_result`` nor ``wooper_return_state_only`` was used in this branch of the method definition).
+This means that the request is not implemented correctly (it has a bug), or that it was not (re)compiled with the proper debug mode, i.e. the one the caller was compiled with.
 
-It means the method is not implemented correctly (it has a bug), or that it was not (re)compiled with the proper debug mode, i.e. the one the caller was compiled with.
-
-This is an instance-side failure (the caller has no responsibility for that), thus the instance process logs that error, sends an error term to the caller (if and only if it is a request), and then exits with the same error term.
+This is an instance-side failure (the caller has no responsibility for that), thus the instance process logs that error, sends an error term to the caller, and then throws an exception with the same error term.
 
 
 
@@ -771,18 +796,9 @@ Therefore one could make use of that information, as in::
 
   MyPoint ! {getCoordinates,[],self()},
   receive
-	  {wooper_result, [X,Y] } ->
+	  {wooper_result, [X,Y]} ->
 			   [..];
-	  {wooper_method_not_found, Pid, Class, Method, Arity, Params} ->
-			   [..];
-	  {wooper_method_failed, Pid, Class, Method, Arity, Params, ErrorTerm} ->
-			   [..];
-	  % Error term can be a tuple {Pid,Error} as well, depending on the exit:
-	  {wooper_method_failed, Pid, Class, Method, Arity, Params, {Pid,Error}} ->
-			   [..];
-	  {wooper_method_faulty_return, Pid, Class, Method, Arity, Params, UnexpectedTerm} ->
-			   [..];
-	  wooper_method_returns_void ->
+	  {wooper_error, ErrorReason} ->
 			   [..];
 	  OtherError ->
 			   % Should never happen:
@@ -798,8 +814,37 @@ However defensive development is not really favoured in Erlang, one may let the 
 			   [..]
   end.
 
-.. [#] Then, in case of failure, the method call will become blocking.
+.. [#] Then, in case of failure, the method call will become blocking, yet the called instance shall at least display an informative log message on the console.
 
+
+
+
+Example of WOOPER error message
+*******************************
+
+By default following information are displayed on the console, facilitating significantly the debugging::
+
+  =ERROR REPORT==== 5-Apr-2016::17:21:37 ===
+  WOOPER error for class_ReliabilityProbe instance of PID <0.68.0>: request class_Probe:sendResults/2 failed (cause: throw):
+
+   - with error term:
+	{open_failed,{"FOOBAR/equipment/src/Reliability_probe_1.p",
+				[raw,write,exclusive]},
+			   eexist}
+
+   - stack trace was (latest calls first):
+	1. file_utils:open/3   [defined in file_utils.erl (line 1642)]
+	2. class_ReliabilityProbe:generateCommandFile/1   [defined in class_ReliabilityProbe.erl (line 168)]
+	3. class_Probe:wooper_effective_method_execution/4   [defined in wooper_execute_internal_functions.hrl (line 364)]
+	4. class_Probe:executeOneway/2   [defined in wooper_execute_internal_functions.hrl (line 875)]
+	5. class_Probe:generate_report/2   [defined in class_Probe.erl (line 2913)]
+	6. class_Probe:sendResults/2   [defined in class_Probe.erl (line 1532)]
+	7. class_ReliabilityProbe:wooper_effective_method_execution/4   [defined in wooper_execute_internal_functions.hrl (line 364)]
+	8. class_ReliabilityProbe:wooper_main_loop/1   [defined in wooper_execute_internal_functions.hrl (line 492)]
+
+   - for parameters:
+	[[data_and_plot]]
+  =END OF ERROR REPORT===
 
 
 
@@ -1926,7 +1971,7 @@ Notably warnings about unused variables allow to catch mistakes when state varia
 Runtime Errors
 ..............
 
-Most errors while using WOOPER should result in relatively clear messages (ex: ``wooper_method_failed`` or ``wooper_method_faulty_return``), associated with all relevant run-time information that was available to WOOPER.
+Most errors while using WOOPER should result in relatively clear messages (ex: ``request_failed`` or ``wooper_method_faulty_return``), associated with all relevant run-time information that was available to WOOPER.
 
 Another way of overcoming WOOPER issues is to activate the debug mode for all WOOPER-enabled compiled modules (ex: uncomment ``-define(wooper_debug,).`` in ``wooper.hrl``), and recompile your classes.
 

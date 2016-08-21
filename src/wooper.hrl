@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2015 Olivier Boudeville
+% Copyright (C) 2003-2016 Olivier Boudeville
 %
 % This file is part of the WOOPER library.
 %
@@ -151,6 +151,14 @@
 % sections, first the exports, then the function definitions. This also allows
 % to have each relevant header included exactly once (hence, for example, no
 % need for include guards).
+
+
+
+% Regarding exceptions:
+%
+% User code is expected to rely only on the throw exception class, rather than
+% on the error or exit ones.
+
 
 
 % First exports:

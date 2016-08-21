@@ -1,4 +1,4 @@
-% Copyright (C) 2012-2015 Olivier Boudeville
+% Copyright (C) 2012-2016 Olivier Boudeville
 %
 % This file is part of the WOOPER examples.
 %
@@ -31,7 +31,7 @@ run() ->
 
 		{ wooper_result, FirstDescription } ->
 			test_facilities:display( "Created following cat: ~s~n" ,
-									[ FirstDescription ] )
+									 [ FirstDescription ] )
 
 	end,
 
@@ -50,7 +50,7 @@ run() ->
 	% the attributes it filters:
 	%
 	TextTransformer = fun( Entry={ AttributeName, AttributeValue },
-				 _Acc={ AccEntries, AccUserData } ) ->
+						   _Acc={ AccEntries, AccUserData } ) ->
 
 			test_facilities:display( " - attribute name '~s' is associated "
 									 "to value '~p'~n",
@@ -96,7 +96,7 @@ run() ->
 	MyR = class_Reptile:new_link( 35, female ),
 
 	MyR ! { serialise, [ _TextTransformer=undefined,
-						_ActualUserData=undefined ], self() },
+						 _ActualUserData=undefined ], self() },
 
 	receive
 
@@ -110,7 +110,7 @@ run() ->
 									 " - binary size: ~B bytes~n"
 									 " - user data: ~p~n",
 									 [ ReptileClass, ReptileBin,
-									  size( ReptileBin ),  ReptileUserData ] )
+									   size( ReptileBin ),  ReptileUserData ] )
 
 	end,
 
@@ -125,7 +125,7 @@ run() ->
 
 		{ wooper_result, SecondDescription } ->
 			test_facilities:display( "Deserialised following cat: ~s~n" ,
-									[ SecondDescription ] )
+									 [ SecondDescription ] )
 
 	end,
 

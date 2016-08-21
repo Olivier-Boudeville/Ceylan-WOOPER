@@ -1,4 +1,4 @@
-% Copyright (C) 2007-2015 Olivier Boudeville
+% Copyright (C) 2007-2016 Olivier Boudeville
 %
 % This file is part of the WOOPER library.
 %
@@ -104,22 +104,21 @@
 
 
 display_state( Tables ) ->
-	error_logger:info_msg( ?log_prefix "Storing now ~B table(s).~n",
-					[ ?wooper_hashtable_type:getEntryCount( Tables ) ] ).
+	wooper:log_info( ?log_prefix "Storing now ~B table(s).~n",
+					 [ ?wooper_hashtable_type:getEntryCount( Tables ) ] ).
 
 
 display_table_creation( Module ) ->
-	error_logger:info_msg( ?log_prefix "Creating a virtual table "
-							"for module ~s.~n", [ Module ] ).
+	wooper:log_info( ?log_prefix "Creating a virtual table "
+					 "for module ~s.~n", [ Module ] ).
 
 
 display_msg( String ) ->
-
 	Message = io_lib:format( ?log_prefix "~s.~n", [ String ] ),
-	error_logger:info_msg( Message ).
+	wooper:log_info( Message ).
 
 
--else.
+-else. % wooper_debug_class_manager
 
 
 display_state( _Tables ) ->
@@ -132,7 +131,7 @@ display_msg( _String ) ->
 	ok.
 
 
--endif.
+-endif. % wooper_debug_class_manager
 
 
 
@@ -200,13 +199,13 @@ loop( Tables ) ->
 
 		{ get_table, Module, Pid } ->
 			{ NewTables, TargetTable } = get_virtual_table_for( Module,
-															   Tables ),
+																Tables ),
 			Pid ! { virtual_table, TargetTable },
 			loop( NewTables );
 
 		display ->
-			error_logger:info_msg( ?log_prefix "Internal state is: ~s~n",
-				[ ?wooper_hashtable_type:toString( Tables ) ] ),
+			wooper:log_info( ?log_prefix "Internal state is: ~s~n",
+							 [ ?wooper_hashtable_type:toString( Tables ) ] ),
 			loop( Tables );
 
 		stop ->

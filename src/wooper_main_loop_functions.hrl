@@ -1,3 +1,30 @@
+% Copyright (C) 2003-2016 Olivier Boudeville
+%
+% This file is part of the WOOPER library.
+%
+% This library is free software: you can redistribute it and/or modify
+% it under the terms of the GNU Lesser General Public License or
+% the GNU General Public License, as they are published by the Free Software
+% Foundation, either version 3 of these Licenses, or (at your option)
+% any later version.
+% You can also redistribute it and/or modify it under the terms of the
+% Mozilla Public License, version 1.1 or later.
+%
+% This library is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+% GNU Lesser General Public License and the GNU General Public License
+% for more details.
+%
+% You should have received a copy of the GNU Lesser General Public
+% License, of the GNU General Public License and of the Mozilla Public License
+% along with this library.
+% If not, see <http://www.gnu.org/licenses/> and
+% <http://www.mozilla.org/MPL/>.
+%
+% Author: Olivier Boudeville (olivier.boudeville@esperide.com)
+
+
 % Modular WOOPER header gathering the main loop of instances
 % (wooper_main_loop/1).
 
@@ -29,7 +56,7 @@ wooper_main_loop( State ) ->
 
 	%?wooper_log( "wooper_main_loop start.~n" ),
 
-	% Commented-out to avoid the state display prior to each method call:
+	% Uncomment to display the current state prior to each method call:
 	% wooper:display_state( State )
 
 	receive
@@ -37,7 +64,8 @@ wooper_main_loop( State ) ->
 		% Requests (thus with response):
 
 		% Instance PID could be sent back as well to discriminate received
-		% answers on the caller side.
+		% answers on the caller side (if interleaving requests).
+
 		{ MethodAtom, ArgumentList, CallerPid }
 				when is_pid( CallerPid ) and is_list( ArgumentList ) ->
 
@@ -45,91 +73,50 @@ wooper_main_loop( State ) ->
 				"request '~s' with argument list ~w for ~w.~n",
 				[ self(), MethodAtom, ArgumentList, CallerPid ] ),
 
-			SenderAwareState = State#state_holder{ request_sender=CallerPid },
-
-			{ NewState, Result } = wooper_execute_method( MethodAtom,
-				SenderAwareState, ArgumentList ),
-			%CallerPid ! { self(), Result }
-			CallerPid ! Result,
-
-			% Force a crash if instance-side error detected:
-			case element( 1, Result ) of
-
-				wooper_method_failed ->
-					throw( Result ) ;
-
-				wooper_method_not_found ->
-					throw( Result ) ;
-
-				% wooper_result:
-				_ ->
-					ok
-
-			end,
-			SenderAgnosticState =
-				NewState#state_holder{ request_sender=undefined },
+			NewState = wooper_handle_remote_request_execution( MethodAtom,
+										  State, ArgumentList, CallerPid ),
 
 			%?wooper_log( "Main loop (case A) ended.~n" ),
 
-			wooper_main_loop( SenderAgnosticState );
+			wooper_main_loop( NewState );
 
 
 
 		% Auto-wrapping single arguments implies putting lists between
-		% double-brackets:
+		% double-brackets for this request:
+		%
 		{ MethodAtom, Argument, CallerPid } when is_pid( CallerPid ) ->
 
-			?wooper_log_format( "Main loop (case B) for ~w: "
-				"request '~s' with argument ~w for ~w.~n",
-				[ self(), MethodAtom, Argument, CallerPid ] ),
+			?wooper_log_format( "Main loop (case B) for ~w: request '~s' "
+								"with argument ~w for ~w.~n",
+								[ self(), MethodAtom, Argument, CallerPid ] ),
 
-			SenderAwareState = State#state_holder{ request_sender=CallerPid },
-
-			{ NewState, Result } = wooper_execute_method( MethodAtom,
-				SenderAwareState, [ Argument ] ),
-
-			%CallerPid ! { self(), Result }
-			CallerPid ! Result,
-
-			% Forces a crash if instance-side error detected:
-			case element( 1, Result ) of
-
-				wooper_method_failed ->
-					throw( Result ) ;
-
-				wooper_method_not_found ->
-					throw( Result ) ;
-
-				% wooper_result:
-				_ ->
-					ok
-
-			end,
-			SenderAgnosticState =
-				NewState#state_holder{ request_sender=undefined },
+			NewState = wooper_handle_remote_request_execution( MethodAtom,
+										  State, [ Argument ], CallerPid ),
 
 			%?wooper_log( "Main loop (case B) ended.~n" ),
 
-			wooper_main_loop( SenderAgnosticState );
+			wooper_main_loop( NewState );
 
 
 
 		% Oneway calls (no caller PID sent, no answer sent back).
 		%
 		% We check though that indeed no value is returned, by pattern-matching
-		% against wooper_method_returns_void, which could be removed if not in
+		% against wooper_method_returns_void, which can be removed if not in
 		% debug mode.
 		%
 		% (if no pattern-matching was done, then either this method would not
 		% return anything, or the sender would not be interested in the result)
+		%
 		{ MethodAtom, ArgumentList } when is_list( ArgumentList ) ->
 
 			?wooper_log_format( "Main loop (case C) for ~w: "
-				"oneway '~s' with argument list ~w.~n",
-				[ self(), MethodAtom, ArgumentList ] ),
+								"oneway '~s' with argument list ~w.~n",
+								[ self(), MethodAtom, ArgumentList ] ),
 
-			NewState = wooper_handle_oneway_execution( MethodAtom, State,
-												ArgumentList ),
+			NewState = wooper_handle_remote_oneway_execution( MethodAtom, State,
+															  ArgumentList ),
 
 			%?wooper_log( "Main loop (case C) ended.~n" ),
 
@@ -155,7 +142,7 @@ wooper_main_loop( State ) ->
 		{ ping, CallerPid } ->
 
 			?wooper_log_format( "Main loop (case D) for ~w: oneway ping.~n",
-				[ self() ] ),
+								[ self() ] ),
 
 			CallerPid ! { pong, self() },
 
@@ -168,11 +155,11 @@ wooper_main_loop( State ) ->
 		{ MethodAtom, Argument } ->
 
 			?wooper_log_format( "Main loop (case E) for ~w: "
-				"oneway '~s' with argument ~w.~n",
-				[ self(), MethodAtom, Argument ] ),
+								"oneway '~s' with argument ~w.~n",
+								[ self(), MethodAtom, Argument ] ),
 
-			NewState = wooper_handle_oneway_execution( MethodAtom, State,
-											[ Argument ] ),
+			NewState = wooper_handle_remote_oneway_execution( MethodAtom, State,
+															  [ Argument ] ),
 
 			%?wooper_log( "Main loop (case E) ended.~n" ),
 
@@ -195,12 +182,12 @@ wooper_main_loop( State ) ->
 		MethodAtom when is_atom( MethodAtom ) ->
 
 			?wooper_log_format(
-				"Main loop (case F) for ~w: oneway from atom ~s.~n",
-				[ self(), MethodAtom ] ),
+			   "Main loop (case F) for ~w: oneway from atom ~s.~n",
+			   [ self(), MethodAtom ] ),
 
 			% Any result should be ignored, only the updated state is kept:
-			NewState = wooper_handle_oneway_execution( MethodAtom, State,
-												_ArgumentList=[] ),
+			NewState = wooper_handle_remote_oneway_execution( MethodAtom, State,
+												  _ArgumentList=[] ),
 
 			%?wooper_log( "Main loop (case F) ended.~n" ),
 			wooper_main_loop( NewState );
@@ -210,7 +197,7 @@ wooper_main_loop( State ) ->
 		{ 'EXIT', Pid, ExitType } when is_pid( Pid ) ->
 
 			?wooper_log_format( "Main loop (case G) for ~w: exit with ~w.~n",
-				[ self(), { Pid, ExitType } ] ),
+								[ self(), { Pid, ExitType } ] ),
 
 			case ?wooper_hashtable_type:lookupEntry(
 					{ _Name=onWOOPERExitReceived, _Arity=3 },
@@ -225,7 +212,7 @@ wooper_main_loop( State ) ->
 					% )', where ExitType is typically a stack trace:
 
 					{ NewState, _ } = wooper_execute_method(
-						onWOOPERExitReceived, State, [ Pid, ExitType ] ),
+							onWOOPERExitReceived, State, [ Pid, ExitType ] ),
 
 					%?wooper_log( "Main loop (case G) ended.~n" ),
 					wooper_main_loop( NewState );
@@ -247,14 +234,14 @@ wooper_main_loop( State ) ->
 
 			% Catch-all:
 			?wooper_log_format( "Main loop (case H) for ~w: unmatched ~p.~n",
-				[ self(), Other ] ),
+								[ self(), Other ] ),
 
-			error_logger:error_msg(
-			  "WOOPER ignored following message for instance ~w:~n~p.~n",
+			wooper:log_error(
+			  "WOOPER ignored following message for instance ~w:~n~p.",
 			  [ self(), Other ] ),
 
 			%?wooper_log( "Main loop (case H) ended.~n" ),
-			throw( { erroneous_call, Other } )
+			throw( { wooper_erroneous_call, Other } )
 
 
 	end.

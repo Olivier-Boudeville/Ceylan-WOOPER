@@ -1,3 +1,30 @@
+% Copyright (C) 2003-2016 Olivier Boudeville
+%
+% This file is part of the WOOPER library.
+%
+% This library is free software: you can redistribute it and/or modify
+% it under the terms of the GNU Lesser General Public License or
+% the GNU General Public License, as they are published by the Free Software
+% Foundation, either version 3 of these Licenses, or (at your option)
+% any later version.
+% You can also redistribute it and/or modify it under the terms of the
+% Mozilla Public License, version 1.1 or later.
+%
+% This library is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+% GNU Lesser General Public License and the GNU General Public License
+% for more details.
+%
+% You should have received a copy of the GNU Lesser General Public
+% License, of the GNU General Public License and of the Mozilla Public License
+% along with this library.
+% If not, see <http://www.gnu.org/licenses/> and
+% <http://www.mozilla.org/MPL/>.
+%
+% Author: Olivier Boudeville (olivier.boudeville@esperide.com)
+
+
 % Modular WOOPER header gathering the facilities for instance destruction.
 
 
@@ -54,14 +81,12 @@ wooper_destruct( State ) ->
 
 				Other ->
 
-					error_logger:error_msg(
-						"~nWOOPER error for PID ~w of class ~s: "
-						"user-defined destructor did not return a state, "
-						"but returned '~p' instead.~n",
-						[ self(), ?MODULE, Other ] ),
+					wooper:log_error(
+					  "~nWOOPER error for PID ~w of class ~s: "
+					  "user-defined destructor did not return a state, "
+					  "but returned '~p' instead.",
+					  [ self(), ?MODULE, Other ] ),
 
-					% Wait a bit as error_msg seems asynchronous:
-					timer:sleep( ?wooper_error_display_waiting ),
 					throw( { invalid_destructor, ?MODULE } )
 
 			catch
@@ -149,7 +174,7 @@ wooper_destruct( State ) ->
 %
 % (helper)
 %
--spec trigger_destruct_error( 'throw' | 'exit' | 'error', term(),
+-spec trigger_destruct_error( basic_utils:exception_class(), term(),
 							  wooper:state() ) -> no_return().
 trigger_destruct_error( Reason, ErrorTerm, State ) ->
 
@@ -158,18 +183,15 @@ trigger_destruct_error( Reason, ErrorTerm, State ) ->
 
 	ActualClassname = wooper:get_class_name( State ),
 
-	error_logger:error_msg( "~nWOOPER error for PID ~w, "
-							"destructor (~s:destruct/1) failed (cause: ~p):~n~n"
-							" - with error term:~n~p~n~n"
-							" - stack trace was (latest calls first):~n~p~n~n"
-							" - instance state was: ~s~n~n",
-							[ self(), ActualClassname, Reason, ErrorTerm,
-							  erlang:get_stacktrace(),
-							  wooper:state_to_string( State )
-							] ),
-
-	% Wait a bit as error_msg seems asynchronous:
-	timer:sleep( ?wooper_error_display_waiting ),
+	wooper:log_error( "~nWOOPER error for PID ~w, "
+					  "destructor (~s:destruct/1) failed (cause: ~p):~n~n"
+					  " - with error term:~n  ~p~n~n"
+					  " - stack trace was (latest calls first):~n~s~n"
+					  " - instance state was: ~s~n~n",
+					  [ self(), ActualClassname, Reason, ErrorTerm,
+						code_utils:interpret_stacktrace(),
+						wooper:state_to_string( State )
+					  ] ),
 
 	% Terminates the process:
 	throw( { wooper_destructor_failed, self(), ActualClassname, ErrorTerm } ).

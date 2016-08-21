@@ -1,3 +1,30 @@
+% Copyright (C) 2003-2016 Olivier Boudeville
+%
+% This file is part of the WOOPER library.
+%
+% This library is free software: you can redistribute it and/or modify
+% it under the terms of the GNU Lesser General Public License or
+% the GNU General Public License, as they are published by the Free Software
+% Foundation, either version 3 of these Licenses, or (at your option)
+% any later version.
+% You can also redistribute it and/or modify it under the terms of the
+% Mozilla Public License, version 1.1 or later.
+%
+% This library is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+% GNU Lesser General Public License and the GNU General Public License
+% for more details.
+%
+% You should have received a copy of the GNU Lesser General Public
+% License, of the GNU General Public License and of the Mozilla Public License
+% along with this library.
+% If not, see <http://www.gnu.org/licenses/> and
+% <http://www.mozilla.org/MPL/>.
+%
+% Author: Olivier Boudeville (olivier.boudeville@esperide.com)
+
+
 % Modular WOOPER header gathering the primitives to manage the creation of
 % instances.
 
@@ -130,8 +157,9 @@ new( ?wooper_construct_parameters ) ->
 	%io:format("new operator: spawning ~w:wooper_construct_and_run "
 	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
 
-	spawn( fun() -> wooper_construct_and_run( [ ?wooper_construct_parameters ] )
-						end ).
+	spawn( fun() ->
+				   wooper_construct_and_run( [ ?wooper_construct_parameters ] )
+		   end ).
 
 
 
@@ -145,8 +173,10 @@ new( ?wooper_construct_parameters ) ->
 %
 new_link( ?wooper_construct_parameters ) ->
 
-	spawn_link( fun() -> wooper_construct_and_run(
-					  [ ?wooper_construct_parameters ] ) end ).
+	spawn_link( fun() ->
+						wooper_construct_and_run(
+						  [ ?wooper_construct_parameters ] )
+				end ).
 
 
 
@@ -165,8 +195,10 @@ synchronous_new( ?wooper_construct_parameters ) ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = spawn( fun() -> wooper_construct_and_run_synchronous(
-		[ ?wooper_construct_parameters ], CreatorPid ) end ),
+	SpawnedPid = spawn( fun() ->
+								wooper_construct_and_run_synchronous(
+								  [ ?wooper_construct_parameters ], CreatorPid )
+						end ),
 
 	% Blocks until the spawned process answers:
 	%
@@ -197,8 +229,11 @@ synchronous_new_link( ?wooper_construct_parameters ) ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = spawn_link( fun() -> wooper_construct_and_run_synchronous(
-		[ ?wooper_construct_parameters ], CreatorPid ) end ),
+	SpawnedPid = spawn_link( fun() ->
+									 wooper_construct_and_run_synchronous(
+									   [ ?wooper_construct_parameters ],
+									   CreatorPid )
+							 end ),
 
 	% Blocks until the spawned process answers:
 	%
@@ -235,8 +270,11 @@ synchronous_timed_new( ?wooper_construct_parameters ) ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = spawn( fun() -> wooper_construct_and_run_synchronous(
-		[ ?wooper_construct_parameters ], CreatorPid ) end ),
+	SpawnedPid = spawn(
+				   fun() ->
+						   wooper_construct_and_run_synchronous(
+							 [ ?wooper_construct_parameters ], CreatorPid )
+				   end ),
 
 	% Blocks until the spawned process answers or a time-out occurs:
 	%
@@ -268,8 +306,11 @@ synchronous_timed_new_link( ?wooper_construct_parameters ) ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = spawn_link( fun() -> wooper_construct_and_run_synchronous(
-		[ ?wooper_construct_parameters ], CreatorPid ) end ),
+	SpawnedPid = spawn_link( fun() ->
+									 wooper_construct_and_run_synchronous(
+									   [ ?wooper_construct_parameters ],
+									   CreatorPid )
+							 end ),
 
 	% Blocks until the spawned process answers or a time-out occurs:
 	%
@@ -324,8 +365,10 @@ synchronous_timed_new_link( ?wooper_construct_parameters ) ->
 %
 remote_new( Node, ?wooper_construct_parameters ) ->
 
-	spawn( Node, fun() -> wooper_construct_and_run(
-						  [ ?wooper_construct_parameters ] ) end ).
+	spawn( Node, fun() ->
+						 wooper_construct_and_run(
+						   [ ?wooper_construct_parameters ] )
+				 end ).
 
 
 
@@ -341,8 +384,10 @@ remote_new( Node, ?wooper_construct_parameters ) ->
 %
 remote_new_link( Node, ?wooper_construct_parameters ) ->
 
-	spawn_link( Node, fun() -> wooper_construct_and_run(
-		[ ?wooper_construct_parameters ] ) end ).
+	spawn_link( Node, fun() ->
+							  wooper_construct_and_run(
+								[ ?wooper_construct_parameters ] )
+					  end ).
 
 
 
@@ -363,8 +408,11 @@ remote_synchronous_new( Node, ?wooper_construct_parameters ) ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = spawn( Node, fun() -> wooper_construct_and_run_synchronous(
-		[ ?wooper_construct_parameters ], CreatorPid ) end ),
+	SpawnedPid = spawn( Node, fun() ->
+									  wooper_construct_and_run_synchronous(
+										[ ?wooper_construct_parameters ],
+										CreatorPid )
+							  end ),
 
 	% Blocks until the spawned process answers:
 	%
@@ -398,8 +446,10 @@ remote_synchronous_new_link( Node, ?wooper_construct_parameters ) ->
 	CreatorPid = self(),
 
 	SpawnedPid = spawn_link( Node, fun() ->
-		wooper_construct_and_run_synchronous( [ ?wooper_construct_parameters ],
-												CreatorPid ) end ),
+										   wooper_construct_and_run_synchronous(
+											 [ ?wooper_construct_parameters ],
+											 CreatorPid )
+								   end ),
 
 	% Blocks until the spawned process answers:
 	%
@@ -435,8 +485,10 @@ remote_synchronisable_new_link( Node, ?wooper_construct_parameters ) ->
 	CreatorPid = self(),
 
 	spawn_link( Node, fun() ->
-		wooper_construct_and_run_synchronous( [ ?wooper_construct_parameters ],
-												CreatorPid ) end ).
+							  wooper_construct_and_run_synchronous(
+								[ ?wooper_construct_parameters ],
+								CreatorPid )
+					  end ).
 
 
 
@@ -461,8 +513,11 @@ remote_synchronous_timed_new( Node, ?wooper_construct_parameters ) ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = spawn( Node, fun() -> wooper_construct_and_run_synchronous(
-		[ ?wooper_construct_parameters ], CreatorPid ) end ),
+	SpawnedPid = spawn( Node, fun() ->
+									  wooper_construct_and_run_synchronous(
+										[ ?wooper_construct_parameters ],
+										CreatorPid )
+							  end ),
 
 	% Blocks until the spawned process answers or a time-out occurs:
 	%
@@ -501,8 +556,10 @@ remote_synchronous_timed_new_link( Node, ?wooper_construct_parameters ) ->
 	CreatorPid = self(),
 
 	SpawnedPid = spawn_link( Node, fun() ->
-		wooper_construct_and_run_synchronous( [ ?wooper_construct_parameters ],
-											CreatorPid ) end ),
+										   wooper_construct_and_run_synchronous(
+											 [ ?wooper_construct_parameters ],
+											 CreatorPid )
+								   end ),
 
 	% Blocks until the spawned process answers or a time-out occurs:
 	%
@@ -558,7 +615,9 @@ new() ->
 	%io:format("new operator: spawning ~w:wooper_construct_and_run "
 	%	"with no parameter.~n", [ ?MODULE ] ),
 
-	spawn( fun() -> wooper_construct_and_run( [] ) end ).
+	spawn( fun() ->
+				   wooper_construct_and_run( _ConstructParams=[] )
+		   end ).
 
 
 
@@ -572,7 +631,9 @@ new() ->
 -spec new_link() -> pid().
 new_link() ->
 
-	spawn_link( fun() -> wooper_construct_and_run( [] ) end ).
+	spawn_link( fun() ->
+						wooper_construct_and_run( _ConstructParams=[] )
+				end ).
 
 
 
@@ -591,8 +652,10 @@ synchronous_new() ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = spawn( fun() -> wooper_construct_and_run_synchronous(
-		[], CreatorPid ) end ),
+	SpawnedPid = spawn( fun() ->
+								wooper_construct_and_run_synchronous(
+								  _ConstructParams=[], CreatorPid )
+						end ),
 
 	% Blocks until the spawned process answers:
 	receive
@@ -615,8 +678,10 @@ synchronous_new_link() ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = spawn_link( fun() -> wooper_construct_and_run_synchronous(
-		[], CreatorPid ) end ),
+	SpawnedPid = spawn_link( fun() ->
+									 wooper_construct_and_run_synchronous(
+									   _ConstructParams=[], CreatorPid )
+							 end ),
 
 	% Blocks until the spawned process answers:
 	%
@@ -649,8 +714,10 @@ synchronous_timed_new() ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = spawn( fun() -> wooper_construct_and_run_synchronous(
-									   [], CreatorPid ) end ),
+	SpawnedPid = spawn( fun() ->
+								wooper_construct_and_run_synchronous(
+									   _ConstructParams=[], CreatorPid )
+						end ),
 
 	% Blocks until the spawned process answers or a time-out occurs:
 	receive
@@ -678,8 +745,10 @@ synchronous_timed_new_link() ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = spawn_link( fun() -> wooper_construct_and_run_synchronous(
-		 [], CreatorPid ) end ),
+	SpawnedPid = spawn_link( fun() ->
+									 wooper_construct_and_run_synchronous(
+									   _ConstructParams=[], CreatorPid )
+							 end ),
 
 	% Blocks until the spawned process answers or a time-out occurs:
 	receive
@@ -729,7 +798,9 @@ synchronous_timed_new_link() ->
 %
 -spec remote_new( net_utils:node_name() ) -> pid().
 remote_new( Node ) ->
-	spawn( Node, fun() -> wooper_construct_and_run( [] ) end ).
+	spawn( Node, fun() ->
+						 wooper_construct_and_run( _ConstructParams=[] )
+				 end ).
 
 
 
@@ -745,7 +816,9 @@ remote_new( Node ) ->
 %
 -spec remote_new_link( net_utils:node_name() ) -> pid().
 remote_new_link( Node ) ->
-	spawn_link( Node, fun() -> wooper_construct_and_run( [] ) end ).
+	spawn_link( Node, fun() ->
+							  wooper_construct_and_run( _ConstructParams=[] )
+					  end ).
 
 
 
@@ -764,8 +837,11 @@ remote_synchronous_new( Node ) ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = spawn( Node, fun() -> wooper_construct_and_run_synchronous(
-		[], CreatorPid ) end ),
+	SpawnedPid = spawn( Node,
+						fun() ->
+								wooper_construct_and_run_synchronous(
+								  _ConstructParams=[], CreatorPid )
+						end ),
 
 	% Blocks until the spawned process answers:
 	%
@@ -795,7 +871,9 @@ remote_synchronous_new_link( Node ) ->
 	CreatorPid = self(),
 
 	SpawnedPid = spawn_link( Node, fun() ->
-		wooper_construct_and_run_synchronous( [], CreatorPid ) end ),
+										   wooper_construct_and_run_synchronous(
+											 _ConstructParams=[], CreatorPid )
+								   end ),
 
 	% Blocks until the spawned process answers:
 	%
@@ -833,7 +911,9 @@ remote_synchronisable_new_link( Node ) ->
 	CreatorPid = self(),
 
 	spawn_link( Node, fun() ->
-		wooper_construct_and_run_synchronous( [], CreatorPid ) end ).
+							  wooper_construct_and_run_synchronous(
+								_ConstructParams=[], CreatorPid )
+					  end ).
 
 
 
@@ -852,8 +932,10 @@ remote_synchronous_timed_new( Node ) ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = spawn( Node, fun() -> wooper_construct_and_run_synchronous(
-		[], CreatorPid ) end ),
+	SpawnedPid = spawn( Node, fun() ->
+									  wooper_construct_and_run_synchronous(
+										_ConstructParams=[], CreatorPid )
+							  end ),
 
 	% Blocks until the spawned process answers or a time-out occurs:
 	%
@@ -888,7 +970,9 @@ remote_synchronous_timed_new_link( Node ) ->
 	CreatorPid = self(),
 
 	SpawnedPid = spawn_link( Node, fun() ->
-		wooper_construct_and_run_synchronous( [], CreatorPid ) end ),
+										   wooper_construct_and_run_synchronous(
+											 _ConstructParams=[], CreatorPid )
+								   end ),
 
 	% Blocks until the spawned process answers or a time-out occurs:
 	%
@@ -949,4 +1033,4 @@ wooper_construct_and_run_synchronous( ConstructionParameters, SpawnerPid ) ->
 	%   [ ConstructionParameters, length( ConstructionParameters ) ] ),
 
 	wooper:construct_and_run_synchronous( _Classname=?MODULE,
-										 ConstructionParameters, SpawnerPid ).
+										  ConstructionParameters, SpawnerPid ).
