@@ -188,7 +188,7 @@ wooper_execute_method( MethodAtom, State, Parameters )
 					% elements, as if in a single string ("M/A"), the result
 					% is displayed as a list:
 					wooper:log_error( ": oneway method ~s/~B not found, "
-									  "parameters were:~n~p",
+									  "parameters were:~n~p~n",
 									  [ MethodAtom, length( Parameters ) + 1,
 										Parameters ], State ),
 
@@ -205,7 +205,7 @@ wooper_execute_method( MethodAtom, State, Parameters )
 					% send back a relevant answer):
 					%
 					wooper:log_error( ": request ~s/~B not found, "
-									  "parameters were:~n~p",
+									  "parameters were:~n~p~n",
 									  [ MethodAtom, length( Parameters ) + 1,
 										Parameters ], State ),
 

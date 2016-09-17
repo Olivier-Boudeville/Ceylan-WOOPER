@@ -49,6 +49,9 @@
 		  wait_for_request_answers/2, wait_for_request_answers/3,
 
 		  obtain_results_for_requests/3,
+
+		  send_request_series/2, obtain_results_for_request_series/2,
+
 		  send_and_listen/3, receive_result/0
 
 		]).
@@ -169,7 +172,12 @@
 
 
 % Section for communication helpers.
+%
+% Generally no wooper result expected to be already in the message queue or to
+% be received during these operations.
 
+
+% First: one caller, one request, multiple callees, with a time-out or not.
 
 
 % Sends specified request (based on its names and arguments) to each of the
@@ -188,11 +196,12 @@ send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 
 
 
-
 % Sends specified request (based on its name and arguments) to each of the
 % specified target instances, and waits (indefinitively) for their
 % acknowledgement, which shall be their only result (i.e. these methods should
 % be requests only for synchronisation).
+%
+% No time-out: answers will be waited indefinitely.
 %
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
 								   [ pid() ], atom() ) -> basic_utils:void().
@@ -235,7 +244,6 @@ wait_for_request_answers( RequestedPidList, AckAtom ) ->
 
 
 
-
 % Waits for an acknowledgement answer, based on specified atom, from the
 % specified requested instances, unless the specified time-out is exceeded
 % (specified as integer milliseconds or the 'infinity' atom).
@@ -258,9 +266,6 @@ wait_for_request_answers( RequestedPidList, Timeout, AckAtom ) ->
 							  AckAtom ).
 
 
-
-
-
 % Waits until end of time if necessary.
 %
 % (helper)
@@ -280,7 +285,6 @@ wait_indefinitively_for_request_answers( RequestedPidList, AckAtom ) ->
 			wait_indefinitively_for_request_answers( NewPidList, AckAtom )
 
 	end.
-
 
 
 
@@ -331,14 +335,14 @@ wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
 
 
 
-
-
 % Sends the specified request to all specified instances for execution, in
 % parallel, and returns the corresponding results, in indiscriminated order.
 %
 % Note: no specified order is enforced in the result list; hence this helper is
 % meant to be used when we can collect each result regardless of its specific
 % sender.
+%
+% No time-out enforced.
 %
 % (exported helper)
 %
@@ -372,6 +376,71 @@ collect_wooper_messages( Count, Acc ) ->
 
 	end.
 
+
+
+% Second: one caller,multiple requests, one callee (expected to answer them in
+% order - which is the general case in WOOPER where there is no selective
+% receive).
+%
+% No other results expected to be received once the request series has been
+% triggered. No time-out enforced.
+
+
+
+% Sends specified series of requests (based on its names and arguments) to the
+% specified target instance.
+%
+% (helper)
+%
+-spec send_request_series( [ { request_name(), method_arguments() } ], pid() )
+						 -> basic_utils:void().
+send_request_series( _Requests=[], _TargetInstancePID ) ->
+	ok;
+
+send_request_series( _Requests=[ { RequestName, RequestArgs } | T ],
+					 TargetInstancePID ) ->
+
+	ActualRequest = { RequestName, RequestArgs, self() },
+
+	TargetInstancePID ! ActualRequest,
+
+	send_request_series( T, TargetInstancePID ).
+
+
+
+
+% Sends the specified request to all specified instances for execution, in
+% parallel, and returns the corresponding results, in indiscriminated order.
+%
+% Note: no specified order is enforced in the result list; hence this helper is
+% meant to be used when we can collect each result regardless of its specific
+% sender.
+%
+% (exported helper)
+%
+-spec obtain_results_for_request_series(
+		[ { request_name(), method_arguments() } ], pid() ) -> [ any() ].
+obtain_results_for_request_series( Requests, TargetInstancePID ) ->
+
+	send_request_series( Requests, TargetInstancePID ),
+
+	% Requests sent in-order, so will answers be received:
+	wait_request_series( _WaitCount=length( Requests ), _Acc=[] ).
+
+
+
+% (helper)
+wait_request_series( _WaitCount=0, Acc ) ->
+	lists:reverse( Acc );
+
+wait_request_series( WaitCount, Acc ) ->
+
+	receive
+
+		{ wooper_result, R } ->
+			wait_request_series( WaitCount-1, [ R | Acc ] )
+
+	end.
 
 
 
