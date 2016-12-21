@@ -1009,7 +1009,7 @@ remote_synchronous_timed_new_link( Node ) ->
 %
 % Allows to obtain the virtual table from the instance, not from its parent.
 %
--spec wooper_construct_and_run( [ method_argument() ] ) -> no_return().
+-spec wooper_construct_and_run( construction_parameters() ) -> no_return().
 wooper_construct_and_run( ConstructionParameters ) ->
 
 	%io:format("wooper_construct_and_run called with parameters ~w, "
@@ -1024,8 +1024,8 @@ wooper_construct_and_run( ConstructionParameters ) ->
 %
 % Allows to obtain the virtual table from the instance, not from its parent.
 %
--spec wooper_construct_and_run_synchronous( [ method_argument() ], pid() ) ->
-												  no_return().
+-spec wooper_construct_and_run_synchronous( construction_parameters(),
+											pid() ) -> no_return().
 wooper_construct_and_run_synchronous( ConstructionParameters, SpawnerPid ) ->
 
 	%io:format("wooper_construct_and_run called with parameters ~w, "

@@ -1,4 +1,4 @@
-% Copyright (C) 2012-2016 Olivier Boudeville
+% Copyright (C) 2012-2017 Olivier Boudeville
 %
 % This file is part of the WOOPER library.
 %
@@ -32,7 +32,6 @@
 
 
 
-
 % First, all the various exports:
 
 
@@ -47,6 +46,7 @@
 
 		  send_requests_and_wait_acks/4, send_requests_and_wait_acks/5,
 		  wait_for_request_answers/2, wait_for_request_answers/3,
+		  wait_for_request_acknowledgements/2,
 
 		  obtain_results_for_requests/3,
 
@@ -123,8 +123,51 @@
 -include("wooper_defines_exports.hrl").
 
 
-% For type request_result/1:
--include("wooper_types_exports.hrl").
+% Actual definitions the shorthands in wooper_types_exports.hrl refer to:
+
+% An atom prefixed with 'class_':
+%
+-type class_name() :: atom().
+
+% A method name (ex: 'setColor'):
+%
+-type method_name() :: meta_utils:function_name().
+
+-type request_name() :: method_name().
+-type oneway_name()  :: method_name().
+
+
+% A method argument can be any type:
+-type method_argument() :: any().
+
+% Standalone (non-list) arguments may also be specified:
+-type method_arguments() :: method_argument() | [ method_argument() ].
+
+
+% Special case of construction parameters:
+-type construction_parameters() :: [ method_argument() ].
+
+
+-type requests_outcome() :: 'success' | { 'failure', [ pid() ] }.
+
+% To be specified more closely maybe:
+-type method_internal_result() :: any().
+
+-type request_result( T ) :: T.
+
+-type request_return( T ) :: { state(), request_result( T ) }.
+-type oneway_return() :: state().
+
+
+-type attribute_name() :: atom().
+-type attribute_value() :: any().
+
+-type attribute_entry() :: { attribute_name(), attribute_value() }.
+
+
+% PID of a WOOPER instance.
+-type instance_pid() :: pid().
+
 
 
 % Otherwise getClassName/1, get_superclasses/0, etc. are unused:
@@ -137,8 +180,14 @@
 %-opaque state() :: #state_holder{}.
 -type state() :: #state_holder{}.
 
+
 % We prefer having it prefixed by wooper:
--export_type([ state/0 ]).
+-export_type([ class_name/0, method_name/0, request_name/0, oneway_name/0,
+			   method_argument/0, method_arguments/0, construction_parameters/0,
+			   requests_outcome/0, method_internal_result/0, request_result/1, 
+			   request_return/1, oneway_return/0,
+			   attribute_name/0, attribute_value/0, attribute_entry/0,
+			   instance_pid/0, state/0 ]).
 
 
 
@@ -219,8 +268,7 @@ send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 % whether it succeeded or if some instances triggered a time-out.
 %
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
-								   [ pid() ], time_utils:time_out(), atom() ) ->
-										 requests_outcome().
+		  [ pid() ], time_utils:time_out(), atom() ) -> requests_outcome().
 send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 							 Timeout, AckAtom ) ->
 
@@ -230,11 +278,12 @@ send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 
 
 
-% Waits for an acknowledgement answer, based on specified atom, from the
-% specified requested instances, indefinitively (no time-out).
+% Waits for an acknowledgement answer, based on specified atom and on the PID of
+% each of the specified requested instances, indefinitively (no time-out).
 %
-% Allows to trigger requests in parallel yet being able to wait synchronously
-% for them.
+% Allows to trigger requests (supposing returning all the same, specified atom)
+% in parallel yet being able to wait synchronously for them, and know which, if
+% any, did not answer.
 %
 % (helper)
 %
@@ -332,6 +381,26 @@ wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
 			end
 
 	end.
+
+
+
+% Waits (indefinitively) that the specified number of requests returned as
+% result the specified acknowledgement atom.
+%
+-spec wait_for_request_acknowledgements( basic_utils:count(), atom() ) ->
+											   basic_utils:void().
+wait_for_request_acknowledgements( _Count=0, _AckAtom ) ->
+	ok;
+
+wait_for_request_acknowledgements( Count, AckAtom ) ->
+
+	receive
+
+		{ wooper_result, AckAtom } ->
+			wait_for_request_acknowledgements( Count-1, AckAtom )
+
+	end.
+
 
 
 
@@ -498,7 +567,7 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 %
 % (helper)
 %
--spec construct_and_run( class_name(), [ method_argument() ] ) ->
+-spec construct_and_run( class_name(), construction_parameters() ) ->
 							   no_return().
 
 
@@ -597,7 +666,7 @@ construct_and_run( Classname, ConstructionParameters ) ->
 %
 % (helper)
 %
--spec construct_and_run_synchronous( class_name(), [ method_argument() ],
+-spec construct_and_run_synchronous( class_name(), construction_parameters(),
 									 pid() ) -> no_return().
 
 
@@ -1055,7 +1124,8 @@ log_error( FormatString, ValueList, State )
 	% Node information distracting:
 	%log_error( "WOOPER error for ~s instance of PID ~w on node ~s"
 	%		   ++ FormatString,
-	%		   [ State#state_holder.actual_class, self(), node() | ValueList ] );
+	%		   [ State#state_holder.actual_class, self(),
+	%            node() | ValueList ] );
 	log_error( "WOOPER error for ~s instance of PID ~w"
 			   ++ FormatString,
 			   [ State#state_holder.actual_class, self() | ValueList ] );

@@ -184,7 +184,7 @@ testCreationDeletion( State ) ->
 	% Comment in order to test normal exits (should not trigger the default or
 	% user-defined EXIT handler):
 	%
-	CatPid ! { terminate, crash },
+	CatPid ! { terminate, intentional_crash },
 
 	io:format( "Deleting cat ~p created from platypus.~n", [ CatPid ] ),
 
