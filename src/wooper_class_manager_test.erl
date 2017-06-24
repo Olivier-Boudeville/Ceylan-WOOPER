@@ -66,6 +66,7 @@ run() ->
 
 	?wooper_class_manager_name ! stop,
 
-	% Probably, if ExitAfterTest is set, the test will stop before the manager
-	% itself.
+	% Probably that, if exit_after_test is set (the default), the test will stop
+	% before the manager itself:
+	%
 	test_facilities:stop().

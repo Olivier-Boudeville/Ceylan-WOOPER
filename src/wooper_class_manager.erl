@@ -47,7 +47,6 @@
 % http://ceylan.sourceforge.net/main/documentation/wooper/
 
 
-
 -export([ start/1, ping/1 ]).
 
 
@@ -348,6 +347,17 @@ select_function( _, _ )                                               -> true.
 							   ?wooper_hashtable_type:?wooper_hashtable_type().
 create_local_method_table_for( Module ) ->
 
+	% Typically if Module is misspelled:
+	Exports = try
+				  Module:module_info( exports )
+			  catch
+
+				  error:undef ->
+					  throw( { class_not_found, Module } )
+
+			  end,
+
+
 	% Filter-out functions that should not be callable via RMI:
 	lists:foldl(
 
@@ -367,7 +377,7 @@ create_local_method_table_for( Module ) ->
 
 		?wooper_hashtable_type:new( ?wooper_method_count_upper_bound ),
 
-		Module:module_info( exports ) ).
+		Exports ).
 
 
 

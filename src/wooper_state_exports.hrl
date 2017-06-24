@@ -31,7 +31,7 @@
 
 -export([
 		 setAttribute/3, setAttributes/2,
-		 getAttribute/2,
+		 getAttribute/2, getAttributes/2,
 		 is_wooper_debug/0,
 		 hasAttribute/2,
 		 removeAttribute/2,
@@ -41,6 +41,7 @@
 		 decrementAttribute/2,
 		 toggleAttribute/2,
 		 appendToAttribute/3,
+		 concatToAttribute/3,
 		 deleteFromAttribute/3,
 		 addKeyValueToAttribute/4,
 		 popFromAttribute/2,
@@ -108,6 +109,8 @@
 % Returns the value associated to specified named-designated attribute, if
 % found, otherwise triggers a case clause error.
 %
+% Ex: MyCount = ?getAttr(count)
+%
 % This macro is usually more useful than the getAttribute function, as one
 % generally wants to retrieve an attribute already available in the 'State'
 % parameter of a method (otherwise that value is available through a bound
@@ -124,6 +127,32 @@
 %
 -define( getAttr(AttributeName),
 	getAttribute( State, (AttributeName) )
+).
+
+
+
+% Returns the value associated to each of the specified named-designated
+% attributes (if found, otherwise triggers a case clause error), in the order of
+% their specification.
+%
+% Ex: [ MyCount, MyAge, MyIdeas ] = ?getAttrList([ count, age, ideas ])
+%
+% This macro is usually more useful than the getAttributes function, as one
+% generally wants to retrieve attributes already available in the 'State'
+% parameter of a method (otherwise these values are available through a bound
+% variable in the method body).
+%
+% Therefore the use of a variable named 'State' can often be implied.
+%
+% Beware to the implicit use of the 'State' variable: in some cases other states
+% should be used; due to this implicit variable, getAttr must remain a macro.
+%
+% See the longer getAttributes/2 function.
+%
+% Definitively not a legacy macro.
+%
+-define( getAttrList(AttributeNameList),
+	getAttributes( State, (AttributeNameList) )
 ).
 
 

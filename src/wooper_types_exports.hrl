@@ -70,9 +70,13 @@
 
 
 % Describes the outcome of a set of requests: either all succeeded, or some
-% failed (that are specified).
+% failed (that are then specified).
 %
 -type requests_outcome() :: wooper:requests_outcome().
+
+
+% The result of the execution of a request:
+-type request_result() :: any().
 
 
 -type request_return( T ) :: wooper:request_result( T ).

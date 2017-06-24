@@ -42,7 +42,7 @@
 
 % Communication helpers:
 %
--export([ send_requests/3,
+-export([ execute_request/3, execute_request/4, send_requests/3,
 
 		  send_requests_and_wait_acks/4, send_requests_and_wait_acks/5,
 		  wait_for_request_answers/2, wait_for_request_answers/3,
@@ -52,9 +52,7 @@
 
 		  send_request_series/2, obtain_results_for_request_series/2,
 
-		  send_and_listen/3, receive_result/0
-
-		]).
+		  send_and_listen/3, receive_result/0 ]).
 
 
 
@@ -69,7 +67,9 @@
 %
 -export([ delete_any_instance_referenced_in/2,
 		  delete_synchronously_any_instance_referenced_in/2,
-		  delete_synchronously_instance/1, delete_synchronously_instances/1
+		  safe_delete_synchronously_any_instance_referenced_in/2,
+		  delete_synchronously_instance/1, delete_synchronously_instances/1,
+		  safe_delete_synchronously_instances/1
 		]).
 
 
@@ -129,6 +129,7 @@
 %
 -type class_name() :: atom().
 
+
 % A method name (ex: 'setColor'):
 %
 -type method_name() :: meta_utils:function_name().
@@ -169,6 +170,13 @@
 -type instance_pid() :: pid().
 
 
+% Atom used to denote an acknowlegment (i.e. a conventional symbol to ensure
+% that a request was synchronously executed):
+%
+-type ack_atom() :: atom().
+
+-type request_result() :: wooper:request_result().
+
 
 % Otherwise getClassName/1, get_superclasses/0, etc. are unused:
 -include("wooper_classes_exports.hrl").
@@ -184,7 +192,7 @@
 % We prefer having it prefixed by wooper:
 -export_type([ class_name/0, method_name/0, request_name/0, oneway_name/0,
 			   method_argument/0, method_arguments/0, construction_parameters/0,
-			   requests_outcome/0, method_internal_result/0, request_result/1, 
+			   requests_outcome/0, method_internal_result/0, request_result/1,
 			   request_return/1, oneway_return/0,
 			   attribute_name/0, attribute_value/0, attribute_entry/0,
 			   instance_pid/0, state/0 ]).
@@ -226,7 +234,92 @@
 % be received during these operations.
 
 
-% First: one caller, one request, multiple callees, with a time-out or not.
+% A WOOPER request execution (hence a synchronous call) not yielding a result in
+% specified duration (in milliseconds) will lead to a notification to be
+% displayed on the console (yet the result will still be waited for
+% indefinitively)
+%
+-ifdef(wooper_debug).
+
+-define( notify_long_wait_after, 2500 ).
+
+-else. % wooper_debug
+
+-define( notify_long_wait_after, 60000 ).
+
+-endif. % wooper_debug
+
+
+
+% First, just a simple shorthand: one caller, one request, one result, waited
+% indefinitively.
+
+
+% Sends specified request to specified instance, waits indefinitively for its
+% returned value (supposing none is already waiting among the received
+% messages), and returns it.
+%
+% (helper)
+%
+-spec execute_request( request_name(), method_arguments(), instance_pid() ) ->
+							 request_result().
+execute_request( RequestName, RequestArgs, TargetInstancePID ) ->
+
+	TargetInstancePID ! { RequestName, RequestArgs, self() },
+
+	receive
+
+		{ wooper_result, Res } ->
+			Res
+
+	after ?notify_long_wait_after ->
+
+		io:format( "Warning: still awaiting an answer from WOOPER "
+				   "instance ~p, after having called request '~s' "
+				   "on it with following parameters:~n~p~n~n",
+				   [ TargetInstancePID, RequestName, RequestArgs ] ),
+
+		execute_request( RequestName, RequestArgs, TargetInstancePID )
+
+	end.
+
+
+
+% Sends specified request to specified instance and waits indefinitively for its
+% specified returned value (supposing none is already waiting among the received
+% messages) that is usually an atom.
+%
+% (helper)
+%
+-spec execute_request( request_name(), method_arguments(), instance_pid(),
+					   any() ) -> basic_utils:void().
+execute_request( RequestName, RequestArgs, TargetInstancePID,
+				 ExpectedResult ) ->
+
+	TargetInstancePID ! { RequestName, RequestArgs, self() },
+
+	receive
+
+		{ wooper_result, ExpectedResult } ->
+			ok
+
+	after ?notify_long_wait_after ->
+
+		io:format( "Warning: still awaiting the expected answer '~p' from "
+				   "WOOPER instance ~p, after having called request '~s' "
+				   "on it with following parameters:~n~p~n~n",
+				   [ ExpectedResult, TargetInstancePID, RequestName,
+					 RequestArgs ] ),
+
+		execute_request( RequestName, RequestArgs, TargetInstancePID,
+						 ExpectedResult )
+
+	end.
+
+
+
+
+% Second: one caller, one request, multiple callees, with a time-out or not.
 
 
 % Sends specified request (based on its names and arguments) to each of the
@@ -234,8 +327,8 @@
 %
 % (helper)
 %
--spec send_requests( request_name(), method_arguments(), [ pid() ] ) ->
-						   basic_utils:void().
+-spec send_requests( request_name(), method_arguments(),
+					 [ instance_pid() ] ) -> basic_utils:void().
 send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 
 	Request = { RequestName, RequestArgs, self() },
@@ -253,7 +346,7 @@ send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 % No time-out: answers will be waited indefinitely.
 %
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
-								   [ pid() ], atom() ) -> basic_utils:void().
+				   [ instance_pid() ], ack_atom() ) -> basic_utils:void().
 send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 							 AckAtom ) ->
 
@@ -268,7 +361,8 @@ send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 % whether it succeeded or if some instances triggered a time-out.
 %
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
-		  [ pid() ], time_utils:time_out(), atom() ) -> requests_outcome().
+		  [ instance_pid() ], time_utils:time_out(), ack_atom() ) ->
+										 requests_outcome().
 send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 							 Timeout, AckAtom ) ->
 
@@ -287,7 +381,8 @@ send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 %
 % (helper)
 %
--spec wait_for_request_answers( [ pid() ], atom() ) -> requests_outcome().
+-spec wait_for_request_answers( [ instance_pid() ], ack_atom() ) ->
+									  requests_outcome().
 wait_for_request_answers( RequestedPidList, AckAtom ) ->
 	wait_indefinitively_for_request_answers( RequestedPidList, AckAtom ).
 
@@ -302,8 +397,8 @@ wait_for_request_answers( RequestedPidList, AckAtom ) ->
 %
 % (helper)
 %
--spec wait_for_request_answers( [ pid() ], time_utils:time_out(), atom() ) ->
-									  requests_outcome().
+-spec wait_for_request_answers( [ instance_pid() ], time_utils:time_out(),
+								ack_atom() ) -> requests_outcome().
 wait_for_request_answers( RequestedPidList, _Timeout=infinity, AckAtom ) ->
 	wait_indefinitively_for_request_answers( RequestedPidList, AckAtom );
 
@@ -387,7 +482,7 @@ wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
 % Waits (indefinitively) that the specified number of requests returned as
 % result the specified acknowledgement atom.
 %
--spec wait_for_request_acknowledgements( basic_utils:count(), atom() ) ->
+-spec wait_for_request_acknowledgements( basic_utils:count(), ack_atom() ) ->
 											   basic_utils:void().
 wait_for_request_acknowledgements( _Count=0, _AckAtom ) ->
 	ok;
@@ -416,7 +511,7 @@ wait_for_request_acknowledgements( Count, AckAtom ) ->
 % (exported helper)
 %
 -spec obtain_results_for_requests( request_name(), method_arguments(),
-								   [ pid() ] ) -> [ any() ].
+								   [ instance_pid() ] ) -> [ request_result() ].
 obtain_results_for_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 
 	send_requests( RequestName, RequestArgs, TargetInstancePIDs ),
@@ -461,8 +556,8 @@ collect_wooper_messages( Count, Acc ) ->
 %
 % (helper)
 %
--spec send_request_series( [ { request_name(), method_arguments() } ], pid() )
-						 -> basic_utils:void().
+-spec send_request_series( [ { request_name(), method_arguments() } ],
+						   instance_pid() ) -> basic_utils:void().
 send_request_series( _Requests=[], _TargetInstancePID ) ->
 	ok;
 
@@ -488,7 +583,8 @@ send_request_series( _Requests=[ { RequestName, RequestArgs } | T ],
 % (exported helper)
 %
 -spec obtain_results_for_request_series(
-		[ { request_name(), method_arguments() } ], pid() ) -> [ any() ].
+		[ { request_name(), method_arguments() } ], instance_pid() ) ->
+											   [ request_result() ].
 obtain_results_for_request_series( Requests, TargetInstancePID ) ->
 
 	send_request_series( Requests, TargetInstancePID ),
@@ -521,7 +617,8 @@ wait_request_series( WaitCount, Acc ) ->
 % once it will have received its class and construction parameters, and link it
 % to the caller and to the specified process.
 %
--spec create_hosting_process( net_utils:node_name(), pid() ) -> pid().
+-spec create_hosting_process( net_utils:node_name(), pid() ) ->
+									instance_pid().
 create_hosting_process( Node, ToLinkWithPid ) ->
 
 	WaitFun = fun() ->
@@ -1242,7 +1339,8 @@ lookup_method_prefix( MethodAtom, Arity, State ) ->
 %
 % Available even when debug mode is off.
 %
--spec send_and_listen( pid(), request_name(), method_arguments() ) -> term().
+-spec send_and_listen( instance_pid(), request_name(), method_arguments() ) ->
+							 term().
 send_and_listen( InstancePid, RequestName, Arguments ) ->
 
 	InstancePid ! { RequestName, Arguments, self() },
@@ -1355,14 +1453,42 @@ delete_any_instance_referenced_in( PidAttribute, State ) ->
 %
 -spec delete_synchronously_any_instance_referenced_in(
 	[ attribute_name() ] | attribute_name(), wooper:state() ) -> wooper:state().
-delete_synchronously_any_instance_referenced_in( _Attributes=[], State ) ->
+delete_synchronously_any_instance_referenced_in( Attributes, State ) ->
+	delete_synchronously_any_instance_referenced_in( Attributes,
+										 _PreTestLiveliness=false, State ).
+
+
+% Deletes safely (pre-testing whether the specified process still exists before
+% attempting to delete it, in order to avoid having to wait for a synchronous
+% time-out) and synchronously, in a parallel yet blocking manner, the WOOPER
+% instance(s) potentially stored in specified attribute list (a standalone
+% attribute may be specified as well).
+%
+% Sets the corresponding attribute(s) to 'undefined', returns an updated state.
+%
+% Ex: in a destructor: NewState =
+% safe_delete_synchronously_any_instance_referenced_in( [ first_pid_attr,
+% second_pid_attr ], State ) or
+% safe_delete_synchronously_any_instance_referenced_in( my_pid_attr, State ).
+%
+-spec safe_delete_synchronously_any_instance_referenced_in(
+	[ attribute_name() ] | attribute_name(), wooper:state() ) -> wooper:state().
+safe_delete_synchronously_any_instance_referenced_in( Attributes, State ) ->
+	delete_synchronously_any_instance_referenced_in( Attributes,
+										 _PreTestLiveliness=true, State ).
+
+
+
+delete_synchronously_any_instance_referenced_in( _Attributes=[],
+												 _PreTestLiveliness, State ) ->
 	State;
 
-delete_synchronously_any_instance_referenced_in( Attributes, State )
-  when is_list( Attributes ) ->
+delete_synchronously_any_instance_referenced_in( Attributes, PreTestLiveliness,
+								 State ) when is_list( Attributes ) ->
 
 	% Triggers the deletion of selected instances:
-	{ TargetAttributes, TargetPids } = delete_pid_from( Attributes, State ),
+	{ TargetAttributes, TargetPids } = delete_pid_from( Attributes,
+												PreTestLiveliness, State ),
 
 	%io:format( "delete_synchronously_any_instance_referenced_in:~n"
 	%			" - attributes are: ~p~n"
@@ -1380,7 +1506,8 @@ delete_synchronously_any_instance_referenced_in( Attributes, State )
 	setAttributes( State, UndefinedAttributes );
 
 
-delete_synchronously_any_instance_referenced_in( Attribute, State ) ->
+delete_synchronously_any_instance_referenced_in( Attribute, PreTestLiveliness,
+												 State ) ->
 
 	case ?getAttr( Attribute ) of
 
@@ -1388,14 +1515,25 @@ delete_synchronously_any_instance_referenced_in( Attribute, State ) ->
 			State;
 
 		Pid when is_pid( Pid ) ->
-			Pid ! { synchronous_delete, self() },
+			case PreTestLiveliness andalso not basic_utils:is_alive( Pid ) of
 
-			receive
+				% Only case where no actual deletion is needed:
+				true ->
+					ok;
 
-				{ deleted, Pid } ->
-					setAttribute( State, Attribute, undefined )
+				false ->
+					Pid ! { synchronous_delete, self() },
 
-			end
+					receive
+
+						{ deleted, Pid } ->
+							ok
+
+					end
+
+			end,
+
+			setAttribute( State, Attribute, undefined )
 
 	end.
 
@@ -1403,33 +1541,49 @@ delete_synchronously_any_instance_referenced_in( Attribute, State ) ->
 
 
 % Helper, which sends delete messages to all PIDs found in the list of
-% attributes, and returns a list of the attributes and a list of the PÏDs.
+% attributes, and returns a list of the attributes and a list of the PIDs.
 %
-delete_pid_from( Attributes, State ) ->
+% If PreTestLiveliness is true, checks first that the process is not already
+% dead, to avoid waiting for a synchronous time-out.
+%
+delete_pid_from( Attributes, PreTestLiveliness, State ) ->
 
 	DeleteMessage = { synchronous_delete, self() },
 
-	delete_pid_from( Attributes, DeleteMessage, State, _AccAttr=[],
-					 _AccPid=[] ).
+	delete_pid_from( Attributes, DeleteMessage, PreTestLiveliness, State,
+					 _AccAttr=[], _AccPid=[] ).
 
 
-delete_pid_from( _Attributes=[], _DeleteMessage, _State, AccAttr, AccPid ) ->
+delete_pid_from( _Attributes=[], _DeleteMessage, _PreTestLiveliness, _State,
+				 AccAttr, AccPid ) ->
 	{ AccAttr, AccPid };
 
-delete_pid_from( [ Attr | T ], DeleteMessage, State, AccAttr, AccPid ) ->
+delete_pid_from( [ Attr | T ], DeleteMessage, PreTestLiveliness, State,
+				 AccAttr, AccPid ) ->
 
 	case ?getAttr( Attr ) of
 
 		undefined ->
-			delete_pid_from( T, DeleteMessage, State, AccAttr, AccPid ) ;
+			delete_pid_from( T, DeleteMessage, PreTestLiveliness, State,
+							 AccAttr, AccPid ) ;
 
 		Pid when is_pid( Pid ) ->
 
-			%io:format( "Deleting now ~s (PID: ~w).~n", [ Attr, Pid ] ),
+			case PreTestLiveliness andalso not basic_utils:is_alive( Pid ) of
 
-			Pid ! DeleteMessage,
-			delete_pid_from( T, DeleteMessage, State, [ Attr | AccAttr ],
-							 [ Pid | AccPid ] )
+				% Only case where no deletion oneway shall be sent:
+				true ->
+					delete_pid_from( T, DeleteMessage, PreTestLiveliness,
+									 State, [ Attr | AccAttr ], AccPid );
+
+				false ->
+					%io:format( "Deleting now ~s (PID: ~w).~n",
+					% [ Attr, Pid ] ),
+					Pid ! DeleteMessage,
+					delete_pid_from( T, DeleteMessage, PreTestLiveliness,
+							 State, [ Attr | AccAttr ], [ Pid | AccPid ] )
+
+			end
 
 	end.
 
@@ -1439,7 +1593,7 @@ delete_pid_from( [ Attr | T ], DeleteMessage, State, AccAttr, AccPid ) ->
 %
 % Will wait forever the effective termination of the specified instance.
 %
--spec delete_synchronously_instance( pid() ) -> basic_utils:void().
+-spec delete_synchronously_instance( instance_pid() ) -> basic_utils:void().
 delete_synchronously_instance( InstancePid ) ->
 
 	%io:format( "delete_synchronously_instance for ~p.~n", [ InstancePid ] ),
@@ -1462,7 +1616,8 @@ delete_synchronously_instance( InstancePid ) ->
 %
 % (exported helper)
 %
--spec delete_synchronously_instances( [ pid() ] ) -> basic_utils:void().
+-spec delete_synchronously_instances( [ instance_pid() ] ) ->
+											basic_utils:void().
 delete_synchronously_instances( InstanceList ) ->
 
 	%io:format( "delete_synchronously_instances for ~p.~n", [ InstanceList ] ),
@@ -1526,7 +1681,10 @@ examine_waited_deletions( _WaitedPids=[], Acc ) ->
 
 examine_waited_deletions( _WaitedPids=[ Pid | T ], Acc ) ->
 
-	case erlang:is_process_alive( Pid ) of
+	%io:format( "Testing whether ~p is alive...~n", [ Pid ] ),
+
+	% Manages processes that are not local as well:
+	case basic_utils:is_alive( Pid ) of
 
 		true ->
 			examine_waited_deletions( T, [ Pid | Acc ] );
@@ -1538,3 +1696,25 @@ examine_waited_deletions( _WaitedPids=[ Pid | T ], Acc ) ->
 			examine_waited_deletions( T, Acc )
 
 	end.
+
+
+
+% Deletes specified instances synchronously (yet in parallel), safely, knowing
+% there might be duplicates in the specified list and that some instances may
+% even be already dead.
+%
+% Will wait forever the effective termination of all instances (and will
+% regularly write a message on the console if waiting for too long) .
+%
+% (exported helper)
+%
+-spec safe_delete_synchronously_instances( [ instance_pid() ] ) ->
+												 basic_utils:void().
+safe_delete_synchronously_instances( InstanceList ) ->
+
+	% Testing for liveliness allows to avoid synchronous time-outs:
+	FilteredInstanceList = [ InstancePid ||
+			InstancePid <- list_utils:uniquify( InstanceList ),
+			basic_utils:is_alive( InstancePid ) ],
+
+	delete_synchronously_instances( FilteredInstanceList ).

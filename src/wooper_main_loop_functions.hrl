@@ -193,11 +193,11 @@ wooper_main_loop( State ) ->
 			wooper_main_loop( NewState );
 
 
-
-		{ 'EXIT', Pid, ExitType } when is_pid( Pid ) ->
+		% Not necessarily a PID per se (ex: can be #Port<0.2194>):
+		{ 'EXIT', PidOrPort, ExitType } -> %when is_pid( Pid ) ->
 
 			?wooper_log_format( "Main loop (case G) for ~w: exit with ~w.~n",
-								[ self(), { Pid, ExitType } ] ),
+								[ self(), { PidOrPort, ExitType } ] ),
 
 			case ?wooper_hashtable_type:lookupEntry(
 					{ _Name=onWOOPERExitReceived, _Arity=3 },
@@ -212,7 +212,8 @@ wooper_main_loop( State ) ->
 					% )', where ExitType is typically a stack trace:
 
 					{ NewState, _ } = wooper_execute_method(
-							onWOOPERExitReceived, State, [ Pid, ExitType ] ),
+							onWOOPERExitReceived, State,
+										[ PidOrPort, ExitType ] ),
 
 					%?wooper_log( "Main loop (case G) ended.~n" ),
 					wooper_main_loop( NewState );
@@ -222,7 +223,7 @@ wooper_main_loop( State ) ->
 
 					% EXIT handler not overridden, using default one:
 					%?wooper_log( "Main loop (case G) ended.~n" ),
-					NewState = wooper:default_exit_handler( State, Pid,
+					NewState = wooper:default_exit_handler( State, PidOrPort,
 															ExitType ),
 					wooper_main_loop( NewState )
 
@@ -237,7 +238,7 @@ wooper_main_loop( State ) ->
 								[ self(), Other ] ),
 
 			wooper:log_error(
-			  "WOOPER ignored following message for instance ~w:~n~p.",
+			  "WOOPER ignored following message for instance ~w:~n~p.~n",
 			  [ self(), Other ] ),
 
 			%?wooper_log( "Main loop (case H) ended.~n" ),

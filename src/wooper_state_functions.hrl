@@ -65,11 +65,13 @@ is_wooper_debug() ->
 % (not recommended functions, i.e. hasAttribute/2 and removeAttribute/2, shall
 % not be inlined)
 %
--compile( { inline, [ setAttribute/3, setAttributes/2, getAttribute/2,
+-compile( { inline, [ setAttribute/3, setAttributes/2,
+					  getAttribute/2, getAttributes/2,
 					  addToAttribute/3, subtractFromAttribute/3,
 					  incrementAttribute/2, decrementAttribute/2,
 					  toggleAttribute/2,
-					  appendToAttribute/3, deleteFromAttribute/3,
+					  appendToAttribute/3, concatToAttribute/3,
+					  deleteFromAttribute/3,
 					  addKeyValueToAttribute/4, popFromAttribute/2 ] } ).
 
 
@@ -138,23 +140,44 @@ setAttributes( State, ListOfAttributePairs ) ->
 -spec hasAttribute( wooper:state(), attribute_name() ) -> boolean().
 hasAttribute( State, AttributeName ) ->
 	?wooper_hashtable_type:hasEntry( AttributeName,
-									State#state_holder.attribute_table ).
+									 State#state_holder.attribute_table ).
 
 
 
 % Returns the value associated to specified named-designated attribute, if
 % found, otherwise triggers a case clause error.
 %
-% Note: not used very frequently, as either the attribute can be obtained with
-% getAttr/1, using the original state, named as 'State' (as externally defined)
-% or the value is already bound in an available variable.
+% Note: not used very frequently, as either the attribute value can be obtained
+% with the getAttr/1 macro, using the original state, named as 'State' (as
+% externally defined) or the value is already bound to an available variable.
 %
 % See also: the getAttr/1 shorthand.
 %
 -spec getAttribute( wooper:state(), attribute_name() ) -> attribute_value().
 getAttribute( State, AttributeName ) ->
-	?wooper_hashtable_type:getEntry( AttributeName,
+	?wooper_hashtable_type:getValue( AttributeName,
 									 State#state_holder.attribute_table ).
+
+
+
+% Returns the value associated to each of the specified named-designated
+% attributes (if found, otherwise triggers a case clause error), in the order of
+% their specification.
+%
+% Ex: [ MyCount, MyAge, MyIdeas ] = getAttribute( SomeState,
+%                                                 [ count, age, ideas ] )
+%
+% Note: not used very frequently, as either the attributes can be obtained with
+% the getAttr/1 macro, using the original state, named as 'State' (as externally
+% defined) or the values are already bound to available variables.
+%
+% See also: the getAttr/1 shorthand.
+%
+-spec getAttributes( wooper:state(), [ attribute_name() ] ) ->
+						   [ attribute_value() ].
+getAttributes( State, AttributeNameList ) ->
+	?wooper_hashtable_type:getValues( AttributeNameList,
+									  State#state_holder.attribute_table ).
 
 
 
@@ -165,6 +188,7 @@ getAttribute( State, AttributeName ) ->
 % Note: this operation is not recommended, as attributes should always be
 % defined. Better keep it defined, but set it to 'undefined'.
 %
+-spec removeAttribute( wooper:state(), attribute_name() ) -> wooper:state().
 removeAttribute( State, AttributeName ) ->
 
 	State#state_holder{
@@ -287,6 +311,30 @@ appendToAttribute( State, AttributeName, Element ) ->
 		attribute_table = ?wooper_hashtable_type:appendToEntry(
 			AttributeName,
 			Element,
+			State#state_holder.attribute_table )
+	}.
+
+
+
+% Concatenes (on the left) specified list to specified attribute, supposed to be
+% a list as well. A case clause is triggered if the attribute did not exist.
+%
+% If that attirbute is not already defined, it will be created and associated to
+% the specified list (as if beforehand it was associated to an empty list).
+
+% Returns an updated state.
+%
+% Note: no check is performed to ensure the attribute is a list indeed, and the
+% operation will not complain if not.
+%
+-spec concatToAttribute( wooper:state(), attribute_name(),
+						attribute_value() ) -> wooper:state().
+concatToAttribute( State, AttributeName, List ) ->
+
+	State#state_holder{
+		attribute_table = ?wooper_hashtable_type:concatToEntry(
+			AttributeName,
+			List,
 			State#state_holder.attribute_table )
 	}.
 

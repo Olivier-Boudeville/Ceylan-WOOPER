@@ -97,11 +97,6 @@
 
 
 
-% For list_impl:
--include("data_types.hrl").
-
-
-
 % Any function that is able to transform the state of an instance.
 %
 % Note: see basic_utils:traverse_term/4, which may be useful in that context.
@@ -743,12 +738,10 @@ merge_list_for( AttributeName, AttributeEntries, State ) ->
 		PlainList when is_list( PlainList ) ->
 			InitialValue ++ PlainList;
 
-		% We suppose it is a ?list_impl:
+		% We suppose it is a set (that cannot match a list)
 		%
-		% (note that their behaviour differs from the one of plain lists - there
-		% are no duplicates in list_impl)
-		ListImpl ->
-			?list_impl:union( InitialValue, ListImpl )
+		Set ->
+			set_utils:union( InitialValue, Set )
 
 	end,
 
