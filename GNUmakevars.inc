@@ -18,7 +18,7 @@ endif
 
 
 ifndef PACKAGE_NAME
-	PACKAGE_NAME = wooper
+	PACKAGE_NAME = Ceylan-WOOPER
 endif
 
 
