@@ -267,6 +267,14 @@ execute_request( RequestName, RequestArgs, TargetInstancePID ) ->
 
 	TargetInstancePID ! { RequestName, RequestArgs, self() },
 
+	execute_request_waiter( TargetInstancePID, RequestName, RequestArgs ).
+
+
+
+% (helper)
+%
+execute_request_waiter( TargetInstancePID, RequestName, RequestArgs ) ->
+
 	receive
 
 		{ wooper_result, Res } ->
@@ -274,20 +282,22 @@ execute_request( RequestName, RequestArgs, TargetInstancePID ) ->
 
 	after ?notify_long_wait_after ->
 
-		io:format( "Warning: still awaiting an answer from WOOPER "
-				   "instance ~p, after having called request '~s' "
-				   "on it with following parameters:~n~p~n~n",
-				   [ TargetInstancePID, RequestName, RequestArgs ] ),
+		trace_utils:warning_fmt( "Still awaiting an answer "
+								 "from WOOPER instance ~p, after having called "
+								 "request '~s' on it with following "
+								 "parameters:~n~p",
+								 [ TargetInstancePID, RequestName,
+								   RequestArgs ] ),
 
-		execute_request( RequestName, RequestArgs, TargetInstancePID )
+		execute_request_waiter( TargetInstancePID, RequestName, RequestArgs )
 
 	end.
 
 
 
 % Sends specified request to specified instance and waits indefinitively for its
-% specified returned value (supposing none is already waiting among the received
-% messages) that is usually an atom.
+% specified, expected returned value (supposing none is already waiting among
+% the received messages) that is usually an atom.
 %
 % (helper)
 %
@@ -298,6 +308,16 @@ execute_request( RequestName, RequestArgs, TargetInstancePID,
 
 	TargetInstancePID ! { RequestName, RequestArgs, self() },
 
+	execute_request_waiter( ExpectedResult, TargetInstancePID, RequestName,
+							RequestArgs ).
+
+
+
+% (helper)
+%
+execute_request_waiter( ExpectedResult, TargetInstancePID, RequestName,
+						RequestArgs ) ->
+
 	receive
 
 		{ wooper_result, ExpectedResult } ->
@@ -305,14 +325,15 @@ execute_request( RequestName, RequestArgs, TargetInstancePID,
 
 	after ?notify_long_wait_after ->
 
-		io:format( "Warning: still awaiting the expected answer '~p' from "
-				   "WOOPER instance ~p, after having called request '~s' "
-				   "on it with following parameters:~n~p~n~n",
-				   [ ExpectedResult, TargetInstancePID, RequestName,
-					 RequestArgs ] ),
+		trace_utils:warning_fmt( "Still awaiting the expected answer '~p' "
+								 "from WOOPER instance ~p, after having called "
+								 "request '~s' on it with following "
+								 "parameters:~n~p",
+								 [ ExpectedResult, TargetInstancePID,
+								   RequestName, RequestArgs ] ),
 
-		execute_request( RequestName, RequestArgs, TargetInstancePID,
-						 ExpectedResult )
+		execute_request_waiter( ExpectedResult, TargetInstancePID,
+								RequestName, RequestArgs )
 
 	end.
 
