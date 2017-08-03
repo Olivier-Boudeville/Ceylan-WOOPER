@@ -10,7 +10,7 @@
 # Nothing simpler can be used:
 
 include $(WOOPER_TOP)/GNUmakevars.inc
-include $(MYRIAD_TOP)/GNUmakevars.inc
+include $(COMMON_TOP)/GNUmakevars.inc
 
 include $(WOOPER_TOP)/GNUmakerules.inc
-include $(MYRIAD_TOP)/GNUmakerules.inc
+include $(COMMON_TOP)/GNUmakerules.inc

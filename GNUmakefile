@@ -1,7 +1,8 @@
 WOOPER_TOP = .
 
 
-.PHONY: all register-version-in-header register-wooper               \
+.PHONY: help help-intro help-wooper                                  \
+		all register-version-in-header register-wooper               \
 		send-release release release-zip release-bz2 release-xz      \
 		prepare-release clean-release clean-archive
 
@@ -22,7 +23,16 @@ SF_USER = wondersye
 
 
 # First target for default:
-all:
+help: help-intro help-wooper
+
+
+help-intro:
+	@echo " Following main make targets are available for package $(PACKAGE_NAME):"
+
+
+help-wooper:
+	@cd $(COMMON_TOP) && $(MAKE) -s help-common
+
 
 
 register-version-in-header:

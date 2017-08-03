@@ -30,6 +30,7 @@
 
 % Overall parse transform for the WOOPER layer.
 %
+%
 -module(wooper_parse_transform).
 
 
@@ -345,15 +346,16 @@ transform( AST ) ->
 %
 get_class_info( AST ) ->
 
-	EmptyTable = table:new(),
-
 	InitClassInfo = #class_info{
-					   constructors = EmptyTable,
+
+					   constructors = table:new(),
 					   destructor = undefined,
-					   requests = EmptyTable,
-					   oneways = EmptyTable,
-					   statics = EmptyTable,
-					   functions = EmptyTable },
+					   requests = table:new(),
+					   oneways = table:new(),
+					   statics = table:new(),
+					   functions = table:new()
+
+					  },
 
 	ReadClassInfo = get_info( AST, InitClassInfo ),
 
@@ -424,7 +426,8 @@ get_info( _AST=[ F={ attribute, _Line, compile, _Options } | T ],
 get_info( _AST=[ F={ attribute, _Line, file, Filename } | T ],
 		  W=#class_info{ includes=Inc, include_defs=IncDefs } ) ->
 	get_info( T, W#class_info{ includes=[ Filename | Inc ],
-							   include_defs=[ F | IncDefs ] } );
+							   include_defs=[ F | IncDefs ]
+							 } );
 
 
 % Type definition section:
@@ -435,7 +438,8 @@ get_info( _AST=[ F={ attribute, _Line, type,
 						 type_definition_defs=TypeDefsDefs } ) ->
 	get_info( T, W#class_info{
 				   type_definitions =[ { TypeName, TypeDef } | TypeDefs ],
-				   type_definition_defs =[ F | TypeDefsDefs ] } );
+				   type_definition_defs =[ F | TypeDefsDefs ]
+							 } );
 
 
 % Type export section:
@@ -446,7 +450,8 @@ get_info( _AST=[ F={ attribute, _Line, export_type, DeclaredTypes } | T ],
   when is_list( DeclaredTypes ) ->
 	get_info( T, W#class_info{
 				   type_exports= DeclaredTypes ++ TypeExports,
-				   type_export_defs=[ F | TypeExportDefs ] } );
+				   type_export_defs=[ F | TypeExportDefs ]
+				  } );
 
 
 % Function export section:
@@ -460,12 +465,15 @@ get_info( _AST=[ F={ attribute, _Line, export, _Filenames } | T ],
 %
 get_info( _AST=[ Form={ function, _Line, Name, Arity, Clauses } | T ],
 		  W=#class_info{
+
 			   constructors=Constructors,
 			   destructor=Destructor,
 			   requests=Requests,
 			   oneways=Oneways,
 			   statics=Statics,
-			   functions=Functions } ) ->
+			   functions=Functions
+
+			  } ) ->
 
 	% Other clauses could be checked as well:
 	%
@@ -558,23 +566,23 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 	FunInfo = case table:lookupEntry( FunId, FunctionTable ) of
 
 		key_not_found ->
-			% New entry then:
-			#function_info{
-			   name=Name,
-			   arity=Arity,
-			   definition=Form
-			   % Implicit:
-			   %spec=undefined
-			};
+					  % New entry then:
+					  #function_info{
+						 name=Name,
+						 arity=Arity,
+						 definition=Form
+						 % Implicit:
+						 %spec=undefined
+						};
 
 		{ value, F=#function_info{ definition=undefined } } ->
-			% Just add the form then:
-			F#function_info{ definition=Form };
+					  % Just add the form then:
+					  F#function_info{ definition=Form };
 
 		% Here a definition was already set:
 		_ ->
-			 meta_utils:raise_error(
-			   { multiple_definition_for, FunId } )
+					  meta_utils:raise_error(
+						{ multiple_definition_for, FunId } )
 
 	end,
 
@@ -591,23 +599,23 @@ add_constructor( Arity, Form, ConstructorTable ) ->
 	FunInfo = case table:lookupEntry( Arity, ConstructorTable ) of
 
 		key_not_found ->
-			% New entry then:
-			#function_info{
-				name=construct,
-			   arity=Arity,
-			   definition=Form
-			   % Implicit:
-			   %spec=undefined
-			};
+					  % New entry then:
+					  #function_info{
+						 name=construct,
+						 arity=Arity,
+						 definition=Form
+						 % Implicit:
+						 %spec=undefined
+						};
 
 		{ value, F=#function_info{ definition=undefined } } ->
-			% Just add the form then:
-			F#function_info{ definition=Form };
+					  % Just add the form then:
+					  F#function_info{ definition=Form };
 
 		% Here a definition was already set:
 		_ ->
-			meta_utils:raise_error(
-			  { multiple_definition_for_constructor, Arity } )
+					  meta_utils:raise_error(
+						{ multiple_definition_for_constructor, Arity } )
 
 	end,
 
@@ -642,23 +650,23 @@ add_request( Name, Arity, Form, RequestTable ) ->
 	RequestInfo = case table:lookupEntry( RequestId, RequestTable ) of
 
 		key_not_found ->
-			% New entry then:
-			#function_info{
-			   name=Name,
-			   arity=Arity,
-			   definition=Form
-			   % Implicit:
-			   %spec=undefined
-			};
+					  % New entry then:
+					  #function_info{
+						 name=Name,
+						 arity=Arity,
+						 definition=Form
+						 % Implicit:
+						 %spec=undefined
+						};
 
 		{ value, F=#function_info{ definition=undefined } } ->
-			% Just add the form then:
-			F#function_info{ definition=Form };
+					  % Just add the form then:
+					  F#function_info{ definition=Form };
 
 		% Here a definition was already set:
 		_ ->
-			meta_utils:raise_error(
-				{ multiple_definition_for_request, RequestId } )
+					  meta_utils:raise_error(
+						{ multiple_definition_for_request, RequestId } )
 
 	end,
 
@@ -677,23 +685,23 @@ add_oneway( Name, Arity, Form, OnewayTable ) ->
 	OnewayInfo = case table:lookupEntry( OnewayId, OnewayTable ) of
 
 		key_not_found ->
-			% New entry then:
-			#function_info{
-				name=Name,
-			   arity=Arity,
-			   definition=Form
-			   % Implicit:
-			   %spec=undefined
-			};
+					  % New entry then:
+					  #function_info{
+						 name=Name,
+						 arity=Arity,
+						 definition=Form
+						 % Implicit:
+						 %spec=undefined
+						};
 
 		{ value, F=#function_info{ definition=undefined } } ->
-			% Just add the form then:
-			F#function_info{ definition=Form };
+					  % Just add the form then:
+					  F#function_info{ definition=Form };
 
 		% Here a definition was already set:
 		_ ->
-			meta_utils:raise_error(
-				{ multiple_definition_for_oneway, OnewayId } )
+					  meta_utils:raise_error(
+						{ multiple_definition_for_oneway, OnewayId } )
 
 	end,
 
@@ -712,23 +720,23 @@ add_static( Name, Arity, Form, StaticTable ) ->
 	StaticInfo = case table:lookupEntry( StaticId, StaticTable ) of
 
 		key_not_found ->
-			% New entry then:
-			#function_info{
-			   name=Name,
-			   arity=Arity,
-			   definition=Form
-			   % Implicit:
-			   %spec=undefined
-			};
+					  % New entry then:
+					  #function_info{
+						 name=Name,
+						 arity=Arity,
+						 definition=Form
+						 % Implicit:
+						 %spec=undefined
+						};
 
 		{ value, F=#function_info{ definition=undefined } } ->
-			% Just add the form then:
-			F#function_info{ definition=Form };
+					  % Just add the form then:
+					  F#function_info{ definition=Form };
 
 		% Here a definition was already set:
 		_ ->
-			meta_utils:raise_error(
-			  { multiple_definition_for_static, StaticId } )
+					  meta_utils:raise_error(
+						{ multiple_definition_for_static, StaticId } )
 
 	end,
 
@@ -783,6 +791,7 @@ generate_ast( #class_info{
 	% Let's start by writing the module declaration; nothing found in erl_syntax
 	% for that, but rather than doing it by hand we can reuse it directly:
 	ModuleForm = [ ClassDef ],
+
 
 	NewLastLine = LastLine,
 
@@ -892,16 +901,16 @@ infer_fun_type( Term={ call, CallLine,
 	DetectedType = case Return of
 
 		request_return when Len =:= 2 ->
-			request;
+						   request;
 
 		oneway_return when Len =:= 1 ->
-			oneway;
+						   oneway;
 
 		static_return ->
-			static;
+						   static;
 
 		_OtherFunction ->
-			CurrentType
+						   CurrentType
 
 	end,
 
@@ -909,17 +918,17 @@ infer_fun_type( Term={ call, CallLine,
 	% to check consistency:
 	NewType = case CurrentType of
 
-		% Possibly overriding defaults:
-		function ->
-			DetectedType;
+				  % Possibly overriding defaults:
+				  function ->
+					  DetectedType;
 
-		% Matches, confirms detection:
-			DetectedType ->
-				DetectedType;
+				  % Matches, confirms detection:
+				  DetectedType ->
+					  DetectedType;
 
-		OtherType ->
-			meta_utils:raise_error( { inconsistent_function_type,
-									  CurrentType, OtherType, CallLine } )
+				  OtherType ->
+					  meta_utils:raise_error( { inconsistent_function_type,
+											CurrentType, OtherType, CallLine } )
 
 	end,
 
@@ -937,7 +946,11 @@ infer_fun_type( Term, CurrentType ) ->
 % that will be checked by the compiler.
 %
 -spec check_class_info( class_info() ) -> basic_utils:void().
-check_class_info( #class_info{ constructors=Constructors } ) ->
+check_class_info( #class_info{
+
+						 constructors=Constructors
+
+					 } ) ->
 
 	case table:isEmpty( Constructors ) of
 
@@ -997,21 +1010,28 @@ class_info_to_string( #class_info{
 
 	SuperclassStrings = case Superclasses of
 
-		undefined ->
-			[ text_utils:format( "no superclass~n", [] ) ];
+						   undefined ->
+							   [ text_utils:format( "no superclass~n", [] ) ];
 
-		Superclasses ->
-			[ text_utils:format( "~B superclasses: ~p~n",
-								 [ length( Superclasses ), Superclasses ] ),
+							Superclasses ->
+								[
 
-			  text_utils:format( "superclasses definition: ~p~n",
-								 [ SuperclassesDef ] ) ]
+								 text_utils:format( "~B superclasses: ~p~n",
+									[ length( Superclasses ), Superclasses ] ),
+
+								 text_utils:format(
+								   "superclasses definition: ~p~n",
+								   [ SuperclassesDef ] )
+								]
 	end,
 
 
-	Infos = [ text_utils:format( "class: ~p~n", [ Class ] ),
-			  text_utils:format( "module definition: ~p~n", [ ClassDef ] ) ] ++
-		SuperclassStrings ++ [
+	Infos = [
+
+			  text_utils:format( "class: ~p~n", [ Class ] ),
+			  text_utils:format( "module definition: ~p~n", [ ClassDef ] )
+
+			 ] ++ SuperclassStrings ++ [
 
 			  text_utils:format( "~B compile option definitions: ~p~n",
 								 [ length( CompileOptDefs ), CompileOptDefs ] ),
@@ -1025,7 +1045,6 @@ class_info_to_string( #class_info{
 
 			  text_utils:format( "~B includes: ~p~n",
 								 [ length( Includes ), Includes ] ),
-
 			  text_utils:format( "include definitions: ~p~n", [ IncludeDefs ] ),
 
 			  text_utils:format( "~B type definitions: ~p~n",
@@ -1059,7 +1078,7 @@ class_info_to_string( #class_info{
 								 [ table:size( Requests ),
 								   table:keys( Requests ) ] ),
 
-			  text_utils:format( "~B oneway methods: ~p~n",
+			  text_utils:format( "~B oneway methodss: ~p~n",
 								 [ table:size( Oneways ),
 								   table:keys( Oneways ) ] ),
 
@@ -1075,5 +1094,5 @@ class_info_to_string( #class_info{
 
 			  ],
 
-	text_utils:format( "Information about class '~s':~n~s",
-					   [ Class, text_utils:strings_to_string( Infos ) ] ).
+	text_utils:format( "Information about class '~s':~n~s", [ Class,
+								   text_utils:strings_to_string( Infos ) ] ).

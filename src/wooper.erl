@@ -1009,7 +1009,7 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters ) ->
 			   "constructor (~s:construct/~B) failed (cause: ~p):~n~n"
 			   " - with error term:~n  ~p~n~n"
 			   " - stack trace was (latest calls first):~n~s~n"
-			   " - for parameters:~n  ~p~n",
+			   " - for construction parameters:~n  ~p~n",
 			   [ self(), Classname, Arity, Reason, ErrorTerm,
 				 code_utils:interpret_stacktrace(), ConstructionParameters ] ),
 
@@ -1276,7 +1276,7 @@ on_failed_request( RequestAtom, ArgumentList, CallerPid, Reason, ErrorTerm,
 	log_error( ": request ~s~s/~B failed (cause: ~s):~n~n"
 			   " - with error term:~n  ~p~n~n"
 			   " - stack trace was (latest calls first):~n~s~n"
-			   " - for parameters:~n  ~p~n",
+			   " - for request parameters:~n  ~p~n",
 			   [ ModulePrefix, RequestAtom, Arity, Reason, ErrorTerm,
 				  code_utils:interpret_stacktrace(), ArgumentList ], State ),
 
@@ -1309,7 +1309,7 @@ on_failed_oneway( OnewayAtom, ArgumentList, Reason, ErrorTerm, State ) ->
 	log_error( ": oneway ~s~s/~B failed (cause: ~s):~n~n"
 			   " - with error term:~n  ~p~n~n"
 			   " - stack trace was (latest calls first):~n~s~n"
-			   " - for parameters:~n  ~p~n",
+			   " - for oneway parameters:~n  ~p~n",
 			   [ ModulePrefix, OnewayAtom, Arity, Reason, ErrorTerm,
 				  code_utils:interpret_stacktrace(), ArgumentList ], State ),
 
