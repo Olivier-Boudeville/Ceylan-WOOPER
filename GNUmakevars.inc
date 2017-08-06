@@ -145,3 +145,7 @@ endif
 # COMMON_TOP may be a symbolic link pointing to the actual Common package to be
 # used:
 COMMON_TOP = $(WOOPER_TOP)/../common
+
+# We define as well the path to the official naming of 'Common':
+#
+MYRIAD_TOP = $(WOOPER_TOP)/../Ceylan-Myriad
