@@ -72,8 +72,8 @@ BEAM_DIRS += $(WOOPER_BEAM_DIRS)
 # So that they can be fetched from outside
 # (see the 'list-beam-dirs' target)
 #
-WOOPER_BEAM_DIRS =  $(WOOPER_BEAM)/src      \
-					$(WOOPER_BEAM)/examples
+WOOPER_BEAM_DIRS = $(WOOPER_BEAM)/src      \
+				   $(WOOPER_BEAM)/examples
 
 
 
