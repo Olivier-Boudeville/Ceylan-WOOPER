@@ -66,7 +66,14 @@ VM_TEST_NAME := wooper_test
 endif
 
 
-BEAM_DIRS += . $(WOOPER_BEAM)/src $(WOOPER_BEAM)/examples
+BEAM_DIRS += $(WOOPER_BEAM_DIRS)
+
+
+# So that they can be fetched from outside
+# (see the 'list-beam-dirs' target)
+#
+WOOPER_BEAM_DIRS =  $(WOOPER_BEAM)/src      \
+					$(WOOPER_BEAM)/examples
 
 
 

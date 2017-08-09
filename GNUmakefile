@@ -1,9 +1,9 @@
 WOOPER_TOP = .
 
 
-.PHONY: help help-intro help-wooper                                  \
-		all register-version-in-header register-wooper               \
-		send-release release release-zip release-bz2 release-xz      \
+.PHONY: help help-intro help-wooper                                   \
+		all register-version-in-header register-wooper list-beam-dirs \
+		send-release release release-zip release-bz2 release-xz       \
 		prepare-release clean-release clean-archive
 
 
@@ -44,6 +44,10 @@ register-version-in-header:
 register-wooper:
 	@echo "-define( wooper_version, \"$(WOOPER_VERSION)\" )." >> $(VERSION_FILE)
 
+
+# Useful to extract internal layout for re-use in upper layers:
+list-beam-dirs:
+	@for d in $(WOOPER_BEAM_DIRS) ; do echo $$(readlink -f $$d) ; done
 
 
 # Note: the source archives are not produced in this directory, but in its
