@@ -84,7 +84,7 @@ wooper_destruct( State ) ->
 					wooper:log_error(
 					  "~nWOOPER error for PID ~w of class ~s: "
 					  "user-defined destructor did not return a state, "
-					  "but returned '~p' instead.",
+					  "but returned '~p' instead.~n",
 					  [ self(), ?MODULE, Other ] ),
 
 					throw( { invalid_destructor, ?MODULE } )
