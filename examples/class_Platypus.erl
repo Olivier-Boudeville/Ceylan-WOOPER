@@ -202,6 +202,8 @@ testCreationDeletion( State ) ->
 %
 % (oneway)
 %
+-spec onWOOPERExitReceived( wooper:state(), pid(),
+							basic_utils:exit_reason() ) -> oneway_return().
 onWOOPERExitReceived( State, Pid, ExitType ) ->
 
 	% Typically: "Received exit message '{{nocatch,

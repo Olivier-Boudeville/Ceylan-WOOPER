@@ -206,7 +206,7 @@ wooper_main_loop( State ) ->
 				{ value, _Key } ->
 
 					% Reusing safe execution facilities rather than directly
-					% 'apply( LocatedModule, onWOOPERExitReceived,...)':
+					% 'apply( LocatedModule, onWOOPERExitReceived, ...)':
 
 					% Will thus call 'onWOOPERExitReceived( State, Pid, ExitType
 					% )', where ExitType is typically a stack trace:
@@ -230,18 +230,57 @@ wooper_main_loop( State ) ->
 			end;
 
 
+		{ 'DOWN', MonitorRef, MonitoredType, MonitoredElement, ExitReason } ->
+
+			?wooper_log_format( "Main loop (case H) for ~w: down message "
+								"with ~w.~n",
+								[ self(), { MonitorRef, MonitoredType,
+											MonitoredElement, ExitReason } ] ),
+
+			case ?wooper_hashtable_type:lookupEntry(
+					{ _Name=onWOOPERDownNotified, _Arity=5 },
+					State#state_holder.virtual_table ) of
+
+				{ value, _Key } ->
+
+					% Reusing safe execution facilities rather than directly
+					% 'apply( LocatedModule, onWOOPERDownNotified, ...)':
+
+					% Will thus call 'onWOOPERDownNotified( State, MonitorRef,
+					% MonitoredType, MonitoredElement, ExitReason )':
+
+					{ NewState, _ } = wooper_execute_method(
+							onWOOPERDownNotified, State,
+							[ MonitorRef, MonitoredType, MonitoredElement,
+							  ExitReason  ] ),
+
+					%?wooper_log( "Main loop (case H) ended.~n" ),
+					wooper_main_loop( NewState );
+
+
+				% Hashtable key not found:
+				_ ->
+
+					% DOWN handler not overridden, using default one:
+					%?wooper_log( "Main loop (case H) ended.~n" ),
+					NewState = wooper:default_down_handler( State, MonitorRef,
+						MonitoredType, MonitoredElement, ExitReason ),
+					wooper_main_loop( NewState )
+
+			end;
+
 
 		Other ->
 
 			% Catch-all:
-			?wooper_log_format( "Main loop (case H) for ~w: unmatched ~p.~n",
+			?wooper_log_format( "Main loop (case I) for ~w: unmatched ~p.~n",
 								[ self(), Other ] ),
 
 			wooper:log_error(
 			  "WOOPER ignored following message for instance ~w:~n~p.~n",
 			  [ self(), Other ] ),
 
-			%?wooper_log( "Main loop (case H) ended.~n" ),
+			%?wooper_log( "Main loop (case I) ended.~n" ),
 			throw( { wooper_erroneous_call, Other } )
 
 

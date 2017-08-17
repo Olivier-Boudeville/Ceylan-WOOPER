@@ -104,7 +104,8 @@
 
 
 % Basics:
--export([ get_class_manager/0, default_exit_handler/3 ]).
+-export([ get_class_manager/0, default_exit_handler/3,
+		  default_down_handler/5 ]).
 
 
 % Defined here because embodied instances rely on the main loop which needs that
@@ -680,6 +681,90 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 
 
 
+% Deactivated, as that check would happen after a corresponding error cause
+% (type class_X:new/N reported as 'undef').
+
+-ifdef(wooper_deactivated).
+
+-ifdef(wooper_debug).
+
+
+% Used only in debug mode:
+-spec check_classname_and_arity( class_name(), construction_parameters() ) ->
+									   basic_utils:void().
+check_classname_and_arity( Classname, ConstructionParameters ) ->
+
+	% Normally useless, as called by the module itself:
+	case code_utils:is_beam_in_path( Classname ) of
+
+		not_found ->
+			throw( { beam_not_found_for, Classname } );
+
+		_ ->
+			ok
+
+	end,
+
+	% Includes the state:
+	ArgCount = length( ConstructionParameters ) + 1,
+
+
+	case meta_utils:is_function_exported( _Module=Classname,
+						_Function=construct, _Arity=ArgCount ) of
+
+		true ->
+			ok;
+
+		false ->
+
+			ExportedFunctions = meta_utils:list_exported_functions( Classname ),
+
+			case _ConstructArities=[ Arity
+					|| { construct, Arity } <- ExportedFunctions ] of
+
+				[] ->
+					trace_utils:error_fmt( "Error, no 'construct' exported "
+										   "in '~s' (regardless of arity).",
+										   [ Classname ] ),
+					throw( { no_exported_construct, Classname } );
+
+				[ FoundArity ] when FoundArity > ArgCount ->
+					ExtraCount  = FoundArity - ArgCount,
+					trace_utils:error( "Error, no ~s:construct/~B found, "
+						"whereas construct/~B is exported; ~B extra "
+						"construction parameter(s) specified.",
+						[ Classname, ArgCount, FoundArity, ExtraCount ] ),
+					throw( { extra_construction_parameters_specified,
+							 Classname, ExtraCount } );
+
+				% Here ArgCount > FoundArity:
+				[ FoundArity ] ->
+					LackingCount  = ArgCount - FoundArity,
+					trace_utils:error( "Error, no ~s:construct/~B found, "
+						"whereas construct/~B is exported; ~B lacking "
+						"construction parameter(s) specified.",
+						[ Classname, ArgCount, FoundArity, LackingCount ] ),
+					throw( { lacking_construction_parameters_specified,
+							 Classname, LackingCount } );
+
+				ConstructArities ->
+					trace_utils:error( "Error, no ~s:construct/~B found, "
+						"whereas exported for following arities: ~w.",
+						[ Classname, ArgCount, ConstructArities ] ),
+					throw( { invalid_construction_parameters_specified,
+							 Classname, ArgCount, ConstructArities } )
+
+			end
+
+	end.
+
+
+-endif. % wooper_debug
+
+-endif. % wooper_deactivated
+
+
+
 % Constructs the initial state of an instance of specified class, using
 % specified construction parameters, and enters its main loop.
 %
@@ -693,8 +778,11 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 
 construct_and_run( Classname, ConstructionParameters ) ->
 
-	%io:format( "wooper:construct_and_run for class ~p and parameters ~p.~n",
-	%		   [ Classname, ConstructionParameters ] ),
+	%trace_utils:debug_fmt( "wooper:construct_and_run for class ~p "
+	%                       "and parameters ~p.~n",
+	%						[ Classname, ConstructionParameters ] ),
+
+	%check_classname_and_arity( Classname, ConstructionParameters ),
 
 	BlankState = get_blank_state( Classname ),
 
@@ -792,6 +880,8 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 construct_and_run_synchronous( Classname, ConstructionParameters,
 							   SpawnerPid ) ->
+
+	%check_classname_and_arity( Classname, ConstructionParameters ),
 
 	BlankState = get_blank_state( Classname ),
 
@@ -966,6 +1056,34 @@ default_exit_handler( State, Pid, ExitType ) ->
 						"from ~w:~n'~p'.~n",
 						[ State#state_holder.actual_class, self(), Pid,
 						  ExitType ] ),
+
+	State.
+
+
+
+% WOOPER default DOWN handler.
+%
+% Returns an updated state.
+%
+% Can be overridden by defining or inheriting the onWOOPERDownNotified/5 method.
+%
+-spec default_down_handler( wooper:state(), basic_utils:monitor_reference(),
+		basic_utils:monitored_element_type(), basic_utils:monitored_element(),
+		basic_utils:exit_reason() ) ->  wooper:state().
+default_down_handler( State, _MonitorReference, _MonitoredType,
+					  _MonitoredElement, _ExitReason=normal ) ->
+	% Normal exits not notified:
+	State;
+
+default_down_handler( State, MonitorReference, MonitoredType, MonitoredElement,
+					  ExitReason ) ->
+
+	wooper:log_warning( "WOOPER default DOWN handler of the ~w "
+						"instance ~w ignored the following down notification "
+						"'~s' for monitored element ~p of type '~p' "
+						"(monitor reference: ~w).~n",
+						[ State#state_holder.actual_class, self(), ExitReason,
+						  MonitoredElement, MonitoredType, MonitorReference ] ),
 
 	State.
 
