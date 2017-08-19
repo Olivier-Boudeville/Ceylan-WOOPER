@@ -1006,7 +1006,7 @@ get_blank_state( Classname ) ->
 % If it is already running, finds it and returns its atom, otherwise launches
 % it, and returns that same atom as well.
 %
--spec get_class_manager() -> basic_utils:registration_name().
+-spec get_class_manager() -> naming_utils:registration_name().
 get_class_manager() ->
 
 	case lists:member( ?wooper_class_manager_name, registered() ) of
@@ -1067,9 +1067,10 @@ default_exit_handler( State, Pid, ExitType ) ->
 %
 % Can be overridden by defining or inheriting the onWOOPERDownNotified/5 method.
 %
--spec default_down_handler( wooper:state(), basic_utils:monitor_reference(),
-		basic_utils:monitored_element_type(), basic_utils:monitored_element(),
-		basic_utils:exit_reason() ) ->  wooper:state().
+-spec default_down_handler( wooper:state(), monitor_utils:monitor_reference(),
+							monitor_utils:monitored_element_type(),
+							monitor_utils:monitored_element(),
+							basic_utils:exit_reason() ) ->  wooper:state().
 default_down_handler( State, _MonitorReference, _MonitoredType,
 					  _MonitoredElement, _ExitReason=normal ) ->
 	% Normal exits not notified:
