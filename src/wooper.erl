@@ -104,8 +104,8 @@
 
 
 % Basics:
--export([ get_class_manager/0, default_exit_handler/3,
-		  default_down_handler/5 ]).
+-export([ get_class_manager/0, default_exit_handler/3, default_down_handler/5,
+		  default_node_up_handler/3, default_node_down_handler/3 ]).
 
 
 % Defined here because embodied instances rely on the main loop which needs that
@@ -188,6 +188,8 @@
 
 %-opaque state() :: #state_holder{}.
 -type state() :: #state_holder{}.
+
+
 
 
 % We prefer having it prefixed by wooper:
@@ -1042,11 +1044,15 @@ get_class_manager() ->
 
 
 
+% Section for default handlers.
+
+
+
 % WOOPER default EXIT handler.
 %
 % Returns an updated state.
 %
-% Can be overridden by defining or inheriting the onWOOPERExitReceived/3 method.
+% Can be overridden by defining or inheriting the onWOOPERExitReceived/3 oneway.
 %
 -spec default_exit_handler( wooper:state(), pid(), any() ) -> wooper:state().
 default_exit_handler( State, Pid, ExitType ) ->
@@ -1065,7 +1071,7 @@ default_exit_handler( State, Pid, ExitType ) ->
 %
 % Returns an updated state.
 %
-% Can be overridden by defining or inheriting the onWOOPERDownNotified/5 method.
+% Can be overridden by defining or inheriting the onWOOPERDownNotified/5 oneway.
 %
 -spec default_down_handler( wooper:state(), monitor_utils:monitor_reference(),
 							monitor_utils:monitored_element_type(),
@@ -1087,6 +1093,50 @@ default_down_handler( State, MonitorReference, MonitoredType, MonitoredElement,
 						  MonitoredElement, MonitoredType, MonitorReference ] ),
 
 	State.
+
+
+
+
+% WOOPER default node up handler.
+%
+% Returns an updated state.
+%
+% Can be overridden by defining or inheriting the onWOOPERNodeConnection/3
+% oneway.
+%
+-spec default_node_up_handler( wooper:state(), net_utils:atom_node_name(),
+					   monitor_utils:monitor_node_info() ) -> wooper:state().
+default_node_up_handler( State, Node, MonitorNodeInfo ) ->
+
+	wooper:log_warning( "WOOPER default node up handler of the ~w "
+						"instance ~w ignored the connection notification "
+						"for node '~s' (information: ~p).~n",
+						[ State#state_holder.actual_class, self(), Node,
+						  MonitorNodeInfo ] ),
+
+	State.
+
+
+
+% WOOPER default node down handler.
+%
+% Returns an updated state.
+%
+% Can be overridden by defining or inheriting the onWOOPERNodeDisconnection/3
+% oneway.
+%
+-spec default_node_down_handler( wooper:state(), net_utils:atom_node_name(),
+						 monitor_utils:monitor_node_info() ) -> wooper:state().
+default_node_down_handler( State, Node, MonitorNodeInfo ) ->
+
+	wooper:log_warning( "WOOPER default node down handler of the ~w "
+						"instance ~w ignored the disconnection notification "
+						"for node '~s' (information: ~p).~n",
+						[ State#state_holder.actual_class, self(), Node,
+						  MonitorNodeInfo ] ),
+
+	State.
+
 
 
 

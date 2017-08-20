@@ -193,6 +193,10 @@ wooper_main_loop( State ) ->
 			wooper_main_loop( NewState );
 
 
+		% Section for the processing of Erlang standard that do not map directly
+		% to WOOPER conventions.
+
+
 		% Not necessarily a PID per se (ex: can be #Port<0.2194>):
 		{ 'EXIT', PidOrPort, ExitType } -> %when is_pid( Pid ) ->
 
@@ -270,17 +274,93 @@ wooper_main_loop( State ) ->
 			end;
 
 
+		{ nodeup, Node, MonitorNodeInfo } ->
+
+			?wooper_log_format( "Main loop (case I) for ~w: node up message "
+								"for '~s' with ~p.~n",
+								[ self(), Node, MonitorNodeInfo ] ),
+
+			case ?wooper_hashtable_type:lookupEntry(
+					{ _Name=onWOOPERNodeConnection, _Arity=3 },
+					State#state_holder.virtual_table ) of
+
+				{ value, _Key } ->
+
+					% Reusing safe execution facilities rather than directly
+					% 'apply( LocatedModule, onWOOPERNodeConnection, ...)':
+
+					% Will thus call 'onWOOPERNodeConnection( State, NodeName,
+					% MonitorNodeInfo )':
+
+					{ NewState, _ } = wooper_execute_method(
+							onWOOPERNodeConnection, State,
+							[ Node, MonitorNodeInfo ] ),
+
+					%?wooper_log( "Main loop (case I) ended.~n" ),
+					wooper_main_loop( NewState );
+
+
+				% Hashtable key not found:
+				_ ->
+
+					% nodeup handler not overridden, using default one:
+					%?wooper_log( "Main loop (case I) ended.~n" ),
+					NewState = wooper:default_node_up_handler( State, Node,
+															   MonitorNodeInfo ),
+					wooper_main_loop( NewState )
+
+			end;
+
+
+		{ nodedown, Node, MonitorNodeInfo } ->
+
+			?wooper_log_format( "Main loop (case J) for ~w: node down message "
+								"for '~s' with ~p.~n",
+								[ self(), Node, MonitorNodeInfo ] ),
+
+			case ?wooper_hashtable_type:lookupEntry(
+					{ _Name=onWOOPERNodeDisconnection, _Arity=3 },
+					State#state_holder.virtual_table ) of
+
+				{ value, _Key } ->
+
+					% Reusing safe execution facilities rather than directly
+					% 'apply( LocatedModule, onWOOPERNodeDisconnection, ...)':
+
+					% Will thus call 'onWOOPERNodeDisconnection( State,
+					% NodeName, MonitorNodeInfo )':
+
+					{ NewState, _ } = wooper_execute_method(
+							onWOOPERNodeDisconnection, State,
+							[ Node, MonitorNodeInfo ] ),
+
+					%?wooper_log( "Main loop (case J) ended.~n" ),
+					wooper_main_loop( NewState );
+
+
+				% Hashtable key not found:
+				_ ->
+
+					% nodeup handler not overridden, using default one:
+					%?wooper_log( "Main loop (case J) ended.~n" ),
+					NewState = wooper:default_node_down_handler( State, Node,
+																 MonitorNodeInfo ),
+					wooper_main_loop( NewState )
+
+			end;
+
+
 		Other ->
 
 			% Catch-all:
-			?wooper_log_format( "Main loop (case I) for ~w: unmatched ~p.~n",
+			?wooper_log_format( "Main loop (case Z) for ~w: unmatched ~p.~n",
 								[ self(), Other ] ),
 
 			wooper:log_error(
 			  "WOOPER ignored following message for instance ~w:~n~p.~n",
 			  [ self(), Other ] ),
 
-			%?wooper_log( "Main loop (case I) ended.~n" ),
+			%?wooper_log( "Main loop (case Z) ended.~n" ),
 			throw( { wooper_erroneous_call, Other } )
 
 
