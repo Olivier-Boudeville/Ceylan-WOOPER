@@ -496,16 +496,17 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 		% Most likely case:
 		{ ExecState, Outcome={ wooper_result, _Result } } ->
 			CallerPid ! Outcome,
-			 ExecState;
+			ExecState;
 
 		{ ExecState, wooper_method_returns_void } ->
-			wooper:log_error( ": method ~s:~s/~B, which was called with "
-				"parameters ~p, did not return a result whereas, according to "
-				"its call, it was expected to be a request.~n"
-				"Either the request implementation is incorrect or it is a "
-				"oneway that has been incorrectly called as a request.",
-				[ State#state_holder.actual_class, RequestAtom,
-				  length( ArgumentList ) + 1, ArgumentList ], State ),
+			wooper:log_error(
+			  ": method ~s:~s/~B, which was called (by ~w) with "
+			  "parameters ~p, did not return a result whereas, according to "
+			  "its call, it was expected to be a request.~n"
+			  "Either the request implementation is incorrect or it is a "
+			  "oneway that has been incorrectly called as a request.",
+			  [ State#state_holder.actual_class, RequestAtom,
+				length( ArgumentList ) + 1, CallerPid, ArgumentList ], State ),
 
 			ErrorReason = { request_void_return, self(),
 							State#state_holder.actual_class, RequestAtom,
@@ -546,7 +547,7 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 			CallerPid ! Outcome,
 			ExecState
 
-		% Request/oneway mistmatches not supposed to happen in non-debug mode.
+		% Request/oneway mismatches not supposed to happen in non-debug mode.
 
 	catch
 

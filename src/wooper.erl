@@ -37,7 +37,7 @@
 
 % Very generic:
 %
--export([ get_class_name/1, state_to_string/1 ]).
+-export([ get_class_name/1, get_attribute_pairs/1, state_to_string/1 ]).
 
 
 % Communication helpers:
@@ -130,6 +130,8 @@
 %
 -type class_name() :: atom().
 
+-type classname() :: class_name().
+
 
 % A method name (ex: 'setColor'):
 %
@@ -144,6 +146,10 @@
 
 % Standalone (non-list) arguments may also be specified:
 -type method_arguments() :: method_argument() | [ method_argument() ].
+
+
+% Method qualifiers not implemented yet:
+-type qualifier() :: any().
 
 
 % Special case of construction parameters:
@@ -193,9 +199,12 @@
 
 
 % We prefer having it prefixed by wooper:
--export_type([ class_name/0, method_name/0, request_name/0, oneway_name/0,
-			   method_argument/0, method_arguments/0, construction_parameters/0,
-			   requests_outcome/0, method_internal_result/0, request_result/1,
+-export_type([ class_name/0, classname/0,
+			   method_name/0, request_name/0, oneway_name/0,
+			   method_argument/0, method_arguments/0, qualifier/0,
+			   construction_parameters/0,
+			   requests_outcome/0, method_internal_result/0,
+			   request_result/1, request_result/0,
 			   request_return/1, oneway_return/0,
 			   attribute_name/0, attribute_value/0, attribute_entry/0,
 			   instance_pid/0, state/0 ]).
@@ -724,6 +733,7 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 			case _ConstructArities=[ Arity
 					|| { construct, Arity } <- ExportedFunctions ] of
 
+
 				[] ->
 					trace_utils:error_fmt( "Error, no 'construct' exported "
 										   "in '~s' (regardless of arity).",
@@ -731,28 +741,38 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 					throw( { no_exported_construct, Classname } );
 
 				[ FoundArity ] when FoundArity > ArgCount ->
+
 					ExtraCount  = FoundArity - ArgCount,
+
 					trace_utils:error( "Error, no ~s:construct/~B found, "
 						"whereas construct/~B is exported; ~B extra "
 						"construction parameter(s) specified.",
 						[ Classname, ArgCount, FoundArity, ExtraCount ] ),
+
 					throw( { extra_construction_parameters_specified,
 							 Classname, ExtraCount } );
 
+
 				% Here ArgCount > FoundArity:
 				[ FoundArity ] ->
+
 					LackingCount  = ArgCount - FoundArity,
+
 					trace_utils:error( "Error, no ~s:construct/~B found, "
 						"whereas construct/~B is exported; ~B lacking "
 						"construction parameter(s) specified.",
 						[ Classname, ArgCount, FoundArity, LackingCount ] ),
+
 					throw( { lacking_construction_parameters_specified,
 							 Classname, LackingCount } );
 
+
 				ConstructArities ->
+
 					trace_utils:error( "Error, no ~s:construct/~B found, "
 						"whereas exported for following arities: ~w.",
 						[ Classname, ArgCount, ConstructArities ] ),
+
 					throw( { invalid_construction_parameters_specified,
 							 Classname, ArgCount, ConstructArities } )
 
@@ -1022,6 +1042,7 @@ get_class_manager() ->
 			% their PID) allows to be sure only one instance (singleton) is
 			% being used, to avoid the case of two managers being launched at
 			% the same time (the second will then terminate immediately).
+			%
 			receive
 
 				class_manager_registered ->
@@ -1032,8 +1053,7 @@ get_class_manager() ->
 
 				log_error( "wooper:get_class_manager: "
 					"unable to find WOOPER class manager after 10 seconds.~n"
-					"Please check that WOOPER has been compiled beforehand."
-				),
+					"Please check that WOOPER has been compiled beforehand." ),
 
 				undefined
 
@@ -1206,13 +1226,61 @@ get_class_name( State ) ->
 
 
 
+% Returns the (user-level) attributes known of WOOPER for the specified state
+% (i.e. all attributes except the ones used internally by WOOPER).
+%
+% (helper)
+%
+-spec get_attribute_pairs( wooper:state() ) -> [ attribute_entry() ].
+get_attribute_pairs( State ) ->
+
+	AllAttrs = get_all_attributes( State ),
+
+	ReservedAttrs = get_wooper_reserved_attribute_names(),
+
+	% Remove WOOPER internals:
+	filter_wooper_attributes( AllAttrs, ReservedAttrs, _Acc=[] ).
+
+
+
+% Removes from the specified atttributes the ones used internally by WOOPER (so
+% that only class-specific ones remain).
+%
+% (internal helper)
+%
+filter_wooper_attributes( _AttrPairs=[], _ReservedAttrs, Acc ) ->
+	Acc;
+
+filter_wooper_attributes( _AttrPairs=[ AttrEntry={ Name, _Value } | T ],
+						  ReservedAttrs, Acc ) ->
+
+	case lists:member( Name, ReservedAttrs ) of
+
+		true ->
+			filter_wooper_attributes( T, ReservedAttrs, Acc );
+
+		false ->
+			filter_wooper_attributes( T, ReservedAttrs, [ AttrEntry | Acc ] )
+
+	end.
+
+
+
+% Returns a list of the attribute names that are used internally by WOOPER.
+%
+-spec get_wooper_reserved_attribute_names() -> [ attribute_name() ].
+get_wooper_reserved_attribute_names() ->
+	[].
+
+
+
 % Returns a textual representation of the attributes of the specified state.
 %
 -spec state_to_string( wooper:state() ) -> string().
 state_to_string( State ) ->
 
-	Attributes = ?wooper_hashtable_type:enumerate(
-								   State#state_holder.attribute_table ),
+	% Not using get_attribute_pairs/1 to rely on the full state:
+	Attributes = get_all_attributes( State ),
 
 	% We prefer having the attributes sorted by their name, in alphabetical
 	% order:
@@ -1222,13 +1290,10 @@ state_to_string( State ) ->
 	lists:foldl(
 
 		fun( { AttName, AttrValue }, Acc ) ->
-			Acc ++ io_lib:format(
-				"     * ~s = ~s~n",
-				[
-					text_utils:term_to_string( AttName ),
-					text_utils:term_to_string( AttrValue, _MaxDepth=16,
-											   _MaxLength=100 )
-				] )
+			Acc ++ io_lib:format( "     * ~s = ~s~n",
+				[ text_utils:term_to_string( AttName ),
+				  text_utils:term_to_string( AttrValue, _MaxDepth=16,
+											 _MaxLength=100 ) ] )
 
 		end,
 
@@ -1252,16 +1317,16 @@ virtual_table_to_string( State ) ->
 
 	lists:foldl(
 
-		fun( { { Name, Arity }, Module }, String ) ->
-				String ++ io_lib:format( "     * ~s/~B -> ~s~n",
-									 [ Name, Arity, Module ] )
-		end,
+	  fun( { { Name, Arity }, Module }, String ) ->
+			  String ++ io_lib:format( "     * ~s/~B -> ~s~n",
+									   [ Name, Arity, Module ] )
+	  end,
 
-		io_lib:format( "Virtual table of ~w:~n"
-					   "(method name/arity -> module defining that method)~n",
-					   [ self() ] ),
+	  _Acc=io_lib:format( "Virtual table of ~w:~n(method name/arity -> "
+						  "module defining that method)~n", [ self() ] ),
 
-		?wooper_hashtable_type:enumerate( State#state_holder.virtual_table ) ).
+	  _List=?wooper_hashtable_type:enumerate(
+			   State#state_holder.virtual_table ) ).
 
 
 
@@ -1313,8 +1378,7 @@ display_instance( State ) ->
 % Returns all the attributes of this instance, as a list of { AttributeName,
 % AttributeValue } pairs.
 %
--spec get_all_attributes( wooper:state() ) ->
-								?wooper_hashtable_type:entries().
+-spec get_all_attributes( wooper:state() ) -> [ attribute_entry() ].
 get_all_attributes( State ) ->
 	?wooper_hashtable_type:enumerate( State#state_holder.attribute_table ).
 
@@ -1445,22 +1509,23 @@ on_failed_request( RequestAtom, ArgumentList, CallerPid, Reason, ErrorTerm,
 	log_error( ": request ~s~s/~B failed (cause: ~s):~n~n"
 			   " - with error term:~n  ~p~n~n"
 			   " - stack trace was (latest calls first):~n~s~n"
+			   " - caller being process ~w"
 			   " - for request parameters:~n  ~p~n",
 			   [ ModulePrefix, RequestAtom, Arity, Reason, ErrorTerm,
-				  code_utils:interpret_stacktrace(), ArgumentList ], State ),
+				  code_utils:interpret_stacktrace(), CallerPid, ArgumentList ],
+			   State ),
 
-			% ArgumentList and actual method module not propagated back to the
-			% caller:
-			%
-			ErrorReason = { request_failed, State#state_holder.actual_class,
-							self(), RequestAtom, { Reason, ErrorTerm } },
+	% ArgumentList and actual method module not propagated back to the caller:
+	%
+	ErrorReason = { request_failed, State#state_holder.actual_class,
+					self(), RequestAtom, { Reason, ErrorTerm } },
 
-			CallerPid ! { wooper_error, ErrorReason },
+	CallerPid ! { wooper_error, ErrorReason },
 
-			% We do not want a duplicate error message, yet we cannot use
-			% 'normal' as linked processes would not be triggered:
-			%
-			exit( request_failed ).
+	% We do not want a duplicate error message, yet we cannot use 'normal' as
+	% linked processes would not be triggered:
+	%
+	exit( request_failed ).
 
 
 
@@ -1499,21 +1564,21 @@ on_failed_oneway( OnewayAtom, ArgumentList, Reason, ErrorTerm, State ) ->
 % (helper)
 %
 -spec lookup_method_prefix( method_name(), arity(), wooper:state() ) ->
-						   string().
+								  string().
 lookup_method_prefix( MethodAtom, Arity, State ) ->
 
 	try wooper_lookup_method( State, MethodAtom, Arity ) of
 
-								{ value, Module } ->
-									text_utils:format( "~s:", [ Module ] );
+		{ value, Module } ->
+			text_utils:format( "~s:", [ Module ] );
 
-								key_not_found ->
-									""
+		key_not_found ->
+			""
 
-						  catch
+	catch
 
-							  _:_ ->
-								  ""
+		_:_ ->
+			""
 
 	end.
 

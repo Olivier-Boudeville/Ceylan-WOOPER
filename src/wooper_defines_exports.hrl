@@ -96,22 +96,22 @@
 %
 -record( state_holder, {
 
-		virtual_table    :: 'undefined' |
-							?wooper_hashtable_type:?wooper_hashtable_type(),
+		   virtual_table    :: 'undefined' |
+							   ?wooper_hashtable_type:?wooper_hashtable_type(),
 
-		attribute_table  :: 'undefined' |
-							?wooper_hashtable_type:?wooper_hashtable_type(),
+		   attribute_table  :: 'undefined' |
+							   ?wooper_hashtable_type:?wooper_hashtable_type(),
 
-		% Only means we know to access the actual class name:
-		%
-		% (otherwise we could not, for example, report in an intermediate child
-		% class the actual class name of a deleted instance)
-		%
-		% To be used, instead of ?MODULE or alike.
-		%
-		actual_class :: basic_utils:module_name(),
+		   % Only means we know to access the actual class name:
+		   %
+		   % (otherwise we could not, for example, report in an intermediate
+		   % child class the actual class name of a deleted instance)
+		   %
+		   % To be used, instead of ?MODULE or alike.
+		   %
+		   actual_class :: basic_utils:module_name(),
 
-		request_sender :: pid() | 'undefined'
+		   request_sender :: pid() | 'undefined'
 
 }).
 

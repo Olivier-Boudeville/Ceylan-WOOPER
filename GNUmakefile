@@ -3,6 +3,7 @@ WOOPER_TOP = .
 
 .PHONY: help help-intro help-wooper                                   \
 		all register-version-in-header register-wooper list-beam-dirs \
+		add-prerequisite-plts link-plt                                \
 		send-release release release-zip release-bz2 release-xz       \
 		prepare-release clean-release clean-archive
 
@@ -48,6 +49,14 @@ register-wooper:
 # Useful to extract internal layout for re-use in upper layers:
 list-beam-dirs:
 	@for d in $(WOOPER_BEAM_DIRS) ; do echo $$(readlink -f $$d) ; done
+
+
+add-prerequisite-plts: link-plt
+
+
+# As upper layers may rely on the 'wooper' naming:
+link-plt:
+	@/bin/ln -s $(PLT_FILE) $(WOOPER_PLT_FILE)
 
 
 # Note: the source archives are not produced in this directory, but in its

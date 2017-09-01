@@ -29,7 +29,7 @@
 % definitions).
 
 
-% Method that returns the classname of the instance.
+% Request returning the classname of the instance.
 %
 % Always accurate, in all constructors, methods and destructors.
 %
