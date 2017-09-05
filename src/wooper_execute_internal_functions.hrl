@@ -280,7 +280,7 @@ wooper_execute_method( MethodAtom, State, Parameters ) ->
 					throw( { wooper_request_not_found, self(),
 							 State#state_holder.actual_class,
 							 MethodAtom, length( Parameters ) + 1,
-							 Parameters } }
+							 Parameters } )
 
 			end
 

@@ -49,6 +49,8 @@ pep8_class_to_wooper_class( ClassName ) when is_atom( ClassName ) ->
 	pep8_class_to_wooper_class( text_utils:atom_to_string( ClassName ) );
 
 pep8_class_to_wooper_class( ClassNameStr ) ->
+	%io:format("~n ~n called pep8_class_to_wooper_class ~s ~n ~n ~n", [ ClassNameStr ] ),
+
 	text_utils:string_to_atom( "class_" ++ ClassNameStr ).
 
 
@@ -56,7 +58,7 @@ pep8_class_to_wooper_class( ClassNameStr ) ->
 % Deduces the Python equivalent name, according to the PEP 8 convention, of an
 % Erlang class which name follows the WOOPER conventions.
 %
-% Ex: 'class_MyFoobarExample' resulting in 'MyFoobarExample'.
+% Ex: "class_MyFoobarExample" resulting in "MyFoobarExample".
 %
 -spec wooper_class_to_pep8_class( wooper:classname() | string() ) ->
 										python_utils:pep8_class_name().
