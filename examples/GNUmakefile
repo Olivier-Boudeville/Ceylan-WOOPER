@@ -28,4 +28,3 @@ class_Platypus_test: \
 	class_Platypus.beam           \
 	class_ViviparousBeing_test    \
 	class_OvoviviparousBeing_test
-
