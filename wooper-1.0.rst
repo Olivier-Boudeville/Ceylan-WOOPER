@@ -17,7 +17,7 @@
 WOOPER 1.0
 ==========
 
-.. comment Note: this is the latest, current version of the WOOPER 1.x documentation. As for WOOPER 2.0, all the available relevant bits are here as well, commented-out.
+.. comment Note: this is the latest, current version of the WOOPER 1.x documentation. As for WOOPER 2.0, all the available relevant bits are here as well, yet commented-out.
 
 
 ---------------------------------------------------
@@ -28,7 +28,8 @@ WOOPER 1.0
 :Organisation: Copyright (C) 2008-2017 Olivier Boudeville
 :Contact: <first name> (dot) <last name> (at) esperide (dot) com
 :Creation Date: Thursday, February 25, 2008
-:Lastly Updated: Wednesday, November 1, 2017
+:Lastly Updated: Monday, December 4, 2017
+
 
 
 The latest version of this documentation is to be found at the `official WOOPER website <http://wooper.esperide.org>`_ (``http://wooper.esperide.org``).
@@ -900,28 +901,35 @@ Self-Invocation: Calling a Method From The Instance Itself
 
 When implementing a method of a class, one may want to call other methods **of that same class** (have they been overridden or not).
 
-For example, when developing a ``declareBirthday/1`` oneway of ``class_Mammal`` (which, among other things, is expected to increment the mammal age), you may want to perform a call to the ``setAge/2`` oneway (possibly introduced by the ``class_Creature`` ancestor class, or directly defined in ``class_Mammal``) on the current instance.
+For example, when developing a ``declareBirthday/1`` oneway of ``class_Mammal`` (which, among other things, is expected to increment the mammal age), you may want to perform a call to the ``setAge/2`` oneway (possibly introduced by an ancestor class like ``class_Creature``, or possibly overridden directly in ``class_Mammal``) on the current instance.
 
-If you just directly call ``setAge/2`` (i.e. ``class_Mammal:setAge/2``, should it even be defined in that class), then any potentially version of that method that would be overloaded in ``class_Mammal`` child classes would never be called. Indeed, if an instance of child class ``class_Cat`` (which inherited ``declareBirthday/1`` "as is") overloaded ``setAge/2``, as a developer you may desire, if not expect, that, for a cat or for any specialised version thereof, ``declareBirthday/1`` calls automatically ``class_Cat:setAge/2``, and not ``class_Mammal:setAge/2``.
+One could refer to this method respectively as a function exported by that ancestor (ex: called as ``class_Creature:setAge(...)``) or that is local to the current module (a ``setAge(...)`` call designating then ``class_Mammal:setAge/2``).
 
-Such a call could be easily performed asynchronously: a classical message-based method auto-call can be used, like in ``self() ! {setAge,10}``. If this approach is useful when not directly needing from the method the result of the call and/or not needing to have it executed at once, there are cases where one wants to have that possibly overridden method be executed *directly*, and to access immediately to the corresponding updated state and, possibly, output result.
+However, in the future, child classes of ``class_Mammal`` may be introduced (ex: ``class_Cat``), and they might define their own version of ``setAge/2``.
 
-In these cases, one should call the WOOPER-defined ``executeRequest/{2,3}`` or ``executeOneway/{2,3}`` functions (or any variation thereof), depending on the type of the method to call.
+Instead of hardcoding which version of that method shall be called (like in the two previous cases, which establish statically the intended version to call), a developer may desire, if not expect, that, for a cat or for any specialised version thereof, ``declareBirthday/1`` calls automatically the "right" ``setAge/2`` method (i.e. the lastly overridden one in the inheritance graph). Possibly any ``class_Cat:setAge/2`` - not the version of ``class_Creature`` or ``class_Mammal``.
 
-These two helper functions behave quite similarly to the actual method calls that are based on the operator ``!``, except that no target instance has to be specified (since it is by definition a call made by an instance to itself) and that no message exchange is involved: the method look-up is just performed through the inheritance hierarchy, the correct method is called with the specified parameters and the result is then directly returned.
+Such an inheritance-aware call could be easily triggered asynchronously: a classical message-based method call directly addressed by an instance to itself could be used, like in ``self()!{setAge,10}``, and (thanks to WOOPER) this would lead to executing the "right" version of that method.
 
-More precisely, **executeRequest** is ``executeRequest/2`` or ``executeRequest/3``, its parameters being the current state, the name of the request method, and, if specified, the parameters of the called request, either as a list or as a standalone one.
+If this approach may be useful when not directly needing from the method the result of the call and/or not needing to have it executed at once, in the general case one wants to have that possibly overridden method be executed *directly*, synchronously, and to obtain immediately the corresponding updated state and, if relevant, the associated output result.
 
-``executeRequest`` returns a pair, made of the new state and of the result.
+Then one should call the WOOPER-defined ``executeRequest/{2,3}`` or ``executeOneway/{2,3}`` functions (or any variation thereof), depending on the type of the method to call.
+
+These two helper functions behave quite similarly to the actual method calls that are based on the operator ``!``, except that no target instance has to be specified (since it is by definition a call made by an instance to itself) and that no message exchange at all is involved: the method look-up is just performed through the inheritance hierarchy, the correct method is called with the specified parameters and the result is then directly returned.
+
+More precisely, **executeRequest** is ``executeRequest/2`` or ``executeRequest/3``, its parameters being the current state, the name of the request method, and, if needed, the parameters of the called request, either as a list or as a standalone one.
+
+``executeRequest`` returns a pair made of the new state and of the result.
 
 For example, for a request taking more than one parameter, or one list parameter::
 
  {NewState,Result} = executeRequest(CurrentState, myRequestName,
 									["hello", 42])
 
-For a request taking exactly one (non-list) parameter::
+For a request taking exactly one, non-list, parameter::
 
- {NewState,NewCounter} = executeRequest(CurrentState, addToCurrentCounter, 78)
+ {NewState,NewCounter} = executeRequest(CurrentState,
+								  addToCurrentCounter, 78)
 
 For a request taking no parameter::
 
@@ -930,7 +938,7 @@ For a request taking no parameter::
 
 
 
-Regarding now **executeOneway**, it is either ``executeOneway/2`` or ``executeOneway/3``, depending on whether the oneway takes parameters. If yes, they can be specified as a list (if there are more than one) or as a standalone parameter.
+Regarding now **executeOneway**, it is either ``executeOneway/2`` or ``executeOneway/3``, depending on whether the oneway takes parameters. If yes, they can be specified as a list (if there are more than one) or, as always, as a standalone non-list parameter.
 
 ``executeOneway`` returns the new state.
 
@@ -952,19 +960,665 @@ For a oneway taking no parameter::
 .. Note:: As discussed previously, there are caller-side errors that are not expected to crash the instance. If such a call is performed directly from that instance (i.e. with one of the ``execute*`` constructs), then two errors will be output: the first, non-fatal for the instance, due to the method call, then the second, fatal for the instance, due to the failure of the ``execute*`` call. This is the expected behaviour, as here the instance plays both roles, the caller and the callee.
 
 
-Finally, we can specify explicitly the class defining the version of the method that we want to execute, bypassing the inheritance-aware overriding system.
+Finally, one can specify **explicitly** the class (of course belonging to the inheritance graph of that class) defining the version of the method that one wants to execute, bypassing the inheritance-aware overriding system.
 
 For example, a method needing to call ``setAge/2`` from its body would be expected to use something like: ``AgeState = executeOneway(State,setAge,NewAge)``.
 
 If ``class_Cat`` overrode ``setAge/2``, any cat instance would then call the overridden ``class_Cat:setAge`` method instead of the original ``class_Creature:setAge``.
 
-What if the method in our cat instance wanted, for any reason, to call the ``class_Creature`` version? In this case a ``execute*With`` function should be used.
+What if our specific method of ``class_Cat`` wanted, for any reason, to call the ``class_Creature`` version, now shadowed by an overridden version of it? In this case a ``execute*With`` function should be used.
 
-These functions, which are ``executeRequestWith/3``, ``executeRequestWith/4``, ``executeOnewayWith/3`` and ``executeOnewayWith/4``, behave exactly as the previous ``execute*`` functions, except that they take an additional parameter (to be specified just after the state) which is the name of the mother class (direct or not) having defined the desired version of the method.
+These functions, which are ``executeRequestWith/{3,4}`` and ``executeOnewayWith/{3,4}``, behave exactly as the previous ``execute*`` functions, except that they take an additional parameter (to be specified just after the state) that is the name of the mother class (direct or not) having defined the version of the method that we want to execute.
 
 .. Note::
 
 	This mother class does not have to have specifically defined or overridden that method: this method will just be called in the context of that class, as if it was an instance of the mother class rather than one of the actual child class.
 
 
-In our example, we should thus use simply: ``AgeState = executeOnewayWith(State,class_Creature,setAge,NewAge)``, in order to call the ``class_Creature`` version of the ``setAge`` method.
+In our example, we should thus use simply::
+
+ AgeState = executeOnewayWith(State,class_Creature,setAge,NewAge)
+
+in order to call the ``class_Creature`` version of the ``setAge/2`` oneway.
+
+
+
+Static Methods
+..............
+
+Static methods, as opposed to member methods, do not target specifically an instance, they are defined at the class level.
+
+They thus do not operate on PID, they are just to be called thanks to their module name, exactly as any exported standard function.
+
+.. comment Static methods are to be listed by the class developer thanks to the ``get_static_methods/0`` function, which must return a list whose elements are pairs, whose first part is the name (atom) of the static method, the second part being the arity of the static method.
+
+.. comment For example:
+
+.. comment  % Determines what are the static methods of this class (if any):
+.. comment  get_static_methods() ->
+.. comment	[ {get_default_whisker_color,0}, {compute_mew_frequency,2} ].
+
+
+Static methods are to be listed by the class developer thanks to the ``wooper_static_method_export`` define, like in::
+
+ -define( wooper_static_method_export, get_default_whisker_color/0,
+		  determine_croquette_appeal/1foo_bar/1 ).
+
+
+The static methods are automatically exported by WOOPER, so that they can be readily called from any context, as in::
+
+  PossibleColor = class_Cat:get_default_whisker_color(),
+  [..]
+
+
+.. comment Hence static methods can be called from anywhere, no qualifier like public, protected or private apply to them.
+
+
+:raw-latex:`\pagebreak`
+
+
+.. _`state management`:
+
+State Management
+----------------
+
+Principles
+..........
+
+We are discussing here about how an instance is to manage its inner state.
+
+Its state is only directly accessible from inside the instance, i.e. from the body of its methods, whether they are inherited or not: the state of an instance is **private** (local to its process), and the outside can *only* access it through the methods defined by its class.
+
+The state of an instance (corresponding to the one that is given by WOOPER as first parameter of all its methods, thanks to a variable conventionally named ``State``) is simply defined as a **set of attributes**.
+
+Each attribute is designated by a name, defined as an atom, and is associated to a mutable value, which can be any Erlang term.
+
+The current state of an instance can be thought as a list of ``{attribute_name,attribute_value}`` pairs, like in::
+
+ [ {color,black}, {fur_color,sand}, {age,13}, {name,"Tortilla"} ].
+
+
+State Implementation Details
+............................
+
+
+.. comment Current Implementation
+.. comment ______________________
+
+.. comment Starting from the 2.x versions of WOOPER, the list of attributes which defines a state is a class-specific, inheritance-aware, predetermined record.
+
+.. comment This record gathers exactly all attributes of an instance: the ones that were defined directly in its class, as well as the ones that were inherited, directly or not.
+
+.. comment This record is defined at compile-time, thanks to parse transforms. Once these mechanisms to determine it have been set-up, it is surely the solution that allows for the best overall performances.
+
+.. comment So a class developer just has to specify the list of attributes that this class specifically introduces: all other attributes are inherited, and thus will be automatically deduced, at compile-time, from the list of the specified superclasses.
+
+.. comment Class-specific attributes can be declared with some qualifiers.
+
+.. comment More generally an attribute can be declared with:
+
+.. comment - just its name, ex: ``whisker_color``
+.. comment - a pair made of its name and a single qualifier, ex: ``{fur_color,protected}``
+.. comment - a pair made of its name and a list of qualifiers, ex: ``{mew_volume,[private,{const,35}]}``
+
+
+.. comment Known attribute qualifiers are:
+
+.. comment - in terms of accessibility:
+
+.. comment   - ``public``: for this attribute, a getter/setter pair is automatically generated; for example if ``whisker_color`` is declared as public, then ``getWhiskerColor/1`` and ``setWhiskerColor/2`` are automatically defined by WOOPER
+.. comment   - ``protected``: the attribute can be modified either by the class that defined it or by any of its child classes
+.. comment   - ``private``: the attribute can be modified only by the class that defined it, not by any of its child classes
+
+.. comment - in terms of mutability:
+
+.. comment   - ``{const,Value}``: the value of the attribute will never change over time, none can modify it (once an attribute is const, there is no point in specifying that his access is protected or private)
+
+
+.. comment Unless specified otherwise, an attribute is protected and non-const.
+
+
+.. comment For example an attribute declaration can be::
+
+.. comment   % Determines what are the class-specific attributes of this class (if any):
+.. comment   get_attributes() ->
+.. comment	[ {fur_color,protected}, whisker_color, {mew_volume,[private,{const,35}]} ].
+
+
+.. comment Once the instance will be created by WOOPER, the initial state will notably be made of a record, whose fields are exactly the attributes supported by this class, whether they are class-specific or inherited (directly or not).
+
+.. comment Const attributes will already be set to their associated values, all others being initially set to the value ``undefined``.
+
+.. comment This empty initial state will be given to the constructor, so that it is able first to call the counterpart constructors of the direct mother classes to update this state, then to set class-specific values afterwards, before returning the resulting state.
+
+
+The conceptual attribute list is actually an associative table [#]_ (ultimately relying on the ``map`` datatype now; previously on our ``hashtable`` module), selected for genericity, dynamicity and efficiency reasons.
+
+.. comment (compared to other means of storing entries *a priori*, i.e. without prior knowledge about them).
+
+.. [#] A not so conclusive experiment relied on class-specific records being defined. This approach raises issues, for example at construction and destruction time where parent classes have to deal with record types different from their own. Moreover there is no guarantee that creating/destructing longer tuples is significantly more efficient than, say, updating a map (yet the memory footprint shall be lower).
+
+
+The hash value of a key (like the ``age`` key) is computed, to be used as an index in order to find the corresponding value (in the previous example, ``13``) in the relevant bucket of the table.
+
+The point is that this kind of look-up is performed in constant time on average, regardless of how many key/value pairs are stored in the table, whereas most dynamic data structures, like plain lists, would have look-up runtime costs that would increase with the number of pairs they contain, thus being possibly most often slower than their hashtable-based counterparts.
+
+.. comment Using now class-specific fixed records has not real impact on flexibility, and allows for constant-time operations significantly more effective than a hashtable, being both faster, and smaller in memory.
+
+
+
+:raw-latex:`\pagebreak`
+
+
+Managing The State Of An Instance
+.................................
+
+A set of functions allows to operate on these state variables, notably to read and write the attributes that they contain.
+
+As seen in the various examples, method implementations will access (read/write) attributes stored in the instance state, whose original version (i.e. the state of the instance at the method beginning) is always specified as their first parameter, conventionally named ``State``.
+
+This current state can be then modified in the method, and a final state (usually an updated version of the initial one) will be returned locally to WOOPER, thanks to the final statement in the method, one of the two ``wooper_return_state_*`` macros.
+
+Then the code (automatically instantiated by the WOOPER header in the class implementation) will loop again for this instance with this updated state, waiting for the next method call, which will possibly change again the state (and trigger side-effects), and so on.
+
+One may refer to `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl>`_ for the actual definition of most of these WOOPER constructs.
+
+.. comment See `wooper.hrl <http://ceylan.svn.sourceforge.net/viewvc/ceylan/Ceylan/trunk/src/code/scripts/erlang/wooper/src/wooper.hrl?view=markup>`_ for the actual definition of most of these WOOPER constructs.
+
+.. comment These state-management constructs look like functions but, thanks to parse transforms, they are actually inlined for increased performances.
+
+.. comment As a consequence of the change in the underlying data structure for state variables, following state-management functions have been deprecated for the 2.x versions of WOOPER and onward: ``removeAttribute/2``, ``hasAttribute/2``.
+
+
+
+Modifying State
+_______________
+
+
+The ``setAttribute/3`` Function
+*******************************
+
+Setting an attribute (creating and/or modifying it) should be done with the ``setAttribute/3`` function::
+
+ NewState = setAttribute(AState,AttributeName,NewAttributeValue)
+
+
+For example, ``AgeState = setAttribute(State,age,3)`` will return a new state, bound to ``AgeState``, exact copy of ``State`` (with all the attribute pairs equal) but for the ``age`` attribute, whose value will be set to 3.
+
+.. comment (whether or not this attribute was already defined in ``State``).
+
+Therefore, during the execution of a method, any number of states can be defined (ex: ``State``, ``InitialisedState``, ``AgeState``, etc.) before all, but the one that is returned, are garbage-collected.
+
+Note that the corresponding state duplication remains efficient both in terms of processing and memory, as the different underlying state structures (ex: ``State`` and ``AgeState``) actually **share** all their terms except the one modified - thanks to the immutability of Erlang variables which allows to reference rather than copy, be these datastructures tables, records, or anything else.
+
+In various cases, notably in constructors, one needs to define a series of attributes in a row, but chaining ``setAttribute/3`` calls with intermediate states that have each to be named is not really convenient.
+
+A better solution is to use the ``setAttributes/2`` function (note the plural) to set a list of attribute name/attribute value pairs in a row.
+
+For example::
+
+ ConstructedState = setAttributes(MyState,[{age,3},
+										   {whisker_color,white}])
+
+will return a new state, exact copy of ``MyState`` but for the listed attributes, set to their respective specified value.
+
+
+
+
+The ``removeAttribute/2`` Function
+**********************************
+
+
+.. Note::
+
+ The ``removeAttribute/2`` function is now deprecated and should not be used anymore.
+
+
+This function was used in order to fully remove an attribute entry (i.e. the whole key/value pair).
+
+This function is deprecated now, as we prefer defining all attributes once for all, at construction time, and never add or remove them dynamically: the good practise is just to operate on their value, which can by example be set to ``undefined``, without having to deal with the fact that, depending on the context, a given attribute may or may not be defined.
+
+For example ``NewState = removeAttribute(State,an_attribute)`` could be used, for a resulting state having no key corresponding to ``an_attribute``.
+
+
+Neither the ``setAttribute*`` variants nor ``removeAttribute/2`` can fail, regardless of the attribute being already existing or not.
+
+
+
+Reading State
+_____________
+
+
+The ``hasAttribute/2`` Function
+*******************************
+
+.. Note::
+
+ The ``hasAttribute/2`` function is now deprecated and should not be used anymore.
+
+
+To test whether an attribute is defined, one could use the ``hasAttribute/2`` function: ``hasAttribute(AState,AttributeName)``, which returns either ``true`` or ``false``, and cannot fail.
+
+For example, ``true = hasAttribute(State,whisker_color)`` matches if and only if the attribute ``whisker_color`` is defined in state ``State``.
+
+Note that generally it is a bad practice to define attributes outside of the constructor of an instance, as the availability of an attribute could then depend on the actual state, which is an eventuality generally difficult to manage reliably.
+
+A better approach is instead to define all possible attributes directly from the constructor. They would then be assigned to their initial value and, if none is appropriate, they should be set to the atom ``undefined`` (instead of not being defined at all).
+
+
+
+The ``getAttribute/2`` Function
+*******************************
+
+Getting the value of an attribute is to be done with the ``getAttribute/2`` function::
+
+ AttributeValue = getAttribute(AState,AttributeName)
+
+For example, ``MyColor = getAttribute(State,whisker_color)`` returns the value of the attribute ``whisker_color`` from state ``State``.
+
+.. comment The requested attribute may not exist in the specified state. In this case, a compile-time error is issued.
+
+The requested attribute may not exist in the specified state. In this case, a runtime error is issued.
+
+.. comment With the hashtable-based version of WOOPER,
+
+Requesting a non-existing attribute triggers a bad match. In the previous example, should the attribute ``whisker_color`` not have been defined, ``getAttribute/2`` would return::
+
+ {key_not_found,whisker_color}
+
+
+
+The ``getAttr/2`` Macro
+***********************
+
+Quite often, when having to retrieve the value of an attribute from a state variable, that variable will be named ``State``, notably when using directly the original state specified in the method declaration.
+
+Indeed, when a method needs a specific value, generally either this value was already available in the state it began with (then we can read it from ``State``), or is computed in the course of the method, in which case that value is most often already bound to a variable, which can then be re-used directly rather than be fetched from a state.
+
+In this case, the ``getAttr/2`` macro can be used: ``?getAttr(whisker_color)`` expands (literally) as ``getAttribute(State,whisker_color)``, and is a tad shorter.
+
+This is implemented as a macro so that the user remains aware that an implicit variable named ``State`` is then used.
+
+The less usual cases where a value must be read from a state variable that is *not* the initial ``State`` one occur mostly when wanting to read a value from the updated state returned by a ``execute*`` function call. In this case the ``getAttribute/2`` function should be used.
+
+
+
+
+
+Read-Modify-Write Operations
+____________________________
+
+Some additional helper functions are provided for the most common operations, to keep the syntax as lightweight as possible.
+
+
+
+The ``addToAttribute/3`` Function
+*********************************
+
+When having a numerical attribute, ``addToAttribute/3`` adds the specified number to the attribute.
+
+To be used like in::
+
+  NewState = addToAttribute(State,AttributeName,Value)
+
+
+For example::
+
+ MyState = addToAttribute(FirstState,a_numerical_attribute,6)
+
+In ``MyState``, the value of attribute ``a_numerical_attribute`` is increased of 6, compared to the one in ``FirstState``.
+
+Calling ``addToAttribute/3`` on a non-existing attribute will trigger a runtime error (``{key_not_found,AttributeName}``).
+
+
+If the attribute exists, but no addition can be performed on it (i.e. if it is meaningless for the type of the current value), a ``badarith`` runtime error will be issued.
+
+
+.. comment With the hashtable-based version of WOOPER:
+
+.. comment- if the target attribute does not exist, will trigger ``{{badmatch,undefined},[{hashtable,addToEntry,3},..``
+
+.. comment- if it exists but no addition can be performed on it (meaningless for the type of the current value), will trigger ``{badarith,[{hashtable,addToEntry,3},..``.
+
+
+
+The ``subtractFromAttribute/3`` Function
+****************************************
+
+When having a numerical attribute, ``subtractFromAttribute/3`` subtracts the specified number from the attribute.
+
+To be used like in::
+
+ NewState = subtractFromAttribute(State,AttributeName,Value)
+
+
+For example::
+
+ MyState = subtractFromAttribute(FirstState,a_numerical_attribute,7)
+
+
+In ``MyState``, the value of attribute ``a_numerical_attribute`` is decreased of 7, compared to the one in ``FirstState``.
+
+
+Calling ``subtractFromAttribute/3`` on a non-existing attribute will trigger a runtime error (``{key_not_found,AttributeName}``).
+If the attribute exists, but no subtraction can be performed on it (meaningless for the type of the current value), a ``badarith`` runtime error will be issued.
+
+
+.. comment With the hashtable-based version of WOOPER:
+
+.. comment - if the target attribute does not exist, will trigger ``{{badmatch,undefined},[{hashtable,subtractFromEntry,3},..``
+
+.. comment - if it exists but no addition can be performed on it (meaningless for the type of the current value), will trigger ``{badarith,[{hashtable,subtractFromEntry,3},..``.
+
+
+
+
+The ``toggleAttribute/2`` Function
+**********************************
+
+Flips the value of the specified (supposedly boolean) attribute: when having a boolean attribute, whose value is either ``true`` or ``false``, sets the opposite logical value to the current one.
+
+To be used like in::
+
+ NewState = toggleAttribute(State,BooleanAttributeName)
+
+
+For example::
+
+ NewState = toggleAttribute(State,a_boolean_attribute)
+
+
+Calling ``toggleAttribute/2`` on a non-existing attribute will trigger a runtime error (``{key_not_found,AttributeName}``). If the attribute exists, but has not a boolean value, a ``badarith`` runtime error will be issued.
+
+
+.. comment With the hashtable-based version of WOOPER:
+
+.. comment - if the target attribute does not exist, will trigger ``{{case_clause,undefined},[{hashtable,toggleEntry,2},..``.
+
+.. comment - if it exists but is neither true or false, will trigger ``{{case_clause,{value,..}},[{hashtable,toggleEntry,2},..``.
+
+
+
+The ``appendToAttribute/3`` Function
+************************************
+
+The corresponding signature is ``NewState = appendToAttribute(State,AttributeName,Element)``: when having a list attribute, appends specified element to the attribute list, in first position.
+
+For example, if ``a_list_attribute`` was already set to ``[see_you,goodbye]`` in ``State``, then after ``NewState = appendToAttribute(State,a_list_attribute,hello)``, the ``a_list_attribute`` attribute defined in ``NewState`` will be equal to ``[hello,see_you,goodbye]``.
+
+Calling ``appendToAttribute/3`` on a non-existing attribute will trigger a compile-time error. If the attribute exists, but is not a list, an ill-formed list will be created (ex: ``[8|false]`` when appending 8 to ``false``, which is not a list).
+
+With the hashtable-based version of WOOPER:
+
+- if the target attribute does not exist, will trigger ``{{badmatch,undefined},[{hashtable,appendToEntry,3},..``.
+
+- if it exists but is not already a list, it will not crash but will create an ill-formed list (ex: ``[8|false]`` when appending 8 to ``false``, which is not a list).
+
+
+
+The ``deleteFromAttribute/3`` Function
+**************************************
+
+The corresponding signature is ``NewState = deleteFromAttribute(State,AttributeName,Element)``: when having a list attribute, deletes first match of specified element from the attribute list.
+
+For example: ``NewState = deleteFromAttribute(State,a_list_attribute,hello)``, with the value corresponding to the ``a_list_attribute`` attribute in ``State`` variable being ``[goodbye,hello,cheers,hello,see_you]`` should return a state whose ``a_list_attribute`` attribute would be equal to ``[goodbye,cheers,hello,see_you]``, all other attributes being unchanged.
+
+If no element in the list matches the specified one, no error will be triggered and the list will be kept as is.
+
+
+Calling ``deleteFromAttribute/3`` on a non-existing attribute will trigger a compile-time error. If the attribute exists, but is not a list, a run-time error will be issued.
+
+With the hashtable-based version of WOOPER:
+
+- if the target attribute does not exist, will trigger ``{{badmatch,undefined},[{hashtable,deleteFromEntry,3},..``.
+
+- if it exists but is not already a list, it will trigger ``{function_clause,[{lists,delete,[..,..]},{hashtable,deleteFromEntry,3}``.
+
+
+
+
+The ``popFromAttribute/2`` Function
+***********************************
+
+The corresponding signature is ``{NewState,Head} = popFromAttribute(State,AttributeName)``: when having an attribute of type list, this function removes the head from the list and returns a pair made of the updated state (same state except that the corresponding list attribute has lost its head, it is equal to the list tail now) and of that head.
+
+For example: ``{NewState,Head} = popFromAttribute(State,a_list_attribute)``. If the value of the attribute ``a_list_attribute`` was ``[5,8,3]``, its new value (in ``NewState``) will be ``[8,3]`` and ``Head`` will be bound to ``5``.
+
+
+
+The ``addKeyValueToAttribute/4`` Function
+*****************************************
+
+The corresponding signature is ``NewState = addKeyValueToAttribute(State,AttributeName,Key,Value)``: when having an attribute whose value is a table, adds specified key/value pair to that table attribute.
+
+
+For example: ``TableState = setAttribute(State,my_table,table:new()), NewState = addKeyValueToAttribute(TableState,my_table,my_key,my_value)`` will result in having the attribute ``my_table`` in state variable ``TableState`` being a table with only one entry, whose key is ``my_key`` and whose value is ``my_value``.
+
+
+
+
+
+:raw-latex:`\pagebreak`
+
+
+Multiple Inheritance & Polymorphism
+-----------------------------------
+
+
+The General Case
+................
+
+Both multiple inheritance and polymorphism are automatically managed by WOOPER: even if our cat class does not define a ``getAge`` method, it can nevertheless readily be called on a cat instance, as it is inherited from its mother classes (here from ``class_Creature``, an indirect mother class).
+
+Therefore all creature instances can be handled the same, regardless of their actual classes::
+
+  % Inherited methods work exactly the same as methods defined
+  % directly in the class:
+  MyCat ! {getAge,[],self()},
+  receive
+	{wooper_result,Age} ->
+	  io:format( "This is a ~B year old cat.", [Age] )
+  end,
+
+  % Polymorphism is immediate:
+  % (class_Platypus inheriting too from class_Mammal,
+  % hence from class_Creature).
+  MyPetList = [MyCat,MyPlatypus],
+  foreach(
+	fun(AnyCreature) ->
+	  AnyCreature ! {getAge,[],self()},
+	  receive
+		{wooper_result,Age} ->
+		  io:format("This is a ~B year old creature.",[Age])
+	end,
+	MyPetList).
+
+Running this code should output something like::
+
+ This is a 4 year old creature.
+ This is a 9 year old creature.
+
+
+The point here is that the implementer does not have to know what are the actual classes of the instances that are interacted with, provided that they share a common ancestor: polymorphism allows to handle them transparently.
+
+
+The Special Case of Diamond-Shaped Inheritance
+..............................................
+
+In the case of a `diamond-shaped inheritance <http://en.wikipedia.org/wiki/Diamond_problem>`_, as the method table is constructed in the order specified in the declaration of the superclasses, like in::
+
+ get_superclasses() ->
+   [class_X,class_Y,...]).
+
+and as child classes override mother ones, when an incoming WOOPER message arrives the selected **method** should be the one defined in the last inheritance branch of the last child (if any), otherwise the one defined in the next to last branch of the last child, etc.
+
+Generally speaking, overriding in that case the relevant methods that were initially defined in the child class at the base of the diamond, in order that they perform explicitly a direct call to the wanted module, is by far the most reasonable solution, in terms of clarity and maintainability, compared to guessing which version of the method in the inheritance graph should be called.
+
+Regarding the instance state, the **attributes** are set by the constructors, and the developer can select in which order the direct mother classes should be constructed.
+
+However, in such an inheritance scheme, the constructor of the class that sits at the top of a given diamond will be called multiple times.
+
+Any side-effect that it would induce would then occur as many times as this class is a common ancestor of the actual class; it may be advisable to create idempotent constructors in that case.
+
+.. Note:: More generally speaking, diamond-shaped inheritance is seldom necessary. More often than not, it is the consequence of a less-than-ideal OOP design, and should be avoided anyway.
+
+
+
+
+
+
+:raw-latex:`\pagebreak`
+
+Life-Cycle
+----------
+
+Basically, creation and destruction of instances are managed respectively thanks to the ``new``/``new_link`` and the ``delete`` operators (all these operators are WOOPER-reserved function names, for all arities), like in::
+
+  MyCat = class_Cat:new(Age,Gender,FurColor,WhiskerColor),
+  MyCat ! delete.
+
+
+
+
+Instance Creation: ``new``/``new_link`` And ``construct``
+.........................................................
+
+
+Role of a  ``new`` /``construct`` Pair
+______________________________________
+
+Whereas the purpose of ``new`` / ``new_link`` is to create a working instance on the user's behalf, the role of ``construct`` is to initialise an instance of that class while being able to be chained for inheritance, as explained later.
+
+Such an initialisation is of course part of the instance creation: all calls to any of the``new`` operators result in an underlying call to the (single) corresponding ``construct`` operator.
+
+For example, both creations stemming from ``MyCat = class_Cat:new(A,B,C,D)`` and ``MyCat = class_Cat:new_link(A,B,C,D)`` will rely on ``class_Cat:construct/5`` to set up a proper initial state for the ``MyCat`` instance; the same ``class_Cat:construct(State,A,B,C,D)`` will be called for all creation cases.
+
+The ``new_link`` operator behaves exactly as the ``new`` operator, except that it creates an instance that is Erlang-linked with the process that called that operator, exactly like ``spawn_link`` behaves compared to ``spawn`` [#]_.
+
+.. [#] For example it induces no race condition between linking and termination in the case of a very short-lived spawned process.
+
+
+The ``new`` and ``new_link`` operators are automatically defined by WOOPER, but they rely on the class-specific user-defined ``construct`` operator (only WOOPER is expected to make use of it). This ``construct`` operator is the one that must be implemented by the class developer (the machinery related to ``new`` being managed by WOOPER).
+
+Currently a single ``construct`` operator can be defined, i.e. a single arity is supported [#]_, possibly with multiple clauses that, as usual, are selected based on pattern-matching.
+
+.. [#] Even if generally workarounds can easily be devised (for example by tagging construction parameters with atom so that a single arity can federate all cases), this limitation is planned to be removed.
+
+
+For example::
+
+  % Selection based on pattern-matching:
+  MyFirstDog  = Class_Dog:new(create_from_weight,4.4).
+  MySecondDog = Class_Dog:new(create_from_colors,[sand,white]).
+
+
+
+
+The Various Ways of Creating An Instance
+________________________________________
+
+As shown with the ``new_link`` operator, even for a given set of construction parameters, many variations of ``new`` can be of use: linked or not, synchronous or not, with a time-out or not, on current node or on a user-specified one, etc.
+
+For a class whose instances can be constructed from ``N`` actual parameters, the following construction operators, detailed in the next section, are built-in:
+
+- if instance is to be created on the **local** node:
+
+  - non-blocking creation: ``new/N`` and ``new_link/N``
+  - blocking creation: ``synchronous_new/N`` and ``synchronous_new_link/N``
+  - blocking creation with time-out: ``synchronous_timed_new/N`` and ``synchronous_timed_new_link/N``
+
+- if instance is to be created on any specified **remote** node:
+
+  - non-blocking creation: ``remote_new/N+1`` and ``remote_new_link/N+1``
+  - blocking creation: ``remote_synchronous_new/N+1`` and ``remote_synchronous_new_link/N+1``
+  - blocking creation with time-out: ``remote_synchronous_timed_new/N+1`` and ``remote_synchronous_timed_new_link/N+1``
+
+.. Note:: All ``remote_*`` variations require one more parameter (to be specified first), since the remote node on which the instance should be created has of course to be specified.
+
+
+All supported ``new`` variations are detailed below.
+
+
+Asynchronous new
+****************
+
+This corresponds to the plain ``new``, ``new_link`` operators etc. discussed earlier, relying internally on the usual ``spawn*`` primitives . These basic operators are **asynchronous** (non-blocking): they trigger the creation of a new instance, and return immediately, without waiting for it to complete, and the execution of the calling process continues while (hopefully, i.e. with no guarantee) the instance is being created and executed.
+
+
+Synchronous new
+***************
+
+As mentioned, with the previous asynchronous forms, the caller has no way of knowing when the spawned instance is up and running (if it ever happens).
+
+Thus two counterpart operators, ``synchronous_new/synchronous_new_link`` are also available.
+
+They behave like ``new/new_link`` except they will return only when (and if) the created instance is up and running: they are blocking, synchronous, operators.
+
+For example, after ``MyMammal = class_Mammal:synchronous_new(...)``, one knows that the ``MyMammal`` instance is fully created and waiting for incoming messages.
+
+The implementation of these synchronous operations relies on a message (precisely: ``{spawn_successful,InstancePid}``) being automatically sent by the created instance to the WOOPER code on the caller side, so that the ``synchronous_new`` operator will return to the user code only once successfully constructed and ready to handle messages.
+
+
+Timed Synchronous new
+*********************
+
+Note that, should the instance creation fail, the caller of a synchronous new would then be blocked for ever, as the awaited message would actually never be sent by the failed new instance.
+
+This is why the ``synchronous_timed_new*`` operators have been introduced: if the caller-side time-out (whose default duration is 5 seconds) expires while waiting for the created instance to answer, then they will throw an appropriate exception, among:
+
+- ``{synchronous_time_out,InstanceModule}``
+- ``{synchronous_linked_time_out,InstanceModule}``
+- ``{remote_synchronous_time_out,Node,InstanceModule}``
+- ``{remote_synchronous_linked_time_out,Node,InstanceModule}``
+- ``{synchronous_time_out,InstanceModule}``
+- ``{synchronous_linked_time_out,InstanceModule}``
+- ``{remote_synchronous_time_out,Node,InstanceModule}``
+- ``{remote_synchronous_linked_time_out,Node,InstanceModule}``
+
+Then the caller may or may not catch this exception.
+
+
+.. comment return the ``time_out`` atom instead of the PID of the created instance. The caller is then able to check whether the creation succeeded thanks to a simple pattern-matching.
+
+
+Remote new
+**********
+
+Exactly like a process might be spawned on another Erlang node, a WOOPER instance can be created on any user-specified available Erlang node.
+
+To do so, the ``remote_*new*`` variations shall be used. They behave exactly like their local counterparts, except that they take an additional information, as first parameter: the node on which the specified instance must be created.
+
+For example::
+
+  MyCat = class_Cat:remote_new(TargetNode, Age, Gender,
+							   FurColor, WhiskerColor).
+
+
+Of course:
+
+- the remote node must be already existing
+- the current node must be able to connect to it (shared cookie)
+- all modules that the instance will make use of must be available on the remote node, including the ones of all relevant classes (i.e. the class of the instance but also its whole class hierarchy)
+
+All variations of the ``new`` operator are always defined automatically by WOOPER: nothing special is to be done for them, provided of course that the constructor they all rely on has been defined.
+
+
+
+Some Examples Of Instance Creation
+__________________________________
+
+Knowing that a cat can be created out of four parameters (Age, Gender, FurColor, WhiskerColor), various cat instances could be created thanks to::
+
+  % Local asynchronous creation:
+  MyFirstCat = class_Cat:new(1,male,brown,white),
+
+  % The same, but a crash of this cat will crash the current process too:
+  MySecondCat = class_Cat:new_link(2,female,black,white),
+
+  % This cat will be created on OtherNode, and the call will return only
+  % once it is up and running or once the creation failed. As moreover the
+  % cat instance is linked to the instance process, it may crash this
+  % calling process:
+  MyThirdCat = class_Cat:remote_synchronous_timed_new_link(OtherNode,3,
+	male,grey,black),
+  [..]
