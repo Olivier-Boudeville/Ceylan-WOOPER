@@ -14,7 +14,7 @@
 
 :raw-html:`<a name="wooper_top"></a>`
 
-:raw-html:`<div class="banner"><p><em>WOOPER documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper-1.0.html">browse mirror</a> <a href="wooper.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[WOOPER]%20Remark">mail us</a></p></div>`
+:raw-html:`<div class="banner"><p><em>WOOPER documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper.html">browse mirror</a> <a href="wooper.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[WOOPER]%20Remark">mail us</a></p></div>`
 
 
 
@@ -38,15 +38,10 @@
 
 The latest version of this documentation is to be found at the `official WOOPER website <http://wooper.esperide.org>`_ (``http://wooper.esperide.org``).
 
-:raw-html:`This WOOPER documentation is also available in the PDF format: see <a href="wooper-1.0.pdf">wooper-1.0.pdf</a> (mirrored <a href="http://olivier-boudeville.github.io/Ceylan-WOOPER/wooper-1.0.html">here</a>).`
+:raw-html:`This WOOPER documentation is also available in the PDF format (see <a href="wooper.pdf">wooper.pdf</a>), and mirrored <a href="http://olivier-boudeville.github.io/Ceylan-WOOPER/wooper.html">here</a>.`
 
-:raw-latex:`The documentation is also mirrored \href{https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper-1.0.html}{here}.`
+:raw-latex:`The documentation is also mirrored \href{https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper.html}{here}.`
 
-
-.. comment Latest stable WOOPER archives are:
-
-.. - `wooper-1.0.tar.bz2 <http://downloads.sourceforge.net/ceylan/wooper-1.0.tar.bz2>`_
-.. - `wooper-1.0.zip <http://downloads.sourceforge.net/ceylan/wooper-1.0.zip>`_
 
 
 
