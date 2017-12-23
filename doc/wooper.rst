@@ -5,6 +5,8 @@
 
 .. comment stylesheet specified through GNUmakefile
 
+.. Note: Not able to obtain a proper Pygments support for code extract (ex: no colors).
+
 
 .. role:: raw-html(raw)
    :format: html
@@ -33,7 +35,8 @@
 :Organisation: Copyright (C) 2008-2017 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation Date: Thursday, February 25, 2008
-:Lastly Updated: Saturday, December 16, 2017
+:Lastly Updated: Saturday, December 23, 2017
+
 
 
 The latest version of this documentation is to be found at the `official WOOPER website <http://wooper.esperide.org>`_ (``http://wooper.esperide.org``).
@@ -46,7 +49,6 @@ The latest version of this documentation is to be found at the `official WOOPER 
 
 
 :raw-latex:`\pagebreak`
-
 
 
 
@@ -125,7 +127,9 @@ Here is a simple example of how a WOOPER class can be defined and used.
 
 It shows ``new/delete`` operators, method calling (both request and oneway), and inheritance.
 
-A cat is here a viviparous mammal, as defined below (this is a variation of our more complete `class_Cat.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat.erl>`__ example)::
+A cat is here a viviparous mammal, as defined below (this is a variation of our more complete `class_Cat.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat.erl>`__ example):
+
+.. code:: erlang
 
  -module(class_Cat).
 
@@ -309,7 +313,9 @@ A WOOPER class can inherit from other classes, in which case the state and behav
 
 Being in a **multiple inheritance** context, a given class can have any number (``[0..n]``) of direct mother classes, which themselves may have mother classes, and so on. This leads to a class hierarchy that forms a graph.
 
-This is declared in WOOPER thanks to the ``wooper_superclasses`` define. For example, a class with no mother class should specify, once having declared its module::
+This is declared in WOOPER thanks to the ``wooper_superclasses`` define. For example, a class with no mother class should specify, once having declared its module:
+
+.. code:: erlang
 
  -define(wooper_superclasses,[]).
 
@@ -318,7 +324,9 @@ This is declared in WOOPER thanks to the ``wooper_superclasses`` define. For exa
 
 .. comment .. [#] Such WOOPER-related functions are already automatically exported by WOOPER. As an added bonus, this allows the class developer to be notified whenever he forgets to define them.
 
-As for our cat, this superb animal could be modelled both as a mammal (itself a specialised creature) and a viviparous being [#]_. Hence its direct inheritance could be defined as::
+As for our cat, this superb animal could be modelled both as a mammal (itself a specialised creature) and a viviparous being [#]_. Hence its direct inheritance could be defined as:
+
+.. code:: erlang
 
  -define(wooper_superclasses,[class_Mammal,class_ViviparousBeing]).
 
@@ -406,7 +414,9 @@ Their arity should be equal to the number of parameters they should be called wi
 
 This ``State`` variable defined by WOOPER can be somehow compared to the ``self`` parameter of Python, or to the ``this`` hidden pointer of C++. That state is automatically kept by WOOPER instances in their main loop, and automatically prepended, as first element, to the parameters of incoming method calls.
 
-In our example, the declarations could therefore result in::
+In our example, the declarations could therefore result in:
+
+.. code:: erlang
 
  -define(wooper_method_export, canEat/2, getWhiskerColor/1,
 		 setWhiskerColor/2).
@@ -417,10 +427,12 @@ In our example, the declarations could therefore result in::
 
 Some method names are reserved for WOOPER; notably no user method should have its name prefixed with ``wooper``.
 
-.. comment In our example, the declarations could therefore result in::
+.. comment In our example, the declarations could therefore result in:
   get_member_methods() ->
 	[ {getMewVolume,1}, {canEat,2, [public,final]},
 	  {getWhiskerColor,1,[public,const]}, {setWhiskerColor,2,protected} ].
+
+
  More generally a member method can be declared with:
 
  - just its name and full arity (including the ``State`` parameter), ex: ``{getMewVolume,1}``
@@ -482,7 +494,9 @@ When the method is expected to return a result (i.e. when it is a request method
 
 Therefore the ``self()`` parameter in the call tuples below corresponds to the PID *of the caller*, while ``MyCat`` is bound to the PID *of the target instance*.
 
-The three methods previously discussed would indeed be called that way::
+The three methods previously discussed would indeed be called that way:
+
+.. code:: erlang
 
   % Calling the canEat request of our cat instance:
   MyCat ! {canEat,soup,self()},
@@ -563,23 +577,31 @@ So these three potential information (request name, parameters, reference of the
 
 If only one parameter is to be sent, and if that parameter is not a list, then this can become ``{request_name,Arg,self()}``.
 
-For example::
+For example:
+
+.. code:: erlang
 
  MyCat ! {getAge,[],self()}
 
 
-or::
+or:
+
+.. code:: erlang
 
  Douglas ! {askQuestionWithHint,[{meaning_of,"Life"},{maybe,42}],self()}
 
-or::
+or:
+
+.. code:: erlang
 
  MyCalculator ! {sum,[[1,2,4]],self()}.
 
 
 The actual result ``R``, as determined by the method, is sent back as an Erlang message, which is a ``{wooper_result,R}`` pair, to help the caller pattern-matching the WOOPER messages in its mailbox.
 
-``receive`` should then be used by the caller to retrieve the request result, like in the case of this example of a 2D point instance::
+``receive`` should then be used by the caller to retrieve the request result, like in the case of this example of a 2D point instance:
+
+.. code:: erlang
 
  MyPoint ! {getCoordinates,[],self()},
  receive
@@ -705,7 +727,10 @@ Caller-Side Error Management
 ****************************
 
 As we can see, errors can be better discriminated if needed, on the caller side.
-Therefore one could make use of that information, as in::
+Therefore one could make use of that information, as in:
+
+.. code:: erlang
+
 
   MyPoint ! {getCoordinates,[],self()},
   receive
@@ -728,7 +753,9 @@ Therefore one could make use of that information, as in::
   end.
 
 
-However defensive development is not really favoured in Erlang, one may let the caller crash on unexpected return instead. Therefore generally one may rely simply on matching the message sent in case of success [#]_::
+However defensive development is not really favoured in Erlang, one may let the caller crash on unexpected return instead. Therefore generally one may rely simply on matching the message sent in case of success [#]_:
+
+.. code:: erlang
 
   MyPoint ! {getCoordinates,[],self()},
   receive
@@ -754,7 +781,9 @@ For the sake of clarity, this variable should preferably always be named ``State
 
 A method must always return at least the newer instance state, even if the state did not change.
 
-In this case the initial state parameter is directly returned, as is, like in::
+In this case the initial state parameter is directly returned, as is, like in:
+
+.. code:: erlang
 
   getWhiskerColor(State) ->
 	  ?wooper_return_state_result(State,?getAttr(whisker_color) ).
@@ -778,7 +807,10 @@ Thus the caller will only receive the **result** of a method, if it is a request
 
 More precisely, depending on its returning a specific result, the method signature will correspond either to the one of a request or of a oneway, and will use in its body, respectively, either the ``wooper_return_state_result`` or the ``wooper_return_state_only`` macro to ensure that a state *and* a result are returned, or just a state.
 
-A good practise is to add a comment to each method definition, and to specify whether it is a request or a oneway, if it is a ``const`` method, etc. For example, the previous method could be best written as::
+A good practise is to add a comment to each method definition, and to specify whether it is a request or a oneway, if it is a ``const`` method, etc. For example, the previous method could be best written as:
+
+
+.. code:: erlang
 
  % Returns the current color of the whiskers of that cat instance.
  % (const request)
@@ -795,7 +827,9 @@ ____________
 
 Requests will use ``?wooper_return_state_result(NewState,Result)``: the new state will be kept by the instance, whereas the result will be sent to the caller. Hence ``wooper_return_state_result`` means that the method returns a state **and** a result.
 
-For example a const request will return an unchanged state, and thus will be just useful for its result (and possible side-effects)::
+For example a const request will return an unchanged state, and thus will be just useful for its result (and possible side-effects):
+
+.. code:: erlang
 
  getAge(State) ->
 	 ?wooper_return_state_result(State,?getAttr(age)).
@@ -803,13 +837,17 @@ For example a const request will return an unchanged state, and thus will be jus
 
 All methods are of course given the parameters specified at their call.
 
-For example, we can declare::
+For example, we can declare:
+
+.. code:: erlang
 
  giveBirth(State,NumberOfMaleChildren,NumberOfFemaleChildren) ->
 		  [..]
 
 
-And then we may call it, in the case of a cat having 2 male kitten and 3 female ones, with::
+And then we may call it, in the case of a cat having 2 male kitten and 3 female ones, with:
+
+.. code:: erlang
 
   MyCat ! {giveBirth,[2,3],self()}.
 
@@ -818,20 +856,27 @@ Requests can access to one more information than oneways: the PID of the caller 
 
 However WOOPER keeps track of this information, which remains available to requests.
 
-The caller PID can indeed be retrieved from a request body by using the ``getSender`` macro, which is automatically managed by WOOPER::
+The caller PID can indeed be retrieved from a request body by using the ``getSender`` macro, which is automatically managed by WOOPER:
+
+.. code:: erlang
 
   giveBirth(State,NumberOfMaleChildren,NumberOfFemaleChildren) ->
 	CallerPID = ?getSender(),
 	[..]
 
 
-Thus a request has natively access to its caller PID, i.e. with no need to specify it in the parameters as well as in the third element of the call tuple; so, instead of having to define::
+Thus a request has natively access to its caller PID, i.e. with no need to specify it in the parameters as well as in the third element of the call tuple; so, instead of having to define:
+
+.. code:: erlang
 
  MyCat ! {giveBirth,[2,3,self()],self()}
 
-one can rely on only::
+one can rely on only:
+
+.. code:: erlang
 
  MyCat ! {giveBirth,[2,3],self()}
+
 
 while still letting the possibility for the called request (here ``giveBirth/3``, for a state and two parameters) to access the caller PID thanks to the ``getSender`` macro, and maybe store it for a later use or do anything appropriate with it.
 
@@ -848,19 +893,25 @@ ___________
 
 Oneway will rely on the ``?wooper_return_state_only(NewState)`` macro: the instance state will be updated, but no result will be returned to the caller, which is not even known.
 
-For example::
+For example:
+
+.. code:: erlang
 
   setAge(State,NewAge) ->
 	?wooper_return_state_only( setAttribute(State,age,NewAge) ).
 
 
-This oneway can be called that way::
+This oneway can be called that way:
+
+.. code:: erlang
 
   MyCat ! {setAge,4}.
   % No result to expect.
 
 
-Oneways may also be ``const``, i.e. leave the state unchanged, only being called for side-effects, for example::
+Oneways may also be ``const``, i.e. leave the state unchanged, only being called for side-effects, for example:
+
+.. code:: erlang
 
   displayAge(State) ->
 	io:format("My age is ~B~n.",[ ?getAttr(age) ]),
@@ -887,7 +938,9 @@ The two ``wooper_return_state_*`` macros have been introduced so that the unwary
 Type Specifications
 ___________________
 
-Although doing so is optional, WOOPER strongly recommends declaring type specifications as well (and provides suitable constructs for that), like in::
+Although doing so is optional, WOOPER strongly recommends declaring type specifications as well (and provides suitable constructs for that), like in:
+
+.. code:: erlang
 
  % Returns the current color of the whiskers of that cat instance.
  % (const request)
@@ -897,7 +950,9 @@ Although doing so is optional, WOOPER strongly recommends declaring type specifi
 
 (of course the developer is responsible for the definition of the ``color()`` type here)
 
-Similarly, the aforementioned ``declareBirthday/1`` oneway could be defined as::
+Similarly, the aforementioned ``declareBirthday/1`` oneway could be defined as:
+
+.. code:: erlang
 
   % Declares the birthday of this creature: increments its age.
   % (oneway)
@@ -933,17 +988,23 @@ More precisely, **executeRequest** is ``executeRequest/2`` or ``executeRequest/3
 
 ``executeRequest`` returns a pair made of the new state and of the result.
 
-For example, for a request taking more than one parameter, or one list parameter::
+For example, for a request taking more than one parameter, or one list parameter:
+
+.. code:: erlang
 
  {NewState,Result} = executeRequest(CurrentState, myRequestName,
 									["hello", 42])
 
-For a request taking exactly one, non-list, parameter::
+For a request taking exactly one, non-list, parameter:
+
+.. code:: erlang
 
  {NewState,NewCounter} = executeRequest(CurrentState,
 								  addToCurrentCounter, 78)
 
-For a request taking no parameter::
+For a request taking no parameter:
+
+.. code:: erlang
 
  {NewState,Sentence} = executeRequest(CurrentState, getLastSentence)
 
@@ -954,17 +1015,23 @@ Regarding now **executeOneway**, it is either ``executeOneway/2`` or ``executeOn
 
 ``executeOneway`` returns the new state.
 
-For example, a oneway taking more than one parameter, or one list parameter::
+For example, a oneway taking more than one parameter, or one list parameter:
+
+.. code:: erlang
 
  NewState = executeOneway(CurrentState,say,[ "hello", 42 ])
 
 
-For a oneway taking exactly one (non-list) parameter::
+For a oneway taking exactly one (non-list) parameter:
+
+.. code:: erlang
 
  NewState = executeOneway(CurrentState,setAge,78)
 
 
-For a oneway taking no parameter::
+For a oneway taking no parameter:
+
+.. code:: erlang
 
  NewState = executeOneway(CurrentState,declareBirthday)
 
@@ -987,7 +1054,9 @@ These functions, which are ``executeRequestWith/{3,4}`` and ``executeOnewayWith/
 	This mother class does not have to have specifically defined or overridden that method: this method will just be called in the context of that class, as if it was an instance of the mother class rather than one of the actual child class.
 
 
-In our example, we should thus use simply::
+In our example, we should thus use simply:
+
+.. code:: erlang
 
  AgeState = executeOnewayWith(State,class_Creature,setAge,NewAge)
 
@@ -1011,13 +1080,17 @@ They thus do not operate on PID, they are just to be called thanks to their modu
 .. comment	[ {get_default_whisker_color,0}, {compute_mew_frequency,2} ].
 
 
-Static methods are to be listed by the class developer thanks to the ``wooper_static_method_export`` define, like in::
+Static methods are to be listed by the class developer thanks to the ``wooper_static_method_export`` define, like in:
+
+.. code:: erlang
 
  -define( wooper_static_method_export, get_default_whisker_color/0,
-		  determine_croquette_appeal/1foo_bar/1 ).
+		  determine_croquette_appeal/1, foo_bar/1 ).
 
 
-The static methods are automatically exported by WOOPER, so that they can be readily called from any context, as in::
+The static methods are automatically exported by WOOPER, so that they can be readily called from any context, as in:
+
+.. code:: erlang
 
   PossibleColor = class_Cat:get_default_whisker_color(),
   [..]
@@ -1045,7 +1118,9 @@ The state of an instance (corresponding to the one that is given by WOOPER as fi
 
 Each attribute is designated by a name, defined as an atom, and is associated to a mutable value, which can be any Erlang term.
 
-The current state of an instance can be thought as a list of ``{attribute_name,attribute_value}`` pairs, like in::
+The current state of an instance can be thought as a list of ``{attribute_name,attribute_value}`` pairs, like in:
+
+.. code:: erlang
 
  [ {color,black}, {fur_color,sand}, {age,13}, {name,"Tortilla"} ].
 
@@ -1150,7 +1225,9 @@ _______________
 The ``setAttribute/3`` Function
 *******************************
 
-Setting an attribute (creating and/or modifying it) should be done with the ``setAttribute/3`` function::
+Setting an attribute (creating and/or modifying it) should be done with the ``setAttribute/3`` function:
+
+.. code:: erlang
 
  NewState = setAttribute(AState,AttributeName,NewAttributeValue)
 
@@ -1167,7 +1244,9 @@ In various cases, notably in constructors, one needs to define a series of attri
 
 A better solution is to use the ``setAttributes/2`` function (note the plural) to set a list of attribute name/attribute value pairs in a row.
 
-For example::
+For example:
+
+.. code:: erlang
 
  ConstructedState = setAttributes(MyState,[{age,3},
 										   {whisker_color,white}])
@@ -1222,9 +1301,12 @@ A better approach is instead to define all possible attributes directly from the
 The ``getAttribute/2`` Function
 *******************************
 
-Getting the value of an attribute is to be done with the ``getAttribute/2`` function::
+Getting the value of an attribute is to be done with the ``getAttribute/2`` function:
+
+.. code:: erlang
 
  AttributeValue = getAttribute(AState,AttributeName)
+
 
 For example, ``MyColor = getAttribute(State,whisker_color)`` returns the value of the attribute ``whisker_color`` from state ``State``.
 
@@ -1234,7 +1316,9 @@ The requested attribute may not exist in the specified state. In this case, a ru
 
 .. comment With the hashtable-based version of WOOPER,
 
-Requesting a non-existing attribute triggers a bad match. In the previous example, should the attribute ``whisker_color`` not have been defined, ``getAttribute/2`` would return::
+Requesting a non-existing attribute triggers a bad match. In the previous example, should the attribute ``whisker_color`` not have been defined, ``getAttribute/2`` would return:
+
+.. code:: erlang
 
  {key_not_found,whisker_color}
 
@@ -1269,12 +1353,16 @@ The ``addToAttribute/3`` Function
 
 When having a numerical attribute, ``addToAttribute/3`` adds the specified number to the attribute.
 
-To be used like in::
+To be used like in:
+
+.. code:: erlang
 
   NewState = addToAttribute(State,AttributeName,Value)
 
 
-For example::
+For example:
+
+.. code:: erlang
 
  MyState = addToAttribute(FirstState,a_numerical_attribute,6)
 
@@ -1299,12 +1387,16 @@ The ``subtractFromAttribute/3`` Function
 
 When having a numerical attribute, ``subtractFromAttribute/3`` subtracts the specified number from the attribute.
 
-To be used like in::
+To be used like in:
+
+.. code:: erlang
 
  NewState = subtractFromAttribute(State,AttributeName,Value)
 
 
-For example::
+For example:
+
+.. code:: erlang
 
  MyState = subtractFromAttribute(FirstState,a_numerical_attribute,7)
 
@@ -1330,12 +1422,16 @@ The ``toggleAttribute/2`` Function
 
 Flips the value of the specified (supposedly boolean) attribute: when having a boolean attribute, whose value is either ``true`` or ``false``, sets the opposite logical value to the current one.
 
-To be used like in::
+To be used like in:
+
+.. code:: erlang
 
  NewState = toggleAttribute(State,BooleanAttributeName)
 
 
-For example::
+For example:
+
+.. code:: erlang
 
  NewState = toggleAttribute(State,a_boolean_attribute)
 
@@ -1422,7 +1518,9 @@ The General Case
 
 Both multiple inheritance and polymorphism are automatically managed by WOOPER: even if our cat class does not define a ``getAge`` method, it can nevertheless readily be called on a cat instance, as it is inherited from its mother classes (here from ``class_Creature``, an indirect mother class).
 
-Therefore all creature instances can be handled the same, regardless of their actual classes::
+Therefore all creature instances can be handled the same, regardless of their actual classes:
+
+.. code:: erlang
 
   % Inherited methods work exactly the same as methods defined
   % directly in the class:
@@ -1457,7 +1555,9 @@ The point here is that the implementer does not have to know what are the actual
 The Special Case of Diamond-Shaped Inheritance
 ..............................................
 
-In the case of a `diamond-shaped inheritance <http://en.wikipedia.org/wiki/Diamond_problem>`_, as the method table is constructed in the order specified in the declaration of the superclasses, like in::
+In the case of a `diamond-shaped inheritance <http://en.wikipedia.org/wiki/Diamond_problem>`_, as the method table is constructed in the order specified in the declaration of the superclasses, like in:
+
+.. code:: erlang
 
  get_superclasses() ->
    [class_X,class_Y,...]).
@@ -1484,7 +1584,9 @@ Any side-effect that it would induce would then occur as many times as this clas
 Life-Cycle
 ----------
 
-Basically, creation and destruction of instances are managed respectively thanks to the ``new``/``new_link`` and the ``delete`` operators (all these operators are WOOPER-reserved function names, for all arities), like in::
+Basically, creation and destruction of instances are managed respectively thanks to the ``new``/``new_link`` and the ``delete`` operators (all these operators are WOOPER-reserved function names, for all arities), like in:
+
+.. code:: erlang
 
   MyCat = class_Cat:new(Age,Gender,FurColor,WhiskerColor),
   MyCat ! delete.
@@ -1517,10 +1619,12 @@ Currently a single ``construct`` operator can be defined, i.e. a single arity is
 .. [#] Even if generally workarounds can easily be devised (for example by tagging construction parameters with atom so that a single arity can federate all cases), this limitation is planned to be removed.
 
 
-For example::
+For example:
+
+.. code:: erlang
 
   % Selection based on pattern-matching:
-  MyFirstDog  = Class_Dog:new(create_from_weight,4.4).
+  MyFirstDog  = Class_Dog:new(create_from_weight,4.4),
   MySecondDog = Class_Dog:new(create_from_colors,[sand,white]).
 
 
@@ -1600,7 +1704,9 @@ Exactly like a process might be spawned on another Erlang node, a WOOPER instanc
 
 To do so, the ``remote_*new*`` variations shall be used. They behave exactly like their local counterparts, except that they take an additional information, as first parameter: the node on which the specified instance must be created.
 
-For example::
+For example:
+
+.. code:: erlang
 
   MyCat = class_Cat:remote_new(TargetNode, Age, Gender,
 							   FurColor, WhiskerColor).
@@ -1619,7 +1725,9 @@ All variations of the ``new`` operator are always defined automatically by WOOPE
 Some Examples Of Instance Creation
 __________________________________
 
-Knowing that a cat can be created out of four parameters (Age, Gender, FurColor, WhiskerColor), various cat instances could be created thanks to::
+Knowing that a cat can be created out of four parameters (Age, Gender, FurColor, WhiskerColor), various cat instances could be created thanks to:
+
+.. code:: erlang
 
   % Local asynchronous creation:
   MyFirstCat = class_Cat:new(1,male,brown,white),
@@ -1652,7 +1760,9 @@ In the context of class inheritance, the ``construct`` operators are expected to
 
 Hence they always take the current state of the instance being created as a starting base, and returns it once updated, first from the direct mother classes, then by this class itself.
 
-For example, let's suppose ``class_Cat`` inherits directly both from ``class_Mammal`` and from ``class_ViviparousBeing``, has only one attribute (``whisker_color)`` of its own, and that a new cat is to be created out of three pieces of information::
+For example, let's suppose ``class_Cat`` inherits directly both from ``class_Mammal`` and from ``class_ViviparousBeing``, has only one attribute (``whisker_color)`` of its own, and that a new cat is to be created out of three pieces of information:
+
+.. code:: erlang
 
   [..]
   get_superclasses() ->
@@ -1672,7 +1782,9 @@ For example, let's suppose ``class_Cat`` inherits directly both from ``class_Mam
 
 The fact that the ``Mammal`` class itself inherits from the ``Creature`` class does not have to appear here: it is to be managed directly by ``class_Mammal:construct`` (at any given inheritance level, only direct mother classes must be taken into account).
 
-One should ensure that, in constructors, the successive states are always built from the last updated one, unlike::
+One should ensure that, in constructors, the successive states are always built from the last updated one, unlike:
+
+.. code:: erlang
 
   % WRONG, the age update is lost:
   construct(State,Age,Gender) ->
@@ -1681,7 +1793,9 @@ One should ensure that, in constructors, the successive states are always built 
 	setAttribute(State,gender,Gender),
 
 
-This would be correct::
+This would be correct:
+
+.. code:: erlang
 
   % RIGHT but a bit clumsy:
   construct(State,Age,Gender) ->
@@ -1689,7 +1803,9 @@ This would be correct::
 	setAttribute(AgeState,gender,Gender).
 
 
-Recommended form::
+Recommended form:
+
+.. code:: erlang
 
   % BEST:
   construct(State,Age,Gender) ->
@@ -1709,6 +1825,7 @@ Recommended form::
 .. Finally, a class can define multiple constructors: the proper one will be called, based on its arity (determined thanks to the number of parameters specified) and on pattern-matching performed on these parameters, to select the relevant clause of the constructor.
 
 Finally, a class can define multiple clauses for its constructor: the proper one will be called based on the pattern-matching performed on these parameters.
+
 
 Instance Deletion
 .................
@@ -1732,7 +1849,9 @@ WOOPER will automatically make use of any user-defined destructor, otherwise the
 Asynchronous Destruction: using ``destruct/1``
 ______________________________________________
 
-More precisely, either the class implementer does not define at all a ``destruct/1`` operator (and therefore uses the default do-nothing destructor), or it defines it explicitly, like in::
+More precisely, either the class implementer does not define at all a ``destruct/1`` operator (and therefore uses the default do-nothing destructor), or it defines it explicitly, like in:
+
+.. code:: erlang
 
  destruct(State) ->
    io:format("An instance of class ~w is being deleted now!",[?MODULE]),
@@ -1753,7 +1872,9 @@ Note that the destructors for direct mother classes will be called in the revers
 Synchronous Destruction: using ``synchronous_delete/1``
 _______________________________________________________
 
-WOOPER automatically defines as well a way of deleting *synchronously* a given instance: a caller can request a synchronous (blocking) deletion of that instance so that, once notified of the deletion, it knows for sure the instance does not exist anymore, like in::
+WOOPER automatically defines as well a way of deleting *synchronously* a given instance: a caller can request a synchronous (blocking) deletion of that instance so that, once notified of the deletion, it knows for sure the instance does not exist anymore, like in:
+
+.. code:: erlang
 
   InstanceToDelete ! {synchronous_delete,self()},
   % Then the caller can block as long as the deletion did not occur:
@@ -1788,7 +1909,9 @@ For example, if ``State`` contains:
 - an attribute named ``my_pid`` whose value is the PID of an instance
 - and also an attribute named ``my_list_of_pid`` containing a list of PID instances
 
-and if the deleted instance took ownership of these instances, then::
+and if the deleted instance took ownership of these instances, then:
+
+.. code:: erlang
 
  delete(State) ->
   TempState = wooper:delete_any_instance_referenced_in(State,my_pid),
@@ -1812,7 +1935,9 @@ A given class can process these EXIT notifications:
 - either by defining and exporting the ``onWOOPERExitReceived/3`` oneway
 - or by inheriting it
 
-For example::
+For example:
+
+.. code:: erlang
 
   onWOOPERExitReceived(State,Pid,ExitType) ->
 	io:format("MyClass EXIT handler ignored signal '~p'"
@@ -1845,7 +1970,9 @@ Type Specifications
 
 We strongly promote at least the definition of types and function specifications, if not a very regular use of `Dialyzer <http://erlang.org/doc/man/dialyzer.html>`_.
 
-Albeit seldom mentioned here, WOOPER defines its own related type constructs in order to apply static typing at its level as well, like in::
+Albeit seldom mentioned here, WOOPER defines its own related type constructs in order to apply static typing at its level as well, like in:
+
+.. code:: erlang
 
  -spec construct( wooper:state(), age(), gender() ) -> wooper:state().
  -spec destruct( wooper:state() ) -> wooper:state().
@@ -1859,7 +1986,9 @@ Please refer to the `test examples <https://github.com/Olivier-Boudeville/Ceylan
 Guidelines
 ----------
 
-All WOOPER classes must include `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl>`_::
+All WOOPER classes must include `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl>`_:
+
+.. code:: erlang
 
  -include("wooper.hrl").
 
@@ -1966,14 +2095,18 @@ No warning should be tolerated in code using WOOPER, as we never found useless n
 
 All attributes of an instance should better be defined from the constructor, instead of being dynamically added during the life of the instance; otherwise the methods would have to deal with some attributes that may, or may not, be defined; if no proper value exists for an attribute at the creation of an instance, then its value should just be set to the atom ``undefined``.
 
-When a function or a method is defined in a WOOPER file, it should of course be commented, and, even if the information can be guessed from context and body, in the last line of the comments the type of the function should be specified (ex: ``oneway``, ``request``, ``helper function``, etc.) possibly with qualifiers (ex: ``const``), like in::
+When a function or a method is defined in a WOOPER file, it should of course be commented, and, even if the information can be guessed from context and body, in the last line of the comments the type of the function should be specified (ex: ``oneway``, ``request``, ``helper function``, etc.) possibly with qualifiers (ex: ``const``), like in:
+
+.. code:: erlang
 
   % Sets the current color.
   % (oneway)
   setColor(State,NewColor) ->
 	[..]
 
-or::
+or:
+
+.. code:: erlang
 
   % Gets the current color.
   % (const request)
@@ -2049,17 +2182,23 @@ Oneway Versus Request Calls
 
 One of these gotchas - experienced even by the WOOPER author - is to define a two-parameter oneway, whose second parameter is a PID, and to call this method wrongly as a request, instead of as a oneway.
 
-For example, let's suppose the ``class_Dog`` class defines the oneway method ``startBarkingAt/3`` as::
+For example, let's suppose the ``class_Dog`` class defines the oneway method ``startBarkingAt/3`` as:
+
+.. code:: erlang
 
  startBarkingAt(State,Duration,ListenerPID) -> ...
 
 
-The correct approach to call this **oneway** would be::
+The correct approach to call this **oneway** would be:
+
+.. code:: erlang
 
  MyDogPid ! {startBarkingAt,[MyDuration,self()]}
 
 
-An absent-minded developer could have written instead::
+An absent-minded developer could have written instead:
+
+.. code:: erlang
 
  MyDogPid ! {startBarkingAt,MyDuration,self()}
 
@@ -2131,7 +2270,9 @@ This layer, ``Ceylan-WOOPER``, relies (only) on:
 
 We prefer using GNU/Linux, sticking to the latest stable release of Erlang, and building it from sources, thanks to GNU ``make``.
 
-For that we devised the `install-erlang.sh <https://github.com/Olivier-Boudeville/Ceylan-Myriad/blob/master/conf/install-erlang.sh>`_ script; a simple use of it is::
+For that we devised the `install-erlang.sh <https://github.com/Olivier-Boudeville/Ceylan-Myriad/blob/master/conf/install-erlang.sh>`_ script; a simple use of it is:
+
+.. code:: bash
 
  $ ./install-erlang.sh --doc-install --generate-plt
 
@@ -2297,7 +2438,9 @@ Released on Sunday, July 22, 2007. Already fully functional!
 WOOPER Inner Workings
 =====================
 
-Each instance runs a main loop (``wooper_main_loop/1``, defined in `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl>`_) that keeps its internal state and, through a blocking ``receive``, serves the methods as specified by incoming messages, quite similarly to a classical server that loops on an updated state, like in::
+Each instance runs a main loop (``wooper_main_loop/1``, defined in `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl>`_) that keeps its internal state and, through a blocking ``receive``, serves the methods as specified by incoming messages, quite similarly to a classical server that loops on an updated state, like in:
+
+.. code:: erlang
 
  my_server(State) ->
    receive
