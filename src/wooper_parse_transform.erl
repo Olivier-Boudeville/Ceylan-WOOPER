@@ -215,8 +215,8 @@ parse_transform( AST, Options ) ->
 		%
 		% (few information gathered)
 		%
-		type_definitions = [] :: [ { meta_utils:type_name(),
-									 meta_utils:type_arity() } ],
+		type_definitions = [] :: [ { type_utils:type_name(),
+									 type_utils:type_arity() } ],
 
 
 		% The abstract forms corresponding to type definitions:
@@ -225,8 +225,8 @@ parse_transform( AST, Options ) ->
 
 
 		% All type exports:
-		type_exports = [] :: [ { meta_utils:type_name(),
-								 meta_utils:type_arity() } ],
+		type_exports = [] :: [ { type_utils:type_name(),
+								 type_utils:type_arity() } ],
 
 		% Type export definitions:
 		type_export_defs = [] :: [ ast() ],
