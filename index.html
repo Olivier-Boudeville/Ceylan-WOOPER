@@ -13,7 +13,7 @@
 
 <span class="target" id="top"></span><p><span class="raw-html"><a name="wooper_top"></a></span></p>
 <p><span class="raw-html"><div class="banner"><p><em>WOOPER documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper.html">browse mirror</a> <a href="wooper.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[WOOPER]%20Remark">mail us</a></p></div></span></p>
-<p><span class="raw-html"><center><img src="wooper-title.png" width="70%"></img></center></span>
+<p><span class="raw-html"><center><img src="wooper-title.png"></img></center></span>
 </p>
 <div class="section" id="wrapper-for-object-oriented-programming-in-erlang">
 <h1><a class="toc-backref" href="#id29"><em>Wrapper for Object-Oriented Programming in Erlang</em></a></h1>
@@ -27,7 +27,7 @@
 </tr>
 <tr class="field"><th class="field-name">Creation Date:</th><td class="field-body">Thursday, February 25, 2008</td>
 </tr>
-<tr class="field"><th class="field-name">Lastly Updated:</th><td class="field-body">Sunday, December 17, 2017</td>
+<tr class="field"><th class="field-name">Lastly Updated:</th><td class="field-body">Saturday, December 23, 2017</td>
 </tr>
 </tbody>
 </table>
@@ -177,77 +177,77 @@
 <p>Here is a simple example of how a WOOPER class can be defined and used.</p>
 <p>It shows <tt class="docutils literal">new/delete</tt> operators, method calling (both request and oneway), and inheritance.</p>
 <p>A cat is here a viviparous mammal, as defined below (this is a variation of our more complete <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat.erl">class_Cat.erl</a> example):</p>
-<pre class="literal-block">
--module(class_Cat).
+<pre class="code erlang literal-block">
+<span class="punctuation">-</span><span class="name entity">module</span><span class="punctuation">(</span><span class="name">class_Cat</span><span class="punctuation">).</span>
 
-% Determines what are the mother classes of this class (if any):
--define(wooper_superclasses,[class_Mammal,class_ViviparousBeing]).
+<span class="comment">% Determines what are the mother classes of this class (if any):
+</span><span class="punctuation">-</span><span class="name entity">define</span><span class="punctuation">(</span><span class="name constant">wooper_superclasses</span><span class="punctuation">,[</span><span class="name">class_Mammal</span><span class="punctuation">,</span><span class="name">class_ViviparousBeing</span><span class="punctuation">]).</span>
 
-% Parameters taken by the constructor ('construct').
+<span class="comment">% Parameters taken by the constructor ('construct').
 % They are here the ones of the Mammal mother class (the viviparous being
 % constructor does not need any parameter) plus whisker color.
 % These are class-specific data needing to be set in the constructor:
--define(wooper_construct_parameters,Age,Gender,FurColor,WhiskerColor).
+</span><span class="punctuation">-</span><span class="name entity">define</span><span class="punctuation">(</span><span class="name constant">wooper_construct_parameters</span><span class="punctuation">,</span><span class="name variable">Age</span><span class="punctuation">,</span><span class="name variable">Gender</span><span class="punctuation">,</span><span class="name variable">FurColor</span><span class="punctuation">,</span><span class="name variable">WhiskerColor</span><span class="punctuation">).</span>
 
-% Declaring all variations of WOOPER standard life-cycle operations:
+<span class="comment">% Declaring all variations of WOOPER standard life-cycle operations:
 % (this is just a pasted template, with updated arities)
--define( wooper_construct_export, new/4, new_link/4,
-   synchronous_new/4, synchronous_new_link/4,
-   synchronous_timed_new/4, synchronous_timed_new_link/4,
-   remote_new/5, remote_new_link/5, remote_synchronous_new/5,
-   remote_synchronous_new_link/5, remote_synchronous_timed_new/5,
-   remote_synchronous_timed_new_link/5, construct/5, destruct/1 ).
+</span><span class="punctuation">-</span><span class="name entity">define</span><span class="punctuation">(</span> <span class="name">wooper_construct_export</span><span class="punctuation">,</span> <span class="name">new</span><span class="operator">/</span><span class="literal number integer">4</span><span class="punctuation">,</span> <span class="name">new_link</span><span class="operator">/</span><span class="literal number integer">4</span><span class="punctuation">,</span>
+   <span class="name">synchronous_new</span><span class="operator">/</span><span class="literal number integer">4</span><span class="punctuation">,</span> <span class="name">synchronous_new_link</span><span class="operator">/</span><span class="literal number integer">4</span><span class="punctuation">,</span>
+   <span class="name">synchronous_timed_new</span><span class="operator">/</span><span class="literal number integer">4</span><span class="punctuation">,</span> <span class="name">synchronous_timed_new_link</span><span class="operator">/</span><span class="literal number integer">4</span><span class="punctuation">,</span>
+   <span class="name">remote_new</span><span class="operator">/</span><span class="literal number integer">5</span><span class="punctuation">,</span> <span class="name">remote_new_link</span><span class="operator">/</span><span class="literal number integer">5</span><span class="punctuation">,</span> <span class="name">remote_synchronous_new</span><span class="operator">/</span><span class="literal number integer">5</span><span class="punctuation">,</span>
+   <span class="name">remote_synchronous_new_link</span><span class="operator">/</span><span class="literal number integer">5</span><span class="punctuation">,</span> <span class="name">remote_synchronous_timed_new</span><span class="operator">/</span><span class="literal number integer">5</span><span class="punctuation">,</span>
+   <span class="name">remote_synchronous_timed_new_link</span><span class="operator">/</span><span class="literal number integer">5</span><span class="punctuation">,</span> <span class="name">construct</span><span class="operator">/</span><span class="literal number integer">5</span><span class="punctuation">,</span> <span class="name">destruct</span><span class="operator">/</span><span class="literal number integer">1</span> <span class="punctuation">).</span>
 
-% Member method declarations:
--define( wooper_method_export,getWhiskerColor/1,setWhiskerColor/2,
-   canEat/2 ).
+<span class="comment">% Member method declarations:
+</span><span class="punctuation">-</span><span class="name entity">define</span><span class="punctuation">(</span> <span class="name">wooper_method_export</span><span class="punctuation">,</span><span class="name">getWhiskerColor</span><span class="operator">/</span><span class="literal number integer">1</span><span class="punctuation">,</span><span class="name">setWhiskerColor</span><span class="operator">/</span><span class="literal number integer">2</span><span class="punctuation">,</span>
+   <span class="name">canEat</span><span class="operator">/</span><span class="literal number integer">2</span> <span class="punctuation">).</span>
 
-% Static method declarations:
--define( wooper_static_method_export, get_default_whisker_color()/0 ).
+<span class="comment">% Static method declarations:
+</span><span class="punctuation">-</span><span class="name entity">define</span><span class="punctuation">(</span> <span class="name">wooper_static_method_export</span><span class="punctuation">,</span> <span class="name">get_default_whisker_color</span><span class="punctuation">()</span><span class="operator">/</span><span class="literal number integer">0</span> <span class="punctuation">).</span>
 
-% Allows to define WOOPER base variables and methods for that class:
--include(&quot;wooper.hrl&quot;).
+<span class="comment">% Allows to define WOOPER base variables and methods for that class:
+</span><span class="punctuation">-</span><span class="name entity">include</span><span class="punctuation">(</span><span class="literal string">&quot;wooper.hrl&quot;</span><span class="punctuation">).</span>
 
-% Constructs a new Cat.
-construct( State, ?wooper_construct_parameters ) -&gt;
-   % First the direct mother classes:
-   MammalState = class_Mammal:construct( State, Age, Gender, FurColor ),
-   ViviparousMammalState = class_ViviparousBeing:construct(MammalState),
-   % Then the class-specific attributes; returns an updated state:
-   setAttributes( ViviparousMammalState, whisker_color, WhiskerColor ).
+<span class="comment">% Constructs a new Cat.
+</span><span class="name function">construct</span><span class="punctuation">(</span> <span class="name variable">State</span><span class="punctuation">,</span> <span class="operator">?</span><span class="name">wooper_construct_parameters</span> <span class="punctuation">)</span> <span class="operator">-&gt;</span>
+   <span class="comment">% First the direct mother classes:
+</span>   <span class="name variable">MammalState</span> <span class="operator">=</span> <span class="name namespace">class_Mammal</span><span class="punctuation">:</span><span class="name function">construct</span><span class="punctuation">(</span> <span class="name variable">State</span><span class="punctuation">,</span> <span class="name variable">Age</span><span class="punctuation">,</span> <span class="name variable">Gender</span><span class="punctuation">,</span> <span class="name variable">FurColor</span> <span class="punctuation">),</span>
+   <span class="name variable">ViviparousMammalState</span> <span class="operator">=</span> <span class="name namespace">class_ViviparousBeing</span><span class="punctuation">:</span><span class="name function">construct</span><span class="punctuation">(</span><span class="name variable">MammalState</span><span class="punctuation">),</span>
+   <span class="comment">% Then the class-specific attributes; returns an updated state:
+</span>   <span class="name">setAttributes</span><span class="punctuation">(</span> <span class="name variable">ViviparousMammalState</span><span class="punctuation">,</span> <span class="name">whisker_color</span><span class="punctuation">,</span> <span class="name variable">WhiskerColor</span> <span class="punctuation">).</span>
 
-destruct(State) -&gt;
-   io:format( &quot;Deleting cat ~w! (overridden destructor)~n&quot;, [self()] ),
-   State.
+<span class="name function">destruct</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+   <span class="name namespace">io</span><span class="punctuation">:</span><span class="name function">format</span><span class="punctuation">(</span> <span class="literal string">&quot;Deleting cat </span><span class="literal string interpol">~w</span><span class="literal string">! (overridden destructor)</span><span class="literal string interpol">~n</span><span class="literal string">&quot;</span><span class="punctuation">,</span> <span class="punctuation">[</span><span class="name">self</span><span class="punctuation">()]</span> <span class="punctuation">),</span>
+   <span class="name variable">State</span><span class="punctuation">.</span>
 
-% Member methods.
+<span class="comment">% Member methods.
+</span>
+<span class="comment">% A cat-specific const request:
+</span><span class="name function">getWhiskerColor</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">)</span><span class="operator">-&gt;</span>
+   <span class="operator">?</span><span class="name">wooper_return_state_result</span><span class="punctuation">(</span> <span class="name variable">State</span><span class="punctuation">,</span> <span class="operator">?</span><span class="name">getAttr</span><span class="punctuation">(</span><span class="name">whisker_color</span><span class="punctuation">)</span> <span class="punctuation">).</span>
 
-% A cat-specific const request:
-getWhiskerColor(State)-&gt;
-   ?wooper_return_state_result( State, ?getAttr(whisker_color) ).
+<span class="comment">% A (non-const) oneway:
+</span><span class="name function">setWhiskerColor</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name variable">NewColor</span><span class="punctuation">)</span><span class="operator">-&gt;</span>
+   <span class="name variable">NewState</span> <span class="operator">=</span> <span class="name">setAttribute</span><span class="punctuation">(</span> <span class="name variable">State</span><span class="punctuation">,</span> <span class="name">whisker_color</span><span class="punctuation">,</span> <span class="name variable">NewColor</span> <span class="punctuation">),</span>
+   <span class="operator">?</span><span class="name">wooper_return_state_only</span><span class="punctuation">(</span> <span class="name variable">NewState</span> <span class="punctuation">).</span>
 
-% A (non-const) oneway:
-setWhiskerColor(State,NewColor)-&gt;
-   NewState = setAttribute( State, whisker_color, NewColor ),
-   ?wooper_return_state_only( NewState ).
-
-% Overrides any request method defined in the Mammal class:
+<span class="comment">% Overrides any request method defined in the Mammal class:
 % (const request)
-canEat(State,soup) -&gt;
-   ?wooper_return_state_result( State, true );
+</span><span class="name function">canEat</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name">soup</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+   <span class="operator">?</span><span class="name">wooper_return_state_result</span><span class="punctuation">(</span> <span class="name variable">State</span><span class="punctuation">,</span> <span class="name">true</span> <span class="punctuation">);</span>
 
-canEat(State,croquette) -&gt;
-   ?wooper_return_state_result( State, true );
+<span class="name function">canEat</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name">croquette</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+   <span class="operator">?</span><span class="name">wooper_return_state_result</span><span class="punctuation">(</span> <span class="name variable">State</span><span class="punctuation">,</span> <span class="name">true</span> <span class="punctuation">);</span>
 
-canEat(State,meat) -&gt;
-   ?wooper_return_state_result( State, true );
+<span class="name function">canEat</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name">meat</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+   <span class="operator">?</span><span class="name">wooper_return_state_result</span><span class="punctuation">(</span> <span class="name variable">State</span><span class="punctuation">,</span> <span class="name">true</span> <span class="punctuation">);</span>
 
-canEat(State,_OtherFood) -&gt;
-   ?wooper_return_state_result( State, false ).
+<span class="name function">canEat</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,_</span><span class="name variable">OtherFood</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+   <span class="operator">?</span><span class="name">wooper_return_state_result</span><span class="punctuation">(</span> <span class="name variable">State</span><span class="punctuation">,</span> <span class="name">false</span> <span class="punctuation">).</span>
 
-% Static method:
-get_default_whisker_color() -&gt;
-   white.
+<span class="comment">% Static method:
+</span><span class="name function">get_default_whisker_color</span><span class="punctuation">()</span> <span class="operator">-&gt;</span>
+   <span class="name">white</span><span class="punctuation">.</span>
 </pre>
 <p>Straightforward, isn't it? We will discuss it in-depth, though.</p>
 <p>To test this class (provided that <tt class="docutils literal">GNU make</tt> and <tt class="docutils literal">Erlang 20.0</tt> or more recent are available in one's environment), one can easily install <tt class="docutils literal"><span class="pre">Ceylan-WOOPER</span></tt>, which depends on <tt class="docutils literal"><span class="pre">Ceylan-Myriad</span></tt>, hence to be installed first:</p>
@@ -370,12 +370,12 @@ class_Cat
 <p>A WOOPER class can inherit from other classes, in which case the state and behaviour defined in the mother classes are readily available to this child class.</p>
 <p>Being in a <strong>multiple inheritance</strong> context, a given class can have any number (<tt class="docutils literal"><span class="pre">[0..n]</span></tt>) of direct mother classes, which themselves may have mother classes, and so on. This leads to a class hierarchy that forms a graph.</p>
 <p>This is declared in WOOPER thanks to the <tt class="docutils literal">wooper_superclasses</tt> define. For example, a class with no mother class should specify, once having declared its module:</p>
-<pre class="literal-block">
--define(wooper_superclasses,[]).
+<pre class="code erlang literal-block">
+<span class="punctuation">-</span><span class="name entity">define</span><span class="punctuation">(</span><span class="name constant">wooper_superclasses</span><span class="punctuation">,[]).</span>
 </pre>
 <p>As for our cat, this superb animal could be modelled both as a mammal (itself a specialised creature) and a viviparous being <a class="footnote-reference" href="#id8" id="id7">[3]</a>. Hence its direct inheritance could be defined as:</p>
-<pre class="literal-block">
--define(wooper_superclasses,[class_Mammal,class_ViviparousBeing]).
+<pre class="code erlang literal-block">
+<span class="punctuation">-</span><span class="name entity">define</span><span class="punctuation">(</span><span class="name constant">wooper_superclasses</span><span class="punctuation">,[</span><span class="name">class_Mammal</span><span class="punctuation">,</span><span class="name">class_ViviparousBeing</span><span class="punctuation">]).</span>
 </pre>
 <table class="docutils footnote" frame="void" id="id8" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -441,9 +441,9 @@ class_Cat
 <p>Their arity should be equal to the number of parameters they should be called with, plus one that is automatically managed by WOOPER and corresponds to the (private) state of that instance.</p>
 <p>This <tt class="docutils literal">State</tt> variable defined by WOOPER can be somehow compared to the <tt class="docutils literal">self</tt> parameter of Python, or to the <tt class="docutils literal">this</tt> hidden pointer of C++. That state is automatically kept by WOOPER instances in their main loop, and automatically prepended, as first element, to the parameters of incoming method calls.</p>
 <p>In our example, the declarations could therefore result in:</p>
-<pre class="literal-block">
--define(wooper_method_export, canEat/2, getWhiskerColor/1,
-        setWhiskerColor/2).
+<pre class="code erlang literal-block">
+<span class="punctuation">-</span><span class="name entity">define</span><span class="punctuation">(</span><span class="name constant">wooper_method_export</span><span class="punctuation">,</span> <span class="name">canEat</span><span class="operator">/</span><span class="literal number integer">2</span><span class="punctuation">,</span> <span class="name">getWhiskerColor</span><span class="operator">/</span><span class="literal number integer">1</span><span class="punctuation">,</span>
+        <span class="name">setWhiskerColor</span><span class="operator">/</span><span class="literal number integer">2</span><span class="punctuation">).</span>
 </pre>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -458,29 +458,29 @@ class_Cat
 <p>When the method is expected to return a result (i.e. when it is a request method), the caller must specify in the corresponding message its own PID, so that the instance knows to whom the result should be sent.</p>
 <p>Therefore the <tt class="docutils literal">self()</tt> parameter in the call tuples below corresponds to the PID <em>of the caller</em>, while <tt class="docutils literal">MyCat</tt> is bound to the PID <em>of the target instance</em>.</p>
 <p>The three methods previously discussed would indeed be called that way:</p>
-<pre class="literal-block">
-% Calling the canEat request of our cat instance:
-MyCat ! {canEat,soup,self()},
-receive
-    {wooper_result,true} -&gt;
-             io:format( &quot;This cat likes soup!!!&quot; );
+<pre class="code erlang literal-block">
+<span class="comment">% Calling the canEat request of our cat instance:
+</span><span class="name variable">MyCat</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">canEat</span><span class="punctuation">,</span><span class="name">soup</span><span class="punctuation">,</span><span class="name">self</span><span class="punctuation">()},</span>
+<span class="keyword">receive</span>
+    <span class="punctuation">{</span><span class="name">wooper_result</span><span class="punctuation">,</span><span class="name">true</span><span class="punctuation">}</span> <span class="operator">-&gt;</span>
+             <span class="name namespace">io</span><span class="punctuation">:</span><span class="name function">format</span><span class="punctuation">(</span> <span class="literal string">&quot;This cat likes soup!!!&quot;</span> <span class="punctuation">);</span>
 
-    {wooper_result,false} -&gt;
-             io:format( &quot;This cat does not seem omnivorous.&quot; )
-end,
+    <span class="punctuation">{</span><span class="name">wooper_result</span><span class="punctuation">,</span><span class="name">false</span><span class="punctuation">}</span> <span class="operator">-&gt;</span>
+             <span class="name namespace">io</span><span class="punctuation">:</span><span class="name function">format</span><span class="punctuation">(</span> <span class="literal string">&quot;This cat does not seem omnivorous.&quot;</span> <span class="punctuation">)</span>
+<span class="keyword">end</span><span class="punctuation">,</span>
 
-% A parameter-less request:
-MyCat ! {getWhiskersColor,[],self()},
-receive
-    {wooper_result,white} -&gt;
-             io:format( &quot;This cat has normal whiskers.&quot; );
+<span class="comment">% A parameter-less request:
+</span><span class="name variable">MyCat</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">getWhiskersColor</span><span class="punctuation">,[],</span><span class="name">self</span><span class="punctuation">()},</span>
+<span class="keyword">receive</span>
+    <span class="punctuation">{</span><span class="name">wooper_result</span><span class="punctuation">,</span><span class="name">white</span><span class="punctuation">}</span> <span class="operator">-&gt;</span>
+             <span class="name namespace">io</span><span class="punctuation">:</span><span class="name function">format</span><span class="punctuation">(</span> <span class="literal string">&quot;This cat has normal whiskers.&quot;</span> <span class="punctuation">);</span>
 
-    {wooper_result,blue} -&gt;
-             io:format( &quot;What a weird cat...&quot; )
-end,
+    <span class="punctuation">{</span><span class="name">wooper_result</span><span class="punctuation">,</span><span class="name">blue</span><span class="punctuation">}</span> <span class="operator">-&gt;</span>
+             <span class="name namespace">io</span><span class="punctuation">:</span><span class="name function">format</span><span class="punctuation">(</span> <span class="literal string">&quot;What a weird cat...&quot;</span> <span class="punctuation">)</span>
+<span class="keyword">end</span><span class="punctuation">,</span>
 
-% A parameter-less oneway:
-MyCat ! declareBirthday.
+<span class="comment">% A parameter-less oneway:
+</span><span class="name variable">MyCat</span> <span class="operator">!</span> <span class="name">declareBirthday</span><span class="punctuation">.</span>
 </pre>
 </div>
 <div class="section" id="method-name">
@@ -516,26 +516,26 @@ MyCat ! declareBirthday.
 <p>So these three potential information (request name, parameters, reference of the sender - i.e. an atom, usually a list, and a PID) are gathered in a triplet (a 3-tuple) sent as a message: <tt class="docutils literal"><span class="pre">{request_name,[Arg1,Arg2,..],self()}</span></tt>.</p>
 <p>If only one parameter is to be sent, and if that parameter is not a list, then this can become <tt class="docutils literal"><span class="pre">{request_name,Arg,self()}</span></tt>.</p>
 <p>For example:</p>
-<pre class="literal-block">
-MyCat ! {getAge,[],self()}
+<pre class="code erlang literal-block">
+<span class="name variable">MyCat</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">getAge</span><span class="punctuation">,[],</span><span class="name">self</span><span class="punctuation">()}</span>
 </pre>
 <p>or:</p>
-<pre class="literal-block">
-Douglas ! {askQuestionWithHint,[{meaning_of,&quot;Life&quot;},{maybe,42}],self()}
+<pre class="code erlang literal-block">
+<span class="name variable">Douglas</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">askQuestionWithHint</span><span class="punctuation">,[{</span><span class="name">meaning_of</span><span class="punctuation">,</span><span class="literal string">&quot;Life&quot;</span><span class="punctuation">},{</span><span class="name">maybe</span><span class="punctuation">,</span><span class="literal number integer">42</span><span class="punctuation">}],</span><span class="name">self</span><span class="punctuation">()}</span>
 </pre>
 <p>or:</p>
-<pre class="literal-block">
-MyCalculator ! {sum,[[1,2,4]],self()}.
+<pre class="code erlang literal-block">
+<span class="name variable">MyCalculator</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">sum</span><span class="punctuation">,[[</span><span class="literal number integer">1</span><span class="punctuation">,</span><span class="literal number integer">2</span><span class="punctuation">,</span><span class="literal number integer">4</span><span class="punctuation">]],</span><span class="name">self</span><span class="punctuation">()}.</span>
 </pre>
 <p>The actual result <tt class="docutils literal">R</tt>, as determined by the method, is sent back as an Erlang message, which is a <tt class="docutils literal">{wooper_result,R}</tt> pair, to help the caller pattern-matching the WOOPER messages in its mailbox.</p>
 <p><tt class="docutils literal">receive</tt> should then be used by the caller to retrieve the request result, like in the case of this example of a 2D point instance:</p>
-<pre class="literal-block">
-MyPoint ! {getCoordinates,[],self()},
-receive
-         {wooper_result,[X,Y]} -&gt;
-                 [..]
-end,
-[..]
+<pre class="code erlang literal-block">
+<span class="name variable">MyPoint</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">getCoordinates</span><span class="punctuation">,[],</span><span class="name">self</span><span class="punctuation">()},</span>
+<span class="keyword">receive</span>
+         <span class="punctuation">{</span><span class="name">wooper_result</span><span class="punctuation">,[</span><span class="name variable">X</span><span class="punctuation">,</span><span class="name variable">Y</span><span class="punctuation">]}</span> <span class="operator">-&gt;</span>
+                 <span class="punctuation">[..]</span>
+<span class="keyword">end</span><span class="punctuation">,</span>
+<span class="punctuation">[..]</span>
 </pre>
 </div>
 <div class="section" id="oneway-methods">
@@ -628,35 +628,35 @@ convention.</td>
 <h6>Caller-Side Error Management</h6>
 <p>As we can see, errors can be better discriminated if needed, on the caller side.
 Therefore one could make use of that information, as in:</p>
-<pre class="literal-block">
-MyPoint ! {getCoordinates,[],self()},
-receive
-    {wooper_result, [X,Y] } -&gt;
-             [..];
-    {wooper_method_not_found, Pid, Class, Method, Arity, Params} -&gt;
-             [..];
-    {wooper_method_failed, Pid, Class, Method, Arity, Params, ErrorTerm} -&gt;
-             [..];
-    % Error term can be a tuple {Pid,Error} as well, depending on the exit:
-    {wooper_method_failed, Pid, Class, Method, Arity, Params, {Pid,Error}} -&gt;
-             [..];
-    {wooper_method_faulty_return, Pid, Class, Method, Arity, Params, UnexpectedTerm} -&gt;
-             [..];
-    wooper_method_returns_void -&gt;
-             [..];
-    OtherError -&gt;
-             % Should never happen:
-             [..]
-end.
+<pre class="code erlang literal-block">
+<span class="name variable">MyPoint</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">getCoordinates</span><span class="punctuation">,[],</span><span class="name">self</span><span class="punctuation">()},</span>
+<span class="keyword">receive</span>
+    <span class="punctuation">{</span><span class="name">wooper_result</span><span class="punctuation">,</span> <span class="punctuation">[</span><span class="name variable">X</span><span class="punctuation">,</span><span class="name variable">Y</span><span class="punctuation">]</span> <span class="punctuation">}</span> <span class="operator">-&gt;</span>
+             <span class="punctuation">[..];</span>
+    <span class="punctuation">{</span><span class="name">wooper_method_not_found</span><span class="punctuation">,</span> <span class="name variable">Pid</span><span class="punctuation">,</span> <span class="name variable">Class</span><span class="punctuation">,</span> <span class="name variable">Method</span><span class="punctuation">,</span> <span class="name variable">Arity</span><span class="punctuation">,</span> <span class="name variable">Params</span><span class="punctuation">}</span> <span class="operator">-&gt;</span>
+             <span class="punctuation">[..];</span>
+    <span class="punctuation">{</span><span class="name">wooper_method_failed</span><span class="punctuation">,</span> <span class="name variable">Pid</span><span class="punctuation">,</span> <span class="name variable">Class</span><span class="punctuation">,</span> <span class="name variable">Method</span><span class="punctuation">,</span> <span class="name variable">Arity</span><span class="punctuation">,</span> <span class="name variable">Params</span><span class="punctuation">,</span> <span class="name variable">ErrorTerm</span><span class="punctuation">}</span> <span class="operator">-&gt;</span>
+             <span class="punctuation">[..];</span>
+    <span class="comment">% Error term can be a tuple {Pid,Error} as well, depending on the exit:
+</span>    <span class="punctuation">{</span><span class="name">wooper_method_failed</span><span class="punctuation">,</span> <span class="name variable">Pid</span><span class="punctuation">,</span> <span class="name variable">Class</span><span class="punctuation">,</span> <span class="name variable">Method</span><span class="punctuation">,</span> <span class="name variable">Arity</span><span class="punctuation">,</span> <span class="name variable">Params</span><span class="punctuation">,</span> <span class="punctuation">{</span><span class="name variable">Pid</span><span class="punctuation">,</span><span class="name variable">Error</span><span class="punctuation">}}</span> <span class="operator">-&gt;</span>
+             <span class="punctuation">[..];</span>
+    <span class="punctuation">{</span><span class="name">wooper_method_faulty_return</span><span class="punctuation">,</span> <span class="name variable">Pid</span><span class="punctuation">,</span> <span class="name variable">Class</span><span class="punctuation">,</span> <span class="name variable">Method</span><span class="punctuation">,</span> <span class="name variable">Arity</span><span class="punctuation">,</span> <span class="name variable">Params</span><span class="punctuation">,</span> <span class="name variable">UnexpectedTerm</span><span class="punctuation">}</span> <span class="operator">-&gt;</span>
+             <span class="punctuation">[..];</span>
+    <span class="name">wooper_method_returns_void</span> <span class="operator">-&gt;</span>
+             <span class="punctuation">[..];</span>
+    <span class="name variable">OtherError</span> <span class="operator">-&gt;</span>
+             <span class="comment">% Should never happen:
+</span>             <span class="punctuation">[..]</span>
+<span class="keyword">end</span><span class="punctuation">.</span>
 </pre>
 <p>However defensive development is not really favoured in Erlang, one may let the caller crash on unexpected return instead. Therefore generally one may rely simply on matching the message sent in case of success <a class="footnote-reference" href="#id12" id="id11">[5]</a>:</p>
-<pre class="literal-block">
-MyPoint ! {getCoordinates,[],self()},
-receive
-    {wooper_result, [X,Y] } -&gt;
-             [..]
-end,
-[..]
+<pre class="code erlang literal-block">
+<span class="name variable">MyPoint</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">getCoordinates</span><span class="punctuation">,[],</span><span class="name">self</span><span class="punctuation">()},</span>
+<span class="keyword">receive</span>
+    <span class="punctuation">{</span><span class="name">wooper_result</span><span class="punctuation">,</span> <span class="punctuation">[</span><span class="name variable">X</span><span class="punctuation">,</span><span class="name variable">Y</span><span class="punctuation">]</span> <span class="punctuation">}</span> <span class="operator">-&gt;</span>
+             <span class="punctuation">[..]</span>
+<span class="keyword">end</span><span class="punctuation">,</span>
+<span class="punctuation">[..]</span>
 </pre>
 <table class="docutils footnote" frame="void" id="id12" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -674,9 +674,9 @@ end,
 <p>For the sake of clarity, this variable should preferably always be named <tt class="docutils literal">State</tt>.</p>
 <p>A method must always return at least the newer instance state, even if the state did not change.</p>
 <p>In this case the initial state parameter is directly returned, as is, like in:</p>
-<pre class="literal-block">
-getWhiskerColor(State) -&gt;
-    ?wooper_return_state_result(State,?getAttr(whisker_color) ).
+<pre class="code erlang literal-block">
+<span class="name function">getWhiskerColor</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+    <span class="operator">?</span><span class="name">wooper_return_state_result</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="operator">?</span><span class="name">getAttr</span><span class="punctuation">(</span><span class="name">whisker_color</span><span class="punctuation">)</span> <span class="punctuation">).</span>
 </pre>
 <p>State is unchanged here.</p>
 <p>Note that when a method &quot;returns&quot; the state of the instance, it returns it to the (local, process-wise) private WOOPER-based main loop of that instance: in other words, the state variable is <em>never</em> exported/sent/visible outside of its process (unless of course a developer writes a specific method for that).</p>
@@ -692,11 +692,11 @@ getWhiskerColor(State) -&gt;
 <p>Thus the caller will only receive the <strong>result</strong> of a method, if it is a request. Otherwise, i.e. with oneways, nothing is sent back (nothing can be, anyway).</p>
 <p>More precisely, depending on its returning a specific result, the method signature will correspond either to the one of a request or of a oneway, and will use in its body, respectively, either the <tt class="docutils literal">wooper_return_state_result</tt> or the <tt class="docutils literal">wooper_return_state_only</tt> macro to ensure that a state <em>and</em> a result are returned, or just a state.</p>
 <p>A good practise is to add a comment to each method definition, and to specify whether it is a request or a oneway, if it is a <tt class="docutils literal">const</tt> method, etc. For example, the previous method could be best written as:</p>
-<pre class="literal-block">
-% Returns the current color of the whiskers of that cat instance.
+<pre class="code erlang literal-block">
+<span class="comment">% Returns the current color of the whiskers of that cat instance.
 % (const request)
-getWhiskerColor(State) -&gt;
-    ?wooper_return_state_result(State, ?getAttr(whisker_color)).
+</span><span class="name function">getWhiskerColor</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+    <span class="operator">?</span><span class="name">wooper_return_state_result</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span> <span class="operator">?</span><span class="name">getAttr</span><span class="punctuation">(</span><span class="name">whisker_color</span><span class="punctuation">)).</span>
 </pre>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -706,35 +706,35 @@ getWhiskerColor(State) -&gt;
 <h5>For Requests</h5>
 <p>Requests will use <tt class="docutils literal"><span class="pre">?wooper_return_state_result(NewState,Result)</span></tt>: the new state will be kept by the instance, whereas the result will be sent to the caller. Hence <tt class="docutils literal">wooper_return_state_result</tt> means that the method returns a state <strong>and</strong> a result.</p>
 <p>For example a const request will return an unchanged state, and thus will be just useful for its result (and possible side-effects):</p>
-<pre class="literal-block">
-getAge(State) -&gt;
-    ?wooper_return_state_result(State,?getAttr(age)).
+<pre class="code erlang literal-block">
+<span class="name function">getAge</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+    <span class="operator">?</span><span class="name">wooper_return_state_result</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="operator">?</span><span class="name">getAttr</span><span class="punctuation">(</span><span class="name">age</span><span class="punctuation">)).</span>
 </pre>
 <p>All methods are of course given the parameters specified at their call.</p>
 <p>For example, we can declare:</p>
-<pre class="literal-block">
-giveBirth(State,NumberOfMaleChildren,NumberOfFemaleChildren) -&gt;
-         [..]
+<pre class="code erlang literal-block">
+<span class="name function">giveBirth</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name variable">NumberOfMaleChildren</span><span class="punctuation">,</span><span class="name variable">NumberOfFemaleChildren</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+         <span class="punctuation">[..]</span>
 </pre>
 <p>And then we may call it, in the case of a cat having 2 male kitten and 3 female ones, with:</p>
-<pre class="literal-block">
-MyCat ! {giveBirth,[2,3],self()}.
+<pre class="code erlang literal-block">
+<span class="name variable">MyCat</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">giveBirth</span><span class="punctuation">,[</span><span class="literal number integer">2</span><span class="punctuation">,</span><span class="literal number integer">3</span><span class="punctuation">],</span><span class="name">self</span><span class="punctuation">()}.</span>
 </pre>
 <p>Requests can access to one more information than oneways: the PID of the caller that sent the request. As WOOPER takes care automatically of sending back the result to the caller, having the request know explicitly the caller is usually not useful, thus the caller PID does not appear explicitly in request signatures, among the actual parameters.</p>
 <p>However WOOPER keeps track of this information, which remains available to requests.</p>
 <p>The caller PID can indeed be retrieved from a request body by using the <tt class="docutils literal">getSender</tt> macro, which is automatically managed by WOOPER:</p>
-<pre class="literal-block">
-giveBirth(State,NumberOfMaleChildren,NumberOfFemaleChildren) -&gt;
-  CallerPID = ?getSender(),
-  [..]
+<pre class="code erlang literal-block">
+<span class="name function">giveBirth</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name variable">NumberOfMaleChildren</span><span class="punctuation">,</span><span class="name variable">NumberOfFemaleChildren</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+  <span class="name variable">CallerPID</span> <span class="operator">=</span> <span class="operator">?</span><span class="name">getSender</span><span class="punctuation">(),</span>
+  <span class="punctuation">[..]</span>
 </pre>
 <p>Thus a request has natively access to its caller PID, i.e. with no need to specify it in the parameters as well as in the third element of the call tuple; so, instead of having to define:</p>
-<pre class="literal-block">
-MyCat ! {giveBirth,[2,3,self()],self()}
+<pre class="code erlang literal-block">
+<span class="name variable">MyCat</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">giveBirth</span><span class="punctuation">,[</span><span class="literal number integer">2</span><span class="punctuation">,</span><span class="literal number integer">3</span><span class="punctuation">,</span><span class="name">self</span><span class="punctuation">()],</span><span class="name">self</span><span class="punctuation">()}</span>
 </pre>
 <p>one can rely on only:</p>
-<pre class="literal-block">
-MyCat ! {giveBirth,[2,3],self()}
+<pre class="code erlang literal-block">
+<span class="name variable">MyCat</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">giveBirth</span><span class="punctuation">,[</span><span class="literal number integer">2</span><span class="punctuation">,</span><span class="literal number integer">3</span><span class="punctuation">],</span><span class="name">self</span><span class="punctuation">()}</span>
 </pre>
 <p>while still letting the possibility for the called request (here <tt class="docutils literal">giveBirth/3</tt>, for a state and two parameters) to access the caller PID thanks to the <tt class="docutils literal">getSender</tt> macro, and maybe store it for a later use or do anything appropriate with it.</p>
 <p>Note that having to handle explicitly the caller PID is rather uncommon, as WOOPER takes care automatically of the sending of the result back to the caller.</p>
@@ -745,20 +745,20 @@ MyCat ! {giveBirth,[2,3],self()}
 <h5>For Oneways</h5>
 <p>Oneway will rely on the <tt class="docutils literal"><span class="pre">?wooper_return_state_only(NewState)</span></tt> macro: the instance state will be updated, but no result will be returned to the caller, which is not even known.</p>
 <p>For example:</p>
-<pre class="literal-block">
-setAge(State,NewAge) -&gt;
-  ?wooper_return_state_only( setAttribute(State,age,NewAge) ).
+<pre class="code erlang literal-block">
+<span class="name function">setAge</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name variable">NewAge</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+  <span class="operator">?</span><span class="name">wooper_return_state_only</span><span class="punctuation">(</span> <span class="name">setAttribute</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name">age</span><span class="punctuation">,</span><span class="name variable">NewAge</span><span class="punctuation">)</span> <span class="punctuation">).</span>
 </pre>
 <p>This oneway can be called that way:</p>
-<pre class="literal-block">
-MyCat ! {setAge,4}.
-% No result to expect.
+<pre class="code erlang literal-block">
+<span class="name variable">MyCat</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">setAge</span><span class="punctuation">,</span><span class="literal number integer">4</span><span class="punctuation">}.</span>
+<span class="comment">% No result to expect.</span>
 </pre>
 <p>Oneways may also be <tt class="docutils literal">const</tt>, i.e. leave the state unchanged, only being called for side-effects, for example:</p>
-<pre class="literal-block">
-displayAge(State) -&gt;
-  io:format(&quot;My age is ~B~n.&quot;,[ ?getAttr(age) ]),
-  ?wooper_return_state_only(State).
+<pre class="code erlang literal-block">
+<span class="name function">displayAge</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+  <span class="name namespace">io</span><span class="punctuation">:</span><span class="name function">format</span><span class="punctuation">(</span><span class="literal string">&quot;My age is </span><span class="literal string interpol">~B~n</span><span class="literal string">.&quot;</span><span class="punctuation">,[</span> <span class="operator">?</span><span class="name">getAttr</span><span class="punctuation">(</span><span class="name">age</span><span class="punctuation">)</span> <span class="punctuation">]),</span>
+  <span class="operator">?</span><span class="name">wooper_return_state_only</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">).</span>
 </pre>
 </div>
 <div class="section" id="usefulness-of-these-two-return-macros">
@@ -773,22 +773,22 @@ displayAge(State) -&gt;
 <div class="section" id="type-specifications">
 <h5>Type Specifications</h5>
 <p>Although doing so is optional, WOOPER strongly recommends declaring type specifications as well (and provides suitable constructs for that), like in:</p>
-<pre class="literal-block">
-% Returns the current color of the whiskers of that cat instance.
+<pre class="code erlang literal-block">
+<span class="comment">% Returns the current color of the whiskers of that cat instance.
 % (const request)
--spec getWhiskerColor(wooper:state()) -&gt; request_return(color()).
-getWhiskerColor(State) -&gt;
-    ?wooper_return_state_result(State, ?getAttr(whisker_color)).
+</span><span class="punctuation">-</span><span class="name entity">spec</span> <span class="name">getWhiskerColor</span><span class="punctuation">(</span><span class="name namespace">wooper</span><span class="punctuation">:</span><span class="name function">state</span><span class="punctuation">())</span> <span class="operator">-&gt;</span> <span class="name">request_return</span><span class="punctuation">(</span><span class="name">color</span><span class="punctuation">()).</span>
+<span class="name function">getWhiskerColor</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+    <span class="operator">?</span><span class="name">wooper_return_state_result</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span> <span class="operator">?</span><span class="name">getAttr</span><span class="punctuation">(</span><span class="name">whisker_color</span><span class="punctuation">)).</span>
 </pre>
 <p>(of course the developer is responsible for the definition of the <tt class="docutils literal">color()</tt> type here)</p>
 <p>Similarly, the aforementioned <tt class="docutils literal">declareBirthday/1</tt> oneway could be defined as:</p>
-<pre class="literal-block">
-% Declares the birthday of this creature: increments its age.
+<pre class="code erlang literal-block">
+<span class="comment">% Declares the birthday of this creature: increments its age.
 % (oneway)
--spec declareBirthday(wooper:state()) -&gt; oneway_return().
-declareBirthday(State) -&gt;
-   AgedState = setAttribute(State, age, ?getAttr(age)+1),
-   ?wooper_return_state_ony(AgedState).
+</span><span class="punctuation">-</span><span class="name entity">spec</span> <span class="name">declareBirthday</span><span class="punctuation">(</span><span class="name namespace">wooper</span><span class="punctuation">:</span><span class="name function">state</span><span class="punctuation">())</span> <span class="operator">-&gt;</span> <span class="name">oneway_return</span><span class="punctuation">().</span>
+<span class="name function">declareBirthday</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+   <span class="name variable">AgedState</span> <span class="operator">=</span> <span class="name">setAttribute</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span> <span class="name">age</span><span class="punctuation">,</span> <span class="operator">?</span><span class="name">getAttr</span><span class="punctuation">(</span><span class="name">age</span><span class="punctuation">)</span><span class="operator">+</span><span class="literal number integer">1</span><span class="punctuation">),</span>
+   <span class="operator">?</span><span class="name">wooper_return_state_ony</span><span class="punctuation">(</span><span class="name variable">AgedState</span><span class="punctuation">).</span>
 </pre>
 </div>
 </div>
@@ -806,32 +806,32 @@ declareBirthday(State) -&gt;
 <p>More precisely, <strong>executeRequest</strong> is <tt class="docutils literal">executeRequest/2</tt> or <tt class="docutils literal">executeRequest/3</tt>, its parameters being the current state, the name of the request method, and, if needed, the parameters of the called request, either as a list or as a standalone one.</p>
 <p><tt class="docutils literal">executeRequest</tt> returns a pair made of the new state and of the result.</p>
 <p>For example, for a request taking more than one parameter, or one list parameter:</p>
-<pre class="literal-block">
-{NewState,Result} = executeRequest(CurrentState, myRequestName,
-                                   [&quot;hello&quot;, 42])
+<pre class="code erlang literal-block">
+<span class="punctuation">{</span><span class="name variable">NewState</span><span class="punctuation">,</span><span class="name variable">Result</span><span class="punctuation">}</span> <span class="operator">=</span> <span class="name">executeRequest</span><span class="punctuation">(</span><span class="name variable">CurrentState</span><span class="punctuation">,</span> <span class="name">myRequestName</span><span class="punctuation">,</span>
+                                   <span class="punctuation">[</span><span class="literal string">&quot;hello&quot;</span><span class="punctuation">,</span> <span class="literal number integer">42</span><span class="punctuation">])</span>
 </pre>
 <p>For a request taking exactly one, non-list, parameter:</p>
-<pre class="literal-block">
-{NewState,NewCounter} = executeRequest(CurrentState,
-                                 addToCurrentCounter, 78)
+<pre class="code erlang literal-block">
+<span class="punctuation">{</span><span class="name variable">NewState</span><span class="punctuation">,</span><span class="name variable">NewCounter</span><span class="punctuation">}</span> <span class="operator">=</span> <span class="name">executeRequest</span><span class="punctuation">(</span><span class="name variable">CurrentState</span><span class="punctuation">,</span>
+                                 <span class="name">addToCurrentCounter</span><span class="punctuation">,</span> <span class="literal number integer">78</span><span class="punctuation">)</span>
 </pre>
 <p>For a request taking no parameter:</p>
-<pre class="literal-block">
-{NewState,Sentence} = executeRequest(CurrentState, getLastSentence)
+<pre class="code erlang literal-block">
+<span class="punctuation">{</span><span class="name variable">NewState</span><span class="punctuation">,</span><span class="name variable">Sentence</span><span class="punctuation">}</span> <span class="operator">=</span> <span class="name">executeRequest</span><span class="punctuation">(</span><span class="name variable">CurrentState</span><span class="punctuation">,</span> <span class="name">getLastSentence</span><span class="punctuation">)</span>
 </pre>
 <p>Regarding now <strong>executeOneway</strong>, it is either <tt class="docutils literal">executeOneway/2</tt> or <tt class="docutils literal">executeOneway/3</tt>, depending on whether the oneway takes parameters. If yes, they can be specified as a list (if there are more than one) or, as always, as a standalone non-list parameter.</p>
 <p><tt class="docutils literal">executeOneway</tt> returns the new state.</p>
 <p>For example, a oneway taking more than one parameter, or one list parameter:</p>
-<pre class="literal-block">
-NewState = executeOneway(CurrentState,say,[ &quot;hello&quot;, 42 ])
+<pre class="code erlang literal-block">
+<span class="name variable">NewState</span> <span class="operator">=</span> <span class="name">executeOneway</span><span class="punctuation">(</span><span class="name variable">CurrentState</span><span class="punctuation">,</span><span class="name">say</span><span class="punctuation">,[</span> <span class="literal string">&quot;hello&quot;</span><span class="punctuation">,</span> <span class="literal number integer">42</span> <span class="punctuation">])</span>
 </pre>
 <p>For a oneway taking exactly one (non-list) parameter:</p>
-<pre class="literal-block">
-NewState = executeOneway(CurrentState,setAge,78)
+<pre class="code erlang literal-block">
+<span class="name variable">NewState</span> <span class="operator">=</span> <span class="name">executeOneway</span><span class="punctuation">(</span><span class="name variable">CurrentState</span><span class="punctuation">,</span><span class="name">setAge</span><span class="punctuation">,</span><span class="literal number integer">78</span><span class="punctuation">)</span>
 </pre>
 <p>For a oneway taking no parameter:</p>
-<pre class="literal-block">
-NewState = executeOneway(CurrentState,declareBirthday)
+<pre class="code erlang literal-block">
+<span class="name variable">NewState</span> <span class="operator">=</span> <span class="name">executeOneway</span><span class="punctuation">(</span><span class="name variable">CurrentState</span><span class="punctuation">,</span><span class="name">declareBirthday</span><span class="punctuation">)</span>
 </pre>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -847,8 +847,8 @@ NewState = executeOneway(CurrentState,declareBirthday)
 <p class="last">This mother class does not have to have specifically defined or overridden that method: this method will just be called in the context of that class, as if it was an instance of the mother class rather than one of the actual child class.</p>
 </div>
 <p>In our example, we should thus use simply:</p>
-<pre class="literal-block">
-AgeState = executeOnewayWith(State,class_Creature,setAge,NewAge)
+<pre class="code erlang literal-block">
+<span class="name variable">AgeState</span> <span class="operator">=</span> <span class="name">executeOnewayWith</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name">class_Creature</span><span class="punctuation">,</span><span class="name">setAge</span><span class="punctuation">,</span><span class="name variable">NewAge</span><span class="punctuation">)</span>
 </pre>
 <p>in order to call the <tt class="docutils literal">class_Creature</tt> version of the <tt class="docutils literal">setAge/2</tt> oneway.</p>
 </div>
@@ -857,14 +857,14 @@ AgeState = executeOnewayWith(State,class_Creature,setAge,NewAge)
 <p>Static methods, as opposed to member methods, do not target specifically an instance, they are defined at the class level.</p>
 <p>They thus do not operate on PID, they are just to be called thanks to their module name, exactly as any exported standard function.</p>
 <p>Static methods are to be listed by the class developer thanks to the <tt class="docutils literal">wooper_static_method_export</tt> define, like in:</p>
-<pre class="literal-block">
--define( wooper_static_method_export, get_default_whisker_color/0,
-         determine_croquette_appeal/1foo_bar/1 ).
+<pre class="code erlang literal-block">
+<span class="punctuation">-</span><span class="name entity">define</span><span class="punctuation">(</span> <span class="name">wooper_static_method_export</span><span class="punctuation">,</span> <span class="name">get_default_whisker_color</span><span class="operator">/</span><span class="literal number integer">0</span><span class="punctuation">,</span>
+         <span class="name">determine_croquette_appeal</span><span class="operator">/</span><span class="literal number integer">1</span><span class="punctuation">,</span> <span class="name">foo_bar</span><span class="operator">/</span><span class="literal number integer">1</span> <span class="punctuation">).</span>
 </pre>
 <p>The static methods are automatically exported by WOOPER, so that they can be readily called from any context, as in:</p>
-<pre class="literal-block">
-PossibleColor = class_Cat:get_default_whisker_color(),
-[..]
+<pre class="code erlang literal-block">
+<span class="name variable">PossibleColor</span> <span class="operator">=</span> <span class="name namespace">class_Cat</span><span class="punctuation">:</span><span class="name function">get_default_whisker_color</span><span class="punctuation">(),</span>
+<span class="punctuation">[..]</span>
 </pre>
 <p></p>
 </div>
@@ -878,8 +878,8 @@ PossibleColor = class_Cat:get_default_whisker_color(),
 <p>The state of an instance (corresponding to the one that is given by WOOPER as first parameter of all its methods, thanks to a variable conventionally named <tt class="docutils literal">State</tt>) is simply defined as a <strong>set of attributes</strong>.</p>
 <p>Each attribute is designated by a name, defined as an atom, and is associated to a mutable value, which can be any Erlang term.</p>
 <p>The current state of an instance can be thought as a list of <tt class="docutils literal">{attribute_name,attribute_value}</tt> pairs, like in:</p>
-<pre class="literal-block">
-[ {color,black}, {fur_color,sand}, {age,13}, {name,&quot;Tortilla&quot;} ].
+<pre class="code erlang literal-block">
+<span class="punctuation">[</span> <span class="punctuation">{</span><span class="name">color</span><span class="punctuation">,</span><span class="name">black</span><span class="punctuation">},</span> <span class="punctuation">{</span><span class="name">fur_color</span><span class="punctuation">,</span><span class="name">sand</span><span class="punctuation">},</span> <span class="punctuation">{</span><span class="name">age</span><span class="punctuation">,</span><span class="literal number integer">13</span><span class="punctuation">},</span> <span class="punctuation">{</span><span class="name">name</span><span class="punctuation">,</span><span class="literal string">&quot;Tortilla&quot;</span><span class="punctuation">}</span> <span class="punctuation">].</span>
 </pre>
 </div>
 <div class="section" id="state-implementation-details">
@@ -907,8 +907,8 @@ PossibleColor = class_Cat:get_default_whisker_color(),
 <div class="section" id="the-setattribute-3-function">
 <h6>The <tt class="docutils literal">setAttribute/3</tt> Function</h6>
 <p>Setting an attribute (creating and/or modifying it) should be done with the <tt class="docutils literal">setAttribute/3</tt> function:</p>
-<pre class="literal-block">
-NewState = setAttribute(AState,AttributeName,NewAttributeValue)
+<pre class="code erlang literal-block">
+<span class="name variable">NewState</span> <span class="operator">=</span> <span class="name">setAttribute</span><span class="punctuation">(</span><span class="name variable">AState</span><span class="punctuation">,</span><span class="name variable">AttributeName</span><span class="punctuation">,</span><span class="name variable">NewAttributeValue</span><span class="punctuation">)</span>
 </pre>
 <p>For example, <tt class="docutils literal">AgeState = setAttribute(State,age,3)</tt> will return a new state, bound to <tt class="docutils literal">AgeState</tt>, exact copy of <tt class="docutils literal">State</tt> (with all the attribute pairs equal) but for the <tt class="docutils literal">age</tt> attribute, whose value will be set to 3.</p>
 <p>Therefore, during the execution of a method, any number of states can be defined (ex: <tt class="docutils literal">State</tt>, <tt class="docutils literal">InitialisedState</tt>, <tt class="docutils literal">AgeState</tt>, etc.) before all, but the one that is returned, are garbage-collected.</p>
@@ -916,9 +916,9 @@ NewState = setAttribute(AState,AttributeName,NewAttributeValue)
 <p>In various cases, notably in constructors, one needs to define a series of attributes in a row, but chaining <tt class="docutils literal">setAttribute/3</tt> calls with intermediate states that have each to be named is not really convenient.</p>
 <p>A better solution is to use the <tt class="docutils literal">setAttributes/2</tt> function (note the plural) to set a list of attribute name/attribute value pairs in a row.</p>
 <p>For example:</p>
-<pre class="literal-block">
-ConstructedState = setAttributes(MyState,[{age,3},
-                                          {whisker_color,white}])
+<pre class="code erlang literal-block">
+<span class="name variable">ConstructedState</span> <span class="operator">=</span> <span class="name">setAttributes</span><span class="punctuation">(</span><span class="name variable">MyState</span><span class="punctuation">,[{</span><span class="name">age</span><span class="punctuation">,</span><span class="literal number integer">3</span><span class="punctuation">},</span>
+                                          <span class="punctuation">{</span><span class="name">whisker_color</span><span class="punctuation">,</span><span class="name">white</span><span class="punctuation">}])</span>
 </pre>
 <p>will return a new state, exact copy of <tt class="docutils literal">MyState</tt> but for the listed attributes, set to their respective specified value.</p>
 </div>
@@ -950,14 +950,14 @@ ConstructedState = setAttributes(MyState,[{age,3},
 <div class="section" id="the-getattribute-2-function">
 <h6>The <tt class="docutils literal">getAttribute/2</tt> Function</h6>
 <p>Getting the value of an attribute is to be done with the <tt class="docutils literal">getAttribute/2</tt> function:</p>
-<pre class="literal-block">
-AttributeValue = getAttribute(AState,AttributeName)
+<pre class="code erlang literal-block">
+<span class="name variable">AttributeValue</span> <span class="operator">=</span> <span class="name">getAttribute</span><span class="punctuation">(</span><span class="name variable">AState</span><span class="punctuation">,</span><span class="name variable">AttributeName</span><span class="punctuation">)</span>
 </pre>
 <p>For example, <tt class="docutils literal">MyColor = getAttribute(State,whisker_color)</tt> returns the value of the attribute <tt class="docutils literal">whisker_color</tt> from state <tt class="docutils literal">State</tt>.</p>
 <p>The requested attribute may not exist in the specified state. In this case, a runtime error is issued.</p>
 <p>Requesting a non-existing attribute triggers a bad match. In the previous example, should the attribute <tt class="docutils literal">whisker_color</tt> not have been defined, <tt class="docutils literal">getAttribute/2</tt> would return:</p>
-<pre class="literal-block">
-{key_not_found,whisker_color}
+<pre class="code erlang literal-block">
+<span class="punctuation">{</span><span class="name">key_not_found</span><span class="punctuation">,</span><span class="name">whisker_color</span><span class="punctuation">}</span>
 </pre>
 </div>
 <div class="section" id="the-getattr-2-macro">
@@ -976,12 +976,12 @@ AttributeValue = getAttribute(AState,AttributeName)
 <h6>The <tt class="docutils literal">addToAttribute/3</tt> Function</h6>
 <p>When having a numerical attribute, <tt class="docutils literal">addToAttribute/3</tt> adds the specified number to the attribute.</p>
 <p>To be used like in:</p>
-<pre class="literal-block">
-NewState = addToAttribute(State,AttributeName,Value)
+<pre class="code erlang literal-block">
+<span class="name variable">NewState</span> <span class="operator">=</span> <span class="name">addToAttribute</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name variable">AttributeName</span><span class="punctuation">,</span><span class="name variable">Value</span><span class="punctuation">)</span>
 </pre>
 <p>For example:</p>
-<pre class="literal-block">
-MyState = addToAttribute(FirstState,a_numerical_attribute,6)
+<pre class="code erlang literal-block">
+<span class="name variable">MyState</span> <span class="operator">=</span> <span class="name">addToAttribute</span><span class="punctuation">(</span><span class="name variable">FirstState</span><span class="punctuation">,</span><span class="name">a_numerical_attribute</span><span class="punctuation">,</span><span class="literal number integer">6</span><span class="punctuation">)</span>
 </pre>
 <p>In <tt class="docutils literal">MyState</tt>, the value of attribute <tt class="docutils literal">a_numerical_attribute</tt> is increased of 6, compared to the one in <tt class="docutils literal">FirstState</tt>.</p>
 <p>Calling <tt class="docutils literal">addToAttribute/3</tt> on a non-existing attribute will trigger a runtime error (<tt class="docutils literal">{key_not_found,AttributeName}</tt>).</p>
@@ -991,12 +991,12 @@ MyState = addToAttribute(FirstState,a_numerical_attribute,6)
 <h6>The <tt class="docutils literal">subtractFromAttribute/3</tt> Function</h6>
 <p>When having a numerical attribute, <tt class="docutils literal">subtractFromAttribute/3</tt> subtracts the specified number from the attribute.</p>
 <p>To be used like in:</p>
-<pre class="literal-block">
-NewState = subtractFromAttribute(State,AttributeName,Value)
+<pre class="code erlang literal-block">
+<span class="name variable">NewState</span> <span class="operator">=</span> <span class="name">subtractFromAttribute</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name variable">AttributeName</span><span class="punctuation">,</span><span class="name variable">Value</span><span class="punctuation">)</span>
 </pre>
 <p>For example:</p>
-<pre class="literal-block">
-MyState = subtractFromAttribute(FirstState,a_numerical_attribute,7)
+<pre class="code erlang literal-block">
+<span class="name variable">MyState</span> <span class="operator">=</span> <span class="name">subtractFromAttribute</span><span class="punctuation">(</span><span class="name variable">FirstState</span><span class="punctuation">,</span><span class="name">a_numerical_attribute</span><span class="punctuation">,</span><span class="literal number integer">7</span><span class="punctuation">)</span>
 </pre>
 <p>In <tt class="docutils literal">MyState</tt>, the value of attribute <tt class="docutils literal">a_numerical_attribute</tt> is decreased of 7, compared to the one in <tt class="docutils literal">FirstState</tt>.</p>
 <p>Calling <tt class="docutils literal">subtractFromAttribute/3</tt> on a non-existing attribute will trigger a runtime error (<tt class="docutils literal">{key_not_found,AttributeName}</tt>).
@@ -1006,12 +1006,12 @@ If the attribute exists, but no subtraction can be performed on it (meaningless 
 <h6>The <tt class="docutils literal">toggleAttribute/2</tt> Function</h6>
 <p>Flips the value of the specified (supposedly boolean) attribute: when having a boolean attribute, whose value is either <tt class="docutils literal">true</tt> or <tt class="docutils literal">false</tt>, sets the opposite logical value to the current one.</p>
 <p>To be used like in:</p>
-<pre class="literal-block">
-NewState = toggleAttribute(State,BooleanAttributeName)
+<pre class="code erlang literal-block">
+<span class="name variable">NewState</span> <span class="operator">=</span> <span class="name">toggleAttribute</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name variable">BooleanAttributeName</span><span class="punctuation">)</span>
 </pre>
 <p>For example:</p>
-<pre class="literal-block">
-NewState = toggleAttribute(State,a_boolean_attribute)
+<pre class="code erlang literal-block">
+<span class="name variable">NewState</span> <span class="operator">=</span> <span class="name">toggleAttribute</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name">a_boolean_attribute</span><span class="punctuation">)</span>
 </pre>
 <p>Calling <tt class="docutils literal">toggleAttribute/2</tt> on a non-existing attribute will trigger a runtime error (<tt class="docutils literal">{key_not_found,AttributeName}</tt>). If the attribute exists, but has not a boolean value, a <tt class="docutils literal">badarith</tt> runtime error will be issued.</p>
 </div>
@@ -1058,27 +1058,27 @@ NewState = toggleAttribute(State,a_boolean_attribute)
 <h4><a class="toc-backref" href="#id97">The General Case</a></h4>
 <p>Both multiple inheritance and polymorphism are automatically managed by WOOPER: even if our cat class does not define a <tt class="docutils literal">getAge</tt> method, it can nevertheless readily be called on a cat instance, as it is inherited from its mother classes (here from <tt class="docutils literal">class_Creature</tt>, an indirect mother class).</p>
 <p>Therefore all creature instances can be handled the same, regardless of their actual classes:</p>
-<pre class="literal-block">
-% Inherited methods work exactly the same as methods defined
+<pre class="code erlang literal-block">
+<span class="comment">% Inherited methods work exactly the same as methods defined
 % directly in the class:
-MyCat ! {getAge,[],self()},
-receive
-  {wooper_result,Age} -&gt;
-    io:format( &quot;This is a ~B year old cat.&quot;, [Age] )
-end,
+</span><span class="name variable">MyCat</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">getAge</span><span class="punctuation">,[],</span><span class="name">self</span><span class="punctuation">()},</span>
+<span class="keyword">receive</span>
+  <span class="punctuation">{</span><span class="name">wooper_result</span><span class="punctuation">,</span><span class="name variable">Age</span><span class="punctuation">}</span> <span class="operator">-&gt;</span>
+    <span class="name namespace">io</span><span class="punctuation">:</span><span class="name function">format</span><span class="punctuation">(</span> <span class="literal string">&quot;This is a </span><span class="literal string interpol">~B</span><span class="literal string"> year old cat.&quot;</span><span class="punctuation">,</span> <span class="punctuation">[</span><span class="name variable">Age</span><span class="punctuation">]</span> <span class="punctuation">)</span>
+<span class="keyword">end</span><span class="punctuation">,</span>
 
-% Polymorphism is immediate:
+<span class="comment">% Polymorphism is immediate:
 % (class_Platypus inheriting too from class_Mammal,
 % hence from class_Creature).
-MyPetList = [MyCat,MyPlatypus],
-foreach(
-  fun(AnyCreature) -&gt;
-    AnyCreature ! {getAge,[],self()},
-    receive
-      {wooper_result,Age} -&gt;
-        io:format(&quot;This is a ~B year old creature.&quot;,[Age])
-  end,
-  MyPetList).
+</span><span class="name variable">MyPetList</span> <span class="operator">=</span> <span class="punctuation">[</span><span class="name variable">MyCat</span><span class="punctuation">,</span><span class="name variable">MyPlatypus</span><span class="punctuation">],</span>
+<span class="name function">foreach</span><span class="punctuation">(</span>
+  <span class="keyword">fun</span><span class="punctuation">(</span><span class="name variable">AnyCreature</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+    <span class="name variable">AnyCreature</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">getAge</span><span class="punctuation">,[],</span><span class="name">self</span><span class="punctuation">()},</span>
+    <span class="keyword">receive</span>
+      <span class="punctuation">{</span><span class="name">wooper_result</span><span class="punctuation">,</span><span class="name variable">Age</span><span class="punctuation">}</span> <span class="operator">-&gt;</span>
+        <span class="name namespace">io</span><span class="punctuation">:</span><span class="name function">format</span><span class="punctuation">(</span><span class="literal string">&quot;This is a </span><span class="literal string interpol">~B</span><span class="literal string"> year old creature.&quot;</span><span class="punctuation">,[</span><span class="name variable">Age</span><span class="punctuation">])</span>
+  <span class="keyword">end</span><span class="punctuation">,</span>
+  <span class="name variable">MyPetList</span><span class="punctuation">).</span>
 </pre>
 <p>Running this code should output something like:</p>
 <pre class="literal-block">
@@ -1090,9 +1090,9 @@ This is a 9 year old creature.
 <div class="section" id="the-special-case-of-diamond-shaped-inheritance">
 <h4><a class="toc-backref" href="#id98">The Special Case of Diamond-Shaped Inheritance</a></h4>
 <p>In the case of a <a class="reference external" href="http://en.wikipedia.org/wiki/Diamond_problem">diamond-shaped inheritance</a>, as the method table is constructed in the order specified in the declaration of the superclasses, like in:</p>
-<pre class="literal-block">
-get_superclasses() -&gt;
-  [class_X,class_Y,...]).
+<pre class="code erlang literal-block">
+<span class="name function">get_superclasses</span><span class="punctuation">()</span> <span class="operator">-&gt;</span>
+  <span class="punctuation">[</span><span class="name">class_X</span><span class="punctuation">,</span><span class="name">class_Y</span><span class="punctuation">,...]).</span>
 </pre>
 <p>and as child classes override mother ones, when an incoming WOOPER message arrives the selected <strong>method</strong> should be the one defined in the last inheritance branch of the last child (if any), otherwise the one defined in the next to last branch of the last child, etc.</p>
 <p>Generally speaking, overriding in that case the relevant methods that were initially defined in the child class at the base of the diamond, in order that they perform explicitly a direct call to the wanted module, is by far the most reasonable solution, in terms of clarity and maintainability, compared to guessing which version of the method in the inheritance graph should be called.</p>
@@ -1109,9 +1109,9 @@ get_superclasses() -&gt;
 <div class="section" id="life-cycle">
 <h3><a class="toc-backref" href="#id99">Life-Cycle</a></h3>
 <p>Basically, creation and destruction of instances are managed respectively thanks to the <tt class="docutils literal">new</tt>/<tt class="docutils literal">new_link</tt> and the <tt class="docutils literal">delete</tt> operators (all these operators are WOOPER-reserved function names, for all arities), like in:</p>
-<pre class="literal-block">
-MyCat = class_Cat:new(Age,Gender,FurColor,WhiskerColor),
-MyCat ! delete.
+<pre class="code erlang literal-block">
+<span class="name variable">MyCat</span> <span class="operator">=</span> <span class="name namespace">class_Cat</span><span class="punctuation">:</span><span class="name function">new</span><span class="punctuation">(</span><span class="name variable">Age</span><span class="punctuation">,</span><span class="name variable">Gender</span><span class="punctuation">,</span><span class="name variable">FurColor</span><span class="punctuation">,</span><span class="name variable">WhiskerColor</span><span class="punctuation">),</span>
+<span class="name variable">MyCat</span> <span class="operator">!</span> <span class="name">delete</span><span class="punctuation">.</span>
 </pre>
 <div class="section" id="instance-creation-new-new-link-and-construct">
 <h4><a class="toc-backref" href="#id100">Instance Creation: <tt class="docutils literal">new</tt>/<tt class="docutils literal">new_link</tt> And <tt class="docutils literal">construct</tt></a></h4>
@@ -1136,10 +1136,10 @@ MyCat ! delete.
 </tbody>
 </table>
 <p>For example:</p>
-<pre class="literal-block">
-% Selection based on pattern-matching:
-MyFirstDog  = Class_Dog:new(create_from_weight,4.4).
-MySecondDog = Class_Dog:new(create_from_colors,[sand,white]).
+<pre class="code erlang literal-block">
+<span class="comment">% Selection based on pattern-matching:
+</span><span class="name variable">MyFirstDog</span>  <span class="operator">=</span> <span class="name variable">Class_Dog</span><span class="punctuation">:</span><span class="name function">new</span><span class="punctuation">(</span><span class="name">create_from_weight</span><span class="punctuation">,</span><span class="literal number integer">4</span><span class="punctuation">.</span><span class="literal number integer">4</span><span class="punctuation">),</span>
+<span class="name variable">MySecondDog</span> <span class="operator">=</span> <span class="name variable">Class_Dog</span><span class="punctuation">:</span><span class="name function">new</span><span class="punctuation">(</span><span class="name">create_from_colors</span><span class="punctuation">,[</span><span class="name">sand</span><span class="punctuation">,</span><span class="name">white</span><span class="punctuation">]).</span>
 </pre>
 </div>
 <div class="section" id="the-various-ways-of-creating-an-instance">
@@ -1198,9 +1198,9 @@ MySecondDog = Class_Dog:new(create_from_colors,[sand,white]).
 <p>Exactly like a process might be spawned on another Erlang node, a WOOPER instance can be created on any user-specified available Erlang node.</p>
 <p>To do so, the <tt class="docutils literal">remote_*new*</tt> variations shall be used. They behave exactly like their local counterparts, except that they take an additional information, as first parameter: the node on which the specified instance must be created.</p>
 <p>For example:</p>
-<pre class="literal-block">
-MyCat = class_Cat:remote_new(TargetNode, Age, Gender,
-                             FurColor, WhiskerColor).
+<pre class="code erlang literal-block">
+<span class="name variable">MyCat</span> <span class="operator">=</span> <span class="name namespace">class_Cat</span><span class="punctuation">:</span><span class="name function">remote_new</span><span class="punctuation">(</span><span class="name variable">TargetNode</span><span class="punctuation">,</span> <span class="name variable">Age</span><span class="punctuation">,</span> <span class="name variable">Gender</span><span class="punctuation">,</span>
+                             <span class="name variable">FurColor</span><span class="punctuation">,</span> <span class="name variable">WhiskerColor</span><span class="punctuation">).</span>
 </pre>
 <p>Of course:</p>
 <ul class="simple">
@@ -1214,20 +1214,20 @@ MyCat = class_Cat:remote_new(TargetNode, Age, Gender,
 <div class="section" id="some-examples-of-instance-creation">
 <h5>Some Examples Of Instance Creation</h5>
 <p>Knowing that a cat can be created out of four parameters (Age, Gender, FurColor, WhiskerColor), various cat instances could be created thanks to:</p>
-<pre class="literal-block">
-% Local asynchronous creation:
-MyFirstCat = class_Cat:new(1,male,brown,white),
+<pre class="code erlang literal-block">
+<span class="comment">% Local asynchronous creation:
+</span><span class="name variable">MyFirstCat</span> <span class="operator">=</span> <span class="name namespace">class_Cat</span><span class="punctuation">:</span><span class="name function">new</span><span class="punctuation">(</span><span class="literal number integer">1</span><span class="punctuation">,</span><span class="name">male</span><span class="punctuation">,</span><span class="name">brown</span><span class="punctuation">,</span><span class="name">white</span><span class="punctuation">),</span>
 
-% The same, but a crash of this cat will crash the current process too:
-MySecondCat = class_Cat:new_link(2,female,black,white),
+<span class="comment">% The same, but a crash of this cat will crash the current process too:
+</span><span class="name variable">MySecondCat</span> <span class="operator">=</span> <span class="name namespace">class_Cat</span><span class="punctuation">:</span><span class="name function">new_link</span><span class="punctuation">(</span><span class="literal number integer">2</span><span class="punctuation">,</span><span class="name">female</span><span class="punctuation">,</span><span class="name">black</span><span class="punctuation">,</span><span class="name">white</span><span class="punctuation">),</span>
 
-% This cat will be created on OtherNode, and the call will return only
+<span class="comment">% This cat will be created on OtherNode, and the call will return only
 % once it is up and running or once the creation failed. As moreover the
 % cat instance is linked to the instance process, it may crash this
 % calling process:
-MyThirdCat = class_Cat:remote_synchronous_timed_new_link(OtherNode,3,
-  male,grey,black),
-[..]
+</span><span class="name variable">MyThirdCat</span> <span class="operator">=</span> <span class="name namespace">class_Cat</span><span class="punctuation">:</span><span class="name function">remote_synchronous_timed_new_link</span><span class="punctuation">(</span><span class="name variable">OtherNode</span><span class="punctuation">,</span><span class="literal number integer">3</span><span class="punctuation">,</span>
+  <span class="name">male</span><span class="punctuation">,</span><span class="name">grey</span><span class="punctuation">,</span><span class="name">black</span><span class="punctuation">),</span>
+<span class="punctuation">[..]</span>
 </pre>
 </div>
 <div class="section" id="definition-of-the-construct-operator">
@@ -1236,44 +1236,44 @@ MyThirdCat = class_Cat:remote_synchronous_timed_new_link(OtherNode,3,
 <p>In the context of class inheritance, the <tt class="docutils literal">construct</tt> operators are expected to be chained: they must be designed to be called by the ones of their child classes, and in turn they must call themselves the constructors of their direct mother classes, if any.</p>
 <p>Hence they always take the current state of the instance being created as a starting base, and returns it once updated, first from the direct mother classes, then by this class itself.</p>
 <p>For example, let's suppose <tt class="docutils literal">class_Cat</tt> inherits directly both from <tt class="docutils literal">class_Mammal</tt> and from <tt class="docutils literal">class_ViviparousBeing</tt>, has only one attribute (<tt class="docutils literal">whisker_color)</tt> of its own, and that a new cat is to be created out of three pieces of information:</p>
-<pre class="literal-block">
-[..]
-get_superclasses() -&gt;
-  [class_Mammal,class_ViviparousBeing].
+<pre class="code erlang literal-block">
+<span class="punctuation">[..]</span>
+<span class="name function">get_superclasses</span><span class="punctuation">()</span> <span class="operator">-&gt;</span>
+  <span class="punctuation">[</span><span class="name">class_Mammal</span><span class="punctuation">,</span><span class="name">class_ViviparousBeing</span><span class="punctuation">].</span>
 
-[..]
-get_attributes() -&gt;
-  [whisker_color].
+<span class="punctuation">[..]</span>
+<span class="name function">get_attributes</span><span class="punctuation">()</span> <span class="operator">-&gt;</span>
+  <span class="punctuation">[</span><span class="name">whisker_color</span><span class="punctuation">].</span>
 
-% Constructs a new Cat.
-construct(State,Gender,FurColor,WhiskerColor) -&gt;
-    % First the (chained) direct mother classes:
-    MammalState = class_Mammal:construct(State,_Age=0,Gender,FurColor),
-    ViviparousMammalState = class_ViviparousBeing:construct(MammalState),
-    % Then the class-specific attributes:
-    setAttribute(ViviparousMammalState,whisker_color,WhiskerColor).
+<span class="comment">% Constructs a new Cat.
+</span><span class="name function">construct</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name variable">Gender</span><span class="punctuation">,</span><span class="name variable">FurColor</span><span class="punctuation">,</span><span class="name variable">WhiskerColor</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+    <span class="comment">% First the (chained) direct mother classes:
+</span>    <span class="name variable">MammalState</span> <span class="operator">=</span> <span class="name namespace">class_Mammal</span><span class="punctuation">:</span><span class="name function">construct</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,_</span><span class="name variable">Age</span><span class="operator">=</span><span class="literal number integer">0</span><span class="punctuation">,</span><span class="name variable">Gender</span><span class="punctuation">,</span><span class="name variable">FurColor</span><span class="punctuation">),</span>
+    <span class="name variable">ViviparousMammalState</span> <span class="operator">=</span> <span class="name namespace">class_ViviparousBeing</span><span class="punctuation">:</span><span class="name function">construct</span><span class="punctuation">(</span><span class="name variable">MammalState</span><span class="punctuation">),</span>
+    <span class="comment">% Then the class-specific attributes:
+</span>    <span class="name">setAttribute</span><span class="punctuation">(</span><span class="name variable">ViviparousMammalState</span><span class="punctuation">,</span><span class="name">whisker_color</span><span class="punctuation">,</span><span class="name variable">WhiskerColor</span><span class="punctuation">).</span>
 </pre>
 <p>The fact that the <tt class="docutils literal">Mammal</tt> class itself inherits from the <tt class="docutils literal">Creature</tt> class does not have to appear here: it is to be managed directly by <tt class="docutils literal">class_Mammal:construct</tt> (at any given inheritance level, only direct mother classes must be taken into account).</p>
 <p>One should ensure that, in constructors, the successive states are always built from the last updated one, unlike:</p>
-<pre class="literal-block">
-% WRONG, the age update is lost:
-construct(State,Age,Gender) -&gt;
-  AgeState = setAttribute(State,age,Age),
-  % AgeState should be used here, not State:
-  setAttribute(State,gender,Gender),
+<pre class="code erlang literal-block">
+<span class="comment">% WRONG, the age update is lost:
+</span><span class="name function">construct</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name variable">Age</span><span class="punctuation">,</span><span class="name variable">Gender</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+  <span class="name variable">AgeState</span> <span class="operator">=</span> <span class="name">setAttribute</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name">age</span><span class="punctuation">,</span><span class="name variable">Age</span><span class="punctuation">),</span>
+  <span class="comment">% AgeState should be used here, not State:
+</span>  <span class="name">setAttribute</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name">gender</span><span class="punctuation">,</span><span class="name variable">Gender</span><span class="punctuation">),</span>
 </pre>
 <p>This would be correct:</p>
-<pre class="literal-block">
-% RIGHT but a bit clumsy:
-construct(State,Age,Gender) -&gt;
-  AgeState = setAttribute(State,age,Age),
-  setAttribute(AgeState,gender,Gender).
+<pre class="code erlang literal-block">
+<span class="comment">% RIGHT but a bit clumsy:
+</span><span class="name function">construct</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name variable">Age</span><span class="punctuation">,</span><span class="name variable">Gender</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+  <span class="name variable">AgeState</span> <span class="operator">=</span> <span class="name">setAttribute</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name">age</span><span class="punctuation">,</span><span class="name variable">Age</span><span class="punctuation">),</span>
+  <span class="name">setAttribute</span><span class="punctuation">(</span><span class="name variable">AgeState</span><span class="punctuation">,</span><span class="name">gender</span><span class="punctuation">,</span><span class="name variable">Gender</span><span class="punctuation">).</span>
 </pre>
 <p>Recommended form:</p>
-<pre class="literal-block">
-% BEST:
-construct(State,Age,Gender) -&gt;
-  setAttributes( State, [ {age,Age}, {gender,Gender} ]).
+<pre class="code erlang literal-block">
+<span class="comment">% BEST:
+</span><span class="name function">construct</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name variable">Age</span><span class="punctuation">,</span><span class="name variable">Gender</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+  <span class="name">setAttributes</span><span class="punctuation">(</span> <span class="name variable">State</span><span class="punctuation">,</span> <span class="punctuation">[</span> <span class="punctuation">{</span><span class="name">age</span><span class="punctuation">,</span><span class="name variable">Age</span><span class="punctuation">},</span> <span class="punctuation">{</span><span class="name">gender</span><span class="punctuation">,</span><span class="name variable">Gender</span><span class="punctuation">}</span> <span class="punctuation">]).</span>
 </pre>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -1296,12 +1296,12 @@ construct(State,Age,Gender) -&gt;
 <div class="section" id="asynchronous-destruction-using-destruct-1">
 <h5>Asynchronous Destruction: using <tt class="docutils literal">destruct/1</tt></h5>
 <p>More precisely, either the class implementer does not define at all a <tt class="docutils literal">destruct/1</tt> operator (and therefore uses the default do-nothing destructor), or it defines it explicitly, like in:</p>
-<pre class="literal-block">
-destruct(State) -&gt;
-  io:format(&quot;An instance of class ~w is being deleted now!&quot;,[?MODULE]),
-  % Quite often the destructor does not need to modify the state of
-  % the instance:
-  State.
+<pre class="code erlang literal-block">
+<span class="name function">destruct</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+  <span class="name namespace">io</span><span class="punctuation">:</span><span class="name function">format</span><span class="punctuation">(</span><span class="literal string">&quot;An instance of class </span><span class="literal string interpol">~w</span><span class="literal string"> is being deleted now!&quot;</span><span class="punctuation">,[</span><span class="operator">?</span><span class="name variable">MODULE</span><span class="punctuation">]),</span>
+  <span class="comment">% Quite often the destructor does not need to modify the state of
+</span>  <span class="comment">% the instance:
+</span>  <span class="name variable">State</span><span class="punctuation">.</span>
 </pre>
 <p>In both cases (default or user-defined destructor), when the instance will be deleted (ex: <tt class="docutils literal">MyInstance ! delete</tt> is issued), WOOPER will take care of:</p>
 <ul class="simple">
@@ -1313,13 +1313,13 @@ destruct(State) -&gt;
 <div class="section" id="synchronous-destruction-using-synchronous-delete-1">
 <h5>Synchronous Destruction: using <tt class="docutils literal">synchronous_delete/1</tt></h5>
 <p>WOOPER automatically defines as well a way of deleting <em>synchronously</em> a given instance: a caller can request a synchronous (blocking) deletion of that instance so that, once notified of the deletion, it knows for sure the instance does not exist anymore, like in:</p>
-<pre class="literal-block">
-InstanceToDelete ! {synchronous_delete,self()},
-% Then the caller can block as long as the deletion did not occur:
-receive
-  {deleted,InstanceToDelete} -&gt;
-      doSomething()
-end.
+<pre class="code erlang literal-block">
+<span class="name variable">InstanceToDelete</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">synchronous_delete</span><span class="punctuation">,</span><span class="name">self</span><span class="punctuation">()},</span>
+<span class="comment">% Then the caller can block as long as the deletion did not occur:
+</span><span class="keyword">receive</span>
+  <span class="punctuation">{</span><span class="name">deleted</span><span class="punctuation">,</span><span class="name variable">InstanceToDelete</span><span class="punctuation">}</span> <span class="operator">-&gt;</span>
+      <span class="name">doSomething</span><span class="punctuation">()</span>
+<span class="keyword">end</span><span class="punctuation">.</span>
 </pre>
 <p>The class implementer does not have to do anything to support this feature, as the synchronous deletion is automatically built by WOOPER on top of the usual asynchronous one (both thus rely on <tt class="docutils literal">destruct/1</tt>).</p>
 <p></p>
@@ -1339,10 +1339,10 @@ end.
 <li>and also an attribute named <tt class="docutils literal">my_list_of_pid</tt> containing a list of PID instances</li>
 </ul>
 <p>and if the deleted instance took ownership of these instances, then:</p>
-<pre class="literal-block">
-delete(State) -&gt;
- TempState = wooper:delete_any_instance_referenced_in(State,my_pid),
- wooper:delete_any_instance_referenced_in(TempState,my_list_of_pid).
+<pre class="code erlang literal-block">
+<span class="name function">delete</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+ <span class="name variable">TempState</span> <span class="operator">=</span> <span class="name namespace">wooper</span><span class="punctuation">:</span><span class="name function">delete_any_instance_referenced_in</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name">my_pid</span><span class="punctuation">),</span>
+ <span class="name namespace">wooper</span><span class="punctuation">:</span><span class="name function">delete_any_instance_referenced_in</span><span class="punctuation">(</span><span class="name variable">TempState</span><span class="punctuation">,</span><span class="name">my_list_of_pid</span><span class="punctuation">).</span>
 </pre>
 <p>will automatically delete all these instances (if any) and return an updated state.</p>
 <p>Then the destructors of the mother classes can be chained by WOOPER.</p>
@@ -1357,11 +1357,11 @@ delete(State) -&gt;
 <li>or by inheriting it</li>
 </ul>
 <p>For example:</p>
-<pre class="literal-block">
-onWOOPERExitReceived(State,Pid,ExitType) -&gt;
-  io:format(&quot;MyClass EXIT handler ignored signal '~p'&quot;
-            &quot; from ~w.~n&quot;, [ExitType,Pid]),
-  ?wooper_return_state_only(State).
+<pre class="code erlang literal-block">
+<span class="name function">onWOOPERExitReceived</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name variable">Pid</span><span class="punctuation">,</span><span class="name variable">ExitType</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+  <span class="name namespace">io</span><span class="punctuation">:</span><span class="name function">format</span><span class="punctuation">(</span><span class="literal string">&quot;MyClass EXIT handler ignored signal '</span><span class="literal string interpol">~p</span><span class="literal string">'&quot;</span>
+            <span class="literal string">&quot; from </span><span class="literal string interpol">~w</span><span class="literal string">.</span><span class="literal string interpol">~n</span><span class="literal string">&quot;</span><span class="punctuation">,</span> <span class="punctuation">[</span><span class="name variable">ExitType</span><span class="punctuation">,</span><span class="name variable">Pid</span><span class="punctuation">]),</span>
+  <span class="operator">?</span><span class="name">wooper_return_state_only</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">).</span>
 </pre>
 <p>may result in an output like:</p>
 <pre class="literal-block">
@@ -1382,19 +1382,19 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <h3><a class="toc-backref" href="#id47">Type Specifications</a></h3>
 <p>We strongly promote at least the definition of types and function specifications, if not a very regular use of <a class="reference external" href="http://erlang.org/doc/man/dialyzer.html">Dialyzer</a>.</p>
 <p>Albeit seldom mentioned here, WOOPER defines its own related type constructs in order to apply static typing at its level as well, like in:</p>
-<pre class="literal-block">
--spec construct( wooper:state(), age(), gender() ) -&gt; wooper:state().
--spec destruct( wooper:state() ) -&gt; wooper:state().
--spec setAge( wooper:state(), age() ) -&gt; oneway_return().
--spec canEat( wooper:state(), food() ) -&gt; request_return( boolean() ).
+<pre class="code erlang literal-block">
+<span class="punctuation">-</span><span class="name entity">spec</span> <span class="name">construct</span><span class="punctuation">(</span> <span class="name namespace">wooper</span><span class="punctuation">:</span><span class="name function">state</span><span class="punctuation">(),</span> <span class="name">age</span><span class="punctuation">(),</span> <span class="name">gender</span><span class="punctuation">()</span> <span class="punctuation">)</span> <span class="operator">-&gt;</span> <span class="name namespace">wooper</span><span class="punctuation">:</span><span class="name function">state</span><span class="punctuation">().</span>
+<span class="punctuation">-</span><span class="name entity">spec</span> <span class="name">destruct</span><span class="punctuation">(</span> <span class="name namespace">wooper</span><span class="punctuation">:</span><span class="name function">state</span><span class="punctuation">()</span> <span class="punctuation">)</span> <span class="operator">-&gt;</span> <span class="name namespace">wooper</span><span class="punctuation">:</span><span class="name function">state</span><span class="punctuation">().</span>
+<span class="punctuation">-</span><span class="name entity">spec</span> <span class="name">setAge</span><span class="punctuation">(</span> <span class="name namespace">wooper</span><span class="punctuation">:</span><span class="name function">state</span><span class="punctuation">(),</span> <span class="name">age</span><span class="punctuation">()</span> <span class="punctuation">)</span> <span class="operator">-&gt;</span> <span class="name">oneway_return</span><span class="punctuation">().</span>
+<span class="punctuation">-</span><span class="name entity">spec</span> <span class="name">canEat</span><span class="punctuation">(</span> <span class="name namespace">wooper</span><span class="punctuation">:</span><span class="name function">state</span><span class="punctuation">(),</span> <span class="name">food</span><span class="punctuation">()</span> <span class="punctuation">)</span> <span class="operator">-&gt;</span> <span class="name">request_return</span><span class="punctuation">(</span> <span class="name">boolean</span><span class="punctuation">()</span> <span class="punctuation">).</span>
 </pre>
 <p>Please refer to the <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples">test examples</a> to better understand their actual use.</p>
 </div>
 <div class="section" id="guidelines">
 <h3><a class="toc-backref" href="#id48">Guidelines</a></h3>
 <p>All WOOPER classes must include <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl">wooper.hrl</a>:</p>
-<pre class="literal-block">
--include(&quot;wooper.hrl&quot;).
+<pre class="code erlang literal-block">
+<span class="punctuation">-</span><span class="name entity">include</span><span class="punctuation">(</span><span class="literal string">&quot;wooper.hrl&quot;</span><span class="punctuation">).</span>
 </pre>
 <p>To help declaring the right defines in the right order, using the WOOPER <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_WOOPERTemplate.erl.sample">template</a> is recommended.</p>
 <p>One may also have a look at the full <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples">test examples</a>, as a source of inspiration.</p>
@@ -1420,7 +1420,7 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <h2><a class="toc-backref" href="#id51">WOOPER Example</a></h2>
 <p>We defined a small set of classes in order to serve as an example and demonstrate multiple inheritance:</p>
 <div class="figure">
-<img alt="WOOPER Example" src="wooper-example.png" />
+<img alt="WOOPER Example" src="wooper-example.png" style="width: 491.20000000000005px; height: 267.2px;" />
 <p class="caption">Example of an inheritance graph to be handled by WOOPER</p>
 </div>
 <div class="section" id="class-implementations">
@@ -1456,18 +1456,18 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <p>No warning should be tolerated in code using WOOPER, as we never found useless notifications.</p>
 <p>All attributes of an instance should better be defined from the constructor, instead of being dynamically added during the life of the instance; otherwise the methods would have to deal with some attributes that may, or may not, be defined; if no proper value exists for an attribute at the creation of an instance, then its value should just be set to the atom <tt class="docutils literal">undefined</tt>.</p>
 <p>When a function or a method is defined in a WOOPER file, it should of course be commented, and, even if the information can be guessed from context and body, in the last line of the comments the type of the function should be specified (ex: <tt class="docutils literal">oneway</tt>, <tt class="docutils literal">request</tt>, <tt class="docutils literal">helper function</tt>, etc.) possibly with qualifiers (ex: <tt class="docutils literal">const</tt>), like in:</p>
-<pre class="literal-block">
-% Sets the current color.
+<pre class="code erlang literal-block">
+<span class="comment">% Sets the current color.
 % (oneway)
-setColor(State,NewColor) -&gt;
-  [..]
+</span><span class="name function">setColor</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name variable">NewColor</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+  <span class="punctuation">[..]</span>
 </pre>
 <p>or:</p>
-<pre class="literal-block">
-% Gets the current color.
+<pre class="code erlang literal-block">
+<span class="comment">% Gets the current color.
 % (const request)
-getColor(State) -&gt;
-  [..]
+</span><span class="name function">getColor</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+  <span class="punctuation">[..]</span>
 </pre>
 <p>Helper functions and static methods (which, from an Erlang point of view, are just exported functions) should be named like C functions (ex: <tt class="docutils literal">compute_sum</tt>) rather than being written in CamelCase (ex: no helper function should be named <tt class="docutils literal">computeSum</tt>), to avoid mixing up these different kinds of code.</p>
 <p>To further separate helper functions from instance methods, an helper function taking a <tt class="docutils literal">State</tt> parameter should better place it at the end of its parameter list rather than in first position (ex: <tt class="docutils literal">compute_sum(X,Y,State)</tt> rather than <tt class="docutils literal">compute_sum(State,X,Y)</tt>).</p>
@@ -1505,16 +1505,16 @@ getColor(State) -&gt;
 <h6>Oneway Versus Request Calls</h6>
 <p>One of these gotchas - experienced even by the WOOPER author - is to define a two-parameter oneway, whose second parameter is a PID, and to call this method wrongly as a request, instead of as a oneway.</p>
 <p>For example, let's suppose the <tt class="docutils literal">class_Dog</tt> class defines the oneway method <tt class="docutils literal">startBarkingAt/3</tt> as:</p>
-<pre class="literal-block">
-startBarkingAt(State,Duration,ListenerPID) -&gt; ...
+<pre class="code erlang literal-block">
+<span class="name function">startBarkingAt</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name variable">Duration</span><span class="punctuation">,</span><span class="name variable">ListenerPID</span><span class="punctuation">)</span> <span class="operator">-&gt;</span> <span class="punctuation">...</span>
 </pre>
 <p>The correct approach to call this <strong>oneway</strong> would be:</p>
-<pre class="literal-block">
-MyDogPid ! {startBarkingAt,[MyDuration,self()]}
+<pre class="code erlang literal-block">
+<span class="name variable">MyDogPid</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">startBarkingAt</span><span class="punctuation">,[</span><span class="name variable">MyDuration</span><span class="punctuation">,</span><span class="name">self</span><span class="punctuation">()]}</span>
 </pre>
 <p>An absent-minded developer could have written instead:</p>
-<pre class="literal-block">
-MyDogPid ! {startBarkingAt,MyDuration,self()}
+<pre class="code erlang literal-block">
+<span class="name variable">MyDogPid</span> <span class="operator">!</span> <span class="punctuation">{</span><span class="name">startBarkingAt</span><span class="punctuation">,</span><span class="name variable">MyDuration</span><span class="punctuation">,</span><span class="name">self</span><span class="punctuation">()}</span>
 </pre>
 <p>This would have called a <tt class="docutils literal">request</tt> method <tt class="docutils literal">startBarkingAt/2</tt> (which could have been for example <tt class="docutils literal">startBarkingAt(State,TerminationOffset) <span class="pre">-&gt;</span> ...</tt>, the PID being interpreted by WOOPER as the request sender PID), a method that most probably does not even exist.</p>
 <p>This would result in a bit obscure error message like <tt class="docutils literal">Error in process &lt;0.43.0&gt; on node 'XXXX' with exit value: <span class="pre">{badarg,[{class_Dog,wooper_main_loop,1}]}</span></tt>.</p>
@@ -1550,7 +1550,7 @@ if a method takes only one parameter and if this parameter is a list, then in a 
 </ul>
 <p>We prefer using GNU/Linux, sticking to the latest stable release of Erlang, and building it from sources, thanks to GNU <tt class="docutils literal">make</tt>.</p>
 <p>For that we devised the <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-Myriad/blob/master/conf/install-erlang.sh">install-erlang.sh</a> script; a simple use of it is:</p>
-<pre class="literal-block">
+<pre class="code bash literal-block">
 $ ./install-erlang.sh --doc-install --generate-plt
 </pre>
 <p>One may execute <tt class="docutils literal"><span class="pre">./install-erlang.sh</span> <span class="pre">--help</span></tt> for more details about how to configure it, notably in order to enable all modules of interest (<tt class="docutils literal">crypto</tt>, <tt class="docutils literal">wx</tt>, etc.) even if they are optional in the context of WOOPER.</p>
@@ -1629,13 +1629,13 @@ $ cd Ceylan-WOOPER &amp;&amp; make all
 <div class="section" id="wooper-inner-workings">
 <h2><a class="toc-backref" href="#id67">WOOPER Inner Workings</a></h2>
 <p>Each instance runs a main loop (<tt class="docutils literal">wooper_main_loop/1</tt>, defined in <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl">wooper.hrl</a>) that keeps its internal state and, through a blocking <tt class="docutils literal">receive</tt>, serves the methods as specified by incoming messages, quite similarly to a classical server that loops on an updated state, like in:</p>
-<pre class="literal-block">
-my_server(State) -&gt;
-  receive
-    {command,{M,P}} -&gt;
-      NewState = execute_command(State,M,P),
-      my_server(NewState)
-  end.
+<pre class="code erlang literal-block">
+<span class="name function">my_server</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">)</span> <span class="operator">-&gt;</span>
+  <span class="keyword">receive</span>
+    <span class="punctuation">{</span><span class="name">command</span><span class="punctuation">,{</span><span class="name variable">M</span><span class="punctuation">,</span><span class="name variable">P</span><span class="punctuation">}}</span> <span class="operator">-&gt;</span>
+      <span class="name variable">NewState</span> <span class="operator">=</span> <span class="name">execute_command</span><span class="punctuation">(</span><span class="name variable">State</span><span class="punctuation">,</span><span class="name variable">M</span><span class="punctuation">,</span><span class="name variable">P</span><span class="punctuation">),</span>
+      <span class="name">my_server</span><span class="punctuation">(</span><span class="name variable">NewState</span><span class="punctuation">)</span>
+  <span class="keyword">end</span><span class="punctuation">.</span>
 </pre>
 <p>In each instance, WOOPER manages the tail-recursive infinite surrounding loop, <tt class="docutils literal">State</tt> corresponding to the (private) state of the instance, and <tt class="docutils literal">execute_command(State,M,P)</tt> corresponding to the WOOPER logic that triggers the user-defined method <tt class="docutils literal">M</tt> with the current state (<tt class="docutils literal">State</tt>) and the specified parameters (<tt class="docutils literal">P</tt>), and that may return a result.</p>
 <p>The per-instance kept state is twofold, in the sense that it contains two associative tables, one to route method calls and one to store the instance attributes, as explained below.</p>
@@ -1672,7 +1672,6 @@ my_server(State) -&gt;
 <ul class="simple">
 <li>test the impact of using HiPE by default</li>
 <li>integrate automatic persistent storage of instance states, for example in Mnesia databases</li>
-<li>add a mode to support <em>passive</em> instances, i.e. pure data-structures not hosted by a specific process; should be as easy as introducing a <tt class="docutils literal">new_passive</tt> operator, returning actually the initial state as it is</li>
 <li>integrate specific constructs for code reflection</li>
 <li>check that a class specified in <tt class="docutils literal">execute*With</tt> is indeed a (direct or not) mother class of this one, at least in debug mode</li>
 <li>check that referenced attributes are legit (existing, not reserved, etc.)</li>
@@ -1734,7 +1733,7 @@ my_server(State) -&gt;
 </div>
 <div class="footer">
 <hr class="footer" />
-Generated on: 2017-12-17.
+Generated on: 2017-12-23.
 
 </div>
 </body>
