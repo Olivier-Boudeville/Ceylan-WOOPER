@@ -14,9 +14,10 @@ CURRENT_VERSION := 1.0
 
 CURRENT_WOOPER_DOC := wooper-$(CURRENT_VERSION).pdf
 
-PROJECT_CSS := wooper.css
+PROJECT_CSS := pygments-default.css,wooper.css
 
-WEB_CONTENT = *.html *.css *.png *.pdf
+
+WEB_CONTENT = *.html *.css *.png wooper.pdf
 
 
 .PHONY: all do full-doc clone-mirror                     \
@@ -45,8 +46,8 @@ export-to-official:
 
 
 export-to-mirror:
-	@echo "   Exporting WOOPER documentation to mirror website"
-	@/bin/cp -f $(WEB_CONTENT) $(WEB_MIRROR_BRANCH) && cd $(WEB_MIRROR_BRANCH) && git add . && git commit -m "WOOPER doc updated" && git push
+	@echo "   Exporting WOOPER documentation to mirror website in $(WEB_MIRROR_BRANCH)"
+	@/bin/cp -f $(WEB_CONTENT) $(WEB_MIRROR_BRANCH) && cd $(WEB_MIRROR_BRANCH) && git add . && git commit -m "WOOPER doc updated." && git push
 
 
 info-web:
