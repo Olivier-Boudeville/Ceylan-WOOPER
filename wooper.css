@@ -9,16 +9,19 @@
 
 
 pre.code {
-
- background: #f9e4e4;
-
+ background: #f1dede;
 }
 
 
 .literal {
-	color: #570101 ;
+  color: #570101 ;
 }
 
+
+/* For command printouts: */
+.literal-block {
+  background: #ebdcdc ;
+}
 
 
 div.box {
