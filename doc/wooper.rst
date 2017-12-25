@@ -1,3 +1,4 @@
+
 .. _Top:
 
 
@@ -14,6 +15,12 @@
 .. role:: raw-latex(raw)
    :format: latex
 
+.. comment Would appear too late, can only be an be used only in preamble:
+.. comment :raw-latex:`\usepackage{graphicx}`
+.. comment As a result, in this document at least a '.. figure:: XXXX' must
+.. exist, otherwise: 'Undefined control sequence \includegraphics.'.
+
+
 :raw-html:`<a name="wooper_top"></a>`
 
 :raw-html:`<div class="banner"><p><em>WOOPER documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper.html">browse mirror</a> <a href="wooper.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[WOOPER]%20Remark">mail us</a></p></div>`
@@ -27,6 +34,7 @@
 
 
 
+
 ---------------------------------------------------
 *Wrapper for Object-Oriented Programming in Erlang*
 ---------------------------------------------------
@@ -35,7 +43,7 @@
 :Organisation: Copyright (C) 2008-2017 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation Date: Thursday, February 25, 2008
-:Lastly Updated: Saturday, December 23, 2017
+:Lastly Updated: Monday, December 25, 2017
 
 
 
@@ -205,13 +213,17 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
 
 Straightforward, isn't it? We will discuss it in-depth, though.
 
-To test this class (provided that ``GNU make`` and ``Erlang 20.0`` or more recent are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on ``Ceylan-Myriad``, hence to be installed first::
+To test this class (provided that ``GNU make`` and ``Erlang 20.0`` or more recent are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on ``Ceylan-Myriad``, hence to be installed first:
+
+.. code:: bash
 
  $ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad.git
  $ cd Ceylan-Myriad && make all && cd ..
 
 
-Then, as ``Ceylan-Myriad`` is known by WOOPER as the ``common`` layer::
+Then, as ``Ceylan-Myriad`` is known by WOOPER as the ``Common`` layer:
+
+.. code:: bash
 
  $ ln -s Ceylan-Myriad common
  $ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git
@@ -220,11 +232,15 @@ Then, as ``Ceylan-Myriad`` is known by WOOPER as the ``common`` layer::
 
 
 
-Running the cat-related example just boils down to::
+Running the cat-related example just boils down to:
+
+.. code:: bash
 
  $ cd examples && make class_Cat_run
 
-In the ``examples`` directory, the test defined in `class_Cat_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat_test.erl>`__ should run against the class defined in `class_Cat.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat.erl>`_, and no error should be detected::
+In the ``examples`` directory, the test defined in `class_Cat_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat_test.erl>`__ should run against the class defined in `class_Cat.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat.erl>`_, and no error should be detected:
+
+.. code:: bash
 
  Running unitary test class_Cat_run (second form)
  Erlang/OTP 20 [erts-9.0.1] [source] [64-bit] [smp:8:8] [..]
@@ -295,10 +311,13 @@ For example, a class modeling a cat should translate into an Erlang module named
 Similarly, a pink flamingo class could be declared as ``class_PinkFlamingo``, in ``class_PinkFlamingo.erl``, which would include a ``-module(class_PinkFlamingo).`` declaration.
 
 
-The class name can be obtained through its ``get_class_name/0`` static method [#]_ (automatically defined by WOOPER)::
+The class name can be obtained through its ``get_class_name/0`` static method [#]_ (automatically defined by WOOPER):
 
-  > class_Cat:get_class_name().
-  class_Cat
+.. code:: erlang
+
+ > class_Cat:get_class_name().
+ class_Cat
+
 
 .. [#] The ``get_class_name/0`` static method has no real interest of its own, it is defined mostly for explanation purpose.
 
@@ -333,7 +352,9 @@ As for our cat, this superb animal could be modelled both as a mammal (itself a 
 .. [#] Neither of them is a subset of the other, these are mostly unrelated concepts, at least in the context of that example! (ex: a platypus is a mammal, but not a viviparous being).
 
 
-The superclasses (direct mother classes) of a given class can be known thanks to its ``get_superclasses/0`` static method::
+The superclasses (direct mother classes) of a given class can be known thanks to its ``get_superclasses/0`` static method:
+
+.. code:: erlang
 
  > class_Cat:get_superclasses().
  [class_Mammal,class_ViviparousBeing]
@@ -502,20 +523,20 @@ The three methods previously discussed would indeed be called that way:
   MyCat ! {canEat,soup,self()},
   receive
 	  {wooper_result,true} ->
-			   io:format( "This cat likes soup!!!" );
+		io:format( "This cat likes soup!!!" );
 
 	  {wooper_result,false} ->
-			   io:format( "This cat does not seem omnivorous." )
+		io:format( "This cat does not seem omnivorous." )
   end,
 
   % A parameter-less request:
   MyCat ! {getWhiskersColor,[],self()},
   receive
 	  {wooper_result,white} ->
-			   io:format( "This cat has normal whiskers." );
+		io:format( "This cat has normal whiskers." );
 
 	  {wooper_result,blue} ->
-			   io:format( "What a weird cat..." )
+		io:format( "What a weird cat..." )
   end,
 
   % A parameter-less oneway:
@@ -605,8 +626,8 @@ The actual result ``R``, as determined by the method, is sent back as an Erlang 
 
  MyPoint ! {getCoordinates,[],self()},
  receive
-		  {wooper_result,[X,Y]} ->
-				  [..]
+	{wooper_result,[X,Y]} ->
+		[..]
  end,
  [..]
 
@@ -735,21 +756,21 @@ Therefore one could make use of that information, as in:
   MyPoint ! {getCoordinates,[],self()},
   receive
 	  {wooper_result, [X,Y] } ->
-			   [..];
+		[..];
 	  {wooper_method_not_found, Pid, Class, Method, Arity, Params} ->
-			   [..];
+		[..];
 	  {wooper_method_failed, Pid, Class, Method, Arity, Params, ErrorTerm} ->
-			   [..];
+		[..];
 	  % Error term can be a tuple {Pid,Error} as well, depending on the exit:
 	  {wooper_method_failed, Pid, Class, Method, Arity, Params, {Pid,Error}} ->
-			   [..];
+		[..];
 	  {wooper_method_faulty_return, Pid, Class, Method, Arity, Params, UnexpectedTerm} ->
-			   [..];
+		[..];
 	  wooper_method_returns_void ->
-			   [..];
+		[..];
 	  OtherError ->
-			   % Should never happen:
-			   [..]
+		% Should never happen:
+		[..]
   end.
 
 
@@ -760,7 +781,7 @@ However defensive development is not really favoured in Erlang, one may let the 
   MyPoint ! {getCoordinates,[],self()},
   receive
 	  {wooper_result, [X,Y] } ->
-			   [..]
+		[..]
   end,
   [..]
 
@@ -786,7 +807,7 @@ In this case the initial state parameter is directly returned, as is, like in:
 .. code:: erlang
 
   getWhiskerColor(State) ->
-	  ?wooper_return_state_result(State,?getAttr(whisker_color) ).
+	?wooper_return_state_result(State,?getAttr(whisker_color) ).
 
 State is unchanged here.
 
@@ -815,7 +836,7 @@ A good practise is to add a comment to each method definition, and to specify wh
  % Returns the current color of the whiskers of that cat instance.
  % (const request)
  getWhiskerColor(State) ->
-	 ?wooper_return_state_result(State, ?getAttr(whisker_color)).
+	?wooper_return_state_result(State, ?getAttr(whisker_color)).
 
 
 .. Note:: When a constructor or a method determines that a fatal error should be raised (for example because it cannot find a required registered process), it should use ``throw``, like in: ``throw({invalid_value,V})``. Using ``exit`` is supported but not recommended.
@@ -832,7 +853,7 @@ For example a const request will return an unchanged state, and thus will be jus
 .. code:: erlang
 
  getAge(State) ->
-	 ?wooper_return_state_result(State,?getAttr(age)).
+	?wooper_return_state_result(State,?getAttr(age)).
 
 
 All methods are of course given the parameters specified at their call.
@@ -842,7 +863,7 @@ For example, we can declare:
 .. code:: erlang
 
  giveBirth(State,NumberOfMaleChildren,NumberOfFemaleChildren) ->
-		  [..]
+	[..]
 
 
 And then we may call it, in the case of a cat having 2 male kitten and 3 female ones, with:
@@ -1774,11 +1795,11 @@ For example, let's suppose ``class_Cat`` inherits directly both from ``class_Mam
 
   % Constructs a new Cat.
   construct(State,Gender,FurColor,WhiskerColor) ->
-	  % First the (chained) direct mother classes:
-	  MammalState = class_Mammal:construct(State,_Age=0,Gender,FurColor),
-	  ViviparousMammalState = class_ViviparousBeing:construct(MammalState),
-	  % Then the class-specific attributes:
-	  setAttribute(ViviparousMammalState,whisker_color,WhiskerColor).
+	% First the (chained) direct mother classes:
+	MammalState = class_Mammal:construct(State,_Age=0,Gender,FurColor),
+	ViviparousMammalState = class_ViviparousBeing:construct(MammalState),
+	% Then the class-specific attributes:
+	setAttribute(ViviparousMammalState,whisker_color,WhiskerColor).
 
 The fact that the ``Mammal`` class itself inherits from the ``Creature`` class does not have to appear here: it is to be managed directly by ``class_Mammal:construct`` (at any given inheritance level, only direct mother classes must be taken into account).
 
@@ -2031,12 +2052,9 @@ WOOPER Example
 
 We defined a small set of classes in order to serve as an example and demonstrate multiple inheritance:
 
-.. figure:: wooper-example.png
-   :alt: WOOPER Example
-   :scale: 40
 
-   Example of an inheritance graph to be handled by WOOPER
-
+:raw-html:`<center><img src="wooper-example.png" width="70%" alt="WOOPER Example"></img></center>`
+:raw-latex:`\includegraphics[scale=0.34]{wooper-example.png}`
 
 
 
@@ -2280,7 +2298,9 @@ For that we devised the `install-erlang.sh <https://github.com/Olivier-Boudevill
 One may execute ``./install-erlang.sh --help`` for more details about how to configure it, notably in order to enable all modules of interest (``crypto``, ``wx``, etc.) even if they are optional in the context of WOOPER.
 
 
-As a result, once a proper Erlang version is available, the `Ceylan-Myriad repository <https://github.com/Olivier-Boudeville/Ceylan-Myriad>`_ should be cloned and built, before doing the same with the `Ceylan-WOOPER repository <https://github.com/Olivier-Boudeville/Ceylan-WOOPER>`_, like in::
+As a result, once a proper Erlang version is available, the `Ceylan-Myriad repository <https://github.com/Olivier-Boudeville/Ceylan-Myriad>`_ should be cloned and built, before doing the same with the `Ceylan-WOOPER repository <https://github.com/Olivier-Boudeville/Ceylan-WOOPER>`_, like in:
+
+.. code:: bash
 
  $ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad
  $ cd Ceylan-Myriad && make all && cd ..
@@ -2658,5 +2678,12 @@ Ending Word
 ===========
 
 Have fun with WOOPER!
+
+.. comment Mostly added to ensure there is at least one figure directive,
+.. otherwise the LateX graphic support will not be included:
+
+.. figure:: wooper-title.png
+   :alt: WOOPER logo
+   :scale: 40
 
 :raw-html:`<a name="wooper_bottom"></a>`
