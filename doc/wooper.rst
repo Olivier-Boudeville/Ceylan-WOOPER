@@ -27,7 +27,7 @@
 
 
 
-:raw-html:`<center><img src="wooper-title.png"></img></center>`
+:raw-html:`<center><img src="wooper-title.png" width="70%"></img></center>`
 :raw-latex:`\includegraphics[scale=0.34]{wooper-title.png}`
 
 .. comment Note: this is the latest, current version of the WOOPER 1.x documentation. As for WOOPER 2.0, all the available relevant bits are here as well, yet commented-out.
@@ -2564,6 +2564,7 @@ Issues & Planned Enhancements
 
 - test the impact of using HiPE by default
 - integrate automatic persistent storage of instance states, for example in Mnesia databases
+- add a mode to support *passive* instances, i.e. pure data-structures not hosted by a specific process; should be as easy as introducing a ``new_passive`` operator, returning actually the initial state as it is
 - integrate specific constructs for code reflection
 - check that a class specified in ``execute*With`` is indeed a (direct or not) mother class of this one, at least in debug mode
 - check that referenced attributes are legit (existing, not reserved, etc.)
