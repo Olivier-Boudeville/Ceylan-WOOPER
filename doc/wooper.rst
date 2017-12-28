@@ -43,7 +43,8 @@
 :Organisation: Copyright (C) 2008-2017 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation Date: Thursday, February 25, 2008
-:Lastly Updated: Monday, December 25, 2017
+:Lastly Updated: Thursday, December 28, 2017
+
 
 
 
