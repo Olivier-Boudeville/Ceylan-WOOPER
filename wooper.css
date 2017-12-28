@@ -8,13 +8,21 @@
 /* Updated : Michal Guerquin (michalg@gmail.com) */
 
 
-.literal {
-	color: #570101 ;
+pre.code {
+ background: #f1dede;
 }
 
-.literal-block {
-	background: #d5bfbf ;
+
+.literal {
+  color: #570101 ;
 }
+
+
+/* For command printouts: */
+.literal-block {
+  background: #ebdcdc ;
+}
+
 
 div.box {
   color: #555555
@@ -381,6 +389,7 @@ a:visited {
 a:hover {
   text-decoration:underline;
 }
+
 
 
 code {
