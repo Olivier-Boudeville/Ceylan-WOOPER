@@ -40,10 +40,10 @@
 ---------------------------------------------------
 
 
-:Organisation: Copyright (C) 2008-2017 Olivier Boudeville
+:Organisation: Copyright (C) 2008-2018 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation Date: Thursday, February 25, 2008
-:Lastly Updated: Thursday, December 28, 2017
+:Lastly Updated: Saturday, March 10, 2018
 
 
 

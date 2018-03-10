@@ -37,7 +37,7 @@ clone-mirror:
 	@cd ../../ && git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git $(shell basename $(WEB_MIRROR_BRANCH)) && git checkout gh-pages
 
 
-export-doc: full-doc export-to-official export-to-mirror
+export-doc: clean-doc full-doc export-to-official export-to-mirror
 
 
 export-to-official:
@@ -47,7 +47,7 @@ export-to-official:
 
 export-to-mirror:
 	@echo "   Exporting WOOPER documentation to mirror website in $(WEB_MIRROR_BRANCH)"
-	@/bin/cp -f $(WEB_CONTENT) $(WEB_MIRROR_BRANCH) && cd $(WEB_MIRROR_BRANCH) && git add . && git commit -m "WOOPER doc updated." && git push
+	@/bin/cp -f $(WEB_CONTENT) $(WEB_MIRROR_BRANCH) && cd $(WEB_MIRROR_BRANCH) && git add . && git merge -s ours && git commit -m "WOOPER doc updated." && git push
 
 
 info-web:
@@ -59,7 +59,7 @@ clean: clean-doc
 
 clean-doc:
 	-@/bin/rm -f *.aux *.log *.maf *.mtc* *.stc* *.tex *.toc \
-	$(CURRENT_WOOPER_DOC)
+	$(CURRENT_WOOPER_DOC) $(DOC_GENERATED_FILES)
 
 
 # For COMMON_TOP:
