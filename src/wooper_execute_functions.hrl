@@ -170,7 +170,7 @@ executeRequest( StateError, RequestAtomError, _LastArg ) ->
 % Parameter-less request, calling the version of the method as defined in the
 % specified class.
 %
--spec executeRequestWith( wooper:state(), class_name(), request_name() ) ->
+-spec executeRequestWith( wooper:state(), classname(), request_name() ) ->
 								{ wooper:state(), method_internal_result() }.
 executeRequestWith( State, Classname, RequestAtom )
   when is_record( State, state_holder ) andalso is_atom( Classname )
@@ -211,7 +211,7 @@ executeRequestWith( _State, ClassnameError, RequestAtomError ) ->
 %
 % Note: Stripped-down version of wooper_main_loop.
 %
--spec executeRequestWith( wooper:state(), class_name(), request_name(),
+-spec executeRequestWith( wooper:state(), classname(), request_name(),
 						  method_arguments() ) ->
 								{ wooper:state(), method_internal_result() }.
 executeRequestWith( State, Classname, RequestAtom, ArgumentList ) when
@@ -378,7 +378,7 @@ executeOneway( _State, OnewayAtomError, _LastArg ) ->
 						   wooper:state().
 
 
--spec executeOnewayWith( wooper:state(), class_name(), oneway_name() ) ->
+-spec executeOnewayWith( wooper:state(), classname(), oneway_name() ) ->
 							   wooper:state().
 executeOnewayWith( State, Classname, OnewayAtom )
   when is_record( State, state_holder ) andalso is_atom( Classname )
@@ -420,8 +420,8 @@ executeOnewayWith( StateError, Classname, OnewayAtom ) ->
 %
 % Note: Stripped-down version of wooper_main_loop.
 %
--spec executeOnewayWith( wooper:state(), class_name(), oneway_name(),
-				method_arguments() ) -> wooper:state().
+-spec executeOnewayWith( wooper:state(), classname(), oneway_name(),
+						 method_arguments() ) -> wooper:state().
 executeOnewayWith( State, Classname, OnewayAtom, ArgumentList ) when
 	  is_record( State, state_holder ) andalso is_atom( Classname )
 	  andalso is_atom( OnewayAtom ) andalso is_list( ArgumentList ) ->

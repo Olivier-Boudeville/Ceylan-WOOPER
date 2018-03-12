@@ -40,12 +40,12 @@ run( IsDebug ) ->
 
 	MyP = class_Platypus:new_link( 4, male, brown, black ),
 
-	MyP ! { getClassName, [], self() },
+	MyP ! { getClassname, [], self() },
 	receive
 
 		{ wooper_result, class_Platypus } ->
 			test_facilities:display(
-				"After constructor, get_class_name returned 'class_Platypus' "
+				"After constructor, getClassname/1 returned 'class_Platypus' "
 				"as expected." );
 
 		{ wooper_result, UnexpectedClass } ->
@@ -58,7 +58,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, [ class_Mammal, class_OvoviviparousBeing ] } ->
 			test_facilities:display(
-				"After constructor, getSuperclasses returned "
+				"After constructor, getSuperclasses/1 returned "
 				"class_Creature and class_OvoviviparousBeing as expected." );
 
 		{ wooper_result, UnexpectedSuperclasses } ->
@@ -75,7 +75,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, 4 } ->
 			test_facilities:display(
-				"After constructor, getAge returned 4 as expected." );
+				"After constructor, getAge/1 returned 4 as expected." );
 
 		{ wooper_result, UnexpectedAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedAge ] )
@@ -87,7 +87,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, male } ->
 			test_facilities:display(
-				"After constructor, getGender returned male as expected." );
+				"After constructor, getGender/1 returned male as expected." );
 
 		{ wooper_result, UnexpectedGender } ->
 			test_facilities:fail( "wrong gender: ~p", [ UnexpectedGender ] )
@@ -100,8 +100,8 @@ run( IsDebug ) ->
 	receive
 
 		{ wooper_result, 5 } ->
-			test_facilities:display(
-							  "After setAge, getAge returned 5 as expected." );
+			test_facilities:display( "After setAge/2, getAge/1 returned 5 "
+									 "as expected." );
 
 		{ wooper_result, UnexpectedNewAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedNewAge ] )
@@ -115,7 +115,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, 6 } ->
 			test_facilities:display(
-			   "After declareBirthday, getAge returned 6 as expected." );
+			   "After declareBirthday/1, getAge/1 returned 6 as expected." );
 
 		{ wooper_result, UnexpectedLastAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedLastAge ] )
@@ -129,7 +129,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, true } ->
 			test_facilities:display(
-						"isHotBlooded returned true as expected." );
+						"isHotBlooded/1 returned true as expected." );
 
 		{ wooper_result, UnexpectedBlood } ->
 			test_facilities:fail( "wrong blood type: ~p", [ UnexpectedBlood ] )
@@ -141,7 +141,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, brown } ->
 			test_facilities:display(
-				"getFurColor returned brown as expected." );
+				"getFurColor/1 returned brown as expected." );
 
 		{ wooper_result, UnexpectedFurColor } ->
 			test_facilities:fail( "wrong fur color: ~p",
@@ -156,8 +156,8 @@ run( IsDebug ) ->
 	receive
 
 		{ wooper_result, 2 } ->
-			test_facilities:display(
-				"After constructor, getMeanEggsCount returned 2 as expected." );
+			test_facilities:display( "After constructor, getMeanEggsCount/1 "
+									 "returned 2 as expected." );
 
 		{ wooper_result, UnexpectedMeanCount } ->
 			test_facilities:fail( "wrong mean egg count: ~p",
@@ -171,7 +171,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, 0 } ->
 			test_facilities:display(
-				"After constructor, getEggsLaidCount returned 0 "
+				"After constructor, getEggsLaidCount/1 returned 0 "
 				"as expected." );
 
 		{ wooper_result, UnexpectedFirstCount } ->
@@ -187,7 +187,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, 1 } ->
 			test_facilities:display(
-				"After giveBirth, getEggsLaidCount returned 1 "
+				"After giveBirth, getEggsLaidCount/1 returned 1 "
 				"as expected." );
 
 		{ wooper_result, UnexpectedSecondCount } ->
@@ -203,7 +203,7 @@ run( IsDebug ) ->
 	receive
 
 		{ wooper_result, 0 } ->
-			test_facilities:display( "getTeatCount returned 0 as expected." );
+			test_facilities:display( "getTeatCount/1 returned 0 as expected." );
 
 		{ wooper_result, UnexpectedTeatCount } ->
 			test_facilities:fail( "wrong teat count: ~p",
@@ -250,13 +250,15 @@ run( IsDebug ) ->
 
 	end,
 
+	ExpectedNames = [ hector, edgar, roger, sean ],
+
 	MyP ! { getAlternateNames, [], self() },
 	receive
 
-		 { wooper_result,  [hector,edgar,roger,sean]  } ->
+		{ wooper_result, ExpectedNames } ->
 			test_facilities:display(
-				"This Platypus has the right alternate names: ~w.",
-				[ [hector,edgar,roger,sean] ] )
+			  "This Platypus has the right alternate names: ~w.",
+			  [ ExpectedNames ] )
 
 	end,
 
@@ -266,17 +268,20 @@ run( IsDebug ) ->
 		 { wooper_result, FirstName } ->
 			test_facilities:display(
 				"This Platypus forgot its first alternate name: ~w.",
-					[ FirstName ] )
+			  [ FirstName ] )
 
 	end,
 
 	MyP ! { getAlternateNames, [], self() },
+
+	ShrunkExpectedNames = tl( ExpectedNames ),
+
 	receive
 
-		 { wooper_result, [edgar,roger,sean] } ->
+		 { wooper_result, ShrunkExpectedNames } ->
 			test_facilities:display(
-				"Finally this Platypus has the right alternate names: ~w.",
-					[ [ edgar, roger, sean ] ] )
+			  "Finally this Platypus has the right alternate names: ~w.",
+			  [ ShrunkExpectedNames ] )
 
 	end,
 
@@ -297,7 +302,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedSyncNozzleColor } ->
 			test_facilities:fail( "wrong nozzle color: ~p",
-				[ UnexpectedSyncNozzleColor ] )
+								  [ UnexpectedSyncNozzleColor ] )
 
 	end,
 
@@ -310,7 +315,7 @@ run( IsDebug ) ->
 
 				{ wooper_result, InspectString } ->
 					test_facilities:display( "Instance description: ~s",
-											[ InspectString ] )
+											 [ InspectString ] )
 			end;
 
 		false ->

@@ -34,12 +34,12 @@ run( IsDebug ) ->
 
 	MyV = class_ViviparousBeing:new_link(),
 
-	MyV ! { getClassName, [], self() },
+	MyV ! { getClassname, [], self() },
 	receive
 
 		{ wooper_result, class_ViviparousBeing } ->
 			test_facilities:display(
-				"After constructor, get_class_name returned "
+				"After constructor, getClassname/1 returned "
 				"'class_ViviparousBeing' as expected." );
 
 		{ wooper_result, UnexpectedClass } ->
@@ -52,7 +52,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, [] } ->
 			test_facilities:display( "After constructor, "
-							 "getSuperclasses returned [] as expected." );
+							 "getSuperclasses/1 returned [] as expected." );
 
 		{ wooper_result, UnexpectedSuperclasses } ->
 			test_facilities:fail( "wrong superclasses: ~p",
@@ -65,7 +65,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, 4 } ->
 			test_facilities:display(
-				"After constructor, getMeanChildrenCount returned 4 "
+				"After constructor, getMeanChildrenCount/1 returned 4 "
 				"as expected." );
 
 		{ wooper_result, UnexpectedMeanCount } ->
@@ -79,7 +79,7 @@ run( IsDebug ) ->
 	receive
 
 		{ wooper_result,0 } ->
-			test_facilities:display( "After constructor, getBirthGivenCount "
+			test_facilities:display( "After constructor, getBirthGivenCount/1 "
 									 "returned 0 as expected." );
 
 		{ wooper_result, UnexpectedFirstCount } ->
@@ -94,7 +94,7 @@ run( IsDebug ) ->
 	receive
 
 		{ wooper_result, 7 }->
-			test_facilities:display( "After giveBirth, getBirthGivenCount "
+			test_facilities:display( "After giveBirth/2, getBirthGivenCount/1 "
 									 "returned 7 as expected." );
 
 		{ wooper_result, UnexpectedSecondCount } ->

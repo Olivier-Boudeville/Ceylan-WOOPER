@@ -56,7 +56,7 @@ pre_serialise_hook( State ) ->
 %
 % (using WOOPER default hook implementation augmented of an io:format)
 %
--spec post_serialise_hook( class_name(),
+-spec post_serialise_hook( classname(),
 						   wooper_serialisation:term_serialisation(),
 						   wooper:state() ) -> term().
 post_serialise_hook( Classname, Entries, _State ) ->

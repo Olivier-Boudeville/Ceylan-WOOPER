@@ -166,7 +166,7 @@ parse_transform( AST, Options ) ->
 
 
 		% Name of that class:
-		class = undefined :: wooper:class_name(),
+		class = undefined :: wooper:classname(),
 
 		% Classname (module) definition:
 		class_def = undefined :: ast(),
@@ -175,7 +175,7 @@ parse_transform( AST, Options ) ->
 		% Ordered list of the superclasses of this class (corresponding form
 		% will be stripped):
 		%
-		superclasses = undefined :: [ wooper:class_name() ],
+		superclasses = undefined :: [ wooper:classname() ],
 
 		% Superclass definition (one attribute):
 		%
@@ -381,7 +381,7 @@ get_class_info( AST ) ->
 get_info( _AST=[ F={ attribute, _Line, module, Classname } | T ],
 		  W=#class_info{ class=undefined, class_def=undefined } ) ->
 
-	check_class_name( Classname ),
+	check_classname( Classname ),
 
 	% Transforms that in a standard module definition:
 	%NewDef = { attribute, Line, module, Classname },
@@ -395,7 +395,7 @@ get_info( _AST=[ F={ attribute, _Line, wooper_superclasses, Classes } | T ],
 		  W=#class_info{ superclasses=undefined,
 						 superclass_def=undefined } ) when is_list( Classes ) ->
 
-	[ check_class_name( C ) || C <- Classes ],
+	[ check_classname( C ) || C <- Classes ],
 
 	get_info( T, W#class_info{
 				   superclasses=Classes,
@@ -549,7 +549,7 @@ get_info( _AST=[ H | T ], Infos ) ->
 
 
 
-%% -spec get_superclasses() -> [ class_name() ].
+%% -spec get_superclasses() -> [ classname() ].
 %% get_superclasses() ->
 %%	?wooper_superclasses.
 
@@ -746,7 +746,7 @@ add_static( Name, Arity, Form, StaticTable ) ->
 
 % Ensures that specified name is a legit class name.
 %
-check_class_name( Name ) ->
+check_classname( Name ) ->
 
 	case text_utils:atom_to_string( Name ) of
 
@@ -754,7 +754,7 @@ check_class_name( Name ) ->
 			ok;
 
 		InvalidName ->
-			meta_utils:raise_error( { invalid_class_name, InvalidName } )
+			meta_utils:raise_error( { invalid_classname, InvalidName } )
 
 	end.
 

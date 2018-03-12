@@ -141,7 +141,7 @@
 % directly specified, instead of being determined from the instance virtual
 % table.
 %
--spec wooper_execute_method_with( class_name(), method_name(), wooper:state(),
+-spec wooper_execute_method_with( classname(), method_name(), wooper:state(),
 								  method_arguments() ) ->
 	{ wooper:state(), method_internal_result() }.
 
@@ -303,10 +303,10 @@ wooper_execute_method( MethodAtom, State, Parameters ) ->
 % (helper)
 %
 -spec wooper_lookup_method( wooper:state(), method_name(), arity() ) ->
-								  { 'value', class_name() } | 'key_not_found'.
+								  { 'value', classname() } | 'key_not_found'.
 wooper_lookup_method( State, MethodAtom, Arity ) ->
-	?wooper_hashtable_type:lookupEntry( { MethodAtom, Arity },
-										State#state_holder.virtual_table ).
+	?wooper_table_type:lookupEntry( { MethodAtom, Arity },
+									State#state_holder.virtual_table ).
 
 
 
@@ -661,7 +661,7 @@ wooper_handle_local_request_execution( RequestAtom, State, ArgumentList ) ->
 % Only local calls can select their implementation class.
 %
 -spec wooper_handle_local_request_execution_with( method_name(), wooper:state(),
-		method_arguments(), class_name() ) ->
+		method_arguments(), classname() ) ->
 							 { wooper:state(), method_internal_result() }.
 
 
@@ -939,7 +939,7 @@ wooper_handle_local_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 % we have already a list.
 %
 -spec wooper_handle_local_oneway_execution_with( method_name(), wooper:state(),
-					method_arguments(), class_name() ) -> wooper:state().
+					method_arguments(), classname() ) -> wooper:state().
 
 
 -compile( { inline, [ wooper_handle_local_oneway_execution_with/4 ] } ).

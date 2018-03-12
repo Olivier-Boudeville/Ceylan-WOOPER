@@ -104,7 +104,7 @@ serialise( State, _EntryTransformer=undefined, UserData ) ->
 	% cleaner):
 	%
 	Entries = lists:sort( [ RandomAttribute |
-					   ?wooper_hashtable_type:enumerate( AttributeTable )  ] ),
+					   ?wooper_table_type:enumerate( AttributeTable )  ] ),
 
 	% By default returns { Classname, Entries }:
 	FullContent = post_serialise_hook( Classname, Entries, PreState ),
@@ -154,7 +154,7 @@ serialise( State, EntryTransformer, UserData ) ->
 	% cleaner):
 	%
 	Entries = lists:sort( [ RandomAttribute |
-					   ?wooper_hashtable_type:enumerate( AttributeTable )  ] ),
+							?wooper_table_type:enumerate( AttributeTable ) ] ),
 
 	%io:format( "Original entries:~n~p~n", [ Entries ] ),
 
@@ -221,7 +221,7 @@ pre_serialise_hook( State ) ->
 % (we do not want to return a state, as we do not want that a state modified by
 % the serialisation be mistakenly used afterwards)
 %
--spec post_serialise_hook( class_name(),
+-spec post_serialise_hook( classname(),
 	   wooper_serialisation:term_serialisation(), wooper:state() ) -> term().
 post_serialise_hook( Classname, Entries, _State ) ->
 	{ Classname, Entries }.

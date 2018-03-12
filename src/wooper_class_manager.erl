@@ -54,7 +54,7 @@
 -include("wooper_class_manager.hrl").
 
 
-% For wooper_hashtable_type:
+% For wooper_table_type:
 -include("wooper_defines_exports.hrl").
 
 
@@ -93,7 +93,7 @@
 % Uncomment to activate debug mode:
 %-define(wooper_debug_class_manager,).
 
--spec display_state( ?wooper_hashtable_type:?wooper_hashtable_type() ) ->
+-spec display_state( ?wooper_table_type:?wooper_table_type() ) ->
 						   basic_utils:void().
 -spec display_table_creation( basic_utils:module_name() ) -> basic_utils:void().
 -spec display_msg( string() ) -> basic_utils:void().
@@ -104,7 +104,7 @@
 
 display_state( Tables ) ->
 	wooper:log_info( ?log_prefix "Storing now ~B table(s).~n",
-					 [ ?wooper_hashtable_type:getEntryCount( Tables ) ] ).
+					 [ ?wooper_table_type:getEntryCount( Tables ) ] ).
 
 
 display_table_creation( Module ) ->
@@ -164,7 +164,7 @@ start( ClientPID ) ->
 		true ->
 			ClientPID ! class_manager_registered,
 
-			EmptyClassTable = ?wooper_hashtable_type:new(
+			EmptyClassTable = ?wooper_table_type:new(
 								 ?wooper_class_count_upper_bound ),
 
 			loop( EmptyClassTable );
@@ -188,7 +188,7 @@ start( ClientPID ) ->
 % Manager main loop, serves virtual tables on request (mostly on instances
 % creation).
 %
--spec loop( ?wooper_hashtable_type:?wooper_hashtable_type() ) ->
+-spec loop( ?wooper_table_type:?wooper_table_type() ) ->
 				  no_return() | 'ok' .
 loop( Tables ) ->
 
@@ -204,7 +204,7 @@ loop( Tables ) ->
 
 		display ->
 			wooper:log_info( ?log_prefix "Internal state is: ~s~n",
-							 [ ?wooper_hashtable_type:toString( Tables ) ] ),
+							 [ ?wooper_table_type:toString( Tables ) ] ),
 			loop( Tables );
 
 		stop ->
@@ -220,18 +220,18 @@ loop( Tables ) ->
 % If found, returns it immediately, otherwise constructs it, stores the result
 % and returns it as well.
 %
-% Virtual tables are stored in a ?wooper_hashtable_type.
+% Virtual tables are stored in a ?wooper_table_type.
 %
 % Returns a pair formed of the new set of virtual tables and of the requested
 % table.
 %
 -spec get_virtual_table_for( basic_utils:module_name(),
-							?wooper_hashtable_type:?wooper_hashtable_type() )
-		-> { ?wooper_hashtable_type:?wooper_hashtable_type(),
-			 ?wooper_hashtable_type:?wooper_hashtable_type() }.
+							?wooper_table_type:?wooper_table_type() )
+		-> { ?wooper_table_type:?wooper_table_type(),
+			 ?wooper_table_type:?wooper_table_type() }.
 get_virtual_table_for( Module, Tables ) ->
 
-	case ?wooper_hashtable_type:lookupEntry( Module, Tables ) of
+	case ?wooper_table_type:lookupEntry( Module, Tables ) of
 
 		{ value, Table } ->
 
@@ -245,16 +245,16 @@ get_virtual_table_for( Module, Tables ) ->
 			ModuleTable = create_method_table_for( Module ),
 
 			% Each class has its virtual table optimised:
-			OptimisedModuleTable = ?wooper_hashtable_type:optimise(
+			OptimisedModuleTable = ?wooper_table_type:optimise(
 															   ModuleTable ),
 
 			% Here the table could be patched with destruct/1, if defined.
-			ClassTable = ?wooper_hashtable_type:addEntry( Module,
+			ClassTable = ?wooper_table_type:addEntry( Module,
 											 OptimisedModuleTable, Tables ),
 
 			% And the table of virtual tables is itself optimised each time a
 			% new class is introduced:
-			{ ?wooper_hashtable_type:optimise( ClassTable ),
+			{ ?wooper_table_type:optimise( ClassTable ),
 			 OptimisedModuleTable }
 
 	end.
@@ -266,7 +266,7 @@ get_virtual_table_for( Module, Tables ) ->
 % virtual table corresponding to specified module.
 %
 -spec create_method_table_for( basic_utils:module_name() ) ->
-						?wooper_hashtable_type:?wooper_hashtable_type().
+						?wooper_table_type:?wooper_table_type().
 create_method_table_for( TargetModule ) ->
 
 	lists:foldl(
@@ -277,23 +277,23 @@ create_method_table_for( TargetModule ) ->
 
 		create_local_method_table_for( TargetModule ),
 
-		apply( TargetModule, get_superclasses, [] ) ).
+		TargetModule:get_superclasses() ).
 
 
 
 % Updates specified virtual table with the method of specified module
 % (i.e. precomputes the virtual table for the related class).
 %
-% In case of key collision, the values specified in ?Wooper_Hashtable_Type have
+% In case of key collision, the values specified in ?Wooper_Table_Type have
 % priority over the ones relative to Module. Hence methods redefined in child
 % classes are selected, rather than the ones of the mother class.
 %
 -spec update_method_table_with( basic_utils:module_name(),
-		  ?wooper_hashtable_type:?wooper_hashtable_type() ) ->
-						  ?wooper_hashtable_type:?wooper_hashtable_type().
+		  ?wooper_table_type:?wooper_table_type() ) ->
+						  ?wooper_table_type:?wooper_table_type().
 update_method_table_with( Module, Hashtable ) ->
-	?wooper_hashtable_type:merge( Hashtable,
-								 create_method_table_for( Module ) ).
+	?wooper_table_type:merge( Hashtable,
+								  create_method_table_for( Module ) ).
 
 
 
@@ -344,7 +344,7 @@ select_function( _, _ )                                               -> true.
 
 % Returns an hashtable appropriate for method look-up, for the specified module.
 -spec create_local_method_table_for( basic_utils:module_name() ) ->
-							   ?wooper_hashtable_type:?wooper_hashtable_type().
+							   ?wooper_table_type:?wooper_table_type().
 create_local_method_table_for( Module ) ->
 
 	% Typically if Module is misspelled:
@@ -366,8 +366,8 @@ create_local_method_table_for( Module ) ->
 			case select_function(  Name, Arity ) of
 
 				true ->
-					?wooper_hashtable_type:addEntry( { Name, Arity }, Module,
-													Hashtable );
+					?wooper_table_type:addEntry( { Name, Arity }, Module,
+													 Hashtable );
 
 				false ->
 					Hashtable
@@ -375,7 +375,7 @@ create_local_method_table_for( Module ) ->
 			end
 		end,
 
-		?wooper_hashtable_type:new( ?wooper_method_count_upper_bound ),
+		?wooper_table_type:new( ?wooper_method_count_upper_bound ),
 
 		Exports ).
 
@@ -387,7 +387,7 @@ create_local_method_table_for( Module ) ->
 -spec ping( atom() | pid() ) -> 'pang' | 'pong'.
 ping( Target ) when is_pid( Target ) ->
 
-	Target ! { ping,  self() },
+	Target ! { ping, self() },
 	receive
 
 		{ pong, Target } ->

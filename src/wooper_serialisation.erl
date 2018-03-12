@@ -50,7 +50,7 @@
 % For attribute_name/0:
 -include("wooper_types_exports.hrl").
 
-% To silence getClassName/1, get_superclasses/0 not being used:
+% To silence getClassname/1, get_superclasses/0 not being used:
 -include("wooper_classes_exports.hrl").
 
 % Otherwise executeRequest/3 and all reported as unused:
@@ -154,7 +154,7 @@
 -include("wooper_execute_internal_functions.hrl").
 
 
-% For get_superclasses/1:
+% For getSuperclasses/1:
 -include("wooper_classes_functions.hrl").
 
 
@@ -506,10 +506,10 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 
 	% We need to bypass any constructor here.
 
-	AttributeTable = ?wooper_hashtable_type:addEntries( TransformedEntries,
-										?wooper_hashtable_type:new() ),
+	AttributeTable = ?wooper_table_type:addEntries( TransformedEntries,
+										?wooper_table_type:new() ),
 
-	OptimisedAttributeTable = ?wooper_hashtable_type:optimise( AttributeTable ),
+	OptimisedAttributeTable = ?wooper_table_type:optimise( AttributeTable ),
 
 	% Must be restored as well:
 	case RandomState of
@@ -552,7 +552,7 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 
 	% That's as simple as that!
 
-	apply( Classname, wooper_main_loop, [ FinalState ] ).
+	Classname:wooper_main_loop( FinalState ).
 
 
 

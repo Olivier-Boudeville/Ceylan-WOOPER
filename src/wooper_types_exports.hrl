@@ -36,10 +36,7 @@
 
 
 % Not module(), which can be also a tuple():
--type class_name() :: wooper:class_name().
-
-% Alias, for convenience:
--type classname() :: class_name().
+-type classname() :: wooper:classname().
 
 
 -type method_name() :: wooper:method_name().
@@ -108,7 +105,7 @@
 % We prefer defining these types into an header file (this one) rather than in
 % the wooper module, to lighten the syntax (no prefix module):
 %
--export_type([ class_name/0, classname/0,
+-export_type([ classname/0,
 			   method_name/0, request_name/0, oneway_name/0,
 			   method_argument/0, method_arguments/0, requests_outcome/0 ]).
 

@@ -35,12 +35,12 @@ run( IsDebug ) ->
 
 	MyV = class_OvoviviparousBeing:synchronous_new(),
 
-	MyV ! { getClassName, [], self() },
+	MyV ! { getClassname, [], self() },
 	receive
 
 		{ wooper_result, class_OvoviviparousBeing } ->
 			test_facilities:display(
-				"After constructor, get_class_name returned "
+				"After constructor, getClassname/1 returned "
 				"'class_OvoviviparousBeing' as expected." );
 
 		{ wooper_result, UnexpectedClass } ->
@@ -53,12 +53,12 @@ run( IsDebug ) ->
 
 		{ wooper_result, [] } ->
 			test_facilities:display(
-				"After constructor, get_superclasses returned [] "
+				"After constructor, getSuperclasses/1 returned [] "
 				"as expected." );
 
 		{ wooper_result, UnexpectedSuperclasses } ->
 			test_facilities:fail( "wrong superclasses: ~p",
-				[ UnexpectedSuperclasses ] )
+								  [ UnexpectedSuperclasses ] )
 
 	end,
 
@@ -67,12 +67,12 @@ run( IsDebug ) ->
 
 		{ wooper_result, 1000 } ->
 			test_facilities:display(
-				"After constructor, getMeanEggsCount returned 1000 "
+				"After constructor, getMeanEggsCount/1 returned 1000 "
 				"as expected." );
 
 		{ wooper_result, UnexpectedMeanCount } ->
 			test_facilities:fail( "wrong mean egg count: ~p",
-				[ UnexpectedMeanCount ] )
+								  [ UnexpectedMeanCount ] )
 
 
 	end,
@@ -82,12 +82,12 @@ run( IsDebug ) ->
 
 		{ wooper_result, 0 } ->
 			test_facilities:display(
-				"After constructor, getEggsLaidCount returned 0 "
+				"After constructor, getEggsLaidCount/1 returned 0 "
 				"as expected." );
 
 		{ wooper_result, UnexpectedFirstCount } ->
 			test_facilities:fail( "wrong first egg count: ~p",
-				[ UnexpectedFirstCount ] )
+								  [ UnexpectedFirstCount ] )
 
 	end,
 
@@ -98,12 +98,12 @@ run( IsDebug ) ->
 
 		{ wooper_result, 747 }->
 			test_facilities:display(
-				"After giveBirth, getEggsLaidCount returned 747 "
+				"After layEggs/2, getEggsLaidCount/1 returned 747 "
 				"as expected." );
 
 		{ wooper_result, UnexpectedSecondCount } ->
 			test_facilities:fail( "wrong second egg count: ~p",
-				[ UnexpectedSecondCount ] )
+								  [ UnexpectedSecondCount ] )
 
 	end,
 
@@ -115,7 +115,7 @@ run( IsDebug ) ->
 
 				{ wooper_result, InspectString } ->
 					test_facilities:display( "Instance description: ~s",
-											[ InspectString ] )
+											 [ InspectString ] )
 			end;
 
 		false ->

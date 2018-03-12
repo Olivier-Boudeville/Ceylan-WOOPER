@@ -203,7 +203,7 @@ wooper_main_loop( State ) ->
 			?wooper_log_format( "Main loop (case G) for ~w: exit with ~w.~n",
 								[ self(), { PidOrPort, ExitType } ] ),
 
-			case ?wooper_hashtable_type:lookupEntry(
+			case ?wooper_table_type:lookupEntry(
 					{ _Name=onWOOPERExitReceived, _Arity=3 },
 					State#state_holder.virtual_table ) of
 
@@ -241,7 +241,7 @@ wooper_main_loop( State ) ->
 								[ self(), { MonitorRef, MonitoredType,
 											MonitoredElement, ExitReason } ] ),
 
-			case ?wooper_hashtable_type:lookupEntry(
+			case ?wooper_table_type:lookupEntry(
 					{ _Name=onWOOPERDownNotified, _Arity=5 },
 					State#state_holder.virtual_table ) of
 
@@ -280,7 +280,7 @@ wooper_main_loop( State ) ->
 								"for '~s' with ~p.~n",
 								[ self(), Node, MonitorNodeInfo ] ),
 
-			case ?wooper_hashtable_type:lookupEntry(
+			case ?wooper_table_type:lookupEntry(
 					{ _Name=onWOOPERNodeConnection, _Arity=3 },
 					State#state_holder.virtual_table ) of
 
@@ -318,7 +318,7 @@ wooper_main_loop( State ) ->
 								"for '~s' with ~p.~n",
 								[ self(), Node, MonitorNodeInfo ] ),
 
-			case ?wooper_hashtable_type:lookupEntry(
+			case ?wooper_table_type:lookupEntry(
 					{ _Name=onWOOPERNodeDisconnection, _Arity=3 },
 					State#state_holder.virtual_table ) of
 

@@ -35,7 +35,7 @@
 % Note: the hashtable type used by WOOPER (not the one exposed as a potential
 % attribute) should be a preprocessor define
 %
--define( wooper_hashtable_type, table ).
+-define( wooper_table_type, table ).
 
 
 % Approximate average attribute count for a given class instance, including
@@ -97,10 +97,10 @@
 -record( state_holder, {
 
 		   virtual_table    :: 'undefined' |
-							   ?wooper_hashtable_type:?wooper_hashtable_type(),
+							   ?wooper_table_type:?wooper_table_type(),
 
 		   attribute_table  :: 'undefined' |
-							   ?wooper_hashtable_type:?wooper_hashtable_type(),
+							   ?wooper_table_type:?wooper_table_type(),
 
 		   % Only means we know to access the actual class name:
 		   %
@@ -111,7 +111,7 @@
 		   %
 		   actual_class :: basic_utils:module_name(),
 
-		   request_sender :: pid() | 'undefined'
+		   request_sender :: basic_utils:maybe( pid() )
 
 }).
 

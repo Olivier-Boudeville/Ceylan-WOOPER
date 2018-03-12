@@ -31,16 +31,17 @@ run( IsDebug ) ->
 	test_facilities:start( ?MODULE ),
 
 	test_facilities:display( "Debug mode: ~s.",
-		[ class_Mammal:is_wooper_debug() ] ),
+							 [ class_Mammal:is_wooper_debug() ] ),
 
 
 	MyM = class_Mammal:synchronous_new_link( 30, male, brown ),
-	MyM ! { getClassName, [], self() },
+
+	MyM ! { getClassname, [], self() },
 	receive
 
 		{ wooper_result, class_Mammal } ->
 			test_facilities:display(
-				"After constructor, get_class_name returned 'class_Mammal' "
+				"After constructor, getClassname/1 returned 'class_Mammal' "
 				"as expected.");
 
 		{ wooper_result, UnexpectedClass } ->
@@ -53,12 +54,12 @@ run( IsDebug ) ->
 
 		{ wooper_result, [ class_Creature ] } ->
 			test_facilities:display(
-				"After constructor, getSuperclasses returned: class_Creature "
+				"After constructor, getSuperclasses/1 returned: class_Creature "
 				"as expected.");
 
 		{ wooper_result, UnexpectedSuperclasses } ->
 			test_facilities:fail( "wrong superclasses: ~p",
-				[ UnexpectedSuperclasses ] )
+								  [ UnexpectedSuperclasses ] )
 
 	end,
 
@@ -67,7 +68,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, 30 } ->
 			test_facilities:display(
-				"After constructor, getAge returned 30 as expected.");
+				"After constructor, getAge/1 returned 30 as expected.");
 
 		{ wooper_result, UnexpectedAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedAge ] )
@@ -79,7 +80,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, male } ->
 			test_facilities:display(
-				"After constructor, getGender returned male as expected." );
+				"After constructor, getGender/1 returned male as expected." );
 
 		{ wooper_result, UnexpectedGender } ->
 			test_facilities:fail( "wrong gender: ~p", [ UnexpectedGender ] )
@@ -93,7 +94,7 @@ run( IsDebug ) ->
 
 		 { wooper_result, 5 }->
 			test_facilities:display(
-				"After setAge, getAge returned 5 as expected." );
+				"After setAge/2, getAge/1 returned 5 as expected." );
 
 		{ wooper_result, UnexpectedNewAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedNewAge ] )
@@ -107,7 +108,7 @@ run( IsDebug ) ->
 
 		 { wooper_result, 6 }->
 			test_facilities:display(
-				"After declareBirthday, getAge returned 6 as expected." );
+				"After declareBirthday/1, getAge/1 returned 6 as expected." );
 
 		{ wooper_result, UnexpectedLastAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedLastAge ] )
@@ -121,11 +122,11 @@ run( IsDebug ) ->
 
 		 { wooper_result, true }->
 			test_facilities:display(
-				"isHotBlooded returned true as expected." );
+				"isHotBlooded/1 returned true as expected." );
 
 		{ wooper_result, UnexpectedBlood } ->
 			test_facilities:fail( "wrong blood type: ~p",
-				[ UnexpectedBlood ] )
+								  [ UnexpectedBlood ] )
 
 	end,
 
@@ -142,11 +143,11 @@ run( IsDebug ) ->
 
 		 { wooper_result, brown }->
 			test_facilities:display(
-				"getFurColor returned brown as expected." );
+				"getFurColor/1 returned brown as expected." );
 
 		{ wooper_result, UnexpectedFurColor } ->
 			test_facilities:fail( "wrong fur color: ~p",
-				[ UnexpectedFurColor ] )
+								  [ UnexpectedFurColor ] )
 
 	end,
 
@@ -160,14 +161,13 @@ run( IsDebug ) ->
 
 				{ wooper_result, InspectString } ->
 					test_facilities:display( "Instance description: ~s",
-											[ InspectString ] )
+											 [ InspectString ] )
 			end;
 
 		false ->
 			ok
 
 	end,
-
 
 	wooper:delete_synchronously_instance( MyM ),
 

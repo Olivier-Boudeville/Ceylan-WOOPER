@@ -32,18 +32,18 @@ run( IsDebug ) ->
 	test_facilities:start( ?MODULE ),
 
 	test_facilities:display( "Debug mode: ~s.",
-							[ class_Cat:is_wooper_debug() ] ),
+							 [ class_Cat:is_wooper_debug() ] ),
 
 	% General tests.
 
 	MyC = class_Cat:new_link( 3, female, sand, white ),
 
-	MyC ! { getClassName, [], self() },
+	MyC ! { getClassname, [], self() },
 	receive
 
 		{ wooper_result, class_Cat } ->
 			test_facilities:display(
-				"After constructor, get_class_name returned 'class_Cat' "
+				"After constructor, getClassname/1 returned 'class_Cat' "
 				"as expected." );
 
 		{ wooper_result, UnexpectedClass } ->
@@ -55,12 +55,12 @@ run( IsDebug ) ->
 	receive
 
 		{ wooper_result, Classes=[ class_Mammal, class_ViviparousBeing ] } ->
-			test_facilities:display( "After constructor, get_superclasses "
+			test_facilities:display( "After constructor, getSuperclasses/1 "
 									 "returned ~p as expected.", [ Classes ] );
 
 		{ wooper_result, UnexpectedSuperclasses } ->
 			test_facilities:fail( "wrong superclasses: ~p",
-				[ UnexpectedSuperclasses ] )
+								  [ UnexpectedSuperclasses ] )
 
 	end,
 
@@ -72,7 +72,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, 3 } ->
 			test_facilities:display(
-				"After constructor, getAge returned 3 as expected." );
+				"After constructor, getAge/1 returned 3 as expected." );
 
 		{ wooper_result, UnexpectedAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedAge ] )
@@ -84,7 +84,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, female } ->
 			test_facilities:display(
-				"After constructor, getGender returned female as expected." );
+				"After constructor, getGender/1 returned female as expected." );
 
 		{ wooper_result, UnexpectedGender } ->
 			test_facilities:fail( "wrong gender: ~p", [ UnexpectedGender ] )
@@ -98,7 +98,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, 5 }->
 			test_facilities:display(
-				"After setAge, getAge returned 5 as expected." );
+				"After setAge, getAge/1 returned 5 as expected." );
 
 		{ wooper_result, UnexpectedNewAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedNewAge ] )
@@ -112,7 +112,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, 6 }->
 			test_facilities:display(
-				"After declareBirthday, getAge returned 6 as expected." );
+				"After declareBirthday/1, getAge/1 returned 6 as expected." );
 
 		{ wooper_result, UnexpectedLastAge } ->
 			test_facilities:fail( "wrong age: ~p", [ UnexpectedLastAge ] )
@@ -126,7 +126,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, true }->
 			test_facilities:display(
-				"isHotBlooded returned true as expected." );
+				"isHotBlooded/1 returned true as expected." );
 
 		{ wooper_result, UnexpectedBlood } ->
 			test_facilities:fail( "wrong blood type: ~p", [ UnexpectedBlood ] )
@@ -138,11 +138,11 @@ run( IsDebug ) ->
 
 		{ wooper_result, sand }->
 			test_facilities:display(
-				"getFurColor returned sand as expected." );
+				"getFurColor/1 returned sand as expected." );
 
 		{ wooper_result, UnexpectedFurColor } ->
 			test_facilities:fail( "wrong fur color: ~p",
-								 [ UnexpectedFurColor ] )
+								  [ UnexpectedFurColor ] )
 
 	end,
 
@@ -154,12 +154,12 @@ run( IsDebug ) ->
 
 		{ wooper_result, 4 } ->
 			test_facilities:display(
-				"After constructor, getMeanChildrenCount returned 4 "
+				"After constructor, getMeanChildrenCount/1 returned 4 "
 				"as expected." );
 
 		{ wooper_result, UnexpectedMeanCount } ->
 			test_facilities:fail( "wrong mean children count: ~p",
-				[ UnexpectedMeanCount ] )
+								  [ UnexpectedMeanCount ] )
 
 	end,
 
@@ -168,7 +168,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, 0 } ->
 			test_facilities:display(
-				"After constructor, getBirthGivenCount returned 0 "
+				"After constructor, getBirthGivenCount/1 returned 0 "
 				"as expected." );
 
 		{ wooper_result, UnexpectedFirstCount } ->
@@ -184,12 +184,12 @@ run( IsDebug ) ->
 
 		{ wooper_result, 5 }->
 			test_facilities:display(
-				"After giveBirth, getBirthGivenCount returned 5 "
+				"After giveBirth/2, getBirthGivenCount/1 returned 5 "
 				"as expected." );
 
 		{ wooper_result, UnexpectedSecondCount } ->
 			test_facilities:fail( "wrong second children count: ~p",
-				[ UnexpectedSecondCount ] )
+								  [ UnexpectedSecondCount ] )
 
 	end,
 
@@ -200,11 +200,11 @@ run( IsDebug ) ->
 	receive
 
 		{ wooper_result, 6 }->
-			test_facilities:display( "getTeatCount returned 6 as expected." );
+			test_facilities:display( "getTeatCount/1 returned 6 as expected." );
 
 		{ wooper_result, UnexpectedTeatCount } ->
 			test_facilities:fail( "wrong teat count: ~p",
-								 [ UnexpectedTeatCount ] )
+								  [ UnexpectedTeatCount ] )
 
 	end,
 
@@ -216,7 +216,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedFoodPreference } ->
 			test_facilities:fail( "wrong food preference: ~p",
-				[ UnexpectedFoodPreference ] )
+								  [ UnexpectedFoodPreference ] )
 
 	end,
 
@@ -229,7 +229,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedOtherFoodPreference } ->
 			test_facilities:fail( "wrong food preference: ~p",
-				[ UnexpectedOtherFoodPreference ] )
+								  [ UnexpectedOtherFoodPreference ] )
 
 	end,
 
@@ -242,11 +242,11 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedWhiskerColor } ->
 			test_facilities:fail( "wrong whisker color: ~p",
-				[ UnexpectedWhiskerColor ] );
+								  [ UnexpectedWhiskerColor ] );
 
 		UnexpectedReturn ->
 			test_facilities:fail( "unexpected method return: ~p",
-				[ UnexpectedReturn ] )
+								  [ UnexpectedReturn ] )
 
 	end,
 
@@ -259,7 +259,7 @@ run( IsDebug ) ->
 
 				{ wooper_result, InspectString } ->
 					test_facilities:display( "Instance description: ~s",
-											[ InspectString ] )
+											 [ InspectString ] )
 			end;
 
 		false ->

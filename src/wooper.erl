@@ -37,7 +37,7 @@
 
 % Very generic:
 %
--export([ get_class_name/1, get_attribute_pairs/1, state_to_string/1 ]).
+-export([ get_classname/1, get_attribute_pairs/1, state_to_string/1 ]).
 
 
 % Communication helpers:
@@ -128,9 +128,7 @@
 
 % An atom prefixed with 'class_':
 %
--type class_name() :: atom().
-
--type classname() :: class_name().
+-type classname() :: atom().
 
 
 % A method name (ex: 'setColor'):
@@ -185,7 +183,7 @@
 -type request_result() :: wooper:request_result().
 
 
-% Otherwise getClassName/1, get_superclasses/0, etc. are unused:
+% Otherwise getClassname/1, get_superclasses/0, etc. are unused:
 -include("wooper_classes_exports.hrl").
 
 % Otherwise wooper_execute_method_with/4 is unused:
@@ -199,7 +197,7 @@
 
 
 % We prefer having it prefixed by wooper:
--export_type([ class_name/0, classname/0,
+-export_type([ classname/0,
 			   method_name/0, request_name/0, oneway_name/0,
 			   method_argument/0, method_arguments/0, qualifier/0,
 			   construction_parameters/0,
@@ -233,7 +231,7 @@
 % For wooper_execute_method/3:
 -include("wooper_execute_internal_functions.hrl").
 
-% For get_superclasses/1:
+% For get_superclasses/0:
 -include("wooper_classes_functions.hrl").
 
 
@@ -701,7 +699,7 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 
 
 % Used only in debug mode:
--spec check_classname_and_arity( class_name(), construction_parameters() ) ->
+-spec check_classname_and_arity( classname(), construction_parameters() ) ->
 									   basic_utils:void().
 check_classname_and_arity( Classname, ConstructionParameters ) ->
 
@@ -792,7 +790,7 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 %
 % (helper)
 %
--spec construct_and_run( class_name(), construction_parameters() ) ->
+-spec construct_and_run( classname(), construction_parameters() ) ->
 							   no_return().
 
 
@@ -817,7 +815,7 @@ construct_and_run( Classname, ConstructionParameters ) ->
 			% as by convention no attribute should be introduced outside of the
 			% constructor:
 			%
-			TunedTable = ?wooper_hashtable_type:optimise(
+			TunedTable = ?wooper_table_type:optimise(
 							ConstructState#state_holder.attribute_table ),
 
 			ReadyState = ConstructState#state_holder{
@@ -826,7 +824,7 @@ construct_and_run( Classname, ConstructionParameters ) ->
 			% Otherwise, in wooper_destruct/1 and all, ?MODULE will be 'wooper'
 			% instead of the right class:
 			%
-			apply( Classname, wooper_main_loop, [ ReadyState ] );
+			Classname:wooper_main_loop( ReadyState );
 
 
 		Other ->
@@ -870,7 +868,7 @@ construct_and_run( Classname, ConstructionParameters ) ->
 	% Enforces a closer-to-ideal load factor of the hashtable if needed, as by
 	% convention no attribute should be introduced outside of the constructor:
 	%
-	TunedTable = ?wooper_hashtable_type:optimise(
+	TunedTable = ?wooper_table_type:optimise(
 							ConstructState#state_holder.attribute_table ),
 
 
@@ -879,7 +877,7 @@ construct_and_run( Classname, ConstructionParameters ) ->
 	% Otherwise, in wooper_destruct/1 and all, ?MODULE will be 'wooper' instead
 	% of the right class:
 	%
-	apply( Classname, wooper_main_loop, [ ReadyState ] ).
+	Classname:wooper_main_loop( ReadyState ).
 
 
 -endif. % wooper_debug
@@ -894,7 +892,7 @@ construct_and_run( Classname, ConstructionParameters ) ->
 %
 % (helper)
 %
--spec construct_and_run_synchronous( class_name(), construction_parameters(),
+-spec construct_and_run_synchronous( classname(), construction_parameters(),
 									 pid() ) -> no_return().
 
 
@@ -919,7 +917,7 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 			% as by convention no attribute should be introduced outside of the
 			% constructor:
 			%
-			TunedTable = ?wooper_hashtable_type:optimise(
+			TunedTable = ?wooper_table_type:optimise(
 							ConstructState#state_holder.attribute_table ),
 
 			ReadyState = ConstructState#state_holder{
@@ -930,7 +928,7 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 			%
 			% (never returns)
 			%
-			apply( Classname, wooper_main_loop, [ ReadyState ] );
+			Classname:wooper_main_loop( ReadyState );
 
 
 
@@ -981,7 +979,7 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 	% Enforces a closer-to-ideal load factor of the hashtable if needed, as by
 	% convention no attribute should be introduced outside of the constructor:
 	%
-	TunedTable = ?wooper_hashtable_type:optimise(
+	TunedTable = ?wooper_table_type:optimise(
 							ConstructState#state_holder.attribute_table ),
 
 	ReadyState = ConstructState#state_holder{ attribute_table=TunedTable },
@@ -991,7 +989,7 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 	%
 	% (never returns)
 	%
-	apply( Classname, wooper_main_loop, [ ReadyState ] ).
+	Classname:wooper_main_loop( ReadyState ).
 
 
 -endif. % not wooper_debug.
@@ -1005,14 +1003,14 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 %
 % (helper)
 %
--spec get_blank_state( class_name() ) -> wooper:state().
+-spec get_blank_state( classname() ) -> wooper:state().
 get_blank_state( Classname ) ->
 
 	#state_holder{
 
 		virtual_table   = retrieve_virtual_table( Classname ),
 
-		attribute_table = ?wooper_hashtable_type:new(
+		attribute_table = ?wooper_table_type:new(
 									?wooper_attribute_count_upper_bound ),
 
 		actual_class    = Classname,
@@ -1165,8 +1163,8 @@ default_node_down_handler( State, Node, MonitorNodeInfo ) ->
 %
 % (helper)
 %
--spec retrieve_virtual_table( class_name() ) ->
-				   ?wooper_hashtable_type:?wooper_hashtable_type().
+-spec retrieve_virtual_table( classname() ) ->
+				   ?wooper_table_type:?wooper_table_type().
 retrieve_virtual_table( Classname ) ->
 
 	% For per-instance virtual table: wooper_create_method_table_for(?MODULE).
@@ -1174,7 +1172,7 @@ retrieve_virtual_table( Classname ) ->
 	receive
 
 		{ virtual_table, Table } ->
-			%?wooper_hashtable_type:display( Table ),
+			%?wooper_table_type:display( Table ),
 			Table
 
 	end.
@@ -1185,7 +1183,7 @@ retrieve_virtual_table( Classname ) ->
 %
 % (helper)
 %
--spec trigger_error( basic_utils:exception_class(), term(), class_name(),
+-spec trigger_error( basic_utils:exception_class(), term(), classname(),
 					 [ method_arguments() ] ) -> no_return().
 trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters ) ->
 
@@ -1212,12 +1210,14 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters ) ->
 % Methods for getting information about an instance.
 
 
-% Returns the actual class name of the current instance.
+% Returns the actual classname of the current instance.
+%
+% Can be trusted.
 %
 % (helper)
 %
--spec get_class_name( wooper:state() ) -> class_name().
-get_class_name( State ) ->
+-spec get_classname( wooper:state() ) -> classname().
+get_classname( State ) ->
 
 	% Note: a mere ?MODULE would not work (ex: case of an inherited method,
 	% compiled with the module name of the parent class).
@@ -1298,7 +1298,7 @@ state_to_string( State ) ->
 		end,
 
 		io_lib:format( "State of ~w:~nInstance of ~s with ~B attribute(s):~n",
-			[ self(), get_class_name( State ), length( Attributes ) ] ),
+			[ self(), get_classname( State ), length( Attributes ) ] ),
 
 		SortedAttributes ).
 
@@ -1325,7 +1325,7 @@ virtual_table_to_string( State ) ->
 	  _Acc=io_lib:format( "Virtual table of ~w:~n(method name/arity -> "
 						  "module defining that method)~n", [ self() ] ),
 
-	  _List=?wooper_hashtable_type:enumerate(
+	  _List=?wooper_table_type:enumerate(
 			   State#state_holder.virtual_table ) ).
 
 
@@ -1380,7 +1380,7 @@ display_instance( State ) ->
 %
 -spec get_all_attributes( wooper:state() ) -> [ attribute_entry() ].
 get_all_attributes( State ) ->
-	?wooper_hashtable_type:enumerate( State#state_holder.attribute_table ).
+	?wooper_table_type:enumerate( State#state_holder.attribute_table ).
 
 
 

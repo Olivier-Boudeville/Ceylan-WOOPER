@@ -43,7 +43,7 @@
 :Organisation: Copyright (C) 2008-2018 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation Date: Thursday, February 25, 2008
-:Lastly Updated: Saturday, March 10, 2018
+:Lastly Updated: Monday, March 12, 2018
 
 
 
@@ -312,15 +312,15 @@ For example, a class modeling a cat should translate into an Erlang module named
 Similarly, a pink flamingo class could be declared as ``class_PinkFlamingo``, in ``class_PinkFlamingo.erl``, which would include a ``-module(class_PinkFlamingo).`` declaration.
 
 
-The class name can be obtained through its ``get_class_name/0`` static method [#]_ (automatically defined by WOOPER):
+The class name can be obtained through its ``get_classname/0`` static method [#]_ (automatically defined by WOOPER):
 
 .. code:: erlang
 
- > class_Cat:get_class_name().
+ > class_Cat:get_classname().
  class_Cat
 
 
-.. [#] The ``get_class_name/0`` static method has no real interest of its own, it is defined mostly for explanation purpose.
+.. [#] The ``get_classname/0`` static method has no real interest of its own, it is defined mostly for explanation purpose.
 
 Note that a static method (i.e. a class method that does not apply to any specific instance) of a class X is nothing more than an Erlang function exported from the corresponding ``class_X`` module: all exported functions could be seen as static methods.
 
@@ -491,7 +491,7 @@ Some method names are reserved for WOOPER; notably no user method should have it
 
   The complete list of reserved function names that do not start with the ``wooper_`` prefix is:
 
- - ``get_class_name``
+ - ``get_classname``
  - ``get_superclasses``
  - ``executeRequest``
  - ``executeOneway``
@@ -500,7 +500,7 @@ Some method names are reserved for WOOPER; notably no user method should have it
 
  They are reserved for all arities.
 
- Note that functions which must be defined by the class developer are unconditionally exported by the WOOPER header, so that a compile-time error is issued whenever at least one of them is not defined.
+ Note that functions that must be defined by the class developer are unconditionally exported by the WOOPER header, so that a compile-time error is issued whenever at least one of them is not defined.
 
 
 

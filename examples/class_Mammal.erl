@@ -51,7 +51,7 @@ construct( State, ?wooper_construct_parameters ) ->
 	CreatureState = class_Creature:construct( State, Age, Gender ),
 
 	{ RequestedState, ActualClass } = executeRequest( CreatureState,
-													  getClassName ),
+													  getClassname ),
 
 	% Even when constructing a cat, we should see the right class (class_Cat)
 	% and not the current class (class_Mammal):
@@ -69,7 +69,7 @@ construct( State, ?wooper_construct_parameters ) ->
 destruct( State ) ->
 
 	{ RequestedState, ActualClass } = executeRequest( State,
-													  getClassName ),
+													  getClassname ),
 
 	% Even when constructing a cat, we should see the right class (class_Cat)
 	% and not the current class (class_Mammal):
@@ -133,7 +133,7 @@ getFurColor( State ) ->
 getArbitraryNumber( State ) ->
 
 	{ RequestedState, ActualClass } = executeRequest( State,
-													  getClassName ),
+													  getClassname ),
 
 	% Even when constructing a cat, we should see the right class (class_Cat)
 	% and not the current class (class_Mammal):

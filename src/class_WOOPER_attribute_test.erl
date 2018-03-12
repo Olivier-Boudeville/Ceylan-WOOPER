@@ -204,7 +204,7 @@ not_crashing_test_hashtable( State ) ->
 
 	% Let's have an (empty) hashtable first:
 	WithTableState = setAttribute( State, test_hashtable,
-								  ?wooper_hashtable_type:new() ),
+								   ?wooper_table_type:new() ),
 
 	EntrySetState = addKeyValueToAttribute( WithTableState, test_hashtable,
 		my_key, my_value ),
@@ -212,8 +212,8 @@ not_crashing_test_hashtable( State ) ->
 	% Check was registered indeed:
 	ReadTable = getAttribute( EntrySetState, test_hashtable ),
 
-	{ value, my_value } = ?wooper_hashtable_type:lookupEntry( my_key,
-															 ReadTable ),
+	{ value, my_value } = ?wooper_table_type:lookupEntry( my_key,
+														  ReadTable ),
 
 	test_ok.
 

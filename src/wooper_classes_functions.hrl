@@ -29,26 +29,37 @@
 % definitions).
 
 
+
+% Static method (i.e. a mere function) that returns the name of that class.
+%
+% Defined mostly for explanation purpose.
+%
+-spec get_classname() -> [ classname() ].
+get_classname() ->
+	?MODULE.
+
+
+
+% Static method (i.e. a mere function) that returns the list of the superclasses
+% of that class.
+%
+% Generally not to be called by the user, see getSuperclasses/1 instead.
+%
+-spec get_superclasses() -> [ classname() ].
+get_superclasses() ->
+	?wooper_superclasses.
+
+
+
 % Request returning the classname of the instance.
 %
 % Always accurate, in all constructors, methods and destructors.
 %
 % (const request)
 %
--spec getClassName( wooper:state() ) -> request_return( class_name() ).
-getClassName( State ) ->
+-spec getClassname( wooper:state() ) -> request_return( classname() ).
+getClassname( State ) ->
 	?wooper_return_state_result( State, State#state_holder.actual_class ).
-
-
-
-% "Static method" (only a function) which returns the list of the superclasses
-% for that class.
-%
-% Not to be called by the user, see get_superclasses/1 instead.
-%
--spec get_superclasses() -> [ class_name() ].
-get_superclasses() ->
-	?wooper_superclasses.
 
 
 
@@ -58,11 +69,10 @@ get_superclasses() ->
 %
 % (const request)
 %
--spec getSuperclasses( wooper:state() ) -> request_return( [ class_name() ] ).
+-spec getSuperclasses( wooper:state() ) -> request_return( [ classname() ] ).
 getSuperclasses( State ) ->
 	ActualModule = State#state_holder.actual_class,
-	SuperClasses = apply( ActualModule, get_superclasses, [] ),
-	%?wooper_return_state_result( State, ?wooper_superclasses ).
+	SuperClasses = ActualModule:get_superclasses(),
 	?wooper_return_state_result( State, SuperClasses ).
 
 

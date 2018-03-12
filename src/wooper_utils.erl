@@ -43,7 +43,7 @@
 %
 % Ex: 'MyFoobarExample' resulting in 'class_MyFoobarExample'.
 %
--spec pep8_class_to_wooper_class( python_utils:pep8_class_name() | string() )
+-spec pep8_class_to_wooper_class( python_utils:pep8_classname() | string() )
 								-> wooper:classname().
 pep8_class_to_wooper_class( ClassName ) when is_atom( ClassName ) ->
 	pep8_class_to_wooper_class( text_utils:atom_to_string( ClassName ) );
@@ -61,7 +61,7 @@ pep8_class_to_wooper_class( ClassNameStr ) ->
 % Ex: "class_MyFoobarExample" resulting in "MyFoobarExample".
 %
 -spec wooper_class_to_pep8_class( wooper:classname() | string() ) ->
-										python_utils:pep8_class_name().
+										python_utils:pep8_classname().
 wooper_class_to_pep8_class( ClassName ) when is_atom( ClassName ) ->
 	wooper_class_to_pep8_class( text_utils:atom_to_string( ClassName ) );
 

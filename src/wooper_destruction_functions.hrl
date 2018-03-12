@@ -51,14 +51,14 @@ wooper_destruct( State ) ->
 	% in the method table would be more efficient, see
 	% wooper_class_manager:get_virtual_table_for):
 
-	% We should never rely on 'wooper:get_class_name( State )' here, as it would
-	% always return the leaf class. We use ?MODULE (even for embodied
+	% We should never rely on 'wooper:get_classname( State )' here, as it would
+	% always return the leaf class. We use ?MODULE (even for embodieds
 	% instances):
 	%
 	Exports = module_info( exports ),
 
 	%io:format( "**** Deleting ~w (destructor for class ~w/~w).~n",
-	%		   [ self(), ?MODULE, wooper:get_class_name( State ) ] ),
+	%		   [ self(), ?MODULE, wooper:get_classname( State ) ] ),
 
 	DestructedState = case lists:member( { destruct, 1 }, Exports ) of
 
@@ -181,7 +181,7 @@ trigger_destruct_error( Reason, ErrorTerm, State ) ->
 	% Destruction failed:
 	% (error term would often be unreadable with ~p)
 
-	ActualClassname = wooper:get_class_name( State ),
+	ActualClassname = wooper:get_classname( State ),
 
 	wooper:log_error( "~nWOOPER error for PID ~w, "
 					  "destructor (~s:destruct/1) failed (cause: ~p):~n~n"
