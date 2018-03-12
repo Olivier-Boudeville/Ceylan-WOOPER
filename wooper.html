@@ -28,7 +28,7 @@
 </tr>
 <tr class="field"><th class="field-name">Creation Date:</th><td class="field-body">Thursday, February 25, 2008</td>
 </tr>
-<tr class="field"><th class="field-name">Lastly Updated:</th><td class="field-body">Saturday, March 10, 2018</td>
+<tr class="field"><th class="field-name">Lastly Updated:</th><td class="field-body">Monday, March 12, 2018</td>
 </tr>
 </tbody>
 </table>
@@ -353,15 +353,15 @@ This cat could be created and be synchronously deleted, as expected.
 <p>To allow for <strong>encapsulation</strong>, a WOOPER class is mapped to an Erlang module, whose name is by convention made from the <tt class="docutils literal">class_</tt> prefix followed by the class name, in the so-called <a class="reference external" href="http://en.wikipedia.org/wiki/CamelCase">CamelCase</a>: all words are spelled in lower-case except their first letter, and there are no separators between words, like in: <em>ThisIsAnExample</em>.</p>
 <p>For example, a class modeling a cat should translate into an Erlang module named <tt class="docutils literal">class_Cat</tt>, thus in a file named <tt class="docutils literal">class_Cat.erl</tt>. At the top of this file, the corresponding module would be therefore declared with: <tt class="docutils literal"><span class="pre">-module(class_Cat).</span></tt>.</p>
 <p>Similarly, a pink flamingo class could be declared as <tt class="docutils literal">class_PinkFlamingo</tt>, in <tt class="docutils literal">class_PinkFlamingo.erl</tt>, which would include a <tt class="docutils literal"><span class="pre">-module(class_PinkFlamingo).</span></tt> declaration.</p>
-<p>The class name can be obtained through its <tt class="docutils literal">get_class_name/0</tt> static method <a class="footnote-reference" href="#id6" id="id5">[2]</a> (automatically defined by WOOPER):</p>
+<p>The class name can be obtained through its <tt class="docutils literal">get_classname/0</tt> static method <a class="footnote-reference" href="#id6" id="id5">[2]</a> (automatically defined by WOOPER):</p>
 <pre class="code erlang literal-block">
-<span class="o">&gt;</span> <span class="nn">class_Cat</span><span class="p">:</span><span class="nf">get_class_name</span><span class="p">().</span>
+<span class="o">&gt;</span> <span class="nn">class_Cat</span><span class="p">:</span><span class="nf">get_classname</span><span class="p">().</span>
 <span class="n">class_Cat</span>
 </pre>
 <table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id5">[2]</a></td><td>The <tt class="docutils literal">get_class_name/0</tt> static method has no real interest of its own, it is defined mostly for explanation purpose.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id5">[2]</a></td><td>The <tt class="docutils literal">get_classname/0</tt> static method has no real interest of its own, it is defined mostly for explanation purpose.</td></tr>
 </tbody>
 </table>
 <p>Note that a static method (i.e. a class method that does not apply to any specific instance) of a class X is nothing more than an Erlang function exported from the corresponding <tt class="docutils literal">class_X</tt> module: all exported functions could be seen as static methods.</p>
