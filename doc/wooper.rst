@@ -43,7 +43,15 @@
 :Organisation: Copyright (C) 2008-2018 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation Date: Thursday, February 25, 2008
-:Lastly Updated: Monday, March 12, 2018
+:Lastly Updated: Wednesday, March 28, 2018
+:Dedication: Users and maintainers of the ``WOOPER`` layer.
+:Abstract:
+
+	The role of the ``WOOPER`` layer is to provide free software object-oriented facilities to the Erlang language.
+
+
+.. meta::
+   :keywords: WOOPER, OOP, inheritance, object-oriented, Erlang
 
 
 
