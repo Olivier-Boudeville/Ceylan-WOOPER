@@ -1,4 +1,4 @@
-% Copyright (C) 2014 Olivier Boudeville
+% Copyright (C) 2014-2018 Olivier Boudeville
 %
 % This file is part of the WOOPER library.
 %
@@ -27,9 +27,7 @@
 
 
 
-
 % Overall parse transform for the WOOPER layer.
-%
 %
 -module(wooper_parse_transform).
 
@@ -37,16 +35,16 @@
 
 % Implementation notes:
 
-% Calls in turn the common parse transform, once WOOPER-level operations have
-% been done.
+% Calls in turn the Common (a.k.a. Myriad) parse transform, once WOOPER-level
+% operations have been completed.
 %
 % One will get: 'undefined parse transform 'wooper_parse_transform'' as soon as
 % a compiled module called by the parse transform (ex: text_utils.beam) will not
 % be found (hence even if the transform itself is available) or a non-exported
 % (or even not existing) function is called (ex: text_utils:format/1).
 
-% We must discriminate between methods and functions, and identify among methods
-% the requests, the oneways and the static ones.
+% We must discriminate here between methods and functions, and identify, among
+% detected methods: the requests, the oneways and the static ones.
 %
 % For that we can rely either on the type specs (if any - but we decided that
 % they should better be mandatory) or on the function definition itself (relying
@@ -67,34 +65,34 @@
 		  class_info_to_string/1 ]).
 
 
-% Describe a member attribute of the state of a given class:
+% Describes a member attribute of the state of a given class:
 %
 -record( attribute_info, {
 
-		   % The name of an attribute:
+		   % The name of this attribute:
 		   name :: wooper:attribute_name(),
 
-		   % Type of an attribute:
-		   type :: meta_utils:type(),
+		   % The type of this attribute:
+		   type :: type_utils:type(),
 
 		   % Qualifiers (if any) that apply to this attribute:
 		   qualifiers = [] :: [ wooper:qualifier() ]
 
 } ).
 
-
 -type attribute_info() :: #attribute_info{}.
 
--type ast() :: meta_utils:ast().
+
+-type ast() :: ast_base:ast().
 
 
 % AST subpart of a clause of a function:
 %
--type clause() :: any().
+-type clause_def() :: meta_utils:clause_def().
 
 
 
-% The WOOPER type of an Erlang function:
+% The specific type of an Erlang function, from the WOOPER point of view:
 %
 -type function_type() :: 'constructor' | 'destructor'
 					   | 'request' | 'oneway' | 'static' | 'function'.
@@ -102,15 +100,16 @@
 
 
 % For function_info:
--include("meta_utils.hrl").
+-include("ast_info.hrl").
 
 
 % For debugging:
 -export([ get_info/2, get_class_info/1, check_class_info/1 ]).
 
 
-% The parse transform itself, transforming the specified Abstract Format code
-% into another one.
+
+% The parse transform itself, transforming the specified (WOOPER-based) Abstract
+% Format code into another (Erlang-compliant) one.
 %
 -spec parse_transform( ast(), list() ) -> ast().
 parse_transform( AST, Options ) ->
@@ -150,23 +149,26 @@ parse_transform( AST, Options ) ->
 % '-define( wooper_superclasses, [ class_A, class_B ] ).'.
 %
 % Now they are defined with the optional:
-
+%
 % '-wooper_superclasses( [ class_A, class_B ] ).
 
 
 
-% A record to store and centralise information gathered about an AST.
+% Stores and centralises WOOPER-level information gathered about an AST.
 %
 % Allows to perform checkings and to reorder the returned version of it.
 %
 % We preserve the forms whenever possible (in *_def* counterpart fields),
 % notably to keep line numbers.
 %
+% See also: the {module,function}_info counterpart Common records, defined in
+% ast_info.hrl.
+%
 -record( class_info, {
 
 
 		% Name of that class:
-		class = undefined :: wooper:classname(),
+		class :: wooper:classname(),
 
 		% Classname (module) definition:
 		class_def = undefined :: ast(),
@@ -175,11 +177,11 @@ parse_transform( AST, Options ) ->
 		% Ordered list of the superclasses of this class (corresponding form
 		% will be stripped):
 		%
-		superclasses = undefined :: [ wooper:classname() ],
+		superclasses :: [ wooper:classname() ],
 
 		% Superclass definition (one attribute):
 		%
-		superclass_def = undefined :: ast(),
+		superclass_def :: ast(),
 
 
 		% We merely touch compilation options (ex: '{compile, { inline, [ {
@@ -191,7 +193,7 @@ parse_transform( AST, Options ) ->
 		% Parse-level attributes (ex: '-my_attribute( my_value ).') not
 		% corresponding to other fields of interest:
 		%
-		parse_attributes = [] :: [ meta_utils:attribute() ],
+		parse_attributes = [] :: [ ast_info:attribute() ],
 
 		% Parse attribute definitions:
 		%
@@ -254,49 +256,48 @@ parse_transform( AST, Options ) ->
 
 		% All information about the constructor(s) of that class:
 		%
-		constructors :: table:table( arity(), meta_utils:function_info() ),
+		constructors :: table:table( arity(), ast_info:function_info() ),
 
 
 		% All information about the destructor (if any) of that class:
 		%
-		destructor = undefined :: meta_utils:function_info(),
+		destructor = undefined :: ast_info:function_info(),
 
 
 		% All information about the class-specific (member) request methods of
 		% that class:
 		%
-		requests = table:table( meta_utils:function_id(),
-								meta_utils:function_info() ),
+		requests = table:table( ast_info:function_id(),
+								ast_info:function_info() ),
 
 
 		% All information about the class-specific (member) oneway methods of
 		% that class:
 		%
-		oneways = table:table( meta_utils:function_id(),
-							   meta_utils:function_info() ),
+		oneways = table:table( ast_info:function_id(),
+							   ast_info:function_info() ),
 
 
 		% All information about the static methods of that class:
 		%
-		statics = table:table( meta_utils:function_id(),
-							   meta_utils:function_info() ),
+		statics = table:table( ast_info:function_id(),
+							   ast_info:function_info() ),
 
 
 
 		% All information about the other, plain functions of that class:
 		%
-		functions = table:table( meta_utils:function_id(),
-								 meta_utils:function_info() ),
+		functions = table:table( ast_info:function_id(),
+								 ast_info:function_info() ),
 
 
 		% The number of the last line in the original source file:
 		%
-		% (added code will be put afterwards)
+		% (any added code will be put afterwards)
 		%
-		last_line :: basic_utils:count()
+		last_line :: ast_base:line()
 
 } ).
-
 
 -type class_info() :: #class_info{}.
 
@@ -304,7 +305,7 @@ parse_transform( AST, Options ) ->
 
 % Transforms specified AST for WOOPER.
 %
--spec transform( meta_utils:ast() ) -> { meta_utils:ast(), class_info() }.
+-spec transform( ast() ) -> { ast(), class_info() }.
 transform( AST ) ->
 
 	% Starts with blank information:
@@ -346,16 +347,14 @@ transform( AST ) ->
 %
 get_class_info( AST ) ->
 
-	InitClassInfo = #class_info{
+	EmptyTable = table:new(),
 
-					   constructors = table:new(),
-					   destructor = undefined,
-					   requests = table:new(),
-					   oneways = table:new(),
-					   statics = table:new(),
-					   functions = table:new()
-
-					  },
+	InitClassInfo = #class_info{ constructors=EmptyTable,
+								 destructor=undefined,
+								 requests=EmptyTable,
+								 oneways=EmptyTable,
+								 statics=EmptyTable,
+								 functions=EmptyTable },
 
 	ReadClassInfo = get_info( AST, InitClassInfo ),
 
@@ -397,19 +396,18 @@ get_info( _AST=[ F={ attribute, _Line, wooper_superclasses, Classes } | T ],
 
 	[ check_classname( C ) || C <- Classes ],
 
-	get_info( T, W#class_info{
-				   superclasses=Classes,
-				   superclass_def=F } );
+	get_info( T, W#class_info{ superclasses=Classes,
+							   superclass_def=F } );
 
 
 get_info( _AST=[ { attribute, Line, wooper_superclasses, Classes } | _T ],
 		  #class_info{ superclasses=undefined } ) when is_list( Classes ) ->
-	meta_utils:raise_error( { invalid_superclasses_definition, { line, Line },
+	ast_utils:raise_error( { invalid_superclasses_definition, { line, Line },
 							  Classes } );
 
 get_info( _AST=[ { attribute, Line, wooper_superclasses, Classes } | _T ],
 		  #class_info.superclasses=OtherClasses ) ->
-	meta_utils:raise_error( { multiple_superclasses_definition, { line, Line },
+	ast_utils:raise_error( { multiple_superclasses_definition, { line, Line },
 							  Classes,OtherClasses  } );
 
 
@@ -426,8 +424,7 @@ get_info( _AST=[ F={ attribute, _Line, compile, _Options } | T ],
 get_info( _AST=[ F={ attribute, _Line, file, Filename } | T ],
 		  W=#class_info{ includes=Inc, include_defs=IncDefs } ) ->
 	get_info( T, W#class_info{ includes=[ Filename | Inc ],
-							   include_defs=[ F | IncDefs ]
-							 } );
+							   include_defs=[ F | IncDefs ] } );
 
 
 % Type definition section:
@@ -438,8 +435,7 @@ get_info( _AST=[ F={ attribute, _Line, type,
 						 type_definition_defs=TypeDefsDefs } ) ->
 	get_info( T, W#class_info{
 				   type_definitions =[ { TypeName, TypeDef } | TypeDefs ],
-				   type_definition_defs =[ F | TypeDefsDefs ]
-							 } );
+				   type_definition_defs =[ F | TypeDefsDefs ] } );
 
 
 % Type export section:
@@ -450,8 +446,7 @@ get_info( _AST=[ F={ attribute, _Line, export_type, DeclaredTypes } | T ],
   when is_list( DeclaredTypes ) ->
 	get_info( T, W#class_info{
 				   type_exports= DeclaredTypes ++ TypeExports,
-				   type_export_defs=[ F | TypeExportDefs ]
-				  } );
+				   type_export_defs=[ F | TypeExportDefs ] } );
 
 
 % Function export section:
@@ -464,16 +459,12 @@ get_info( _AST=[ F={ attribute, _Line, export, _Filenames } | T ],
 % Function definition section:
 %
 get_info( _AST=[ Form={ function, _Line, Name, Arity, Clauses } | T ],
-		  W=#class_info{
-
-			   constructors=Constructors,
-			   destructor=Destructor,
-			   requests=Requests,
-			   oneways=Oneways,
-			   statics=Statics,
-			   functions=Functions
-
-			  } ) ->
+		  W=#class_info{ constructors=Constructors,
+						 destructor=Destructor,
+						 requests=Requests,
+						 oneways=Oneways,
+						 statics=Statics,
+						 functions=Functions } ) ->
 
 	% Other clauses could be checked as well:
 	%
@@ -516,8 +507,7 @@ get_info( _AST=[ Form={ function, _Line, Name, Arity, Clauses } | T ],
 
 
 % Spec attributes:
-get_info( _AST=[ _F={ attribute, _Line, spec, _FunSpec } | T ],
-		  W ) ->
+get_info( _AST=[ _F={ attribute, _Line, spec, _FunSpec } | T ], W ) ->
 	% Currently dropped!
 	get_info( T, W );
 
@@ -540,7 +530,7 @@ get_info( _AST=[ _F={ eof, Line } ], W=#class_info{ last_line=undefined } ) ->
 
 get_info( _AST=[ H | T ], Infos ) ->
 	io:format( "WARNING: ~p not managed.~n", [ H ] ),
-	%meta_utils:raise_error( { unhandled_form, H } ),
+	%ast_utils:raise_error( { unhandled_form, H } ),
 	get_info( T, Infos ).
 
 % Useless because of eof:
@@ -567,22 +557,24 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 
 		key_not_found ->
 					  % New entry then:
-					  #function_info{
-						 name=Name,
-						 arity=Arity,
-						 definition=Form
-						 % Implicit:
-						 %spec=undefined
-						};
+					  #function_info{ name=Name,
+									  arity=Arity,
+									  location=undefined,
+									  line=undefined,
+									  clauses=Form
+									  % Implicit:
+									  %spec=undefined
+									  %callback=undefined
+									  %exported=[]
+									 };
 
-		{ value, F=#function_info{ definition=undefined } } ->
-					  % Just add the form then:
-					  F#function_info{ definition=Form };
+		{ value, F=#function_info{ clauses=undefined } } ->
+			% Just add the form then:
+			F#function_info{ clauses=Form };
 
 		% Here a definition was already set:
 		_ ->
-					  meta_utils:raise_error(
-						{ multiple_definition_for, FunId } )
+			ast_utils:raise_error( { multiple_definition_for, FunId } )
 
 	end,
 
@@ -599,22 +591,21 @@ add_constructor( Arity, Form, ConstructorTable ) ->
 	FunInfo = case table:lookupEntry( Arity, ConstructorTable ) of
 
 		key_not_found ->
-					  % New entry then:
-					  #function_info{
-						 name=construct,
-						 arity=Arity,
-						 definition=Form
-						 % Implicit:
-						 %spec=undefined
-						};
+			% New entry then:
+			#function_info{ name=construct,
+							arity=Arity,
+							clauses=Form
+							% Implicit:
+							%spec=undefined
+							};
 
-		{ value, F=#function_info{ definition=undefined } } ->
-					  % Just add the form then:
-					  F#function_info{ definition=Form };
+		{ value, F=#function_info{ clauses=undefined } } ->
+			% Just add the form then:
+			F#function_info{ clauses=Form };
 
 		% Here a definition was already set:
 		_ ->
-					  meta_utils:raise_error(
+			ast_utils:raise_error(
 						{ multiple_definition_for_constructor, Arity } )
 
 	end,
@@ -627,15 +618,15 @@ add_constructor( Arity, Form, ConstructorTable ) ->
 %
 register_destructor( Form, undefined ) ->
 	% No spec:
-	#function_info{ name=destruct, arity=1, definition=Form };
+	#function_info{ name=destruct, arity=1, clauses=Form };
 
-register_destructor( Form, F=#function_info{ definition=undefined } ) ->
+register_destructor( Form, F=#function_info{ clauses=undefined } ) ->
 	% Already a spec:
-	F#function_info{ definition=Form };
+	F#function_info{ clauses=Form };
 
 register_destructor( _Form, _FunInfo ) ->
 	% Here a definition was already set:
-	meta_utils:raise_error( multiple_destructors_defined ).
+	ast_utils:raise_error( multiple_destructors_defined ).
 
 
 
@@ -650,23 +641,22 @@ add_request( Name, Arity, Form, RequestTable ) ->
 	RequestInfo = case table:lookupEntry( RequestId, RequestTable ) of
 
 		key_not_found ->
-					  % New entry then:
-					  #function_info{
-						 name=Name,
-						 arity=Arity,
-						 definition=Form
-						 % Implicit:
-						 %spec=undefined
-						};
+			% New entry then:
+			#function_info{ name=Name,
+							arity=Arity,
+							clauses=Form
+							% Implicit:
+							%spec=undefined
+						   };
 
-		{ value, F=#function_info{ definition=undefined } } ->
-					  % Just add the form then:
-					  F#function_info{ definition=Form };
+		{ value, F=#function_info{ clauses=undefined } } ->
+			% Just add the form then:
+			F#function_info{ clauses=Form };
 
 		% Here a definition was already set:
 		_ ->
-					  meta_utils:raise_error(
-						{ multiple_definition_for_request, RequestId } )
+			ast_utils:raise_error(
+			  { multiple_definition_for_request, RequestId } )
 
 	end,
 
@@ -685,23 +675,22 @@ add_oneway( Name, Arity, Form, OnewayTable ) ->
 	OnewayInfo = case table:lookupEntry( OnewayId, OnewayTable ) of
 
 		key_not_found ->
-					  % New entry then:
-					  #function_info{
-						 name=Name,
-						 arity=Arity,
-						 definition=Form
-						 % Implicit:
-						 %spec=undefined
-						};
+			% New entry then:
+			#function_info{ name=Name,
+							arity=Arity,
+							clauses=Form
+							% Implicit:
+							%spec=undefined
+						  };
 
-		{ value, F=#function_info{ definition=undefined } } ->
-					  % Just add the form then:
-					  F#function_info{ definition=Form };
+		{ value, F=#function_info{ clauses=undefined } } ->
+			% Just add the form then:
+			F#function_info{ clauses=Form };
 
 		% Here a definition was already set:
 		_ ->
-					  meta_utils:raise_error(
-						{ multiple_definition_for_oneway, OnewayId } )
+			ast_utils:raise_error(
+				{ multiple_definition_for_oneway, OnewayId } )
 
 	end,
 
@@ -720,23 +709,22 @@ add_static( Name, Arity, Form, StaticTable ) ->
 	StaticInfo = case table:lookupEntry( StaticId, StaticTable ) of
 
 		key_not_found ->
-					  % New entry then:
-					  #function_info{
-						 name=Name,
-						 arity=Arity,
-						 definition=Form
-						 % Implicit:
-						 %spec=undefined
-						};
+			% New entry then:
+			#function_info{ name=Name,
+							arity=Arity,
+							clauses=Form
+							% Implicit:
+							%spec=undefined
+						  };
 
-		{ value, F=#function_info{ definition=undefined } } ->
-					  % Just add the form then:
-					  F#function_info{ definition=Form };
+		{ value, F=#function_info{ clauses=undefined } } ->
+			% Just add the form then:
+			F#function_info{ clauses=Form };
 
 		% Here a definition was already set:
 		_ ->
-					  meta_utils:raise_error(
-						{ multiple_definition_for_static, StaticId } )
+			ast_utils:raise_error(
+				{ multiple_definition_for_static, StaticId } )
 
 	end,
 
@@ -754,7 +742,7 @@ check_classname( Name ) ->
 			ok;
 
 		InvalidName ->
-			meta_utils:raise_error( { invalid_classname, InvalidName } )
+			ast_utils:raise_error( { invalid_classname, InvalidName } )
 
 	end.
 
@@ -804,7 +792,7 @@ generate_ast( #class_info{
 % Tells whether specified clause belongs to a request, a oneway, a constuctor,
 % etc.
 %
--spec identify_function( basic_utils:function_name(), arity(), clause() ) ->
+-spec identify_function( basic_utils:function_name(), arity(), clause_def() ) ->
 							   function_type().
 identify_function( _Name=construct, _Arity, _Clause ) ->
 	constructor;
@@ -813,7 +801,7 @@ identify_function( _Name=destruct, _Arity=1, _Clause ) ->
 	destructor;
 
 identify_function( _Name=destruct, Arity, _Clause ) ->
-	meta_utils:raise_error( { destructor_arity_must_be_one, Arity } );
+	ast_utils:raise_error( { destructor_arity_must_be_one, Arity } );
 
 identify_function( Name, _Arity,
 				   _Clause={ clause, _Line, _Vars, _, AST } ) ->
@@ -821,7 +809,7 @@ identify_function( Name, _Arity,
 	case lists:member( Name, get_new_variation_names() ) of
 
 		true ->
-			%meta_utils:raise_error( { new_variations_are_reserved, Name } );
+			%ast_utils:raise_error( { new_variations_are_reserved, Name } );
 			fixme;
 
 		false ->
@@ -834,7 +822,7 @@ identify_function( Name, _Arity,
 	case StringName of
 
 		"wooper" ++ _ ->
-			%meta_utils:raise_error( { wooper_prefix_is_reserved, Name } );
+			%ast_utils:raise_error( { wooper_prefix_is_reserved, Name } );
 			fixme;
 
 		_ ->
@@ -865,7 +853,7 @@ infer_function_type( AST ) ->
 	% If no wooper return pseudo-call is detected, by default it will be a
 	% function:
 	%
-	{ _SameAST, FunType } = meta_utils:traverse_term( _TargetTerm=AST,
+	{ _SameAST, FunType } = ast_transform:traverse_term( _TargetTerm=AST,
 									 _TypeDescription=tuple,
 									 _TermTransformer=fun infer_fun_type/2,
 									 _UserData=function ),
@@ -889,46 +877,45 @@ infer_function_type( AST ) ->
 %
 -spec infer_fun_type( term(), basic_utils:user_data() ) ->
 								   { term(), basic_utils:user_data() }.
-infer_fun_type( Term={ call, CallLine,
-		 { remote, _L2,
-				  { atom, _L3, wooper },
-				  { atom, _L4, Return }
-		 },
-		 ArgList }, CurrentType )->
+infer_fun_type( Term={ call, CallLine, { remote, _L2,
+										 { atom, _L3, wooper },
+										 { atom, _L4, Return } },
+					   ArgList }, CurrentType )->
 
 	Len = length( ArgList ),
 
 	DetectedType = case Return of
 
 		request_return when Len =:= 2 ->
-						   request;
+			request;
 
 		oneway_return when Len =:= 1 ->
-						   oneway;
+			oneway;
 
 		static_return ->
-						   static;
+			static;
 
 		_OtherFunction ->
-						   CurrentType
+			CurrentType
 
 	end,
 
-	% As we do not have a way to stop the traversal, we take advantage of that
-	% to check consistency:
+	% As we do not have a way to stop the transformation, we take advantage of
+	% that to check consistency:
+	%
 	NewType = case CurrentType of
 
-				  % Possibly overriding defaults:
-				  function ->
-					  DetectedType;
+		% Possibly overriding defaults:
+		function ->
+			DetectedType;
 
-				  % Matches, confirms detection:
-				  DetectedType ->
-					  DetectedType;
+		% Matches, confirms detection:
+		DetectedType ->
+			DetectedType;
 
-				  OtherType ->
-					  meta_utils:raise_error( { inconsistent_function_type,
-											CurrentType, OtherType, CallLine } )
+		OtherType ->
+			ast_utils:raise_error( { inconsistent_function_type, CurrentType,
+									 OtherType, CallLine } )
 
 	end,
 
@@ -946,16 +933,12 @@ infer_fun_type( Term, CurrentType ) ->
 % that will be checked by the compiler.
 %
 -spec check_class_info( class_info() ) -> basic_utils:void().
-check_class_info( #class_info{
-
-						 constructors=Constructors
-
-					 } ) ->
+check_class_info( #class_info{ constructors=Constructors } ) ->
 
 	case table:isEmpty( Constructors ) of
 
 		true ->
-			meta_utils:raise_error( no_constructor_defined );
+			ast_utils:raise_error( no_constructor_defined );
 
 		false ->
 			ok
@@ -1005,24 +988,21 @@ class_info_to_string( #class_info{
 						 oneways=Oneways,
 						 statics=Statics,
 						 functions=Functions,
-						 last_line=LastLine
-						} ) ->
+						 last_line=LastLine } ) ->
 
 	SuperclassStrings = case Superclasses of
 
-						   undefined ->
-							   [ text_utils:format( "no superclass~n", [] ) ];
+		undefined ->
+			[ text_utils:format( "no superclass~n", [] ) ];
 
-							Superclasses ->
-								[
+		Superclasses ->
+			[
 
-								 text_utils:format( "~B superclasses: ~p~n",
-									[ length( Superclasses ), Superclasses ] ),
+			 text_utils:format( "~B superclasses: ~p~n",
+								[ length( Superclasses ), Superclasses ] ),
 
-								 text_utils:format(
-								   "superclasses definition: ~p~n",
-								   [ SuperclassesDef ] )
-								]
+			 text_utils:format( "superclasses definition: ~p~n",
+								[ SuperclassesDef ] ) ]
 	end,
 
 
@@ -1094,5 +1074,5 @@ class_info_to_string( #class_info{
 
 			  ],
 
-	text_utils:format( "Information about class '~s':~n~s", [ Class,
-								   text_utils:strings_to_string( Infos ) ] ).
+	text_utils:format( "Information about class '~s':~n~s",
+					   [ Class, text_utils:strings_to_string( Infos ) ] ).
