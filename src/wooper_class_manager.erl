@@ -93,10 +93,9 @@
 % Uncomment to activate debug mode:
 %-define(wooper_debug_class_manager,).
 
--spec display_state( ?wooper_table_type:?wooper_table_type() ) ->
-						   basic_utils:void().
--spec display_table_creation( basic_utils:module_name() ) -> basic_utils:void().
--spec display_msg( string() ) -> basic_utils:void().
+-spec display_state( ?wooper_table_type:?wooper_table_type() ) -> void().
+-spec display_table_creation( basic_utils:module_name() ) -> void().
+-spec display_msg( string() ) -> void().
 
 
 -ifdef(wooper_debug_class_manager).
@@ -136,7 +135,7 @@ display_msg( _String ) ->
 
 % Starts a new blank class manager.
 %
--spec start( pid() ) -> basic_utils:void().
+-spec start( pid() ) -> void().
 start( ClientPID ) ->
 
 	display_msg( io_lib:format( "Starting WOOPER class manager "

@@ -646,14 +646,14 @@ mute_attributes( AttributeNameList, State ) ->
 %
 % (helper)
 %
--spec check_attributes_equal( [ attribute_name() ],
-		 [ attribute_entry() ], wooper:state() ) -> basic_utils:void().
+-spec check_attributes_equal( [ attribute_name() ], [ attribute_entry() ],
+							  wooper:state() ) -> void().
 check_attributes_equal( _AttributeNames=[], _AttributeEntries,
 							  _State ) ->
 	ok;
 
-check_attributes_equal( _AttributeNames=[ AttributeName | T ],
-							  AttributeEntries, State ) ->
+check_attributes_equal( _AttributeNames=[ AttributeName | T ], AttributeEntries,
+						State ) ->
 
 	{ AttributeValue, RemainingEntries } = option_list:extract(
 								 _K=AttributeName, AttributeEntries ),
@@ -665,7 +665,7 @@ check_attributes_equal( _AttributeNames=[ AttributeName | T ],
 
 		OtherValue ->
 			throw( { attribute_value_mismatch, AttributeName,
-					{ OtherValue, AttributeValue } } )
+					 { OtherValue, AttributeValue } } )
 
 	end.
 

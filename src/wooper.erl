@@ -312,7 +312,7 @@ execute_request_waiter( TargetInstancePID, RequestName, RequestArgs ) ->
 % (helper)
 %
 -spec execute_request( request_name(), method_arguments(), instance_pid(),
-					   any() ) -> basic_utils:void().
+					   any() ) -> void().
 execute_request( RequestName, RequestArgs, TargetInstancePID,
 				 ExpectedResult ) ->
 
@@ -358,8 +358,8 @@ execute_request_waiter( ExpectedResult, TargetInstancePID, RequestName,
 %
 % (helper)
 %
--spec send_requests( request_name(), method_arguments(),
-					 [ instance_pid() ] ) -> basic_utils:void().
+-spec send_requests( request_name(), method_arguments(), [ instance_pid() ] ) ->
+						   void().
 send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 
 	Request = { RequestName, RequestArgs, self() },
@@ -377,7 +377,7 @@ send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 % No time-out: answers will be waited indefinitely.
 %
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
-				   [ instance_pid() ], ack_atom() ) -> basic_utils:void().
+								   [ instance_pid() ], ack_atom() ) -> void().
 send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 							 AckAtom ) ->
 
@@ -514,7 +514,7 @@ wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
 % result the specified acknowledgement atom.
 %
 -spec wait_for_request_acknowledgements( basic_utils:count(), ack_atom() ) ->
-											   basic_utils:void().
+											   void().
 wait_for_request_acknowledgements( _Count=0, _AckAtom ) ->
 	ok;
 
@@ -588,7 +588,7 @@ collect_wooper_messages( Count, Acc ) ->
 % (helper)
 %
 -spec send_request_series( [ { request_name(), method_arguments() } ],
-						   instance_pid() ) -> basic_utils:void().
+						   instance_pid() ) -> void().
 send_request_series( _Requests=[], _TargetInstancePID ) ->
 	ok;
 
@@ -700,7 +700,7 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 
 % Used only in debug mode:
 -spec check_classname_and_arity( classname(), construction_parameters() ) ->
-									   basic_utils:void().
+									   void().
 check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 	% Normally useless, as called by the module itself:
@@ -1347,7 +1347,7 @@ instance_to_string( State ) ->
 %
 % This is not a method.
 %
--spec display_state( wooper:state() ) -> basic_utils:void().
+-spec display_state( wooper:state() ) -> void().
 display_state( State ) ->
 	error_logger:info_msg( "~s~n", [ state_to_string( State ) ] ).
 
@@ -1357,7 +1357,7 @@ display_state( State ) ->
 %
 % This is not a method.
 %
--spec display_virtual_table( wooper:state() ) -> basic_utils:void().
+-spec display_virtual_table( wooper:state() ) -> void().
 display_virtual_table( State ) ->
 	error_logger:info_msg( "~s~n", [ virtual_table_to_string( State ) ] ).
 
@@ -1366,7 +1366,7 @@ display_virtual_table( State ) ->
 %
 % This is not a method.
 %
--spec display_instance( wooper:state() ) -> basic_utils:void().
+-spec display_instance( wooper:state() ) -> void().
 display_instance( State ) ->
 	error_logger:info_msg( "~s~n", [ instance_to_string( State ) ] ).
 
@@ -1390,7 +1390,7 @@ get_all_attributes( State ) ->
 % Reports (on a best-effort basis) the specified information to the user,
 % typically by displaying an information report on the console.
 %
--spec log_info( string() ) -> basic_utils:void().
+-spec log_info( string() ) -> void().
 log_info( String ) ->
 	error_logger:info_msg( String ++ "\n" ).
 
@@ -1398,8 +1398,7 @@ log_info( String ) ->
 % Reports (on a best-effort basis) the specified information to the user,
 % typically by displaying an information report on the console.
 %
--spec log_info( text_utils:format_string(), [ term() ] ) ->
-					  basic_utils:void().
+-spec log_info( text_utils:format_string(), [ term() ] ) -> void().
 log_info( FormatString, ValueList ) ->
 	error_logger:info_msg( FormatString ++ "\n", ValueList ).
 
@@ -1408,7 +1407,7 @@ log_info( FormatString, ValueList ) ->
 % Reports (on a best-effort basis) the specified warning to the user,
 % typically by displaying a warning report on the console.
 %
--spec log_warning( string() ) -> basic_utils:void().
+-spec log_warning( string() ) -> void().
 log_warning( String ) ->
 	error_logger:warning_msg( String ++ "\n" ),
 
@@ -1419,8 +1418,7 @@ log_warning( String ) ->
 % Reports (on a best-effort basis) the specified warning to the user,
 % typically by displaying a warning report on the console.
 %
--spec log_warning( text_utils:format_string(), [ term() ] ) ->
-					  basic_utils:void().
+-spec log_warning( text_utils:format_string(), [ term() ] ) -> void().
 log_warning( FormatString, ValueList ) ->
 	error_logger:warning_msg( FormatString ++ "\n", ValueList ),
 
@@ -1433,7 +1431,7 @@ log_warning( FormatString, ValueList ) ->
 % notification) the specified error to the user, typically by displaying an
 % error report on the console (non-halting function, ex: no exception thrown).
 %
--spec log_error( string() ) -> basic_utils:void().
+-spec log_error( string() ) -> void().
 log_error( Message ) ->
 
 	error_logger:error_msg( Message ++ "\n" ),
@@ -1447,8 +1445,7 @@ log_error( Message ) ->
 % notification) the specified error to the user, typically by displaying an
 % error report on the console (non-halting function, ex: no exception thrown).
 %
--spec log_error( text_utils:format_string(), [ term() ] ) ->
-						   basic_utils:void().
+-spec log_error( text_utils:format_string(), [ term() ] ) -> void().
 log_error( FormatString, ValueList ) ->
 
 	error_logger:error_msg( FormatString
@@ -1467,7 +1464,7 @@ log_error( FormatString, ValueList ) ->
 % report on the console (non-halting function, ex: no exception thrown).
 %
 -spec log_error( text_utils:format_string(), [ term() ],
-		 wooper:state() | basic_utils:module_name() ) -> basic_utils:void().
+				 wooper:state() | basic_utils:module_name() ) -> void().
 log_error( FormatString, ValueList, State )
   when is_record( State, state_holder ) ->
 	io:format( "~n", [] ),
@@ -1848,7 +1845,7 @@ delete_pid_from( [ Attr | T ], DeleteMessage, PreTestLiveliness, State,
 %
 % Will wait forever the effective termination of the specified instance.
 %
--spec delete_synchronously_instance( instance_pid() ) -> basic_utils:void().
+-spec delete_synchronously_instance( instance_pid() ) -> void().
 delete_synchronously_instance( InstancePid ) ->
 
 	%io:format( "delete_synchronously_instance for ~p.~n", [ InstancePid ] ),
@@ -1871,8 +1868,7 @@ delete_synchronously_instance( InstancePid ) ->
 %
 % (exported helper)
 %
--spec delete_synchronously_instances( [ instance_pid() ] ) ->
-											basic_utils:void().
+-spec delete_synchronously_instances( [ instance_pid() ] ) -> void().
 delete_synchronously_instances( InstanceList ) ->
 
 	%io:format( "delete_synchronously_instances for ~p.~n", [ InstanceList ] ),
@@ -1963,8 +1959,7 @@ examine_waited_deletions( _WaitedPids=[ Pid | T ], Acc ) ->
 %
 % (exported helper)
 %
--spec safe_delete_synchronously_instances( [ instance_pid() ] ) ->
-												 basic_utils:void().
+-spec safe_delete_synchronously_instances( [ instance_pid() ] ) -> void().
 safe_delete_synchronously_instances( InstanceList ) ->
 
 	% Testing for liveliness allows to avoid synchronous time-outs:
