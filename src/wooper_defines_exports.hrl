@@ -96,11 +96,9 @@
 %
 -record( state_holder, {
 
-		   virtual_table    :: 'undefined' |
-							   ?wooper_table_type:?wooper_table_type(),
+		   virtual_table :: maybe( ?wooper_table_type:?wooper_table_type() ),
 
-		   attribute_table  :: 'undefined' |
-							   ?wooper_table_type:?wooper_table_type(),
+		   attribute_table :: maybe( ?wooper_table_type:?wooper_table_type() ),
 
 		   % Only means we know to access the actual class name:
 		   %
@@ -111,7 +109,7 @@
 		   %
 		   actual_class :: basic_utils:module_name(),
 
-		   request_sender :: basic_utils:maybe( pid() )
+		   request_sender :: maybe( pid() )
 
 }).
 

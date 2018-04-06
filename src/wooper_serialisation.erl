@@ -101,9 +101,9 @@
 %
 % Note: see basic_utils:traverse_term/4, which may be useful in that context.
 %
--type entry_transformer() :: 'undefined' |
+-type entry_transformer() :: maybe(
 			fun( ( attribute_entry(), basic_utils:user_data() ) ->
-					 { attribute_entry(), basic_utils:user_data() } ).
+					 { attribute_entry(), basic_utils:user_data() } ) ).
 
 
 
@@ -462,17 +462,17 @@ remote_synchronous_timed_load_link( Node, BinSerialisation, EntryTransformer,
 %
 -spec deserialise( bin_serialisation(), entry_transformer(),
 				   basic_utils:user_data(), ListenerPid ) -> any() % no_return()
-						   when ListenerPid :: basic_utils:maybe( pid() ).
+						   when ListenerPid :: maybe( pid() ).
 deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 
 	{ Classname, SerialisedEntries } = binary_to_term( BinSerialisation ),
 
 	% First we extract the WOOPER extra information:
 	{ RandomState, OtherEntries } = option_list:extract( wooper_random_state,
-													SerialisedEntries ),
+														 SerialisedEntries ),
 
 	HookedEntries = pre_deserialise_hook( { Classname, OtherEntries },
-											  UserData ),
+										  UserData ),
 
 	% Slight optimisation compared to using wooper:retrieve_virtual_table/0
 	% upfront later:
@@ -533,15 +533,13 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 
 	ForgedState = #state_holder{
 
-		virtual_table   = VirtualTable,
+		virtual_table=VirtualTable,
 
-		attribute_table = OptimisedAttributeTable,
+		attribute_table=OptimisedAttributeTable,
 
-		actual_class    = Classname,
+		actual_class=Classname,
 
-		request_sender  = undefined
-
-	 },
+		request_sender=undefined },
 
 
 	% We could check here that no serialisation marker remains, with a specific
@@ -594,7 +592,6 @@ handle_private_processes( PrivateAttributeNames, State ) ->
 				_Acc0=State,
 
 				_List=PrivateAttributeNames ).
-
 
 
 
