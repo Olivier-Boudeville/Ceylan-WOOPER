@@ -116,15 +116,17 @@ parse_transform( AST, Options ) ->
 
 	io:format( "  (applying parse transform '~p')~n", [ ?MODULE ] ),
 
-	%io:format( "Input AST:~n~p~n", [ AST ] ),
+	io:format( "Input AST:~n~p~n", [ AST ] ),
 
-	{ WOOPERAST, ClassInfo } = transform( AST ),
+	%{ WOOPERAST, ClassInfo } = transform( AST ),
 
-	io:format( "~s~n", [ class_info_to_string( ClassInfo ) ] ),
+	%io:format( "~s~n", [ class_info_to_string( ClassInfo ) ] ),
+
+	WOOPERAST = AST,
 
 	OutputAST = common_parse_transform:parse_transform( WOOPERAST, Options ),
 
-	%io:format( "~n~nOutput AST:~n~p~n", [ OutputAST ] ),
+	io:format( "~n~nOutput AST:~n~p~n", [ OutputAST ] ),
 
 	OutputAST.
 
@@ -309,8 +311,8 @@ parse_transform( AST, Options ) ->
 transform( AST ) ->
 
 	% Starts with blank information:
-	ClassInfo = get_class_info( AST ),
-	%ClassInfo = ok,
+	%ClassInfo = get_class_info( AST ),
+	ClassInfo = ok,
 
 	%io:format( "~n~s~n", [ class_info_to_string( ClassInfo ) ] ),
 
@@ -329,7 +331,6 @@ transform( AST ) ->
 	%NewAST =  [ ExpForm | lists:reverse( RevAST ) ],
 
 	%NewAST = generate_ast( Info ),
-
 	NewAST = AST,
 
 	{ NewAST, ClassInfo }.
