@@ -5,7 +5,7 @@ WOOPER_TOP = .
 		all register-version-in-header register-wooper list-beam-dirs \
 		add-prerequisite-plts link-plt                                \
 		send-release release release-zip release-bz2 release-xz       \
-		prepare-release clean-release clean-archive
+		prepare-release clean-release clean-archive info-compile
 
 
 MODULES_DIRS = src doc examples
@@ -112,6 +112,20 @@ clean-release:
 
 clean-archive:
 	-@cd .. && /bin/rm -f $(WOOPER_RELEASES)
+
+
+info-compile:
+	@echo "ERLANG_COMPILER_BASE_OPT = $(ERLANG_COMPILER_BASE_OPT)"
+	@echo "BEAM_DIRS = $(BEAM_DIRS)"
+	@echo "INC = $(INC)"
+	@echo "ERLANG_COMPILER_EXEC_TARGET_OPT = $(ERLANG_COMPILER_EXEC_TARGET_OPT)"
+	@echo "ERLANG_COMPILER_DEBUG_OPT = $(ERLANG_COMPILER_DEBUG_OPT)"
+	@echo "ERLANG_COMPILER_NATIVE_COMPILATION_OPT = $(ERLANG_COMPILER_NATIVE_COMPILATION_OPT)"
+	@echo "ERLANG_COMPILER_WARNING_OPT = $(ERLANG_COMPILER_WARNING_OPT)"
+	@echo "ERLANG_COMPILER_OPT_BASE = $(ERLANG_COMPILER_OPT_BASE)"
+	@echo "ERLANG_COMPILER_OPT = $(ERLANG_COMPILER_OPT)"
+	@echo "OVERALL_PZ_OPT = $(OVERALL_PZ_OPT)"
+	@echo "ERLANG_COMPILER_PARSE_TRANSFORM_OPT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT)"
 
 
 include $(WOOPER_TOP)/GNUmakesettings.inc
