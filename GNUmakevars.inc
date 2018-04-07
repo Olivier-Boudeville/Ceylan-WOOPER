@@ -66,7 +66,6 @@ VM_TEST_NAME := wooper_test
 endif
 
 
-BEAM_DIRS += $(WOOPER_BEAM_DIRS)
 
 
 # So that they can be fetched from outside
@@ -75,6 +74,9 @@ BEAM_DIRS += $(WOOPER_BEAM_DIRS)
 WOOPER_BEAM_DIRS = $(WOOPER_BEAM)/src      \
 				   $(WOOPER_BEAM)/examples
 
+
+# We rely on Common as well:
+BEAM_DIRS += $(WOOPER_BEAM_DIRS)
 
 
 # Overall settings section.
@@ -122,16 +124,54 @@ endif
 # be built (maximum performance versus extended checkings).
 ifeq ($(ENABLE_DEBUG),true)
 
-  ENABLE_WOOPER_DEBUG_OPT = -Dwooper_debug
+	ENABLE_WOOPER_DEBUG_OPT = -Dwooper_debug
 
 else
 
-  ENABLE_WOOPER_DEBUG_OPT =
+	ENABLE_WOOPER_DEBUG_OPT =
 
 endif
 
 
-ERLANG_COMPILER_OPT += $(ENABLE_WOOPER_DEBUG_OPT)
+ERLANG_COMPILER_OPT += $(ENABLE_WOOPER_DEBUG_OPT) $(OVERALL_PZ_OPT)
+
+
+## Parse-transform related section.
+
+
+# List here all the directories expected to contain parse transforms:
+#
+# (to be overridden by each upper layer)
+#
+ifndef PARSE_TRANSFORM_DIRS
+
+	   PARSE_TRANSFORM_DIRS = $(WOOPER_TOP)/src
+
+endif
+
+
+# So that the (compilation of the) WOOPER parse transform can benefit from the
+#  Common parse transform:
+#
+ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_COMMON)
+
+
+# Variable defined to be re-usable by upper layers, so that compiling their own
+# parse transforms can take advantage of the WOOPER one:
+#
+ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER = \
+					'+{parse_transform,wooper_parse_transform}'
+
+#					-pz $(COMMON_TOP)/src/utils                 \
+#					-pz $(COMMON_TOP)/src/meta                  \
+#					-pz $(WOOPER_TOP)/src                       \
+
+
+ifndef ERLANG_COMPILER_PARSE_TRANSFORM_OPT
+
+	   ERLANG_COMPILER_PARSE_TRANSFORM_OPT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER)
+
+endif
 
 
 # For later reuse in the next layer of the software stack:
@@ -140,12 +180,12 @@ WOOPER_PLT_FILE := $(WOOPER_TOP)/wooper.plt
 # This is the merged PLT of the level just below in the software stack.
 # For 'WOOPER', it is the PLT of 'Common':
 ifndef PREDECESSOR_PLT
-   PREDECESSOR_PLT = $(COMMON_PLT_FILE)
+	   PREDECESSOR_PLT = $(COMMON_PLT_FILE)
 endif
 
 # To use a generic rule to produce it (unless already defined):
 ifndef PLT_FILE
-		PLT_FILE = $(PACKAGE_TOP)/$(PACKAGE_NAME).plt
+	   PLT_FILE = $(PACKAGE_TOP)/$(PACKAGE_NAME).plt
 endif
 
 
