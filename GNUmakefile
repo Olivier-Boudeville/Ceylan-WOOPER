@@ -8,7 +8,7 @@ WOOPER_TOP = .
 		prepare-release clean-release clean-archive info-compile
 
 
-MODULES_DIRS = src doc examples
+MODULES_DIRS = src doc tests examples
 
 
 # To override the 'all' default target with a parallel version:
