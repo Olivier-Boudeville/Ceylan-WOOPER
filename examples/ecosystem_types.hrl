@@ -1,10 +1,10 @@
-% Copyright (C) 2012-2018 Olivier Boudeville (olivier.boudeville@esperide.com)
+% Copyright (C) 2012-2018 Olivier Boudeville
 %
 % This file is part of the WOOPER examples.
 %
 % It has been placed in the public domain.
 %
-% Author: Olivier Boudeville (olivier.boudeville@esperide.com)
+% Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
 
 % Common type specifications to be used in the ecosystem-based WOOPER examples.

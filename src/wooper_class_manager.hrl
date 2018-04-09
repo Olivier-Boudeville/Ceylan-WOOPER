@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville (olivier.boudeville@esperide.com)
+% Copyright (C) 2003-2018 Olivier Boudeville
 %
 % This file is part of the WOOPER library.
 %
@@ -22,7 +22,7 @@
 % If not, see <http://www.gnu.org/licenses/> and
 % <http://www.mozilla.org/MPL/>.
 %
-% Author: Olivier Boudeville (olivier.boudeville@esperide.com)
+% Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
 
 % Header sharing defines for the WOOPER class manager.
@@ -32,7 +32,7 @@
 
 
 % Creation date: Friday, July 12, 2007.
-% Author: Olivier Boudeville (olivier.boudeville@esperide.com).
+% Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
 % Licensed under a disjunctive tri-license: MPL/GPL/LGPL, see:
 % http://ceylan.sourceforge.net/main/documentation/wooper/index.html#license
