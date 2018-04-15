@@ -147,7 +147,7 @@
 
 
 % Method qualifiers not implemented yet:
--type qualifier() :: any().
+-type method_qualifier() :: any().
 
 
 % Special case of construction parameters:
@@ -169,6 +169,12 @@
 -type attribute_value() :: any().
 
 -type attribute_entry() :: { attribute_name(), attribute_value() }.
+
+
+% Qualifiers applying to attributes:
+-type attribute_qualifier() ::
+		% The initial value of that attribute cannot be modified:
+		'const'.
 
 
 % PID of a WOOPER instance.
@@ -199,12 +205,13 @@
 % We prefer having it prefixed by wooper:
 -export_type([ classname/0,
 			   method_name/0, request_name/0, oneway_name/0,
-			   method_argument/0, method_arguments/0, qualifier/0,
+			   method_argument/0, method_arguments/0, method_qualifier/0,
 			   construction_parameters/0,
 			   requests_outcome/0, method_internal_result/0,
 			   request_result/1, request_result/0,
 			   request_return/1, oneway_return/0,
 			   attribute_name/0, attribute_value/0, attribute_entry/0,
+			   attribute_qualifier/0,
 			   instance_pid/0, state/0 ]).
 
 
