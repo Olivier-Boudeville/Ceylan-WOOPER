@@ -2,11 +2,9 @@
 .. _Top:
 
 
-.. title:: Welcome to the WOOPER documentation
+.. title:: Welcome to the Ceylan-WOOPER documentation
 
 .. comment stylesheet specified through GNUmakefile
-
-.. Note: Not able to obtain a proper Pygments support for code extract (ex: no colors).
 
 
 .. role:: raw-html(raw)
@@ -23,7 +21,7 @@
 
 :raw-html:`<a name="wooper_top"></a>`
 
-:raw-html:`<div class="banner"><p><em>WOOPER documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper.html">browse mirror</a> <a href="wooper.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[WOOPER]%20Remark">mail us</a></p></div>`
+:raw-html:`<div class="banner"><p><em>WOOPER documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper.html">browse mirror</a> <a href="wooper.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER]%20Remark">mail us</a></p></div>`
 
 
 
@@ -43,7 +41,7 @@
 :Organisation: Copyright (C) 2008-2018 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation Date: Thursday, February 25, 2008
-:Lastly Updated: Wednesday, March 28, 2018
+:Lastly Updated: Sunday, April 15, 2018
 :Dedication: Users and maintainers of the ``WOOPER`` layer.
 :Abstract:
 
@@ -222,7 +220,7 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
 
 Straightforward, isn't it? We will discuss it in-depth, though.
 
-To test this class (provided that ``GNU make`` and ``Erlang 20.0`` or more recent are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on ``Ceylan-Myriad``, hence to be installed first:
+To test this class (provided that ``GNU make`` and ``Erlang 20.0`` or more recent are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on `Ceylan-Myriad <http://myriad.esperide.org>`_, hence to be installed first:
 
 .. code:: bash
 
@@ -2026,6 +2024,7 @@ To help declaring the right defines in the right order, using the WOOPER `templa
 
 One may also have a look at the full `test examples <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples>`_, as a source of inspiration.
 
+For examples of re-use of WOOPER by upper layers, one may refer to `Ceylan-Traces <http://traces.esperide.org>`_ or the `Sim-Diasca <http://sim-diasca.com>_` simulation engine.
 
 .. comment Note:: To be updated, notably with respect to parse transforms.
 
@@ -2292,7 +2291,7 @@ We try to ensure that the main line (in the ``master`` branch) always stays func
 This layer, ``Ceylan-WOOPER``, relies (only) on:
 
 - `Erlang <http://www.erlang.org/>`_, version 20.2 or higher
-- the ``Ceylan-Myriad`` base layer
+- the `Ceylan-Myriad <http://myriad.esperide.org>`_ base layer
 
 
 We prefer using GNU/Linux, sticking to the latest stable release of Erlang, and building it from sources, thanks to GNU ``make``.
@@ -2638,6 +2637,8 @@ Sources, Inspirations & Alternate Solutions
 - **Concurrent Programming in Erlang**, Joe Armstrong, Robert Virding, Claes Wikström et Mike Williams. Chapter 18, page 299: Object-oriented Programming. This book describes a simple way of implementing multiple inheritance, without virtual table, at the expense of a (probably slow) systematic method look-up (at each method call). No specific state management is supported
 
 - Chris Rathman's `approach <http://www.angelfire.com/tx4/cus/shapes/erlang.html>`_ to life cycle management and polymorphism. Inheritance not supported
+
+- `ECT <http://www.erlang-factory.com/upload/presentations/162/ECT.pdf>`_, an Object-Oriented Extension to Erlang, very promising yet apparently not maintained anymore
 
 - As Burkhard Neppert suggested, an alternative way of implementing OOP here could be to use Erlang behaviours. This is the way OTP handles generic functionalities that can be specialised (e.g. ``gen_server``). One approach could be to map each object-oriented base class to an Erlang **behaviour**. See some guidelines about `defining <http://wiki.trapexit.org/index.php/Defining_Your_Own_Behaviour>`_ your own behaviours and making them `cascade <http://wiki.trapexit.org/index.php/Cascading_Behaviours>`_
 
