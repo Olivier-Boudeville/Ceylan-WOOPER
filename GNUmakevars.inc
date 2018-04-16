@@ -159,19 +159,9 @@ ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_COMMON)
 # Variable defined to be re-usable by upper layers, so that compiling their own
 # parse transforms can take advantage of the WOOPER one:
 #
-ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER = \
+COMPILER_PARSE_TRANSFORM_FOR_WOOPER_CLASSES_OPT = \
 					'+{parse_transform,wooper_parse_transform}'
 
-#					-pz $(COMMON_TOP)/src/utils                 \
-#					-pz $(COMMON_TOP)/src/meta                  \
-#					-pz $(WOOPER_TOP)/src                       \
-
-
-ifndef ERLANG_COMPILER_PARSE_TRANSFORM_OPT
-
-	   ERLANG_COMPILER_PARSE_TRANSFORM_OPT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER)
-
-endif
 
 
 # For later reuse in the next layer of the software stack:
