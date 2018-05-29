@@ -75,7 +75,7 @@ WOOPER_BEAM_DIRS = $(WOOPER_BEAM)/src      \
 				   $(WOOPER_BEAM)/examples
 
 
-# We rely on Common as well:
+# We rely on Myriad as well:
 BEAM_DIRS += $(WOOPER_BEAM_DIRS)
 
 
@@ -136,6 +136,7 @@ endif
 ERLANG_COMPILER_OPT += $(ENABLE_WOOPER_DEBUG_OPT) $(OVERALL_PZ_OPT)
 
 
+
 ## Parse-transform related section.
 
 
@@ -151,9 +152,9 @@ endif
 
 
 # So that the (compilation of the) WOOPER parse transform can benefit from the
-#  Common parse transform:
+# Myriad parse transform:
 #
-ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_COMMON)
+ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD)
 
 
 # Variable defined to be re-usable by upper layers, so that compiling their own
@@ -168,9 +169,9 @@ COMPILER_PARSE_TRANSFORM_FOR_WOOPER_CLASSES_OPT = \
 WOOPER_PLT_FILE := $(WOOPER_TOP)/wooper.plt
 
 # This is the merged PLT of the level just below in the software stack.
-# For 'WOOPER', it is the PLT of 'Common':
+# For 'WOOPER', it is the PLT of 'Myriad':
 ifndef PREDECESSOR_PLT
-	   PREDECESSOR_PLT = $(COMMON_PLT_FILE)
+	   PREDECESSOR_PLT = $(MYRIAD_PLT_FILE)
 endif
 
 # To use a generic rule to produce it (unless already defined):
@@ -179,10 +180,8 @@ ifndef PLT_FILE
 endif
 
 
-# COMMON_TOP may be a symbolic link pointing to the actual Common package to be
-# used:
-COMMON_TOP = $(WOOPER_TOP)/../common
-
-# We define as well the path to the official naming of 'Common':
+# We define the path to the Myriad layer:
+#
+# (it may be a symbolic link pointing to the actual Myriad package to be used)
 #
 MYRIAD_TOP = $(WOOPER_TOP)/../Ceylan-Myriad
