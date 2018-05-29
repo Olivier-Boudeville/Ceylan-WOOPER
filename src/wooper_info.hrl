@@ -62,6 +62,12 @@
 
 
 
+% Description of the class name:
+-type class_entry() :: basic_utils:maybe( { wooper:classname(),
+											ast_info:located_form() } ).
+
+
+
 % Stores and centralises WOOPER-level information gathered about a given class.
 %
 % This record is to strictly supersede the Myriad-level module_info one.
@@ -110,7 +116,7 @@
 
 		% Include definitions:
 		%
-		include_defs = [] :: [ ast() ],
+		include_defs = [] :: [ ast_base:ast() ],
 
 
 		% Type definitions:
@@ -123,7 +129,7 @@
 
 		% The abstract forms corresponding to type definitions:
 		%
-		type_definition_defs = [] :: [ ast() ],
+		type_definition_defs = [] :: [ ast_base:ast() ],
 
 
 		% All type exports:
@@ -131,16 +137,21 @@
 								 type_utils:type_arity() } ],
 
 		% Type export definitions:
-		type_export_defs = [] :: [ ast() ],
+		type_export_defs = [] :: [ ast_base:ast() ],
 
 
-		% Whether a function (possibly any kind of method) is exported is
-		% recorded primarily in its respective function_info record through a
-		% boolean, while the forms for the exports of all functions (including
-		% methods) are recorded here (better that way, as an export attribute
-		% may define any number of exports and we want to record its line):
+		% Whether a function (possibly any kind of it) is exported is recorded
+		% primarily in its own function_info record through a list of locations,
+		% while the information sufficient to reconstruct the actual forms for
+		% the exports of all functions are recorded here.
 		%
-		function_exports = [] :: [ ast() ],
+		% Note: it is better that way, as a function export attribute may define
+		% any number of exports, and we need to record its definition line.
+		%
+		% (this field must be kept synchronised with the table in the
+		% 'functions' field)
+		%
+		function_exports :: ast_info:function_export_table(),
 
 
 		% The class-specific attribute definitions (AST forms stripped, hence
@@ -164,31 +175,31 @@
 		destructor = undefined :: ast_info:function_info(),
 
 
-		% All information about the class-specific (member) request methods of
-		% that class:
+		% All information about the class-specific (member) request methods
+		% defined for that class:
 		%
 		requests = table:table( ast_info:function_id(),
 								ast_info:function_info() ),
 
 
-		% All information about the class-specific (member) oneway methods of
-		% that class:
+		% All information about the class-specific (member) oneway methods
+		% defined for that class:
 		%
 		oneways = table:table( ast_info:function_id(),
 							   ast_info:function_info() ),
 
 
-		% All information about the static methods of that class:
+		% All information about the static methods defined for that class:
 		%
 		statics = table:table( ast_info:function_id(),
 							   ast_info:function_info() ),
 
 
 
-		% All information about the other, plain functions of that class:
+		% All information about the other, plain functions defined for that
+		% class:
 		%
-		functions = table:table( ast_info:function_id(),
-								 ast_info:function_info() ),
+		functions = ast_info:function_table(),
 
 
 		% The number of the last line in the original source file:
