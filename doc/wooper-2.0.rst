@@ -2,7 +2,7 @@
 .. _Top:
 
 
-.. title:: Welcome to the Ceylan-WOOPER documentation
+.. title:: Welcome to the Ceylan-WOOPER 2.0 documentation
 
 .. comment stylesheet specified through GNUmakefile
 
@@ -21,15 +21,14 @@
 
 :raw-html:`<a name="wooper_top"></a>`
 
-:raw-html:`<div class="banner"><p><em>WOOPER documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper.html">browse mirror</a> <a href="wooper.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER]%20Remark">mail us</a></p></div>`
+:raw-html:`<div class="banner"><p><em>WOOPER 2.0 documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper-2.0.html">browse mirror</a> <a href="wooper-2.0.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER 2.0]%20Remark">mail us</a></p></div>`
 
 
 
 :raw-html:`<center><img src="wooper-title.png" width="70%"></img></center>`
 :raw-latex:`\includegraphics[scale=0.34]{wooper-title.png}`
 
-.. comment Note: this is the latest, current version of the WOOPER 1.x documentation. As for WOOPER 2.0, all the available relevant bits are here as well, yet commented-out.
-
+.. comment Note: this is the latest, current version of the WOOPER 2.x documentation, directly obtained from the one of WOOPER 1.x.
 
 
 
@@ -41,8 +40,9 @@
 :Organisation: Copyright (C) 2008-2018 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation Date: Thursday, February 25, 2008
-:Lastly Updated: Sunday, April 15, 2018
-:Dedication: Users and maintainers of the ``WOOPER`` layer.
+:Lastly Updated: Monday, May 28, 2018
+
+:Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
 	The role of the ``WOOPER`` layer is to provide free software object-oriented facilities to the Erlang language.
@@ -56,9 +56,9 @@
 
 The latest version of this documentation is to be found at the `official WOOPER website <http://wooper.esperide.org>`_ (``http://wooper.esperide.org``).
 
-:raw-html:`This WOOPER documentation is also available in the PDF format (see <a href="wooper.pdf">wooper.pdf</a>), and mirrored <a href="http://olivier-boudeville.github.io/Ceylan-WOOPER/wooper.html">here</a>.`
+:raw-html:`This WOOPER documentation is also available in the PDF format (see <a href="wooper-2.0.pdf">wooper.pdf</a>), and mirrored <a href="http://olivier-boudeville.github.io/Ceylan-WOOPER/wooper-2.0.html">here</a>.`
 
-:raw-latex:`The documentation is also mirrored \href{https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper.html}{here}.`
+:raw-latex:`The documentation is also mirrored \href{https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper-2.0.html}{here}.`
 
 
 
@@ -83,6 +83,8 @@ Overview
 ========
 
 WOOPER, which stands for *Wrapper for Object-Oriented Programming in Erlang*, is a `free software`_ lightweight layer on top of the `Erlang <http://erlang.org>`__ language that provides constructs dedicated to `Object-Oriented Programming <http://en.wikipedia.org/wiki/Object-oriented_programming>`_ (OOP).
+
+This documentation applies to the WOOPER 2.0 version.
 
 WOOPER is a rather autonomous part of the `Ceylan <https://github.com/Olivier-Boudeville/Ceylan>`_ project.
 
@@ -228,11 +230,11 @@ To test this class (provided that ``GNU make`` and ``Erlang 20.0`` or more recen
  $ cd Ceylan-Myriad && make all && cd ..
 
 
-Then, as ``Ceylan-Myriad`` is known by WOOPER as the ``Common`` layer:
+.. comment Then, as ``Ceylan-Myriad`` is known by WOOPER as the ``Common`` layer:
+		   $ ln -s Ceylan-Myriad common
 
 .. code:: bash
 
- $ ln -s Ceylan-Myriad common
  $ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git
  $ cd Ceylan-WOOPER && make all
 
@@ -2250,9 +2252,14 @@ _____________________________________________________________
 
 .. You most probably are using the hashtable-based version of WOOPER and you forgot to build the ``common`` directory, which, among other things, contains the ``hashtable.erl`` source file.
 
-You most probably forgot to build the ``common`` directory (a.k.a. ``Ceylan-Myriad``) that contains, among other modules, the ``map_hashtable.erl`` source file.
+.. You most probably forgot to build the ``common`` directory (a.k.a. ``Ceylan-Myriad``) that contains, among other modules, the ``map_hashtable.erl`` source file.
 
-Check that you have a ``map_hashtable.beam`` file indeed, and that it can be found from the paths specified to the virtual machine. Note that the WOOPER code designates this module as the ``table`` one (ex: ``table:new()``), for a better substituability (this is obtained thanks to a parse-transform provided by ``Ceylan-Myriad``) .
+
+You most probably forgot to build the ``Ceylan-Myriad`` directory that contains, among other modules, the ``map_hashtable.erl`` source file.
+
+Check that you have a ``map_hashtable.beam`` file indeed, and that it can be found from the paths specified to the virtual machine.
+
+Note that the WOOPER code designates this module as the ``table`` one (ex: ``table:new()``), for a better substituability (this is obtained thanks to a parse-transform provided by ``Ceylan-Myriad``) .
 
 
 
@@ -2308,12 +2315,13 @@ One may execute ``./install-erlang.sh --help`` for more details about how to con
 
 As a result, once a proper Erlang version is available, the `Ceylan-Myriad repository <https://github.com/Olivier-Boudeville/Ceylan-Myriad>`_ should be cloned and built, before doing the same with the `Ceylan-WOOPER repository <https://github.com/Olivier-Boudeville/Ceylan-WOOPER>`_, like in:
 
+.. # WOOPER knows this package as the 'Common' layer:
+   $ ln -s Ceylan-Myriad common
+
 .. code:: bash
 
  $ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad
  $ cd Ceylan-Myriad && make all && cd ..
- # WOOPER knows this package as the 'Common' layer:
- $ ln -s Ceylan-Myriad common
  $ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER
  $ cd Ceylan-WOOPER && make all
 

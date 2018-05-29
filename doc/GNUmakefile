@@ -5,17 +5,23 @@ DOCUTILS_TOP = $(WOOPER_TOP)
 
 DOC_BASE_NAME := wooper
 
-OVERALL_DOCUMENT_TARGET = $(DOC_BASE_NAME).rst
-
-DOC_GENERATED_FILES = $(DOC_BASE_NAME).pdf $(DOC_BASE_NAME).html
-
-DOC_FILES = $(DOC_GENERATED_FILES) wooper-example.png
-
-
 # The current, operational version of WOOPER:
-CURRENT_VERSION := 1.0
+CURRENT_VERSION := 2.0
 
-CURRENT_WOOPER_DOC := $(DOC_BASE_NAME)-$(CURRENT_VERSION).pdf
+DOC_NAME := $(DOC_BASE_NAME)-$(CURRENT_VERSION)
+
+OVERALL_DOCUMENT_SOURCE := $(DOC_NAME).rst
+
+
+CURRENT_WOOPER_PDF := $(DOC_NAME).pdf
+CURRENT_WOOPER_HTML := $(DOC_NAME).html
+
+
+DOC_GENERATED_FILES := $(CURRENT_WOOPER_PDF) $(CURRENT_WOOPER_HTML)
+
+DOC_FILES := $(DOC_GENERATED_FILES) wooper-example.png
+
+
 
 PROJECT_CSS := pygments-default.css,wooper.css
 
@@ -23,10 +29,9 @@ PROJECT_CSS := pygments-default.css,wooper.css
 WEB_CONTENT = *.html *.css *.png *.pdf
 
 # Read from the user's environment:
-GITHUB_PAGES_BASE := $(shell basename $(MYRIAD_WEB_MIRROR_BRANCH))
+GITHUB_PAGES_BASE := $(shell basename $(WOOPER_WEB_MIRROR_BRANCH))
 
 
-OVERALL_DOCUMENT_SOURCE = $(DOC_BASE_NAME).rst
 
 
 .PHONY: all doc full-doc clone-mirror                    \
@@ -37,14 +42,13 @@ OVERALL_DOCUMENT_SOURCE = $(DOC_BASE_NAME).rst
 
 # Default do-nothing target:
 all:
-	@echo "  Run 'make full-doc' to generate the manual of the 'WOOPER' layer."
+	@echo "  Run 'make full-doc' to generate the manual of the WOOPER-$(CURRENT_VERSION) layer."
 
 
 doc:
 
 
-full-doc:
-	@$(MAKE) $(DOC_GENERATED_FILES) #VIEW_PDF=no
+full-doc: $(CURRENT_WOOPER_HTML)
 
 
 # Creates a separate repository for the GitHub pages branch:
@@ -71,7 +75,13 @@ clean: clean-doc
 
 clean-doc:
 	-@/bin/rm -f *.aux *.log *.maf *.mtc* *.stc* *.tex *.toc \
-	$(CURRENT_WOOPER_DOC) $(DOC_GENERATED_FILES)
+	$(CURRENT_WOOPER_PDF) $(DOC_GENERATED_FILES)
+
+info: info-doc info-web
+
+info-doc:
+	@echo "OVERALL_DOCUMENT_SOURCE = $(OVERALL_DOCUMENT_SOURCE)"
+	@echo "DOC_FILES = $(DOC_FILES)"
 
 
 info-web:
