@@ -32,6 +32,10 @@
 -module(wooper_info).
 
 
+% For the attribute_info record:
+-include("wooper_info.hrl").
+
+
 % Shorthands:
 -type attribute_name() :: wooper:attribute_name().
 
