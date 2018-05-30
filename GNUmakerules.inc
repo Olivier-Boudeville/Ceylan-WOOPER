@@ -1,8 +1,8 @@
 # Add all WOOPER-specific rules below.
 
 
-# Outside prerequisites:
-# $(WOOPER_SRC)/wooper.hrl wooper_class_manager and modules from 'common'.
+# Outside prerequisites: $(WOOPER_SRC)/wooper.hrl wooper_class_manager and
+# modules from 'Ceylan-Myriad'.
 
 
 
