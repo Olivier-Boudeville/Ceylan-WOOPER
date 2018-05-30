@@ -29,7 +29,8 @@
 
 % Overall parse transform for the WOOPER layer.
 %
-% It is meant to be applied to ASTs describing classes (not standard modules).
+% It is meant to be applied to ASTs describing (WOOPER) classes (not standard
+% modules).
 %
 -module(wooper_parse_transform).
 
@@ -37,8 +38,10 @@
 
 % Implementation notes:
 
-% Calls in turn the Common (a.k.a. Myriad) parse transform, once WOOPER-level
-% operations have been completed.
+% Calls in turn the Myriad parse transform, before and after the WOOPER-level
+% operations have been completed (respectively to obtain a module_info as input
+% for WOOPER, and to transform adequately, as standard Erlang code, any
+% WOOPER-injected code that would rely on Myriad conventions).
 %
 % One will get: 'undefined parse transform 'wooper_parse_transform'' as soon as
 % a compiled module called by the parse transform (ex: text_utils.beam) will not
@@ -48,24 +51,58 @@
 % We must discriminate here between methods and functions, and identify, among
 % detected methods: the requests, the oneways and the static ones.
 %
-% For that we can rely either on the type specs (if any - but we decided that
-% they should better be mandatory) or on the function definition itself (relying
-% then on the wooper return primitives).
+% For that we can rely either on the type specs (if any, as technically they
+% remain optional - but we decided that, conventionally, they should better be
+% mandatory) or on the function definition itself (relying then on the WOOPER
+% return primitives).
 %
 % More precisely, both for the type spec and the actual code (all clauses):
 %
-% - a request shall return its state and value thanks to wooper:request_return/2
+% - a request shall return its state and value thanks to a call to
+% wooper:request_return/2
 %
-% - a oneway shall return its state thanks to wooper:oneway_return/1
+% - a oneway shall return its state thanks to a call to wooper:oneway_return/1
 %
 % - a static method (as opposed to the previous two member methods) shall return
-% this value thanks to wooper:static_return/1
+% this value thanks to a call to wooper:static_return/1
+
+
+
+% Regarding the WOOPER parse transform.
+
+% All WOOPER-related symbols (ex: atoms, functions, etc.) are to be prefixed by
+% 'wooper_'. This prefix shall be considered as reserved for WOOPER internals
+% (all wooper_* symbols are forbidden to the user).
+
+% Previously, for simplicity, some values (ex: the superclasses) were defined
+% thanks to macro defines (ex: '-define( wooper_foo, 42 )'). Now they are
+% specified thanks to attributes -ex: '-wooper_foo( 42 ).' and when there was
+% previously ?wooper_foo, we replaced that with the definition of a
+% wooper_get_foo() function.
+
+
+% Regarding WOOPER superclasses.
+%
+% They used to be defined with:
+% '-define( wooper_superclasses, [ class_A, class_B ] ).'.
+%
+% Now they are defined with the optional:
+%
+% '-wooper_superclasses( [ class_A, class_B ] ).
+
+
+% To better report errors
+-define( origin_layer, "WOOPER" ).
+
+
+% Used for iterated (re)composition of class information:
+-type compose_pair() :: { ast_info:function_table(), class_info() }.
 
 
 % Local shorthands:
 
 -type ast() :: ast_base:ast().
-%-type module_info() :: ast_info:module_info().
+-type module_info() :: ast_info:module_info().
 
 
 -export([ run_standalone/1, parse_transform/2, apply_wooper_transform/1,
@@ -95,31 +132,8 @@
 
 
 % tmp:
--export([add_function/4, add_constructor/3, register_destructor/2 ,add_request/4, add_oneway/4, add_static/4, identify_function/3, infer_function_type/1, infer_fun_type/2, 
+-export([add_function/4, add_constructor/3, register_destructor/2 ,add_request/4, add_oneway/4, add_static/4, identify_function/3, infer_function_type/1, infer_fun_type/2,
 		 get_new_variation_names/0]).
-
-
-% Regarding the WOOPER parse transform.
-
-% All WOOPER-related symbols (ex: atoms, functions, etc.) are to be prefixed by
-% 'wooper_'. This prefix shall be considered as reserved for WOOPER internals
-% (all wooper_* symbols are forbidden to the user).
-
-% Previously, for simplicity, some values (ex: the superclasses) were defined
-% thanks to macro defines (ex: '-define( wooper_foo, 42 )'). Now they are
-% specified thanks to attributes -ex: '-wooper_foo( 42 ).' and when there was
-% previously ?wooper_foo, we defined a replaced that with the definition of a
-% wooper_get_foo() function.
-
-
-% Regarding WOOPER superclasses.
-%
-% They used to be defined with:
-% '-define( wooper_superclasses, [ class_A, class_B ] ).'.
-%
-% Now they are defined with the optional:
-%
-% '-wooper_superclasses( [ class_A, class_B ] ).
 
 
 -type class_info() :: #class_info{}.
@@ -151,7 +165,7 @@ run_standalone( FileToTransform ) ->
 -spec parse_transform( ast(), list() ) -> ast().
 parse_transform( InputAST, _Options ) ->
 
-	trace_utils:info_fmt( "  (applying parse transform '~p')", [ ?MODULE ] ),
+	trace_utils:info_fmt( "(applying parse transform '~p')", [ ?MODULE ] ),
 
 	%trace_utils:trace_fmt( "WOOPER input AST:~n~p~n", [ InputAST ] ),
 
@@ -161,8 +175,6 @@ parse_transform( InputAST, _Options ) ->
 	% use afterwards and thus can be dropped:
 	%
 	{ WOOPERAST, _ClassInfo } = apply_wooper_transform( InputAST ),
-
-	%trace_utils:debug_fmt( "~s~n", [ class_info_to_string( ClassInfo ) ] ),
 
 	%trace_utils:trace_fmt( "WOOPER output AST:~n~p~n", [ WOOPERAST ] ),
 
@@ -175,10 +187,16 @@ parse_transform( InputAST, _Options ) ->
 -spec apply_wooper_transform( ast() ) -> { ast(), class_info() }.
 apply_wooper_transform( InputAST ) ->
 
-	% First preprocesses the AST based on the Common (Myriad) parse transform:
-	{ MyriadAST, ModuleInfo } = common_parse_transform:apply_myriad_transform(
+	%trace_utils:debug_fmt( "  (applying parse transform '~p')~n",
+	%  [ ?MODULE ] ),
+
+	% First preprocesses the AST based on the Myriad parse transform, in order
+	% to benefit from its corresponding module_info record:
+	%
+	{ MyriadAST, ModuleInfo } = myriad_parse_transform:apply_myriad_transform(
 								  InputAST ),
 
+	% Then promote this Myriad-level  information into a WOOPER one:
 	ClassInfo = get_class_info( ModuleInfo ),
 	%ClassInfo = ok,
 
@@ -208,11 +226,13 @@ apply_wooper_transform( InputAST ) ->
 
 % Returns the class information that were gathered in the module ones.
 %
+-spec get_class_info( module_info() ) -> class_info().
 get_class_info( ModuleInfo ) ->
 
 	EmptyTable = table:new(),
 
-	InitClassInfo = #class_info{ constructors=EmptyTable,
+	InitClassInfo = #class_info{ function_exports=EmptyTable,
+								 constructors=EmptyTable,
 								 destructor=undefined,
 								 requests=EmptyTable,
 								 oneways=EmptyTable,
@@ -226,48 +246,71 @@ get_class_info( ModuleInfo ) ->
 
 	check_class_info( ExtractedClassInfo ),
 
-
-
 	ExtractedClassInfo.
 
 
 
 % Recomposes class information from module-level ones.
 %
-recompose_module_info_for_class( _ModuleInfo=#module_info{
-											   module=ModuleEntry,
-											   parse_attributes=ParseAttrTable
-											  },
-								 ClassInfo ) ->
+% The goal is to pick the relevant WOOPER-level information (from the module
+% info) and populate from them the specified class information.
+%
+-spec recompose_module_info_for_class( module_info(), class_info() ) ->
+											 class_info().
+recompose_module_info_for_class(
+  _ModuleInfo=#module_info{ module=ModuleEntry,
+							parse_attributes=ParseAttrTable,
+							functions=FunctionTable,
+							last_line=LastLine },
+  ClassInfo ) ->
 
-	ClassInClassInfo = get_classname( ModuleEntry, ClassInfo ),
+	ClassInClassInfo = manage_classname( ModuleEntry, ClassInfo ),
 
-	SuperClassInfo = get_superclasses( ParseAttrTable, ClassInClassInfo ),
+	SuperClassInfo = manage_superclasses( ParseAttrTable, ClassInClassInfo ),
 
-	trace_utils:debug_fmt( "Final class information: ~s",
-						   [ class_info_to_string( SuperClassInfo ) ] ),
+	% We extract elements (ex: constructors) from the function table, yet we do
+	% not modify specifically the other related information (ex: exports).
 
-	SuperClassInfo.
+	% Managing { FunctionTable, ClassInfo } pairs:
+	InitialPair = { FunctionTable, SuperClassInfo },
+
+	ConstructPair = manage_constructors( InitialPair ),
+
+	DestructPair = manage_destructor( ConstructPair ),
+
+	% ...
+
+	_FinalPair = { FinalFunctionTable, FinalClassInfo } = DestructPair,
+
+	ReturnedClassInfo = FinalClassInfo#class_info{
+						  functions=FinalFunctionTable,
+						  last_line=LastLine },
+
+	trace_utils:debug_fmt( "Recomposed class information: ~s",
+						   [ class_info_to_string( ReturnedClassInfo ) ] ),
+
+	ReturnedClassInfo.
 
 
 
 % Registers the corresponding classname into specified class information.
 %
--spec get_classname( module_entry(), class_info() ) -> class_info().
-get_classname( _ModuleEntry=undefined, _ClassInfo ) ->
-	ast_utils:raise_error( no_module_name_defined );
+-spec manage_classname( module_entry(), class_info() ) -> class_info().
+manage_classname( _ModuleEntry=undefined, _ClassInfo ) ->
+	raise_error( no_module_name_defined );
 
-get_classname( _ModuleEntry={ _ModuleName=Classname, ModuleDef }, ClassInfo ) ->
+manage_classname( _ModuleEntry={ _ModuleName=Classname, ModuleDef }, ClassInfo ) ->
 	check_classname( Classname ),
 	ClassDef = ModuleDef,
 	ClassInfo#class_info{ class={ Classname, ClassDef } }.
 
 
+
 % Registers the declared superclasses (if any) into specified class information.
 %
--spec get_superclasses( ast_info:attribute_table(), class_info() ) ->
+-spec manage_superclasses( ast_info:attribute_table(), class_info() ) ->
 							  class_info().
-get_superclasses( ParseAttrTable, ClassInfo ) ->
+manage_superclasses( ParseAttrTable, ClassInfo ) ->
 
 	case table:lookupEntry( wooper_superclasses, ParseAttrTable ) of
 
@@ -279,32 +322,35 @@ get_superclasses( ParseAttrTable, ClassInfo ) ->
 								  parse_attributes=NewParseAttrTable };
 
 		key_not_found ->
-			ast_utils:raise_error( superclasses_not_defined )
+			raise_error( superclasses_not_defined )
 
 	end.
 
 
 
 
-%% % Class/module section:
+% Class/module section:
 
-%% % Any invalid or duplicated module declaration will be caught by the compiler
-%% % anyway.
-%% %
-%% % We wanted the users to rely on a define such as '-classname(class_MyName)'
-%% % instead of '-module(class_MyName)', yet apparently -module should be found
-%% % *before* the parse-transform is ever triggered (we collected the very first
-%% % InputAST we can get to check, it is already unusable if a module declaration
-%% % was lacking), so that the preprocessor can rely on the ?MODULE macro
-%% % afterwards; otherwise the input AST contains forms such as
-%% % '{error,{L,epp,{undefined,'MODULE',none}}}' instead of the forms that referred
-%% % to ?MODULE (lost, unrecoverable information).
-%% %
-%% % Only possible work-around: have the actual modules compiled by a specific
-%% % program, driving the compilation by itself, instead of being inserted as a
-%% % mere parse transform. Later maybe! For the moment, we stick to requiring a
-%% % -module(XXX) declaration.
-%% %
+% Any invalid or duplicated module declaration will be caught by the compiler
+% anyway.
+
+
+% We wanted the users to rely on a define such as '-classname(class_MyName)'
+% instead of '-module(class_MyName)', yet apparently -module should be found
+% *before* the parse-transform is ever triggered (we collected the very first
+% InputAST we can get to check, it is already unusable if a module declaration
+% was lacking), so that the preprocessor can rely on the ?MODULE macro
+% afterwards; otherwise the input AST contains forms such as
+% '{error,{L,epp,{undefined,'MODULE',none}}}' instead of the forms that referred
+% to ?MODULE (as a result these are lost, unrecoverable information).
+%
+% Only possible work-around: have the actual modules compiled by a specific
+% program, driving the compilation by itself, instead of being inserted as a
+% mere parse transform. Later maybe!
+%
+% For the moment, we stick to requiring a
+% -module(class_XXX) declaration.
+%
 %% get_info( _AST=[ { 'attribute', Line, 'classname', Classname } | T ],
 %%		  C=#class_info{ class=undefined, class_def=undefined } ) ->
 
@@ -392,6 +438,32 @@ get_superclasses( ParseAttrTable, ClassInfo ) ->
 %%	get_info( T, C#class_info{ function_exports=[ F | FunExports ] } );
 
 
+
+% Extracts the constructors found in the specified function table, and
+% interprets them to enrich the specified class information.
+%
+% Returns an updated pair thereof.
+%
+-spec manage_constructors( compose_pair() ) -> compose_pair().
+manage_constructors( { FunctionTable, ClassInfo } ) ->
+	{ FunctionTable, ClassInfo }.
+
+
+
+% Extracts the destructors found in the specified function table, and
+% interprets them to enrich the specified class information.
+%
+% Returns an updated pair thereof.
+%
+-spec manage_destructor( compose_pair() ) -> compose_pair().
+manage_destructor( { FunctionTable, ClassInfo } ) ->
+	{ FunctionTable, ClassInfo }.
+
+
+
+
+
+
 %% % Function definition section:
 %% %
 %% get_info( _AST=[ Form={ function, _Line, Name, Arity, Clauses } | T ],
@@ -436,8 +508,8 @@ get_superclasses( ParseAttrTable, ClassInfo ) ->
 
 %%	end,
 
-%%	io:format( "function ~s/~B with ~B clauses registered.~n",
-%%			   [ Name, Arity, length( Clauses ) ] ),
+%%	trace_utils:debug_fmt( "function ~s/~B with ~B clauses registered.",
+% %						   [ Name, Arity, length( Clauses ) ] ),
 
 %%	get_info( T, NewClassInfo );
 
@@ -465,8 +537,8 @@ get_superclasses( ParseAttrTable, ClassInfo ) ->
 %%	C#class_info{ last_line=Line };
 
 %% get_info( _AST=[ H | T ], Infos ) ->
-%%	io:format( "WARNING: ~p not managed.~n", [ H ] ),
-%%	%ast_utils:raise_error( { unhandled_form, H } ),
+%%	trace_utils:warning_fmt( "~p not managed.", [ H ] ),
+%%	%raise_error( { unhandled_form, H } ),
 %%	get_info( T, Infos ).
 
 %% % Useless because of eof:
@@ -475,8 +547,8 @@ get_superclasses( ParseAttrTable, ClassInfo ) ->
 
 
 
-%% -spec get_superclasses() -> [ classname() ].
-%% get_superclasses() ->
+%% -spec manage_superclasses() -> [ classname() ].
+%% manage_superclasses() ->
 %%	?wooper_superclasses.
 
 
@@ -510,7 +582,7 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 
 		% Here a definition was already set:
 		_ ->
-			ast_utils:raise_error( { multiple_definition_for, FunId } )
+			raise_error( { multiple_definition_for, FunId } )
 
 	end,
 
@@ -541,8 +613,7 @@ add_constructor( Arity, Form, ConstructorTable ) ->
 
 		% Here a definition was already set:
 		_ ->
-			ast_utils:raise_error(
-						{ multiple_definition_for_constructor, Arity } )
+			raise_error( { multiple_definition_for_constructor, Arity } )
 
 	end,
 
@@ -562,7 +633,7 @@ register_destructor( Form, F=#function_info{ clauses=undefined } ) ->
 
 register_destructor( _Form, _FunInfo ) ->
 	% Here a definition was already set:
-	ast_utils:raise_error( multiple_destructors_defined ).
+	raise_error( multiple_destructors_defined ).
 
 
 
@@ -591,8 +662,7 @@ add_request( Name, Arity, Form, RequestTable ) ->
 
 		% Here a definition was already set:
 		_ ->
-			ast_utils:raise_error(
-			  { multiple_definition_for_request, RequestId } )
+			raise_error( { multiple_definition_for_request, RequestId } )
 
 	end,
 
@@ -625,8 +695,7 @@ add_oneway( Name, Arity, Form, OnewayTable ) ->
 
 		% Here a definition was already set:
 		_ ->
-			ast_utils:raise_error(
-				{ multiple_definition_for_oneway, OnewayId } )
+			raise_error( { multiple_definition_for_oneway, OnewayId } )
 
 	end,
 
@@ -659,8 +728,7 @@ add_static( Name, Arity, Form, StaticTable ) ->
 
 		% Here a definition was already set:
 		_ ->
-			ast_utils:raise_error(
-				{ multiple_definition_for_static, StaticId } )
+			raise_error( { multiple_definition_for_static, StaticId } )
 
 	end,
 
@@ -678,13 +746,12 @@ check_classname( Name ) when is_atom( Name ) ->
 			ok;
 
 		InvalidName ->
-			ast_utils:raise_error( { invalid_classname, no_class_prefix,
-									 InvalidName } )
+			raise_error( { invalid_classname, no_class_prefix, InvalidName } )
 
 	end;
 
 check_classname( Other ) ->
-	ast_utils:raise_error( { invalid_classname, not_atom, Other } ).
+	raise_error( { invalid_classname, not_atom, Other } ).
 
 
 
@@ -740,7 +807,7 @@ identify_function( _Name=destruct, _Arity=1, _Clause ) ->
 	destructor;
 
 identify_function( _Name=destruct, Arity, _Clause ) ->
-	ast_utils:raise_error( { destructor_arity_must_be_one, Arity } );
+	raise_error( { destructor_arity_must_be_one, Arity } );
 
 identify_function( Name, _Arity,
 				   _Clause={ clause, _Line, _Vars, _, AST } ) ->
@@ -748,7 +815,7 @@ identify_function( Name, _Arity,
 	case lists:member( Name, get_new_variation_names() ) of
 
 		true ->
-			%ast_utils:raise_error( { new_variations_are_reserved, Name } );
+			%raise_error( { new_variations_are_reserved, Name } );
 			fixme;
 
 		false ->
@@ -761,7 +828,7 @@ identify_function( Name, _Arity,
 	case StringName of
 
 		"wooper" ++ _ ->
-			%ast_utils:raise_error( { wooper_prefix_is_reserved, Name } );
+			%raise_error( { wooper_prefix_is_reserved, Name } );
 			fixme;
 
 		_ ->
@@ -769,7 +836,7 @@ identify_function( Name, _Arity,
 
 	end,
 
-	%io:format( "Inferring ~p:~p:~n", [ Name, Arity ] ),
+	%trace_utils:debug_fmt( "Inferring ~p/~B.", [ Name, Arity ] ),
 
 	% We have here either a function, a request, a oneway or a static method. To
 	% discriminate, we simply rely on how values are returned:
@@ -787,7 +854,7 @@ identify_function( Name, _Arity,
 %
 infer_function_type( AST ) ->
 
-	%io:format( "Inferring from code : ~p~n", [ AST ] ),
+	%trace_utils:debug_fmt( "Inferring from code : ~p", [ AST ] ),
 
 	% If no wooper return pseudo-call is detected, by default it will be a
 	% function:
@@ -853,8 +920,8 @@ infer_fun_type( Term={ call, CallLine, { remote, _L2,
 			DetectedType;
 
 		OtherType ->
-			ast_utils:raise_error( { inconsistent_function_type, CurrentType,
-									 OtherType, CallLine } )
+			raise_error( { inconsistent_function_type, CurrentType, OtherType,
+						   CallLine } )
 
 	end,
 
@@ -877,7 +944,7 @@ check_class_info( #class_info{ constructors=Constructors } ) ->
 	case table:isEmpty( Constructors ) of
 
 		true ->
-			ast_utils:raise_error( no_constructor_defined );
+			raise_error( no_constructor_defined );
 
 		false ->
 			ok
@@ -902,6 +969,25 @@ get_new_variation_names() ->
 
 
 
+% Raises a (compile-time, rather ad hoc) error when applying this parse
+% transform, to stop the build on failure and report the actual error.
+%
+-spec raise_error( term() ) -> no_return().
+raise_error( ErrorTerm ) ->
+	raise_error( ErrorTerm, _Context=undefined ).
+
+
+
+% Raises a (compile-time, rather ad hoc) error, with specified context, when
+% applying this parse transform, to stop the build on failure and report the
+% actual error.
+%
+-spec raise_error( term(), ast_base:form_context() ) -> no_return().
+raise_error( ErrorTerm, Context ) ->
+	ast_utils:raise_error( ErrorTerm, Context, ?origin_layer ).
+
+
+
 
 -spec class_info_to_string( class_info() ) -> text_utils:ustring().
 class_info_to_string( #class_info{
@@ -915,7 +1001,7 @@ class_info_to_string( #class_info{
 						 type_definition_defs=TypeDefsDefs,
 						 type_exports=TypeExports,
 						 type_export_defs=TypeExportDefs,
-						 function_exports=FunctionExports,
+						 function_exports=FunctionExportTable,
 						 class_specific_attributes=ClassAttributes,
 						 inherited_attributes=InheritedAttributes,
 						 constructors=Constructors,
@@ -924,7 +1010,7 @@ class_info_to_string( #class_info{
 						 oneways=Oneways,
 						 statics=Statics,
 						 functions=Functions,
-						 last_line=LastLine } ) ->
+						 last_line=LastLineLocDef } ) ->
 
 	SuperclassStrings = case Superclasses of
 
@@ -944,6 +1030,10 @@ class_info_to_string( #class_info{
 	ParseAttributes = [ { AttrName, AttrValue } ||
 						 { AttrName, { AttrValue, _AttrLocDef } }
 							  <- table:enumerate( ParseAttrTable ) ],
+
+	{ _LocLine, { eof, LastLine } } = LastLineLocDef,
+
+	LastLineString = text_utils:format( "line count: ~B", [ LastLine ] ),
 
 	Infos = [
 
@@ -975,8 +1065,8 @@ class_info_to_string( #class_info{
 			  text_utils:format( "type export definitions: ~p~n",
 								 [ TypeExportDefs ] ),
 
-			  text_utils:format( "~B function exports: ~p~n",
-					 [ length( FunctionExports ), FunctionExports ] ),
+			  text_utils:format( "~B function exports~n",
+					 [ table:size( FunctionExportTable ) ] ),
 
 			  text_utils:format( "~B class-specific attributes: ~p~n",
 					 [ length( ClassAttributes ), ClassAttributes ] ),
@@ -1006,9 +1096,7 @@ class_info_to_string( #class_info{
 								 [ table:size( Functions ),
 								   table:keys( Functions ) ] ),
 
-			  text_utils:format( "line count: ~B", [ LastLine ] )
-
-			  ],
+			  LastLineString ],
 
 	text_utils:format( "Information about class '~s':~n~s",
 					   [ Class, text_utils:strings_to_string( Infos ) ] ).
