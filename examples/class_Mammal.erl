@@ -10,8 +10,11 @@
 
 
 % Determines what are the mother classes of this class (if any):
+
+% TO BE REMOVED ULTIMATELY:
 -define( wooper_superclasses, [ class_Creature ] ).
 
+-wooper_superclasses( [ class_Creature ] ).
 
 % Parameters taken by the constructor ('construct').
 % They are here the ones of the mother class (creature) plus fur color:
