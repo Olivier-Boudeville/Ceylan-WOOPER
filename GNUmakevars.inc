@@ -136,6 +136,9 @@ endif
 ERLANG_COMPILER_OPT += $(ENABLE_WOOPER_DEBUG_OPT) $(OVERALL_PZ_OPT)
 
 
+COMPILER_OPT_FOR_WOOPER_CLASSES = $(ERLANG_COMPILER_OPT)
+
+
 
 ## Parse-transform related section.
 
@@ -160,9 +163,26 @@ ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD)
 # Variable defined to be re-usable by upper layers, so that compiling their own
 # parse transforms can take advantage of the WOOPER one:
 #
-COMPILER_PARSE_TRANSFORM_FOR_WOOPER_CLASSES_OPT = \
+ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER = \
 					'+{parse_transform,wooper_parse_transform}'
 
+
+# We conditionally defined this option, as upper layers may want to trigger
+# their own parse transforms *instead* (probably that will call directly, by
+# themselves, at the Erlang level, this 'WOOPER' parse transform):
+#
+ifndef ERLANG_COMPILER_PARSE_TRANSFORM_OPT
+
+	   ERLANG_COMPILER_PARSE_TRANSFORM_OPT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER)
+
+endif
+
+
+# Variable defined to be re-usable by upper layers, so that compiling their own
+# parse transforms can take advantage of the WOOPER one:
+#
+COMPILER_PARSE_TRANSFORM_FOR_WOOPER_CLASSES_OPT = \
+					'+{parse_transform,wooper_parse_transform}'
 
 
 # For later reuse in the next layer of the software stack:
