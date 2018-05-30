@@ -97,7 +97,7 @@
 		% We merely touch compilation options (ex: '{compile, { inline, [ {
 		% FunName, Arity } ] } }'):
 		%
-		compilation_option_defs = [] :: [ ast() ],
+		compilation_option_defs = [] :: [ ast_info:located_form() ],
 
 
 		% Other parse-level attributes (ex: '-my_attribute( my_value ).'), not
@@ -116,7 +116,7 @@
 
 		% Include definitions:
 		%
-		include_defs = [] :: [ ast_base:ast() ],
+		include_defs = [] :: [ ast_info:located_form() ],
 
 
 		% Type definitions:
@@ -129,7 +129,7 @@
 
 		% The abstract forms corresponding to type definitions:
 		%
-		type_definition_defs = [] :: [ ast_base:ast() ],
+		type_definition_defs = [] :: [ ast_info:located_form() ],
 
 
 		% All type exports:
@@ -137,7 +137,7 @@
 								 type_utils:type_arity() } ],
 
 		% Type export definitions:
-		type_export_defs = [] :: [ ast_base:ast() ],
+		type_export_defs = [] :: [ ast_info:located_form() ],
 
 
 		% Whether a function (possibly any kind of it) is exported is recorded
