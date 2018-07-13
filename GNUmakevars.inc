@@ -35,10 +35,10 @@ WOOPER_RELEASE_ARCHIVE_XZ  := $(WOOPER_RELEASE_BASE).tar.xz
 
 
 # Source section.
-WOOPER_SRC  := $(WOOPER_TOP)/src
+WOOPER_SRC := $(WOOPER_TOP)/src
 
 # BEAM path section.
-WOOPER_BEAM  := $(WOOPER_TOP)
+WOOPER_BEAM := $(WOOPER_TOP)
 
 # Include path section.
 WOOPER_INC = -I$(WOOPER_SRC)
@@ -136,8 +136,37 @@ endif
 ERLANG_COMPILER_OPT += $(ENABLE_WOOPER_DEBUG_OPT) $(OVERALL_PZ_OPT)
 
 
-COMPILER_OPT_FOR_WOOPER_CLASSES = $(ERLANG_COMPILER_OPT)
+ifndef COMPILER_OPT_FOR_WOOPER_CLASSES
 
+	   COMPILER_OPT_FOR_WOOPER_CLASSES =                      \
+			$(ERLANG_COMPILER_OPT_BASE)                       \
+			$(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER)
+
+endif
+
+
+ifndef ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_STANDARD_MODULES
+
+	   # Standard (non-class) modules in WOOPER shall not be compiled with the
+	   #  WOOPER parse-transform, but with the Myriad one:
+	   #
+	   ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_STANDARD_MODULES = \
+				$(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD)
+
+endif
+
+
+# Conditionally defined so that upper layer may update these settings (ex:
+# adding pz directories):
+#
+ifndef ERLANG_COMPILER_OPT_FOR_STANDARD_MODULES
+
+	ERLANG_COMPILER_OPT_FOR_STANDARD_MODULES =                          \
+			$(ERLANG_COMPILER_OPT_BASE)                                 \
+			$(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_STANDARD_MODULES) \
+			$(ENABLE_WOOPER_DEBUG_OPT)
+
+endif
 
 
 ## Parse-transform related section.
@@ -157,13 +186,16 @@ endif
 # So that the (compilation of the) WOOPER parse transform can benefit from the
 # Myriad parse transform:
 #
-ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD)
+ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_OPT_BASE) \
+							 $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD)
 
 
 # Variable defined to be re-usable by upper layers, so that compiling their own
 # parse transforms can take advantage of the WOOPER one:
 #
-ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER = \
+ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER =                 \
+					$(OVERALL_PZ_OPT)                            \
+					-pz $(WOOPER_TOP)/src                        \
 					'+{parse_transform,wooper_parse_transform}'
 
 
@@ -188,6 +220,7 @@ COMPILER_PARSE_TRANSFORM_FOR_WOOPER_CLASSES_OPT = \
 # For later reuse in the next layer of the software stack:
 WOOPER_PLT_FILE := $(WOOPER_TOP)/wooper.plt
 
+
 # This is the merged PLT of the level just below in the software stack.
 # For 'WOOPER', it is the PLT of 'Myriad':
 ifndef PREDECESSOR_PLT
@@ -202,6 +235,16 @@ endif
 
 # We define the path to the Myriad layer:
 #
-# (it may be a symbolic link pointing to the actual Myriad package to be used)
+# (it may be a symbolic link pointing to the actual Myriad package to be used,
+# which itself may be either a 'Ceylan-Myriad' directory or a 'myriad' one)
 #
-MYRIAD_TOP = $(WOOPER_TOP)/../Ceylan-Myriad
+ifneq ($(wildcard $(WOOPER_TOP)/../myriad),)
+
+	MYRIAD_TOP = $(WOOPER_TOP)/../myriad
+
+else
+
+	# Default:
+	MYRIAD_TOP = $(WOOPER_TOP)/../Ceylan-Myriad
+
+endif
