@@ -22,17 +22,17 @@ run() ->
 	test_facilities:display(
 		"Statically, class name is ~s, superclasses are ~w.",
 		[
-			class_MYCLASS:get_class_name(),
+			class_MYCLASS:getClassname(),
 			class_MYCLASS:get_superclasses() ] ),
 
 	MyC = class_MYCLASS:new_link(X,Y,Z),
-	MyC ! {get_class_name,[],self()},
+	MyC ! {getClassname,[],self()},
 
 	receive
 
 		{wooper_result,class_MYCLASS} ->
 			test_facilities:display(
-				"After constructor, get_class_name returned 'class_MYCLASS' "
+				"After constructor, getClassname returned 'class_MYCLASS' "
 				"as expected." );
 
 		{wooper_result,UnexpectedClass} ->
