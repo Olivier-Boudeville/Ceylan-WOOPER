@@ -29,7 +29,7 @@ PROJECT_CSS := pygments-default.css,wooper.css
 WEB_CONTENT = *.html *.css *.png *.pdf
 
 # Read from the user's environment:
-GITHUB_PAGES_BASE := $(shell basename $(WOOPER_WEB_MIRROR_BRANCH))
+GITHUB_PAGES_BASE := $(shell basename "(WOOPER_WEB_MIRROR_BRANCH)")
 
 
 

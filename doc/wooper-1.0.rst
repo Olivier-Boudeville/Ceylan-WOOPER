@@ -41,7 +41,7 @@
 :Organisation: Copyright (C) 2008-2018 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation Date: Thursday, February 25, 2008
-:Lastly Updated: Sunday, April 15, 2018
+:Lastly Updated: Thursday, July 5, 2018
 :Dedication: Users and maintainers of the ``WOOPER`` layer.
 :Abstract:
 
@@ -228,11 +228,8 @@ To test this class (provided that ``GNU make`` and ``Erlang 20.0`` or more recen
  $ cd Ceylan-Myriad && make all && cd ..
 
 
-Then, as ``Ceylan-Myriad`` is known by WOOPER as the ``Common`` layer:
-
 .. code:: bash
 
- $ ln -s Ceylan-Myriad common
  $ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git
  $ cd Ceylan-WOOPER && make all
 
@@ -2248,9 +2245,9 @@ if a method takes only one parameter and if this parameter is a list, then in a 
 Error With Exit Value: ``{undef,[{map_hashtable,new,[..]}..``
 _____________________________________________________________
 
-.. You most probably are using the hashtable-based version of WOOPER and you forgot to build the ``common`` directory, which, among other things, contains the ``hashtable.erl`` source file.
+.. You most probably are using the hashtable-based version of WOOPER and you forgot to build the ``myriad`` directory, which, among other things, contains the ``hashtable.erl`` source file.
 
-You most probably forgot to build the ``common`` directory (a.k.a. ``Ceylan-Myriad``) that contains, among other modules, the ``map_hashtable.erl`` source file.
+You most probably forgot to build the ``myriad`` directory (a.k.a. ``Ceylan-Myriad``) that contains, among other modules, the ``map_hashtable.erl`` source file.
 
 Check that you have a ``map_hashtable.beam`` file indeed, and that it can be found from the paths specified to the virtual machine. Note that the WOOPER code designates this module as the ``table`` one (ex: ``table:new()``), for a better substituability (this is obtained thanks to a parse-transform provided by ``Ceylan-Myriad``) .
 
@@ -2312,8 +2309,6 @@ As a result, once a proper Erlang version is available, the `Ceylan-Myriad repos
 
  $ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad
  $ cd Ceylan-Myriad && make all && cd ..
- # WOOPER knows this package as the 'Common' layer:
- $ ln -s Ceylan-Myriad common
  $ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER
  $ cd Ceylan-WOOPER && make all
 
