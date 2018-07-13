@@ -217,7 +217,7 @@ wooper_main_loop( State ) ->
 
 					{ NewState, _ } = wooper_execute_method(
 							onWOOPERExitReceived, State,
-										[ PidOrPort, ExitType ] ),
+							[ PidOrPort, ExitType ] ),
 
 					%?wooper_log( "Main loop (case G) ended.~n" ),
 					wooper_main_loop( NewState );
@@ -306,7 +306,7 @@ wooper_main_loop( State ) ->
 					% nodeup handler not overridden, using default one:
 					%?wooper_log( "Main loop (case I) ended.~n" ),
 					NewState = wooper:default_node_up_handler( State, Node,
-															   MonitorNodeInfo ),
+														   MonitorNodeInfo ),
 					wooper_main_loop( NewState )
 
 			end;
@@ -344,7 +344,7 @@ wooper_main_loop( State ) ->
 					% nodeup handler not overridden, using default one:
 					%?wooper_log( "Main loop (case J) ended.~n" ),
 					NewState = wooper:default_node_down_handler( State, Node,
-																 MonitorNodeInfo ),
+														 MonitorNodeInfo ),
 					wooper_main_loop( NewState )
 
 			end;

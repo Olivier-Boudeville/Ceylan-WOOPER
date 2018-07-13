@@ -52,7 +52,7 @@ wooper_destruct( State ) ->
 	% wooper_class_manager:get_virtual_table_for):
 
 	% We should never rely on 'wooper:get_classname( State )' here, as it would
-	% always return the leaf class. We use ?MODULE (even for embodieds
+	% always return the leaf class. We use ?MODULE (even for embodied
 	% instances):
 	%
 	Exports = module_info( exports ),
@@ -140,13 +140,13 @@ wooper_destruct( State ) ->
 
 			try
 
-				%apply( ?MODULE, destruct, [ State ] )
 				?MODULE:destruct( State )
 
 			catch
 
-				Reason:ErrorTerm ->
-					trigger_destruct_error( Reason, ErrorTerm, State )
+				Reason:ErrorTerm:StackTrace ->
+					trigger_destruct_error( Reason, ErrorTerm, StackTrace,
+											State )
 
 			end;
 
@@ -174,9 +174,10 @@ wooper_destruct( State ) ->
 %
 % (helper)
 %
--spec trigger_destruct_error( basic_utils:exception_class(), term(),
-							  wooper:state() ) -> no_return().
-trigger_destruct_error( Reason, ErrorTerm, State ) ->
+-spec trigger_destruct_error( basic_utils:exception_class(),
+		basic_utils:error_term(), code_utils:stack_trace(), wooper:state() ) ->
+									no_return().
+trigger_destruct_error( Reason, ErrorTerm, StackTrace, State ) ->
 
 	% Destruction failed:
 	% (error term would often be unreadable with ~p)
@@ -189,9 +190,8 @@ trigger_destruct_error( Reason, ErrorTerm, State ) ->
 					  " - stack trace was (latest calls first):~n~s~n"
 					  " - instance state was: ~s~n~n",
 					  [ self(), ActualClassname, Reason, ErrorTerm,
-						code_utils:interpret_stacktrace(),
-						wooper:state_to_string( State )
-					  ] ),
+						code_utils:interpret_stacktrace( StackTrace ),
+						wooper:state_to_string( State ) ] ),
 
 	% Terminates the process:
 	throw( { wooper_destructor_failed, self(), ActualClassname, ErrorTerm } ).

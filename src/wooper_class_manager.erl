@@ -103,7 +103,7 @@
 
 display_state( Tables ) ->
 	wooper:log_info( ?log_prefix "Storing now ~B table(s).~n",
-					 [ ?wooper_table_type:getEntryCount( Tables ) ] ).
+					 [ ?wooper_table_type:size( Tables ) ] ).
 
 
 display_table_creation( Module ) ->
@@ -291,8 +291,7 @@ create_method_table_for( TargetModule ) ->
 		  ?wooper_table_type:?wooper_table_type() ) ->
 						  ?wooper_table_type:?wooper_table_type().
 update_method_table_with( Module, Hashtable ) ->
-	?wooper_table_type:merge( Hashtable,
-								  create_method_table_for( Module ) ).
+	?wooper_table_type:merge( Hashtable, create_method_table_for( Module ) ).
 
 
 
@@ -366,7 +365,7 @@ create_local_method_table_for( Module ) ->
 
 				true ->
 					?wooper_table_type:addEntry( { Name, Arity }, Module,
-													 Hashtable );
+												 Hashtable );
 
 				false ->
 					Hashtable

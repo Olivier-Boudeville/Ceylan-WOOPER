@@ -72,7 +72,7 @@
 %
 % This record is to strictly supersede the Myriad-level module_info one.
 %
-% See also: the {module,function}_info counterpart Common records, defined in
+% See also: the {module,function}_info counterpart Myriad records, defined in
 % ast_info.hrl.
 %
 -record( class_info, {

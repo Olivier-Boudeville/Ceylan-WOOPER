@@ -34,7 +34,7 @@
 %
 % Defined mostly for explanation purpose.
 %
--spec get_classname() -> [ classname() ].
+-spec get_classname() -> classname().
 get_classname() ->
 	?MODULE.
 

@@ -165,7 +165,7 @@ run_standalone( FileToTransform ) ->
 -spec parse_transform( ast(), list() ) -> ast().
 parse_transform( InputAST, _Options ) ->
 
-	trace_utils:info_fmt( "(applying parse transform '~p')", [ ?MODULE ] ),
+	%trace_utils:info_fmt( "(applying parse transform '~p')", [ ?MODULE ] ),
 
 	%trace_utils:trace_fmt( "WOOPER input AST:~n~p~n", [ InputAST ] ),
 
@@ -244,7 +244,7 @@ get_class_info( ModuleInfo ) ->
 	ExtractedClassInfo = recompose_module_info_for_class( ModuleInfo,
 														  InitClassInfo ),
 
-	check_class_info( ExtractedClassInfo ),
+	% to re-add: check_class_info( ExtractedClassInfo ),
 
 	ExtractedClassInfo.
 
@@ -286,8 +286,8 @@ recompose_module_info_for_class(
 						  functions=FinalFunctionTable,
 						  last_line=LastLine },
 
-	trace_utils:debug_fmt( "Recomposed class information: ~s",
-						   [ class_info_to_string( ReturnedClassInfo ) ] ),
+	%trace_utils:debug_fmt( "Recomposed class information: ~s",
+	%					   [ class_info_to_string( ReturnedClassInfo ) ] ),
 
 	ReturnedClassInfo.
 
@@ -299,7 +299,8 @@ recompose_module_info_for_class(
 manage_classname( _ModuleEntry=undefined, _ClassInfo ) ->
 	raise_error( no_module_name_defined );
 
-manage_classname( _ModuleEntry={ _ModuleName=Classname, ModuleDef }, ClassInfo ) ->
+manage_classname( _ModuleEntry={ _ModuleName=Classname, ModuleDef },
+				  ClassInfo ) ->
 	check_classname( Classname ),
 	ClassDef = ModuleDef,
 	ClassInfo#class_info{ class={ Classname, ClassDef } }.
@@ -314,15 +315,28 @@ manage_superclasses( ParseAttrTable, ClassInfo ) ->
 
 	case table:lookupEntry( wooper_superclasses, ParseAttrTable ) of
 
-		{ value, E={ SuperclassList, _SuperclassDef } } ->
+		% A single declaration expected:
+		{ value, [ E={ SuperclassList, _SuperclassDef } ] } ->
 			[ check_classname( Class ) || Class <- SuperclassList ],
 			NewParseAttrTable = table:removeEntry( wooper_superclasses,
 												   ParseAttrTable ),
 			ClassInfo#class_info{ superclasses=E,
 								  parse_attributes=NewParseAttrTable };
 
+		% Cannot be empty, hence more than one declaration:
+		{ value, L } ->
+			raise_error( { multiple_superclass_declarations, L } );
+
 		key_not_found ->
-			raise_error( superclasses_not_defined )
+
+			%trace_utils:warning( "TODO: superclasses" ),
+			% to remove:
+			NewParseAttrTable = table:removeEntry( wooper_superclasses,
+												   ParseAttrTable ),
+			ClassInfo#class_info{ superclasses={ [ toto ], undefined_def },
+								  parse_attributes=NewParseAttrTable }
+
+			%raise_error( superclasses_not_defined )
 
 	end.
 
@@ -365,8 +379,9 @@ manage_superclasses( ParseAttrTable, ClassInfo ) ->
 %%	get_info( T, C#class_info{ class=Classname, class_def=NewDef } );
 
 
-%% % We accept (only) the Erlang-standard, direct '-module(XXX).' declaration for
-%% % now:
+%% % We accept (only) the Erlang-standard, direct '-module(XXX).' declaration
+%% for % now:
+
 %% get_info( _AST=[ F={ 'attribute', _Line, 'module', Classname } | T ],
 %%		  C=#class_info{ class=undefined, class_def=undefined } ) ->
 
@@ -533,8 +548,8 @@ manage_destructor( { FunctionTable, ClassInfo } ) ->
 
 
 %% % Expected to be defined once, and not kept as will be added back later:
-%% get_info( _AST=[ _F={ eof, Line } ], C=#class_info{ last_line=undefined } ) ->
-%%	C#class_info{ last_line=Line };
+%% get_info( _AST=[ _F={ eof, Line } ], C=#class_info{ last_line=undefined } )
+%% -> C#class_info{ last_line=Line };
 
 %% get_info( _AST=[ H | T ], Infos ) ->
 %%	trace_utils:warning_fmt( "~p not managed.", [ H ] ),
@@ -938,7 +953,7 @@ infer_fun_type( Term, CurrentType ) ->
 % generation, besides the ones checked during the AST exploration and the ones
 % that will be checked by the compiler.
 %
--spec check_class_info( class_info() ) -> basic_utils:void().
+-spec check_class_info( class_info() ) -> void().
 check_class_info( #class_info{ constructors=Constructors } ) ->
 
 	case table:isEmpty( Constructors ) of
@@ -1027,9 +1042,8 @@ class_info_to_string( #class_info{
 								[ SuperclassesLocDef ] ) ]
 	end,
 
-	ParseAttributes = [ { AttrName, AttrValue } ||
-						 { AttrName, { AttrValue, _AttrLocDef } }
-							  <- table:enumerate( ParseAttrTable ) ],
+	ParseAttributes = [ [ { AttrName, AttrValue } || { AttrValue, _AttrLocDef } <- AttrPairs ]
+						|| { AttrName, AttrPairs } <- table:enumerate( ParseAttrTable ) ],
 
 	{ _LocLine, { eof, LastLine } } = LastLineLocDef,
 
@@ -1046,8 +1060,7 @@ class_info_to_string( #class_info{
 								 [ length( CompileOptDefs ), CompileOptDefs ] ),
 
 			  text_utils:format( "~B parse attributes: ~p~n",
-								 [ length( ParseAttributes ),
-								   ParseAttributes ] ),
+								 [ length( ParseAttributes ), ParseAttributes ] ),
 
 			  text_utils:format( "~B includes: ~p~n",
 								 [ length( Includes ), Includes ] ),
@@ -1056,14 +1069,12 @@ class_info_to_string( #class_info{
 			  text_utils:format( "~B type definitions: ~p~n",
 								 [ length( TypeDefs ), TypeDefs ] ),
 
-			  text_utils:format( "type definitions: ~p~n",
-								 [ TypeDefsDefs ] ),
+			  text_utils:format( "type definitions: ~p~n", [ TypeDefsDefs ] ),
 
 			  text_utils:format( "~B type exports: ~p~n",
 								 [ length( TypeExports ), TypeExports ] ),
 
-			  text_utils:format( "type export definitions: ~p~n",
-								 [ TypeExportDefs ] ),
+			  text_utils:format( "type export definitions: ~p~n", [ TypeExportDefs ] ),
 
 			  text_utils:format( "~B function exports~n",
 					 [ table:size( FunctionExportTable ) ] ),

@@ -84,7 +84,7 @@
 -export([ log_info/1, log_info/2,
 		  log_warning/1, log_warning/2,
 		  log_error/1, log_error/2, log_error/3,
-		  on_failed_request/6, on_failed_oneway/5
+		  on_failed_request/7, on_failed_oneway/6
 		]).
 
 
@@ -845,9 +845,9 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 	catch
 
-		Reason:ErrorTerm ->
+		Reason:ErrorTerm:Stacktrace ->
 			trigger_error( Reason, ErrorTerm, Classname,
-						   ConstructionParameters )
+						   ConstructionParameters, Stacktrace )
 
 	end.
 
@@ -866,9 +866,9 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 	catch
 
-		Reason:ErrorTerm ->
+		Reason:ErrorTerm:Stacktrace ->
 			trigger_error( Reason, ErrorTerm, Classname,
-						   ConstructionParameters )
+						   ConstructionParameters, Stacktrace )
 
 	end,
 
@@ -950,9 +950,9 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 
 	catch
 
-		Reason:ErrorTerm ->
+		Reason:ErrorTerm:Stacktrace ->
 			trigger_error( Reason, ErrorTerm, Classname,
-						   ConstructionParameters )
+						   ConstructionParameters, Stacktrace )
 
 	end.
 
@@ -974,9 +974,9 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 
 	catch
 
-		Reason:ErrorTerm ->
+		Reason:ErrorTerm:Stacktrace ->
 			trigger_error( Reason, ErrorTerm, Classname,
-						   ConstructionParameters )
+						   ConstructionParameters, Stacktrace )
 
 	end,
 
@@ -1191,8 +1191,9 @@ retrieve_virtual_table( Classname ) ->
 % (helper)
 %
 -spec trigger_error( basic_utils:exception_class(), term(), classname(),
-					 [ method_arguments() ] ) -> no_return().
-trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters ) ->
+		 [ method_arguments() ], code_utils:stack_trace() ) -> no_return().
+trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
+			   Stacktrace ) ->
 
 	% Construction failed:
 	% (error term would often be unreadable with ~p)
@@ -1205,7 +1206,8 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters ) ->
 			   " - stack trace was (latest calls first):~n~s~n"
 			   " - for construction parameters:~n  ~p~n",
 			   [ self(), Classname, Arity, Reason, ErrorTerm,
-				 code_utils:interpret_stacktrace(), ConstructionParameters ] ),
+				 code_utils:interpret_stacktrace( Stacktrace ),
+				 ConstructionParameters ] ),
 
 	throw( { wooper_constructor_failed, self(), Classname, Arity,
 			 ConstructionParameters, ErrorTerm } ).
@@ -1502,9 +1504,10 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 % the caller, and have the process instance exit.
 %
 -spec on_failed_request( request_name(), method_arguments(), pid(),
-						 atom(), term(), wooper:state() ) -> no_return().
+						 basic_utils:error_type(), code_utils:stack_trace(),
+						 wooper:state() ) -> no_return().
 on_failed_request( RequestAtom, ArgumentList, CallerPid, Reason, ErrorTerm,
-				   State ) ->
+				   Stacktrace, State ) ->
 
 	Arity = length( ArgumentList ) + 1,
 
@@ -1516,7 +1519,8 @@ on_failed_request( RequestAtom, ArgumentList, CallerPid, Reason, ErrorTerm,
 			   " - caller being process ~w"
 			   " - for request parameters:~n  ~p~n",
 			   [ ModulePrefix, RequestAtom, Arity, Reason, ErrorTerm,
-				  code_utils:interpret_stacktrace(), CallerPid, ArgumentList ],
+				 code_utils:interpret_stacktrace( Stacktrace ), CallerPid,
+				 ArgumentList ],
 			   State ),
 
 	% ArgumentList and actual method module not propagated back to the caller:
@@ -1536,9 +1540,11 @@ on_failed_request( RequestAtom, ArgumentList, CallerPid, Reason, ErrorTerm,
 % Called by WOOPER whenever a oneway fails, to report it on the console and to
 % the caller, and have the process instance exit.
 %
--spec on_failed_oneway( oneway_name(), method_arguments(), atom(), term(),
+-spec on_failed_oneway( oneway_name(), method_arguments(),
+						basic_utils:error_type(), code_utils:stack_trace(),
 						wooper:state() ) -> no_return().
-on_failed_oneway( OnewayAtom, ArgumentList, Reason, ErrorTerm, State ) ->
+on_failed_oneway( OnewayAtom, ArgumentList, Reason, ErrorTerm, Stacktrace,
+				  State ) ->
 
 	Arity = length( ArgumentList ) + 1,
 
@@ -1549,7 +1555,8 @@ on_failed_oneway( OnewayAtom, ArgumentList, Reason, ErrorTerm, State ) ->
 			   " - stack trace was (latest calls first):~n~s~n"
 			   " - for oneway parameters:~n  ~p~n",
 			   [ ModulePrefix, OnewayAtom, Arity, Reason, ErrorTerm,
-				  code_utils:interpret_stacktrace(), ArgumentList ], State ),
+				  code_utils:interpret_stacktrace( Stacktrace ),
+				 ArgumentList ], State ),
 
 			% No caller to notify, for oneways.
 
