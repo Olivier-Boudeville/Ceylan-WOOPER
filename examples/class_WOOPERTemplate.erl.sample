@@ -1,10 +1,10 @@
 % Add your standard header here.
 %
--module(class_MyClass).
+-module(class_).
 
 
 % Determines what are the mother classes of this class (if any):
--define( wooper_superclasses, [ class_DirectMotherOne, class_DirectMotherTwo ] ).
+-define( wooper_superclasses, [] ).
 
 
 % Parameters taken by the constructor ('construct').
@@ -16,74 +16,48 @@
 -define( wooper_construct_export, new/X, new_link/X,
 		synchronous_new/X, synchronous_new_link/X,
 		synchronous_timed_new/X, synchronous_timed_new_link/X,
-		remote_new/X+1, remote_new_link/X+1, remote_synchronous_new/X+1,
-		remote_synchronous_new_link/X+1, remote_synchronous_timed_new/X+1,
-		remote_synchronous_timed_new_link/X+1, construct/X+1, destruct/1 ).
+		remote_new/Y, remote_new_link/Y, remote_synchronous_new/Y,
+		remote_synchronous_new_link/Y, remote_synchronous_timed_new/Y,
+		remote_synchronous_timed_new_link/Y, construct/Y, destruct/1 ).
 
 
 % Member method declarations.
--define( wooper_method_export, myRequest/A1, myOneway/A2 ).
+-define( wooper_method_export, ).
 
 
 % Static method declarations.
--define( wooper_static_method_export, my_static_method/A3 ).
+-define( wooper_static_method_export, ).
 
 
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
 
 
-% Constructs a new instance of MyClass.
+% Constructs a new .
 construct( State, ?wooper_construct_parameters ) ->
 
 	% First the direct mother classes:
-	MotherOneState = class_DirectMotherOne:construct( State, P1, P2, ...  ),
+	XState = class_:construct( State,  ),
 
-	MotherTwoState = class_DirectMotherTwo:construct( MotherOneState, P3,  ...  ),
-
-	% Then the class-specific construction:
-
-	[...]
-
-	AnotherState = setAttributes( MotherTwoState, [
-		 { my_attribute, 24 },
-		 { other, "This is a message" } ] ),
-
-	AnotherState.
+	% Then the class-specific attributes:
+	setAttributes( XState, [
+		 {,},
+		 {,} ] ).
 
 
 
-% Overriden destructor.
 destruct( State ) ->
 
-	% Class-specific actions:
-	[...]
+	State.
 
-	% Then call the direct mother class counterparts, and allow chaining:
-	FinalState.
+	io:format( "Deleting cat ~w! (overridden destructor)~n", [ self() ] ),
 
 
 
 % Member method section.
 
 
-myRequest( State, X, Y ) ->
-	[...]
-	?wooper_return_state_result( AState, AResult ).
-
-
-myOneway( State, Z ) ->
-	[...]
-	?wooper_return_state_only( SomeState ).
-
-
 % Static method section.
-
-my_static_method( A, B, C ) ->
-	[...]
 
 
 % Helper functions section.
-
-my_helper(N) ->
-	[...]

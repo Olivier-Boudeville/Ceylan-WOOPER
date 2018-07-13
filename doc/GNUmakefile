@@ -1,40 +1,61 @@
 WOOPER_TOP = ..
 
+
 DOCUTILS_TOP = $(WOOPER_TOP)
 
-OVERALL_DOCUMENT_TARGET = wooper.rst
-
-DOC_GENERATED_FILES = wooper.pdf wooper.html
-
-DOC_FILES = $(DOC_GENERATED_FILES) wooper-example.png
-
+DOC_BASE_NAME := wooper
 
 # The current, operational version of WOOPER:
-CURRENT_VERSION := 1.0
+CURRENT_VERSION := 2.0
 
-CURRENT_WOOPER_DOC := wooper-$(CURRENT_VERSION).pdf
+DOC_NAME := $(DOC_BASE_NAME)-$(CURRENT_VERSION)
+
+OVERALL_DOCUMENT_SOURCE := $(DOC_NAME).rst
+
+
+CURRENT_WOOPER_PDF := $(DOC_NAME).pdf
+CURRENT_WOOPER_HTML := $(DOC_NAME).html
+
+
+DOC_GENERATED_FILES := $(CURRENT_WOOPER_PDF) $(CURRENT_WOOPER_HTML)
+
+DOC_FILES := $(DOC_GENERATED_FILES) wooper-example.png
+
+
 
 PROJECT_CSS := pygments-default.css,wooper.css
 
 
-WEB_CONTENT = *.html *.css *.png wooper.pdf
+WEB_CONTENT = *.html *.css *.png *.pdf
+
+# Read from the user's environment:
+GITHUB_PAGES_BASE := $(shell basename "(WOOPER_WEB_MIRROR_BRANCH)")
 
 
-.PHONY: all do full-doc clone-mirror                     \
+
+
+.PHONY: all doc full-doc clone-mirror                    \
 		export-doc export-to-official export-to-mirror   \
 		info-web clean clean-doc
 
+
+
+# Default do-nothing target:
 all:
+	@echo "  Run 'make full-doc' to generate the manual of the WOOPER-$(CURRENT_VERSION) layer."
+
 
 doc:
 
-full-doc:
-	@$(MAKE) $(DOC_GENERATED_FILES) VIEW_PDF=no
+
+full-doc: $(CURRENT_WOOPER_HTML)
 
 
-# Create a separate repository for the GitHub pages branch:
+# Creates a separate repository for the GitHub pages branch:
+# (please then remove all initial content of that branch)
+#
 clone-mirror:
-	@cd ../../ && git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git $(shell basename $(WEB_MIRROR_BRANCH)) && git checkout gh-pages
+	@cd ../../ && git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git $(GITHUB_PAGES_BASE) && cd $(GITHUB_PAGES_BASE) && git checkout -b gh-pages
 
 
 export-doc: clean-doc full-doc export-to-official export-to-mirror
@@ -46,21 +67,30 @@ export-to-official:
 
 
 export-to-mirror:
-	@echo "   Exporting WOOPER documentation to mirror website in $(WEB_MIRROR_BRANCH)"
-	@/bin/cp -f $(WEB_CONTENT) $(WEB_MIRROR_BRANCH) && cd $(WEB_MIRROR_BRANCH) && git add . && git merge -s ours && git commit -m "WOOPER doc updated." && git push
-
-
-info-web:
-	@echo "WEB_CONTENT = $(WEB_CONTENT)"
-	@echo "WEB_MIRROR_BRANCH = $(WEB_MIRROR_BRANCH)"
+	@echo "   Exporting WOOPER documentation to mirror website in $(WOOPER_WEB_MIRROR_BRANCH)"
+	@/bin/cp -f $(WEB_CONTENT) $(WOOPER_WEB_MIRROR_BRANCH) && cd $(WOOPER_WEB_MIRROR_BRANCH) && git add . && git merge -s ours && git commit -m "WOOPER doc updated." && git push
 
 
 clean: clean-doc
 
 clean-doc:
 	-@/bin/rm -f *.aux *.log *.maf *.mtc* *.stc* *.tex *.toc \
-	$(CURRENT_WOOPER_DOC) $(DOC_GENERATED_FILES)
+	$(CURRENT_WOOPER_PDF) $(DOC_GENERATED_FILES)
+
+info: info-doc info-web
+
+info-doc:
+	@echo "OVERALL_DOCUMENT_SOURCE = $(OVERALL_DOCUMENT_SOURCE)"
+	@echo "DOC_FILES = $(DOC_FILES)"
 
 
-# For COMMON_TOP:
+info-web:
+	@echo "WEB_CONTENT = $(WEB_CONTENT)"
+	@echo "WOOPER_WEB_MIRROR_BRANCH = $(WOOPER_WEB_MIRROR_BRANCH)"
+	@echo "GITHUB_PAGES_BASE = $(GITHUB_PAGES_BASE)"
+
+
+DOCUTILS_TOP = .
+
+# For MYRIAD_TOP:
 include $(WOOPER_TOP)/GNUmakesettings.inc

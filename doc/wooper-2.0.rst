@@ -2,11 +2,9 @@
 .. _Top:
 
 
-.. title:: Welcome to the WOOPER documentation
+.. title:: Welcome to the Ceylan-WOOPER 2.0 documentation
 
 .. comment stylesheet specified through GNUmakefile
-
-.. Note: Not able to obtain a proper Pygments support for code extract (ex: no colors).
 
 
 .. role:: raw-html(raw)
@@ -23,15 +21,14 @@
 
 :raw-html:`<a name="wooper_top"></a>`
 
-:raw-html:`<div class="banner"><p><em>WOOPER documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper.html">browse mirror</a> <a href="wooper.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[WOOPER]%20Remark">mail us</a></p></div>`
+:raw-html:`<div class="banner"><p><em>WOOPER 2.0 documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper-2.0.html">browse mirror</a> <a href="wooper-2.0.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER 2.0]%20Remark">mail us</a></p></div>`
 
 
 
 :raw-html:`<center><img src="wooper-title.png" width="70%"></img></center>`
 :raw-latex:`\includegraphics[scale=0.34]{wooper-title.png}`
 
-.. comment Note: this is the latest, current version of the WOOPER 1.x documentation. As for WOOPER 2.0, all the available relevant bits are here as well, yet commented-out.
-
+.. comment Note: this is the latest, current version of the WOOPER 2.x documentation, directly obtained from the one of WOOPER 1.x.
 
 
 
@@ -43,8 +40,9 @@
 :Organisation: Copyright (C) 2008-2018 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation Date: Thursday, February 25, 2008
-:Lastly Updated: Wednesday, March 28, 2018
-:Dedication: Users and maintainers of the ``WOOPER`` layer.
+:Lastly Updated: Thursday, July 5, 2018
+
+:Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
 	The role of the ``WOOPER`` layer is to provide free software object-oriented facilities to the Erlang language.
@@ -58,9 +56,9 @@
 
 The latest version of this documentation is to be found at the `official WOOPER website <http://wooper.esperide.org>`_ (``http://wooper.esperide.org``).
 
-:raw-html:`This WOOPER documentation is also available in the PDF format (see <a href="wooper.pdf">wooper.pdf</a>), and mirrored <a href="http://olivier-boudeville.github.io/Ceylan-WOOPER/wooper.html">here</a>.`
+:raw-html:`This WOOPER documentation is also available in the PDF format (see <a href="wooper-2.0.pdf">wooper.pdf</a>), and mirrored <a href="http://olivier-boudeville.github.io/Ceylan-WOOPER/wooper-2.0.html">here</a>.`
 
-:raw-latex:`The documentation is also mirrored \href{https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper.html}{here}.`
+:raw-latex:`The documentation is also mirrored \href{https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper-2.0.html}{here}.`
 
 
 
@@ -85,6 +83,8 @@ Overview
 ========
 
 WOOPER, which stands for *Wrapper for Object-Oriented Programming in Erlang*, is a `free software`_ lightweight layer on top of the `Erlang <http://erlang.org>`__ language that provides constructs dedicated to `Object-Oriented Programming <http://en.wikipedia.org/wiki/Object-oriented_programming>`_ (OOP).
+
+This documentation applies to the WOOPER 2.0 version.
 
 WOOPER is a rather autonomous part of the `Ceylan <https://github.com/Olivier-Boudeville/Ceylan>`_ project.
 
@@ -222,7 +222,7 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
 
 Straightforward, isn't it? We will discuss it in-depth, though.
 
-To test this class (provided that ``GNU make`` and ``Erlang 20.0`` or more recent are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on ``Ceylan-Myriad``, hence to be installed first:
+To test this class (provided that ``GNU make`` and ``Erlang 20.0`` or more recent are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on `Ceylan-Myriad <http://myriad.esperide.org>`_, hence to be installed first:
 
 .. code:: bash
 
@@ -230,11 +230,8 @@ To test this class (provided that ``GNU make`` and ``Erlang 20.0`` or more recen
  $ cd Ceylan-Myriad && make all && cd ..
 
 
-Then, as ``Ceylan-Myriad`` is known by WOOPER as the ``Common`` layer:
-
 .. code:: bash
 
- $ ln -s Ceylan-Myriad common
  $ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git
  $ cd Ceylan-WOOPER && make all
 
@@ -2026,6 +2023,7 @@ To help declaring the right defines in the right order, using the WOOPER `templa
 
 One may also have a look at the full `test examples <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples>`_, as a source of inspiration.
 
+For examples of re-use of WOOPER by upper layers, one may refer to `Ceylan-Traces <http://traces.esperide.org>`_ or the `Sim-Diasca <http://sim-diasca.com>_` simulation engine.
 
 .. comment Note:: To be updated, notably with respect to parse transforms.
 
@@ -2249,11 +2247,16 @@ if a method takes only one parameter and if this parameter is a list, then in a 
 Error With Exit Value: ``{undef,[{map_hashtable,new,[..]}..``
 _____________________________________________________________
 
-.. You most probably are using the hashtable-based version of WOOPER and you forgot to build the ``common`` directory, which, among other things, contains the ``hashtable.erl`` source file.
+.. You most probably are using the hashtable-based version of WOOPER and you forgot to build the ``myriad`` directory, which, among other things, contains the ``hashtable.erl`` source file.
 
-You most probably forgot to build the ``common`` directory (a.k.a. ``Ceylan-Myriad``) that contains, among other modules, the ``map_hashtable.erl`` source file.
+.. You most probably forgot to build the ``myriad`` directory (a.k.a. ``Ceylan-Myriad``) that contains, among other modules, the ``map_hashtable.erl`` source file.
 
-Check that you have a ``map_hashtable.beam`` file indeed, and that it can be found from the paths specified to the virtual machine. Note that the WOOPER code designates this module as the ``table`` one (ex: ``table:new()``), for a better substituability (this is obtained thanks to a parse-transform provided by ``Ceylan-Myriad``) .
+
+You most probably forgot to build the ``Ceylan-Myriad`` directory that contains, among other modules, the ``map_hashtable.erl`` source file.
+
+Check that you have a ``map_hashtable.beam`` file indeed, and that it can be found from the paths specified to the virtual machine.
+
+Note that the WOOPER code designates this module as the ``table`` one (ex: ``table:new()``), for a better substituability (this is obtained thanks to a parse-transform provided by ``Ceylan-Myriad``) .
 
 
 
@@ -2292,7 +2295,7 @@ We try to ensure that the main line (in the ``master`` branch) always stays func
 This layer, ``Ceylan-WOOPER``, relies (only) on:
 
 - `Erlang <http://www.erlang.org/>`_, version 20.2 or higher
-- the ``Ceylan-Myriad`` base layer
+- the `Ceylan-Myriad <http://myriad.esperide.org>`_ base layer
 
 
 We prefer using GNU/Linux, sticking to the latest stable release of Erlang, and building it from sources, thanks to GNU ``make``.
@@ -2309,12 +2312,11 @@ One may execute ``./install-erlang.sh --help`` for more details about how to con
 
 As a result, once a proper Erlang version is available, the `Ceylan-Myriad repository <https://github.com/Olivier-Boudeville/Ceylan-Myriad>`_ should be cloned and built, before doing the same with the `Ceylan-WOOPER repository <https://github.com/Olivier-Boudeville/Ceylan-WOOPER>`_, like in:
 
+
 .. code:: bash
 
  $ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad
  $ cd Ceylan-Myriad && make all && cd ..
- # WOOPER knows this package as the 'Common' layer:
- $ ln -s Ceylan-Myriad common
  $ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER
  $ cd Ceylan-WOOPER && make all
 
@@ -2638,6 +2640,8 @@ Sources, Inspirations & Alternate Solutions
 - **Concurrent Programming in Erlang**, Joe Armstrong, Robert Virding, Claes Wikström et Mike Williams. Chapter 18, page 299: Object-oriented Programming. This book describes a simple way of implementing multiple inheritance, without virtual table, at the expense of a (probably slow) systematic method look-up (at each method call). No specific state management is supported
 
 - Chris Rathman's `approach <http://www.angelfire.com/tx4/cus/shapes/erlang.html>`_ to life cycle management and polymorphism. Inheritance not supported
+
+- `ECT <http://www.erlang-factory.com/upload/presentations/162/ECT.pdf>`_, an Object-Oriented Extension to Erlang, very promising yet apparently not maintained anymore
 
 - As Burkhard Neppert suggested, an alternative way of implementing OOP here could be to use Erlang behaviours. This is the way OTP handles generic functionalities that can be specialised (e.g. ``gen_server``). One approach could be to map each object-oriented base class to an Erlang **behaviour**. See some guidelines about `defining <http://wiki.trapexit.org/index.php/Defining_Your_Own_Behaviour>`_ your own behaviours and making them `cascade <http://wiki.trapexit.org/index.php/Cascading_Behaviours>`_
 

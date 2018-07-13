@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2017 Olivier Boudeville
+% Copyright (C) 2003-2018 Olivier Boudeville
 %
 % This file is part of the WOOPER library.
 %
@@ -22,7 +22,7 @@
 % If not, see <http://www.gnu.org/licenses/> and
 % <http://www.mozilla.org/MPL/>.
 %
-% Author: Olivier Boudeville (olivier.boudeville@esperide.com)
+% Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
 
 % Modular WOOPER header gathering the main loop of instances
@@ -217,7 +217,7 @@ wooper_main_loop( State ) ->
 
 					{ NewState, _ } = wooper_execute_method(
 							onWOOPERExitReceived, State,
-										[ PidOrPort, ExitType ] ),
+							[ PidOrPort, ExitType ] ),
 
 					%?wooper_log( "Main loop (case G) ended.~n" ),
 					wooper_main_loop( NewState );
@@ -306,7 +306,7 @@ wooper_main_loop( State ) ->
 					% nodeup handler not overridden, using default one:
 					%?wooper_log( "Main loop (case I) ended.~n" ),
 					NewState = wooper:default_node_up_handler( State, Node,
-															   MonitorNodeInfo ),
+														   MonitorNodeInfo ),
 					wooper_main_loop( NewState )
 
 			end;
@@ -344,7 +344,7 @@ wooper_main_loop( State ) ->
 					% nodeup handler not overridden, using default one:
 					%?wooper_log( "Main loop (case J) ended.~n" ),
 					NewState = wooper:default_node_down_handler( State, Node,
-																 MonitorNodeInfo ),
+														 MonitorNodeInfo ),
 					wooper_main_loop( NewState )
 
 			end;

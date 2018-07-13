@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2018-2018 Olivier Boudeville
 %
 % This file is part of the WOOPER library.
 %
@@ -22,6 +22,30 @@
 % If not, see <http://www.gnu.org/licenses/> and
 % <http://www.mozilla.org/MPL/>.
 %
+% Creation date: Friday, April 13, 2018
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
-% Modular WOOPER header gathering elements used to define a class.
+
+
+% Centralisation of class-level information.
+%
+-module(wooper_info).
+
+
+% For the attribute_info record:
+-include("wooper_info.hrl").
+
+
+% Shorthands:
+-type attribute_name() :: wooper:attribute_name().
+
+
+-type attribute_info() :: #attribute_info{}.
+
+
+% Stores all class-level information (i.e. metadata) regarding attributes.
+%
+-type attribute_table() :: table:table( attribute_name(), attribute_info() ).
+
+
+-export_type([ attribute_info/0, attribute_table/0 ]).

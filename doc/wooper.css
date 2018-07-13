@@ -14,22 +14,22 @@ pre.code {
 
 
 .literal {
-  color: #570101 ;
+  color: #570101;
 }
 
 
 /* For command printouts: */
 .literal-block {
-  background: #ebdcdc ;
+  background: #ebdcdc;
 }
 
 
 div.box {
-  color: #555555
+	color: #555555;
   background: #FFFFFF;
   border: solid;
   padding : 5px;
-  border-width: thin ;
+  border-width: thin;
   text-align: left;
 }
 
@@ -38,27 +38,6 @@ div.centered {
   text-align: center;
   margin-left: auto;
   margin-right: auto;
-}
-
-
-/* green for an open poll */
-div.open {
-  color: #32CD32;
-  font-family: courier, serif;
-}
-
-
-/* red for a closed one */
-div.closed {
-  color: #FF0000;
-  font-family: courier, serif;
-}
-
-
-/* blue for a pending one */
-div.running {
-  color: #0000FF;
-  font-family: courier, serif;
 }
 
 
@@ -77,7 +56,7 @@ body {
 
 
 h1.Huge {
-  color: #00FF00 ;
+  color: #00FF00;
   background: transparent;
   font-size: 70px;
   font-weight: bold;
@@ -91,7 +70,7 @@ h1.Huge {
 
 
 h1.Big {
-  color: #FF0000 ;
+  color: #FF0000;
   font-family: "Lucida Sans Unicode", serif;
   font-size: 40px;
 }
@@ -112,7 +91,7 @@ h1 {
 
 
 h2 {
-  color: #00FF00 ;
+  color: #00FF00;
   font-size: 27px;
   background: transparent;
   text-align: left;
@@ -393,7 +372,7 @@ a:hover {
 
 
 code {
-  color: #FF0000 ;
+  color: #FF0000;
   font-size: 17px;
   font-weight: normal;
   font-family: Courier, serif;
@@ -420,7 +399,7 @@ b {
 div.banner {
   background: #910909;
   margin: 0;
-  font-size: 70% ;
+  font-size: 70%;
   font-weight: bold;
   line-height: 1.0;
   text-align: center;

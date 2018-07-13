@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2017 Olivier Boudeville
+% Copyright (C) 2003-2018 Olivier Boudeville
 %
 % This file is part of the WOOPER library.
 %
@@ -22,7 +22,7 @@
 % If not, see <http://www.gnu.org/licenses/> and
 % <http://www.mozilla.org/MPL/>.
 %
-% Author: Olivier Boudeville (olivier.boudeville@esperide.com)
+% Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
 
 % Modular WOOPER header gathering the primitives (functions) to manage the state
@@ -95,7 +95,7 @@ is_wooper_debug() ->
 						wooper:state().
 setAttribute( State, AttributeName, AttributeValue ) ->
    State#state_holder{
-	   attribute_table = ?wooper_table_type:addEntry(
+	   attribute_table=?wooper_table_type:addEntry(
 		   AttributeName,
 		   AttributeValue,
 		   State#state_holder.attribute_table )
@@ -120,7 +120,7 @@ setAttribute( State, AttributeName, AttributeValue ) ->
 setAttributes( State, ListOfAttributePairs ) ->
 
    State#state_holder{
-	   attribute_table = ?wooper_table_type:addEntries(
+	   attribute_table=?wooper_table_type:addEntries(
 		   ListOfAttributePairs,
 		   State#state_holder.attribute_table )
    }.
@@ -192,7 +192,7 @@ getAttributes( State, AttributeNameList ) ->
 removeAttribute( State, AttributeName ) ->
 
 	State#state_holder{
-		attribute_table = ?wooper_table_type:removeEntry( AttributeName,
+		attribute_table=?wooper_table_type:removeEntry( AttributeName,
 			State#state_holder.attribute_table )
 	}.
 
@@ -210,7 +210,7 @@ removeAttribute( State, AttributeName ) ->
 addToAttribute( State, AttributeName, Value ) ->
 
 	State#state_holder{
-		attribute_table = ?wooper_table_type:addToEntry(
+		attribute_table=?wooper_table_type:addToEntry(
 			AttributeName,
 			Value,
 			State#state_holder.attribute_table )
@@ -230,7 +230,7 @@ addToAttribute( State, AttributeName, Value ) ->
 subtractFromAttribute( State, AttributeName, Value ) ->
 
 	State#state_holder{
-		attribute_table = ?wooper_table_type:subtractFromEntry(
+		attribute_table=?wooper_table_type:subtractFromEntry(
 			AttributeName,
 			Value,
 			State#state_holder.attribute_table )
@@ -250,7 +250,7 @@ subtractFromAttribute( State, AttributeName, Value ) ->
 incrementAttribute( State, AttributeName ) ->
 
 	State#state_holder{
-		attribute_table = ?wooper_table_type:addToEntry(
+		attribute_table=?wooper_table_type:addToEntry(
 			AttributeName,
 			_Value=1,
 			State#state_holder.attribute_table )
@@ -270,7 +270,7 @@ incrementAttribute( State, AttributeName ) ->
 decrementAttribute( State, AttributeName ) ->
 
 	State#state_holder{
-		attribute_table = ?wooper_table_type:addToEntry(
+		attribute_table=?wooper_table_type:addToEntry(
 			AttributeName,
 			_Value=-1,
 			State#state_holder.attribute_table )
@@ -288,7 +288,7 @@ decrementAttribute( State, AttributeName ) ->
 toggleAttribute( State, BooleanAttributeName ) ->
 
 	State#state_holder{
-		attribute_table = ?wooper_table_type:toggleEntry(
+		attribute_table=?wooper_table_type:toggleEntry(
 			BooleanAttributeName,
 			State#state_holder.attribute_table )
 	}.
@@ -308,7 +308,7 @@ toggleAttribute( State, BooleanAttributeName ) ->
 appendToAttribute( State, AttributeName, Element ) ->
 
 	State#state_holder{
-		attribute_table = ?wooper_table_type:appendToEntry(
+		attribute_table=?wooper_table_type:appendToEntry(
 			AttributeName,
 			Element,
 			State#state_holder.attribute_table )
@@ -332,7 +332,7 @@ appendToAttribute( State, AttributeName, Element ) ->
 concatToAttribute( State, AttributeName, List ) ->
 
 	State#state_holder{
-		attribute_table = ?wooper_table_type:concatToEntry(
+		attribute_table=?wooper_table_type:concatToEntry(
 			AttributeName,
 			List,
 			State#state_holder.attribute_table )
@@ -353,7 +353,7 @@ concatToAttribute( State, AttributeName, List ) ->
 deleteFromAttribute( State, AttributeName, Element ) ->
 
 	State#state_holder{
-		attribute_table = ?wooper_table_type:deleteFromEntry(
+		attribute_table=?wooper_table_type:deleteFromEntry(
 			AttributeName,
 			Element,
 			State#state_holder.attribute_table )
@@ -378,7 +378,7 @@ deleteFromAttribute( State, AttributeName, Element ) ->
 addKeyValueToAttribute( State, AttributeName, Key, Value ) ->
 
 	State#state_holder{
-		attribute_table = ?wooper_table_type:addEntry(
+		attribute_table=?wooper_table_type:addEntry(
 
 			AttributeName,
 
@@ -396,7 +396,7 @@ addKeyValueToAttribute( State, AttributeName, Key, Value ) ->
 % a tuple { NewState, PoppedHead }.
 %
 % For example, if the attribute 'my_list' contains [5,8,3], executing:
-% '{ PoppedState, Head } = ?popFromAttribute( State, my_list )'
+% '{ PoppedState, Head }=?popFromAttribute( State, my_list )'
 % returns a state whose my_list attribute is [8,3] and a value Head = 5.
 %
 % A case clause is triggered if the attribute did not exist.
@@ -405,18 +405,16 @@ addKeyValueToAttribute( State, AttributeName, Key, Value ) ->
 							{ wooper:state(), attribute_value() }.
 popFromAttribute( State, AttributeName ) ->
 
-	{ Head, PoppedAttributeTable } = ?wooper_table_type:popFromEntry(
+	{ Head, PoppedAttributeTable }=?wooper_table_type:popFromEntry(
 				  AttributeName, State#state_holder.attribute_table ),
 
-	{ State#state_holder{ attribute_table = PoppedAttributeTable },
-		Head }.
+	{ State#state_holder{ attribute_table=PoppedAttributeTable }, Head }.
 
 
 
 % Helper function for the checkUndefined macro.
 %
--spec wooper_check_undefined( wooper:state(), attribute_name() ) ->
-							basic_utils:void().
+-spec wooper_check_undefined( wooper:state(), attribute_name() ) -> void().
 wooper_check_undefined( State, Attribute ) ->
 
 	try
@@ -429,8 +427,7 @@ wooper_check_undefined( State, Attribute ) ->
 
 			% Attribute value was not equal to 'undefined':
 			throw( { attribute_was_not_undefined,
-					 { Attribute, UnexpectedValue },
-					 Stack } );
+					 { Attribute, UnexpectedValue }, Stack } );
 
 		exit:Error ->
 			% Other error (ex: unknown attribute):

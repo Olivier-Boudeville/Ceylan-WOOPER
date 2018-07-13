@@ -1,17 +1,20 @@
-% Copyright (C) 2003-2017 Olivier Boudeville
+% Copyright (C) 2003-2018 Olivier Boudeville
 %
 % This file is part of the WOOPER examples.
 %
 % It has been placed in the public domain.
 %
-% Author: Olivier Boudeville (olivier.boudeville@esperide.com)
+% Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 %
 -module(class_Mammal).
 
 
 % Determines what are the mother classes of this class (if any):
+
+% TO BE REMOVED ULTIMATELY:
 -define( wooper_superclasses, [ class_Creature ] ).
 
+-wooper_superclasses( [ class_Creature ] ).
 
 % Parameters taken by the constructor ('construct').
 % They are here the ones of the mother class (creature) plus fur color:

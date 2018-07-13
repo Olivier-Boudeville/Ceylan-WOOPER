@@ -23,7 +23,7 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Creation date: Friday, July 12, 2007.
-% Author: Olivier Boudeville (olivier.boudeville@esperide.com)
+% Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
 
 
@@ -93,10 +93,9 @@
 % Uncomment to activate debug mode:
 %-define(wooper_debug_class_manager,).
 
--spec display_state( ?wooper_table_type:?wooper_table_type() ) ->
-						   basic_utils:void().
--spec display_table_creation( basic_utils:module_name() ) -> basic_utils:void().
--spec display_msg( string() ) -> basic_utils:void().
+-spec display_state( ?wooper_table_type:?wooper_table_type() ) -> void().
+-spec display_table_creation( basic_utils:module_name() ) -> void().
+-spec display_msg( string() ) -> void().
 
 
 -ifdef(wooper_debug_class_manager).
@@ -104,7 +103,7 @@
 
 display_state( Tables ) ->
 	wooper:log_info( ?log_prefix "Storing now ~B table(s).~n",
-					 [ ?wooper_table_type:getEntryCount( Tables ) ] ).
+					 [ ?wooper_table_type:size( Tables ) ] ).
 
 
 display_table_creation( Module ) ->
@@ -136,7 +135,7 @@ display_msg( _String ) ->
 
 % Starts a new blank class manager.
 %
--spec start( pid() ) -> basic_utils:void().
+-spec start( pid() ) -> void().
 start( ClientPID ) ->
 
 	display_msg( io_lib:format( "Starting WOOPER class manager "
@@ -292,8 +291,7 @@ create_method_table_for( TargetModule ) ->
 		  ?wooper_table_type:?wooper_table_type() ) ->
 						  ?wooper_table_type:?wooper_table_type().
 update_method_table_with( Module, Hashtable ) ->
-	?wooper_table_type:merge( Hashtable,
-								  create_method_table_for( Module ) ).
+	?wooper_table_type:merge( Hashtable, create_method_table_for( Module ) ).
 
 
 
@@ -367,7 +365,7 @@ create_local_method_table_for( Module ) ->
 
 				true ->
 					?wooper_table_type:addEntry( { Name, Arity }, Module,
-													 Hashtable );
+												 Hashtable );
 
 				false ->
 					Hashtable

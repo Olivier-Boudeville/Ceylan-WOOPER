@@ -22,7 +22,7 @@
 % If not, see <http://www.gnu.org/licenses/> and
 % <http://www.mozilla.org/MPL/>.
 %
-% Author: Olivier Boudeville (olivier.boudeville@esperide.com)
+% Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
 
 % Module containing some facilities for WOOPER users, better placed in a
@@ -84,7 +84,7 @@
 -export([ log_info/1, log_info/2,
 		  log_warning/1, log_warning/2,
 		  log_error/1, log_error/2, log_error/3,
-		  on_failed_request/6, on_failed_oneway/5
+		  on_failed_request/7, on_failed_oneway/6
 		]).
 
 
@@ -147,7 +147,7 @@
 
 
 % Method qualifiers not implemented yet:
--type qualifier() :: any().
+-type method_qualifier() :: any().
 
 
 % Special case of construction parameters:
@@ -169,6 +169,12 @@
 -type attribute_value() :: any().
 
 -type attribute_entry() :: { attribute_name(), attribute_value() }.
+
+
+% Qualifiers applying to attributes:
+-type attribute_qualifier() ::
+		% The initial value of that attribute cannot be modified:
+		'const'.
 
 
 % PID of a WOOPER instance.
@@ -199,12 +205,13 @@
 % We prefer having it prefixed by wooper:
 -export_type([ classname/0,
 			   method_name/0, request_name/0, oneway_name/0,
-			   method_argument/0, method_arguments/0, qualifier/0,
+			   method_argument/0, method_arguments/0, method_qualifier/0,
 			   construction_parameters/0,
 			   requests_outcome/0, method_internal_result/0,
 			   request_result/1, request_result/0,
 			   request_return/1, oneway_return/0,
 			   attribute_name/0, attribute_value/0, attribute_entry/0,
+			   attribute_qualifier/0,
 			   instance_pid/0, state/0 ]).
 
 
@@ -312,7 +319,7 @@ execute_request_waiter( TargetInstancePID, RequestName, RequestArgs ) ->
 % (helper)
 %
 -spec execute_request( request_name(), method_arguments(), instance_pid(),
-					   any() ) -> basic_utils:void().
+					   any() ) -> void().
 execute_request( RequestName, RequestArgs, TargetInstancePID,
 				 ExpectedResult ) ->
 
@@ -358,8 +365,8 @@ execute_request_waiter( ExpectedResult, TargetInstancePID, RequestName,
 %
 % (helper)
 %
--spec send_requests( request_name(), method_arguments(),
-					 [ instance_pid() ] ) -> basic_utils:void().
+-spec send_requests( request_name(), method_arguments(), [ instance_pid() ] ) ->
+						   void().
 send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 
 	Request = { RequestName, RequestArgs, self() },
@@ -377,7 +384,7 @@ send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 % No time-out: answers will be waited indefinitely.
 %
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
-				   [ instance_pid() ], ack_atom() ) -> basic_utils:void().
+								   [ instance_pid() ], ack_atom() ) -> void().
 send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 							 AckAtom ) ->
 
@@ -514,7 +521,7 @@ wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
 % result the specified acknowledgement atom.
 %
 -spec wait_for_request_acknowledgements( basic_utils:count(), ack_atom() ) ->
-											   basic_utils:void().
+											   void().
 wait_for_request_acknowledgements( _Count=0, _AckAtom ) ->
 	ok;
 
@@ -588,7 +595,7 @@ collect_wooper_messages( Count, Acc ) ->
 % (helper)
 %
 -spec send_request_series( [ { request_name(), method_arguments() } ],
-						   instance_pid() ) -> basic_utils:void().
+						   instance_pid() ) -> void().
 send_request_series( _Requests=[], _TargetInstancePID ) ->
 	ok;
 
@@ -700,7 +707,7 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 
 % Used only in debug mode:
 -spec check_classname_and_arity( classname(), construction_parameters() ) ->
-									   basic_utils:void().
+									   void().
 check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 	% Normally useless, as called by the module itself:
@@ -838,9 +845,9 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 	catch
 
-		Reason:ErrorTerm ->
+		Reason:ErrorTerm:Stacktrace ->
 			trigger_error( Reason, ErrorTerm, Classname,
-						   ConstructionParameters )
+						   ConstructionParameters, Stacktrace )
 
 	end.
 
@@ -859,9 +866,9 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 	catch
 
-		Reason:ErrorTerm ->
+		Reason:ErrorTerm:Stacktrace ->
 			trigger_error( Reason, ErrorTerm, Classname,
-						   ConstructionParameters )
+						   ConstructionParameters, Stacktrace )
 
 	end,
 
@@ -943,9 +950,9 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 
 	catch
 
-		Reason:ErrorTerm ->
+		Reason:ErrorTerm:Stacktrace ->
 			trigger_error( Reason, ErrorTerm, Classname,
-						   ConstructionParameters )
+						   ConstructionParameters, Stacktrace )
 
 	end.
 
@@ -967,9 +974,9 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 
 	catch
 
-		Reason:ErrorTerm ->
+		Reason:ErrorTerm:Stacktrace ->
 			trigger_error( Reason, ErrorTerm, Classname,
-						   ConstructionParameters )
+						   ConstructionParameters, Stacktrace )
 
 	end,
 
@@ -1184,8 +1191,9 @@ retrieve_virtual_table( Classname ) ->
 % (helper)
 %
 -spec trigger_error( basic_utils:exception_class(), term(), classname(),
-					 [ method_arguments() ] ) -> no_return().
-trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters ) ->
+		 [ method_arguments() ], code_utils:stack_trace() ) -> no_return().
+trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
+			   Stacktrace ) ->
 
 	% Construction failed:
 	% (error term would often be unreadable with ~p)
@@ -1198,7 +1206,8 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters ) ->
 			   " - stack trace was (latest calls first):~n~s~n"
 			   " - for construction parameters:~n  ~p~n",
 			   [ self(), Classname, Arity, Reason, ErrorTerm,
-				 code_utils:interpret_stacktrace(), ConstructionParameters ] ),
+				 code_utils:interpret_stacktrace( Stacktrace ),
+				 ConstructionParameters ] ),
 
 	throw( { wooper_constructor_failed, self(), Classname, Arity,
 			 ConstructionParameters, ErrorTerm } ).
@@ -1347,7 +1356,7 @@ instance_to_string( State ) ->
 %
 % This is not a method.
 %
--spec display_state( wooper:state() ) -> basic_utils:void().
+-spec display_state( wooper:state() ) -> void().
 display_state( State ) ->
 	error_logger:info_msg( "~s~n", [ state_to_string( State ) ] ).
 
@@ -1357,7 +1366,7 @@ display_state( State ) ->
 %
 % This is not a method.
 %
--spec display_virtual_table( wooper:state() ) -> basic_utils:void().
+-spec display_virtual_table( wooper:state() ) -> void().
 display_virtual_table( State ) ->
 	error_logger:info_msg( "~s~n", [ virtual_table_to_string( State ) ] ).
 
@@ -1366,7 +1375,7 @@ display_virtual_table( State ) ->
 %
 % This is not a method.
 %
--spec display_instance( wooper:state() ) -> basic_utils:void().
+-spec display_instance( wooper:state() ) -> void().
 display_instance( State ) ->
 	error_logger:info_msg( "~s~n", [ instance_to_string( State ) ] ).
 
@@ -1390,7 +1399,7 @@ get_all_attributes( State ) ->
 % Reports (on a best-effort basis) the specified information to the user,
 % typically by displaying an information report on the console.
 %
--spec log_info( string() ) -> basic_utils:void().
+-spec log_info( string() ) -> void().
 log_info( String ) ->
 	error_logger:info_msg( String ++ "\n" ).
 
@@ -1398,8 +1407,7 @@ log_info( String ) ->
 % Reports (on a best-effort basis) the specified information to the user,
 % typically by displaying an information report on the console.
 %
--spec log_info( text_utils:format_string(), [ term() ] ) ->
-					  basic_utils:void().
+-spec log_info( text_utils:format_string(), [ term() ] ) -> void().
 log_info( FormatString, ValueList ) ->
 	error_logger:info_msg( FormatString ++ "\n", ValueList ).
 
@@ -1408,7 +1416,7 @@ log_info( FormatString, ValueList ) ->
 % Reports (on a best-effort basis) the specified warning to the user,
 % typically by displaying a warning report on the console.
 %
--spec log_warning( string() ) -> basic_utils:void().
+-spec log_warning( string() ) -> void().
 log_warning( String ) ->
 	error_logger:warning_msg( String ++ "\n" ),
 
@@ -1419,8 +1427,7 @@ log_warning( String ) ->
 % Reports (on a best-effort basis) the specified warning to the user,
 % typically by displaying a warning report on the console.
 %
--spec log_warning( text_utils:format_string(), [ term() ] ) ->
-					  basic_utils:void().
+-spec log_warning( text_utils:format_string(), [ term() ] ) -> void().
 log_warning( FormatString, ValueList ) ->
 	error_logger:warning_msg( FormatString ++ "\n", ValueList ),
 
@@ -1433,7 +1440,7 @@ log_warning( FormatString, ValueList ) ->
 % notification) the specified error to the user, typically by displaying an
 % error report on the console (non-halting function, ex: no exception thrown).
 %
--spec log_error( string() ) -> basic_utils:void().
+-spec log_error( string() ) -> void().
 log_error( Message ) ->
 
 	error_logger:error_msg( Message ++ "\n" ),
@@ -1447,8 +1454,7 @@ log_error( Message ) ->
 % notification) the specified error to the user, typically by displaying an
 % error report on the console (non-halting function, ex: no exception thrown).
 %
--spec log_error( text_utils:format_string(), [ term() ] ) ->
-						   basic_utils:void().
+-spec log_error( text_utils:format_string(), [ term() ] ) -> void().
 log_error( FormatString, ValueList ) ->
 
 	error_logger:error_msg( FormatString
@@ -1467,7 +1473,7 @@ log_error( FormatString, ValueList ) ->
 % report on the console (non-halting function, ex: no exception thrown).
 %
 -spec log_error( text_utils:format_string(), [ term() ],
-		 wooper:state() | basic_utils:module_name() ) -> basic_utils:void().
+				 wooper:state() | basic_utils:module_name() ) -> void().
 log_error( FormatString, ValueList, State )
   when is_record( State, state_holder ) ->
 	io:format( "~n", [] ),
@@ -1498,9 +1504,10 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 % the caller, and have the process instance exit.
 %
 -spec on_failed_request( request_name(), method_arguments(), pid(),
-						 atom(), term(), wooper:state() ) -> no_return().
+						 basic_utils:error_type(), code_utils:stack_trace(),
+						 wooper:state() ) -> no_return().
 on_failed_request( RequestAtom, ArgumentList, CallerPid, Reason, ErrorTerm,
-				   State ) ->
+				   Stacktrace, State ) ->
 
 	Arity = length( ArgumentList ) + 1,
 
@@ -1512,7 +1519,8 @@ on_failed_request( RequestAtom, ArgumentList, CallerPid, Reason, ErrorTerm,
 			   " - caller being process ~w"
 			   " - for request parameters:~n  ~p~n",
 			   [ ModulePrefix, RequestAtom, Arity, Reason, ErrorTerm,
-				  code_utils:interpret_stacktrace(), CallerPid, ArgumentList ],
+				 code_utils:interpret_stacktrace( Stacktrace ), CallerPid,
+				 ArgumentList ],
 			   State ),
 
 	% ArgumentList and actual method module not propagated back to the caller:
@@ -1532,9 +1540,11 @@ on_failed_request( RequestAtom, ArgumentList, CallerPid, Reason, ErrorTerm,
 % Called by WOOPER whenever a oneway fails, to report it on the console and to
 % the caller, and have the process instance exit.
 %
--spec on_failed_oneway( oneway_name(), method_arguments(), atom(), term(),
+-spec on_failed_oneway( oneway_name(), method_arguments(),
+						basic_utils:error_type(), code_utils:stack_trace(),
 						wooper:state() ) -> no_return().
-on_failed_oneway( OnewayAtom, ArgumentList, Reason, ErrorTerm, State ) ->
+on_failed_oneway( OnewayAtom, ArgumentList, Reason, ErrorTerm, Stacktrace,
+				  State ) ->
 
 	Arity = length( ArgumentList ) + 1,
 
@@ -1545,7 +1555,8 @@ on_failed_oneway( OnewayAtom, ArgumentList, Reason, ErrorTerm, State ) ->
 			   " - stack trace was (latest calls first):~n~s~n"
 			   " - for oneway parameters:~n  ~p~n",
 			   [ ModulePrefix, OnewayAtom, Arity, Reason, ErrorTerm,
-				  code_utils:interpret_stacktrace(), ArgumentList ], State ),
+				  code_utils:interpret_stacktrace( Stacktrace ),
+				 ArgumentList ], State ),
 
 			% No caller to notify, for oneways.
 
@@ -1848,7 +1859,7 @@ delete_pid_from( [ Attr | T ], DeleteMessage, PreTestLiveliness, State,
 %
 % Will wait forever the effective termination of the specified instance.
 %
--spec delete_synchronously_instance( instance_pid() ) -> basic_utils:void().
+-spec delete_synchronously_instance( instance_pid() ) -> void().
 delete_synchronously_instance( InstancePid ) ->
 
 	%io:format( "delete_synchronously_instance for ~p.~n", [ InstancePid ] ),
@@ -1871,8 +1882,7 @@ delete_synchronously_instance( InstancePid ) ->
 %
 % (exported helper)
 %
--spec delete_synchronously_instances( [ instance_pid() ] ) ->
-											basic_utils:void().
+-spec delete_synchronously_instances( [ instance_pid() ] ) -> void().
 delete_synchronously_instances( InstanceList ) ->
 
 	%io:format( "delete_synchronously_instances for ~p.~n", [ InstanceList ] ),
@@ -1963,8 +1973,7 @@ examine_waited_deletions( _WaitedPids=[ Pid | T ], Acc ) ->
 %
 % (exported helper)
 %
--spec safe_delete_synchronously_instances( [ instance_pid() ] ) ->
-												 basic_utils:void().
+-spec safe_delete_synchronously_instances( [ instance_pid() ] ) -> void().
 safe_delete_synchronously_instances( InstanceList ) ->
 
 	% Testing for liveliness allows to avoid synchronous time-outs:

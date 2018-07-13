@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2017 Olivier Boudeville
+% Copyright (C) 2003-2018 Olivier Boudeville
 %
 % This file is part of the WOOPER library.
 %
@@ -22,7 +22,7 @@
 % If not, see <http://www.gnu.org/licenses/> and
 % <http://www.mozilla.org/MPL/>.
 %
-% Author: Olivier Boudeville (olivier.boudeville@esperide.com)
+% Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
 
 % Modular WOOPER header gathering all direct primitives for method execution,
@@ -519,11 +519,11 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 
 	catch
 
-		Reason:ErrorTerm ->
+		Reason:ErrorTerm:Stacktrace ->
 
 			% Reports it (to console and caller), and exits:
 			wooper:on_failed_request( RequestAtom, ArgumentList, CallerPid,
-									  Reason, ErrorTerm, State )
+									  Reason, ErrorTerm, Stacktrace, State )
 
 	end,
 
@@ -551,11 +551,11 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 
 	catch
 
-		Reason:ErrorTerm ->
+		Reason:ErrorTerm:StackTrace ->
 
 			% Reports it (to console and caller), and exits:
 			wooper:on_failed_request( RequestAtom, ArgumentList, CallerPid,
-									  Reason, ErrorTerm, State )
+									  Reason, ErrorTerm, StackTrace, State )
 
 	end,
 
@@ -800,11 +800,11 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 
 	catch
 
-		Reason:ErrorTerm ->
+		Reason:ErrorTerm:StackTrace ->
 
 			% Reports it to console and exits:
 			wooper:on_failed_oneway( OnewayAtom, ArgumentList, Reason,
-									 ErrorTerm, State )
+									 ErrorTerm, StackTrace, State )
 
 	end,
 
@@ -834,11 +834,11 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 	 catch
 
 
-		 Reason:ErrorTerm ->
+		 Reason:ErrorTerm:Stacktrace ->
 
 			% Reports it to console and exits:
 			 wooper:on_failed_oneway( OnewayAtom, ArgumentList, Reason,
-									  ErrorTerm, State )
+									  ErrorTerm, Stacktrace, State )
 
 	end,
 

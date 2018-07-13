@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2017 Olivier Boudeville
+% Copyright (C) 2003-2018 Olivier Boudeville
 %
 % This file is part of the WOOPER library.
 %
@@ -22,7 +22,7 @@
 % If not, see <http://www.gnu.org/licenses/> and
 % <http://www.mozilla.org/MPL/>.
 %
-% Author: Olivier Boudeville (olivier.boudeville@esperide.com)
+% Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
 
 % Modular WOOPER header gathering all general-purposes defines.
@@ -96,11 +96,9 @@
 %
 -record( state_holder, {
 
-		   virtual_table    :: 'undefined' |
-							   ?wooper_table_type:?wooper_table_type(),
+		   virtual_table :: maybe( ?wooper_table_type:?wooper_table_type() ),
 
-		   attribute_table  :: 'undefined' |
-							   ?wooper_table_type:?wooper_table_type(),
+		   attribute_table :: maybe( ?wooper_table_type:?wooper_table_type() ),
 
 		   % Only means we know to access the actual class name:
 		   %
@@ -111,7 +109,7 @@
 		   %
 		   actual_class :: basic_utils:module_name(),
 
-		   request_sender :: basic_utils:maybe( pid() )
+		   request_sender :: maybe( pid() )
 
 }).
 

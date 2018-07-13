@@ -5,10 +5,10 @@ WOOPER_TOP = .
 		all register-version-in-header register-wooper list-beam-dirs \
 		add-prerequisite-plts link-plt                                \
 		send-release release release-zip release-bz2 release-xz       \
-		prepare-release clean-release clean-archive
+		prepare-release clean-release clean-archive info-compile
 
 
-MODULES_DIRS = src doc examples
+MODULES_DIRS = src doc tests examples
 
 
 # To override the 'all' default target with a parallel version:
@@ -32,7 +32,7 @@ help-intro:
 
 
 help-wooper:
-	@cd $(COMMON_TOP) && $(MAKE) -s help-common
+	@cd $(MYRIAD_TOP) && $(MAKE) -s help-myriad
 
 
 
@@ -95,7 +95,7 @@ release-xz: prepare-release
 # actual target file, otherwise tar would include dead links in releases.
 prepare-release: clean clean-release
 	@echo "     Preparing release archive for WOOPER $(WOOPER_VERSION)"
-	@cd .. && mkdir -p $(WOOPER_RELEASE_BASE) && /bin/cp -L -r common wooper $(WOOPER_RELEASE_BASE)
+	@cd .. && mkdir -p $(WOOPER_RELEASE_BASE) && /bin/cp -L -r myriad wooper $(WOOPER_RELEASE_BASE)
 	@cd ../$(WOOPER_RELEASE_BASE) && mv wooper/top-GNUmakefile-for-releases GNUmakefile
 	-@cd .. && find $(WOOPER_RELEASE_BASE) -type d -a -name '.svn' -exec /bin/rm -rf '{}' ';' 2>/dev/null
 	-@cd .. && find $(WOOPER_RELEASE_BASE) -type d -a -name '.git' -exec /bin/rm -rf '{}' ';' 2>/dev/null
@@ -112,6 +112,20 @@ clean-release:
 
 clean-archive:
 	-@cd .. && /bin/rm -f $(WOOPER_RELEASES)
+
+
+info-compile:
+	@echo "ERLANG_COMPILER_BASE_OPT = $(ERLANG_COMPILER_BASE_OPT)"
+	@echo "BEAM_DIRS = $(BEAM_DIRS)"
+	@echo "INC = $(INC)"
+	@echo "ERLANG_COMPILER_EXEC_TARGET_OPT = $(ERLANG_COMPILER_EXEC_TARGET_OPT)"
+	@echo "ERLANG_COMPILER_DEBUG_OPT = $(ERLANG_COMPILER_DEBUG_OPT)"
+	@echo "ERLANG_COMPILER_NATIVE_COMPILATION_OPT = $(ERLANG_COMPILER_NATIVE_COMPILATION_OPT)"
+	@echo "ERLANG_COMPILER_WARNING_OPT = $(ERLANG_COMPILER_WARNING_OPT)"
+	@echo "ERLANG_COMPILER_OPT_BASE = $(ERLANG_COMPILER_OPT_BASE)"
+	@echo "ERLANG_COMPILER_OPT = $(ERLANG_COMPILER_OPT)"
+	@echo "OVERALL_PZ_OPT = $(OVERALL_PZ_OPT)"
+	@echo "ERLANG_COMPILER_PARSE_TRANSFORM_OPT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT)"
 
 
 include $(WOOPER_TOP)/GNUmakesettings.inc

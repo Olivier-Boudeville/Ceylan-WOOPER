@@ -6,7 +6,8 @@
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 %
--module(class_Creature).
+-module(class_SimplestClass).
+%-classname(class_SimplestClass).
 
 
 % Determines what are the mother classes of this class (if any):
