@@ -67,6 +67,9 @@
 % this value thanks to a call to wooper:static_return/1
 
 
+% We consider here that the ?table type (defined in meta_utils.hrl) is actually
+% map_hashtable, and thus can be designated as just table.
+
 
 % Regarding the WOOPER parse transform.
 
@@ -91,6 +94,47 @@
 % '-wooper_superclasses( [ class_A, class_B ] ).
 
 
+% Regarding function/method exports:
+%
+% We could have preferred that methods are auto-exported (defining them would
+% have sufficed, with no particular export declaration), yet:
+%
+% - a pseudo-export line (i.e. '-export([ setColor/2, ...]).') would have to be
+% generated and placed
+%
+% - knowing that we want -spec lines (even in the form '-oneway setColor(...,
+% ... ) -> ...') to remain optional, the kind of a method
+% (oneway/request/static) would have to be inferred at compilation-time, which
+% is not easy (ex: scanning for wooper:oneway_return/1 through all "leaves" of
+% the call graph); moreover, all standard functions could be static ones, and
+% thus would be exported, which is not desirable
+%
+% As a result, we preferred relying on explicit exports:
+%
+% - '-export([ f/1, g/0 ])' for simple functions, as usual
+% - '-oneway_export([ setColor/2, resetFoo/1 ]) for oneway methods
+% - '-request_export([ getColor/1, isFooReset/1 ]) for request methods
+% - '-static_export([ get_mean_count/1, get_default_name/0 ]) for static methods
+%
+% As for constructor(s) and destructor (if any), there are auto-exported (i.e.
+% all construct/N and destruct/1 functions).
+
+
+% Regarding function/method type specifications:
+%
+% - example for a (plain) function:
+%       -spec f( float() ) -> integer().
+
+% - example for a oneway method:
+%       -oneway_spec setColor( wooper:state(), color() ) -> void().
+%
+% - example for a request method:
+%       -request_spec getColor( wooper:state() ) -> color().
+%
+% - example for a static method:
+%       -static_spec get_mean_count( foo() ) -> count().
+
+
 % To better report errors
 -define( origin_layer, "WOOPER" ).
 
@@ -99,14 +143,9 @@
 -type compose_pair() :: { ast_info:function_table(), class_info() }.
 
 
-% Local shorthands:
-
--type ast() :: ast_base:ast().
--type module_info() :: ast_info:module_info().
-
 
 -export([ run_standalone/1, parse_transform/2, apply_wooper_transform/1,
-		  generate_ast/1, class_info_to_string/1 ]).
+		  generate_ast_from/1, class_info_to_string/1 ]).
 
 
 
@@ -124,11 +163,21 @@
 % For class_info, attribute_info, etc.:
 -include("wooper_info.hrl").
 
--type attribute_info() :: #attribute_info{}.
+
+
+
+% Local shorthands:
+
+-type ast() :: ast_base:ast().
+-type located_form() :: ast_info:located_form().
+-type module_info() :: ast_info:module_info().
+-type attribute_info() :: wooper_info:attribute_info().
+-type class_info() :: wooper_info:class_info().
+
 
 
 % For debugging:
--export([ get_class_info/1, check_class_info/1 ]).
+-export([ get_class_info_from/1, check_class_info/1 ]).
 
 
 % tmp:
@@ -136,12 +185,9 @@
 		 get_new_variation_names/0]).
 
 
--type class_info() :: #class_info{}.
-
-
 
 % Runs the WOOPER parse transform defined here in a standalone way (i.e. without
-% being triggered by the usual, integrated compile process).
+% being triggered by the usual, integrated compilation process).
 %
 % This allows to benefit from all compilation error and warning messages,
 % whereas they are seldom available from a code directly run as a parse
@@ -169,7 +215,7 @@ parse_transform( InputAST, _Options ) ->
 
 	%trace_utils:trace_fmt( "WOOPER input AST:~n~p~n", [ InputAST ] ),
 
-	%ast_utils:write_ast_to_file( InputAST, "InputAST.txt" ),
+	%ast_utils:write_ast_to_file( InputAST, "WOOPER-input-AST.txt" ),
 
 	% In the context of this direct parse transform, the class_info is of no
 	% use afterwards and thus can be dropped:
@@ -177,6 +223,8 @@ parse_transform( InputAST, _Options ) ->
 	{ WOOPERAST, _ClassInfo } = apply_wooper_transform( InputAST ),
 
 	%trace_utils:trace_fmt( "WOOPER output AST:~n~p~n", [ WOOPERAST ] ),
+
+	%ast_utils:write_ast_to_file( WOOPERAST, "WOOPER-output-AST.txt" ),
 
 	WOOPERAST.
 
@@ -187,64 +235,73 @@ parse_transform( InputAST, _Options ) ->
 -spec apply_wooper_transform( ast() ) -> { ast(), class_info() }.
 apply_wooper_transform( InputAST ) ->
 
-	%trace_utils:debug_fmt( "  (applying parse transform '~p')~n",
-	%  [ ?MODULE ] ),
+	%trace_utils:debug_fmt( "  (applying parse transform '~p')", [ ?MODULE ] ),
+
+	%trace_utils:debug_fmt( "~n## INPUT ####################################" ),
+	%trace_utils:debug_fmt( "WOOPER input AST:~n~p~n~n", [ InputAST ] ),
+
+	%ast_utils:write_ast_to_file( InputAST, "WOOPER-input-AST.txt" ),
+
+	% This allows to compare input and output ASTs more easily:
+	ast_utils:write_ast_to_file( lists:sort( InputAST ),
+								 "WOOPER-input-AST-sorted.txt" ),
+
 
 	% First preprocesses the AST based on the Myriad parse transform, in order
 	% to benefit from its corresponding module_info record:
+	% (no Myriad-level transformation performed yet)
 	%
-	{ MyriadAST, ModuleInfo } = myriad_parse_transform:apply_myriad_transform(
-								  InputAST ),
+	ModuleInfo = ast_info:extract_module_info_from_ast( InputAST ),
 
-	% Then promote this Myriad-level  information into a WOOPER one:
-	ClassInfo = get_class_info( ModuleInfo ),
-	%ClassInfo = ok,
+	io:format( "Module information as obtained from Myriad: ~s",
+			   [ ast_info:module_info_to_string( ModuleInfo ) ] ),
 
-	%trace_utils:debug_fmt( "~s", [ class_info_to_string( ClassInfo ) ] ),
+	% Then promote this Myriad-level information into a WOOPER one:
+	ClassInfo = generate_class_info_from( ModuleInfo ),
 
-	%LastLine = Info#class_info.last_line,
+	% Finally perform WOOPER-specific transformation:
+	NewClassInfo = transform_class_info( ClassInfo ),
 
-	%ExpForm = meta_utils:form_to_ast( io_lib:format( "-export([ f/0 ]).", [] ),
-	%								  LastLine + 1 ),
+	%trace_utils:debug_fmt( "~s", [ class_info_to_string( NewClassInfo ) ] ),
 
-	%FunForm = meta_utils:form_to_ast( io_lib:format( "f() -> 4.", [] ),
-	%								  LastLine + 1 ),
+	% Then translates back this class information in module information:
+	NewModuleInfo = generate_module_info_from( NewClassInfo ),
 
-	%NewRevAST = [ { eof, LastLine + 1 }, FunForm | RevAST ],
+	% And finally obtain the corresponding updated AST thanks to Myriad:
+	TransformedModuleInfo = myriad_parse_transform:transform_module_info(
+							  NewModuleInfo ),
 
-	%ExpForm = undefined,
+	OutputAST = ast_info:recompose_ast_from_module_info(
+				  TransformedModuleInfo ),
 
-	%NewAST =  [ ExpForm | lists:reverse( RevAST ) ],
+	%trace_utils:debug_fmt( "~n~nWOOPER output AST:~n~p~n", [ OutputAST ] ),
 
-	%OutputAST = generate_ast( Info ),
-	OutputAST = MyriadAST,
+	%OutputASTFilename = text_utils:format(
+	%           "WOOPER-output-AST-for-module-~s.txt",
+	%			[ element( 1, TransformedModuleInfo#module_info.module ) ] ),
 
-	{ OutputAST, ClassInfo }.
+	%ast_utils:write_ast_to_file( OutputAST, OutputASTFilename ),
+
+	%ast_utils:write_ast_to_file( lists:sort( OutputAST ),
+	%							 "WOOPER-output-AST-sorted.txt" ),
+
+	{ OutputAST, NewClassInfo }.
 
 
 
 
 % Returns the class information that were gathered in the module ones.
 %
--spec get_class_info( module_info() ) -> class_info().
-get_class_info( ModuleInfo ) ->
-
-	EmptyTable = table:new(),
-
-	InitClassInfo = #class_info{ function_exports=EmptyTable,
-								 constructors=EmptyTable,
-								 destructor=undefined,
-								 requests=EmptyTable,
-								 oneways=EmptyTable,
-								 statics=EmptyTable,
-								 functions=EmptyTable },
+% (reciprocal of generate_module_info_from/1)
+%
+-spec generate_class_info_from( module_info() ) -> class_info().
+generate_class_info_from( ModuleInfo ) ->
 
 	% We handle there only WOOPER-specific needs:
 
-	ExtractedClassInfo = recompose_module_info_for_class( ModuleInfo,
-														  InitClassInfo ),
+	ExtractedClassInfo = create_class_info_from( ModuleInfo ),
 
-	% to re-add: check_class_info( ExtractedClassInfo ),
+	check_class_info( ExtractedClassInfo ),
 
 	ExtractedClassInfo.
 
@@ -255,14 +312,66 @@ get_class_info( ModuleInfo ) ->
 % The goal is to pick the relevant WOOPER-level information (from the module
 % info) and populate from them the specified class information.
 %
--spec recompose_module_info_for_class( module_info(), class_info() ) ->
-											 class_info().
-recompose_module_info_for_class(
+-spec create_class_info_from( module_info() ) -> class_info().
+create_class_info_from(
+  % We basically reuse (as they are or after relevant transformations) all
+  % information gathered from the module:
   _ModuleInfo=#module_info{ module=ModuleEntry,
+							compilation_options=CompileOptTable,
+							compilation_option_defs=CompileOptDefs,
 							parse_attributes=ParseAttrTable,
+							remote_spec_defs=RemoteSpecDefs,
+							includes=Includes,
+							include_defs=IncludeDefs,
+							type_exports=TypeExportTable,
+							types=TypeTable,
+							records=RecordTable,
+							function_imports=FunctionImportTable,
+							function_imports_defs=FunctionImportDefs,
+							function_exports=FunctionExportTable,
 							functions=FunctionTable,
-							last_line=LastLine },
-  ClassInfo ) ->
+							optional_callbacks_defs=OptCallbacksDefs,
+							last_line=LastLine,
+							errors=Errors,
+							unhandled_forms=UnhandledForms } ) ->
+
+	BlankClassInfo = wooper_info:init_class_info(),
+
+	% For a starting basis, let's init first all the fields we do not plan to
+	% update:
+	%
+	% (commented: the fields updated afterwards)
+	%
+	VerbatimClassInfo = BlankClassInfo#class_info{
+						  %class
+						  %superclasses
+						  %attributes
+						  %inherited_attributes
+						  compilation_options=CompileOptTable,
+						  compilation_option_defs=CompileOptDefs,
+						  parse_attributes=ParseAttrTable,
+						  remote_spec_defs=RemoteSpecDefs,
+						  includes=Includes,
+						  include_defs=IncludeDefs,
+						  type_exports=TypeExportTable,
+						  types=TypeTable,
+						  records=RecordTable,
+						  function_imports=FunctionImportTable,
+						  function_imports_defs=FunctionImportDefs,
+						  function_exports=FunctionExportTable,
+						  functions=FunctionTable,
+						  %constructors
+						  %destructor
+						  %request_exports
+						  %requests
+						  %oneway_exports
+						  %oneways
+						  %static_exports
+						  %statics
+						  optional_callbacks_defs=OptCallbacksDefs,
+						  last_line=LastLine,
+						  errors=Errors,
+						  unhandled_forms=UnhandledForms },
 
 	ClassInClassInfo = manage_classname( ModuleEntry, ClassInfo ),
 
@@ -283,11 +392,10 @@ recompose_module_info_for_class(
 	_FinalPair = { FinalFunctionTable, FinalClassInfo } = DestructPair,
 
 	ReturnedClassInfo = FinalClassInfo#class_info{
-						  functions=FinalFunctionTable,
-						  last_line=LastLine },
+						  functions=FinalFunctionTable },
 
-	%trace_utils:debug_fmt( "Recomposed class information: ~s",
-	%					   [ class_info_to_string( ReturnedClassInfo ) ] ),
+	trace_utils:debug_fmt( "Recomposed class information: ~s",
+						   [ class_info_to_string( ReturnedClassInfo ) ] ),
 
 	ReturnedClassInfo.
 
@@ -318,10 +426,11 @@ manage_superclasses( ParseAttrTable, ClassInfo ) ->
 		% A single declaration expected:
 		{ value, [ E={ SuperclassList, _SuperclassDef } ] } ->
 			[ check_classname( Class ) || Class <- SuperclassList ],
-			NewParseAttrTable = table:removeEntry( wooper_superclasses,
-												   ParseAttrTable ),
+			ShrunkParseAttrTable = table:removeEntry( wooper_superclasses,
+													  ParseAttrTable ),
+			% Any prior value superseded, no merging here:
 			ClassInfo#class_info{ superclasses=E,
-								  parse_attributes=NewParseAttrTable };
+								  parse_attributes=ShrunkParseAttrTable };
 
 		% Cannot be empty, hence more than one declaration:
 		{ value, L } ->
@@ -329,12 +438,8 @@ manage_superclasses( ParseAttrTable, ClassInfo ) ->
 
 		key_not_found ->
 
-			%trace_utils:warning( "TODO: superclasses" ),
-			% to remove:
-			NewParseAttrTable = table:removeEntry( wooper_superclasses,
-												   ParseAttrTable ),
-			ClassInfo#class_info{ superclasses={ [ toto ], undefined_def },
-								  parse_attributes=NewParseAttrTable }
+			%trace_utils:warning( "no superclass specified" ),
+			ClassInfo#class_info{ superclasses={ [], undefined } }
 
 			%raise_error( superclasses_not_defined )
 
@@ -677,7 +782,7 @@ add_request( Name, Arity, Form, RequestTable ) ->
 
 		% Here a definition was already set:
 		_ ->
-			raise_error( { multiple_definition_for_request, RequestId } )
+			raise_error( { multiple_definitions_for_request, RequestId } )
 
 	end,
 
@@ -710,7 +815,7 @@ add_oneway( Name, Arity, Form, OnewayTable ) ->
 
 		% Here a definition was already set:
 		_ ->
-			raise_error( { multiple_definition_for_oneway, OnewayId } )
+			raise_error( { multiple_definitions_for_oneway, OnewayId } )
 
 	end,
 
@@ -743,7 +848,7 @@ add_static( Name, Arity, Form, StaticTable ) ->
 
 		% Here a definition was already set:
 		_ ->
-			raise_error( { multiple_definition_for_static, StaticId } )
+			raise_error( { multiple_definitions_for_static, StaticId } )
 
 	end,
 
@@ -770,43 +875,21 @@ check_classname( Other ) ->
 
 
 
-
-% Returns a full AST from specified class information.
+% Returns the (located) forms that correspond to known (class-level) attributes.
 %
-generate_ast( #class_info{
+-spec get_attribute_forms( wooper_info:attribute_table() ) ->
+								 [ located_form() ].
+get_attribute_forms( _AttributeTable ) ->
 
-				 class={ _Class, ClassLocDef },
-				 superclasses={ _Superclasses, SuperclassesLocDef },
-				 %superclass_def=SuperclassDef,
-				 %compilation_option_defs=CompileOptDefs,
-				 %parse_attributes=ParseAttributes,
-				 %includes=Includes,
-				 %include_defs=IncludeDefs,
-				 %type_definitions=TypeDefs,
-				 %type_definition_defs=TypeDefDefs
-				 type_exports=_TypeExports,
-				 %type_export_defs=TypeExportDefs,
-				 function_exports=_FunctionExports,
-				 class_specific_attributes=_ClassSpecificAttributes,
-				 inherited_attributes=_InheritedAttributes,
-				 constructors=_Constructors,
-				 destructor=_Destructor,
-				 requests=_Requests,
-				 oneways=_Oneways,
-				 statics=_Statics,
-				 functions=_Functions,
-				 last_line=LastLine } ) ->
+	% Currently not managed (no consequence of class-level attribute declaration
+	% onto the resulting AST:
+	[].
 
-	% Let's start by writing the module declaration; nothing found in erl_syntax
-	% for that, but rather than doing it by hand we can reuse it directly:
-	ModuleForm = [ ClassLocDef, SuperclassesLocDef ],
+	% The key (attribute name) is duplicated in the attribute_info value:
+	% ... = table:values( AttributeTable ),
 
 
-	NewLastLine = LastLine,
 
-	FinalForm = [ NewLastLine | ModuleForm ],
-
-	lists:reverse( FinalForm ).
 
 
 
@@ -984,6 +1067,129 @@ get_new_variation_names() ->
 
 
 
+% Transforms (at the WOOPER level) specified class information.
+%
+-spec transform_class_info( class_info() ) -> class_info().
+transform_class_info( ClassInfo ) ->
+	ClassInfo.
+
+
+
+% Generates back (Myriad-level) module information from specified class
+% information.
+%
+% (reciprocal of generate_class_info_from/1)
+%
+-spec generate_module_info_from( class_info() ) -> module_info().
+generate_module_info_from( #class_info{
+				 class=ClassEntry,
+				 superclasses={ _Superclasses, MaybeSuperclassesLocDef },
+
+				 attributes=AttributeTable,
+
+				 % No impact onto the class-related module itself:
+				 inherited_attributes=_InheritedAttributeTable,
+
+				 compilation_options=CompileOptTable,
+				 compilation_option_defs=CompileOptDefs,
+
+				 parse_attributes=ParseAttrTable,
+
+				 remote_spec_defs=RemoteSpecDefs,
+
+				 includes=Includes,
+				 include_defs=IncludeDefs,
+
+				 type_exports=TypeExportTable,
+				 types=TypeTable,
+
+				 records=RecordTable,
+
+				 function_imports=FunctionImportTable,
+				 function_imports_defs=FunctionImportDefs,
+
+				 function_exports=FunctionExportTable,
+				 functions=_Functions,
+
+				 constructors=_ConstructorTable,
+				 destructor=_Destructor,
+
+				 request_exports=_RequestExportTable,
+				 requests=_RequestTable,
+
+				 oneway_exports=_OnewayExportTable,
+				 oneways=_OnewayTable,
+
+				 static_exports=_StaticExportTable,
+				 statics=_StaticTable,
+
+				 optional_callbacks_defs=OptCallbackDefs,
+
+				 last_line=LastLine,
+
+				 errors=Errors,
+
+				 unhandled_forms=UnhandledForm } ) ->
+
+	% Adds back the relevant parse attributes that had been interpreted (even
+	% though they might not be so useful then):
+	%
+	FullParseAttrTable = gather_parse_attributes( ParseAttrTable,
+									  MaybeSuperclassesLocDef, AttributeTable ),
+
+	% Directly returned (many fields can be copied verbatim):
+	#module_info{
+
+		% Untouched:
+		module=ClassEntry,
+		compilation_options=CompileOpts,
+		compilation_option_defs=CompileOptDefs,
+
+		parse_attributes=FullParseAttrTable,
+
+		% Untouched:
+		remote_spec_defs=RemoteSpecDefs,
+		includes=Includes,
+		include_defs=IncludeDefs,
+		type_exports=TypeExportTable,
+		types=TypeTable,
+		records=Records,
+		function_imports=FunctionImports,
+		function_imports_defs=FunctionImportDefs,
+		function_exports=
+		functions=
+		optional_callbacks_defs=OptCallbackDefs,
+		last_line=LastLine,
+		errors=Errors,
+		unhandled_forms=UnhandledForms }.
+
+
+
+
+% Recreates a complete table of parse attributes, from specified arguments.
+%
+-spec gather_parse_attributes( ast_info:attribute_table(),
+	   maybe( ast_info:located_form() ), wooper_info:attribute_table()  ) ->
+									 ast_info:attribute_table().
+gather_parse_attributes( ParseAttrTable, MaybeSuperclassesLocDef,
+						 _AttributeTable ) ->
+
+	% AttributeTable not yet populated.
+
+	case MaybeSuperclassesLocDef of
+
+		undefined ->
+			ParseAttrTable;
+
+		SuperclassesLocDef ->
+			% V must be a list of {AttrValue,LocForm} pairs:
+			table:addNewEntry( _K=wooper_superclasses,
+							   _V=[ MaybeSuperclassesLocDef ], ParseAttrTable )
+
+	end.
+
+
+
 % Raises a (compile-time, rather ad hoc) error when applying this parse
 % transform, to stop the build on failure and report the actual error.
 %
@@ -1000,114 +1206,3 @@ raise_error( ErrorTerm ) ->
 -spec raise_error( term(), ast_base:form_context() ) -> no_return().
 raise_error( ErrorTerm, Context ) ->
 	ast_utils:raise_error( ErrorTerm, Context, ?origin_layer ).
-
-
-
-
--spec class_info_to_string( class_info() ) -> text_utils:ustring().
-class_info_to_string( #class_info{
-						 class={ Class, ClassLocDef },
-						 superclasses={ Superclasses, SuperclassesLocDef },
-						 compilation_option_defs=CompileOptDefs,
-						 parse_attributes=ParseAttrTable,
-						 includes=Includes,
-						 include_defs=IncludeDefs,
-						 type_definitions=TypeDefs,
-						 type_definition_defs=TypeDefsDefs,
-						 type_exports=TypeExports,
-						 type_export_defs=TypeExportDefs,
-						 function_exports=FunctionExportTable,
-						 class_specific_attributes=ClassAttributes,
-						 inherited_attributes=InheritedAttributes,
-						 constructors=Constructors,
-						 destructor=Destructor,
-						 requests=Requests,
-						 oneways=Oneways,
-						 statics=Statics,
-						 functions=Functions,
-						 last_line=LastLineLocDef } ) ->
-
-	SuperclassStrings = case Superclasses of
-
-		undefined ->
-			[ text_utils:format( "no superclass~n", [] ) ];
-
-		Superclasses ->
-			[
-
-			 text_utils:format( "~B superclasses: ~p~n",
-								[ length( Superclasses ), Superclasses ] ),
-
-			 text_utils:format( "superclasses definition: ~p~n",
-								[ SuperclassesLocDef ] ) ]
-	end,
-
-	ParseAttributes = [ [ { AttrName, AttrValue } || { AttrValue, _AttrLocDef } <- AttrPairs ]
-						|| { AttrName, AttrPairs } <- table:enumerate( ParseAttrTable ) ],
-
-	{ _LocLine, { eof, LastLine } } = LastLineLocDef,
-
-	LastLineString = text_utils:format( "line count: ~B", [ LastLine ] ),
-
-	Infos = [
-
-			  text_utils:format( "class: ~p~n", [ Class ] ),
-			  text_utils:format( "module definition: ~p~n", [ ClassLocDef ] )
-
-			 ] ++ SuperclassStrings ++ [
-
-			  text_utils:format( "~B compile option definitions: ~p~n",
-								 [ length( CompileOptDefs ), CompileOptDefs ] ),
-
-			  text_utils:format( "~B parse attributes: ~p~n",
-								 [ length( ParseAttributes ), ParseAttributes ] ),
-
-			  text_utils:format( "~B includes: ~p~n",
-								 [ length( Includes ), Includes ] ),
-			  text_utils:format( "include definitions: ~p~n", [ IncludeDefs ] ),
-
-			  text_utils:format( "~B type definitions: ~p~n",
-								 [ length( TypeDefs ), TypeDefs ] ),
-
-			  text_utils:format( "type definitions: ~p~n", [ TypeDefsDefs ] ),
-
-			  text_utils:format( "~B type exports: ~p~n",
-								 [ length( TypeExports ), TypeExports ] ),
-
-			  text_utils:format( "type export definitions: ~p~n", [ TypeExportDefs ] ),
-
-			  text_utils:format( "~B function exports~n",
-					 [ table:size( FunctionExportTable ) ] ),
-
-			  text_utils:format( "~B class-specific attributes: ~p~n",
-					 [ length( ClassAttributes ), ClassAttributes ] ),
-
-			  text_utils:format( "~B inherited attributes: ~p~n",
-					 [ length( InheritedAttributes ), InheritedAttributes ] ),
-
-			  text_utils:format( "~B constructors, with arities: ~p~n",
-								 [ table:size( Constructors ),
-								   table:keys( Constructors ) ] ),
-
-			  text_utils:format( "destructor: ~p~n", [ Destructor ] ),
-
-			  text_utils:format( "~B request methods: ~p~n",
-								 [ table:size( Requests ),
-								   table:keys( Requests ) ] ),
-
-			  text_utils:format( "~B oneway methodss: ~p~n",
-								 [ table:size( Oneways ),
-								   table:keys( Oneways ) ] ),
-
-			  text_utils:format( "~B static methods: ~p~n",
-								 [ table:size( Statics ),
-								   table:keys( Statics ) ] ),
-
-			  text_utils:format( "~B plain functions: ~p~n",
-								 [ table:size( Functions ),
-								   table:keys( Functions ) ] ),
-
-			  LastLineString ],
-
-	text_utils:format( "Information about class '~s':~n~s",
-					   [ Class, text_utils:strings_to_string( Infos ) ] ).

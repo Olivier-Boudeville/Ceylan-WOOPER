@@ -11,7 +11,7 @@
 
 % Determines what are the mother classes of this class (if any):
 -define( wooper_superclasses, [ class_Mammal, class_OvoviviparousBeing ] ).
-
+-wooper_superclasses([ class_Mammal, class_OvoviviparousBeing ] ).
 
 % Parameters taken by the constructor ('construct').
 %
@@ -31,6 +31,7 @@
 		 remote_synchronous_new_link/5, remote_synchronisable_new_link/5,
 		 remote_synchronous_timed_new/5, remote_synchronous_timed_new_link/5,
 		 construct/5, destruct/1 ).
+%		 construct/5 ).
 
 
 % Method declarations.
@@ -77,10 +78,10 @@ construct( State, ?wooper_construct_parameters ) ->
 
 
 % This useless destructor overriding was made to silence Dialyzer (which is not
-% able to determine that this function will never be called, as WOOPER performs
-% the appropriate test is made beforehand):
+% able to determine that this function will never be called, as WOOPER handles
+% it at runtime):
 %
--spec destruct( wooper:state() ) -> wooper:state().
+-spec destruct( wooper:state() ) ->  wooper:state().
 destruct( State ) ->
 	State.
 

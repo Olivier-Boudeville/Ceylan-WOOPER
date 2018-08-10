@@ -133,9 +133,6 @@ else
 endif
 
 
-ERLANG_COMPILER_OPT += $(ENABLE_WOOPER_DEBUG_OPT) $(OVERALL_PZ_OPT)
-
-
 ifndef COMPILER_OPT_FOR_WOOPER_CLASSES
 
 	   COMPILER_OPT_FOR_WOOPER_CLASSES =                      \
@@ -186,8 +183,7 @@ endif
 # So that the (compilation of the) WOOPER parse transform can benefit from the
 # Myriad parse transform:
 #
-ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_OPT_BASE) \
-							 $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD)
+ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD)
 
 
 # Variable defined to be re-usable by upper layers, so that compiling their own

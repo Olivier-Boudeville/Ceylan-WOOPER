@@ -5,7 +5,8 @@ WOOPER_TOP = .
 		all register-version-in-header register-wooper list-beam-dirs \
 		add-prerequisite-plts link-plt                                \
 		send-release release release-zip release-bz2 release-xz       \
-		prepare-release clean-release clean-archive info-compile
+		prepare-release clean-release clean-archive                   \
+		info-paths info-compile info-parse-transform
 
 
 MODULES_DIRS = src doc tests examples
@@ -114,6 +115,10 @@ clean-archive:
 	-@cd .. && /bin/rm -f $(WOOPER_RELEASES)
 
 
+info-paths:
+	@echo "BEAM_PATH_OPT = $(BEAM_PATH_OPT)"
+
+
 info-compile:
 	@echo "ERLANG_COMPILER_BASE_OPT = $(ERLANG_COMPILER_BASE_OPT)"
 	@echo "BEAM_DIRS = $(BEAM_DIRS)"
@@ -123,8 +128,14 @@ info-compile:
 	@echo "ERLANG_COMPILER_NATIVE_COMPILATION_OPT = $(ERLANG_COMPILER_NATIVE_COMPILATION_OPT)"
 	@echo "ERLANG_COMPILER_WARNING_OPT = $(ERLANG_COMPILER_WARNING_OPT)"
 	@echo "ERLANG_COMPILER_OPT_BASE = $(ERLANG_COMPILER_OPT_BASE)"
-	@echo "ERLANG_COMPILER_OPT = $(ERLANG_COMPILER_OPT)"
 	@echo "OVERALL_PZ_OPT = $(OVERALL_PZ_OPT)"
+	@echo "ERLANG_COMPILER_OPT_FOR_STANDARD_MODULES = $(ERLANG_COMPILER_OPT_FOR_STANDARD_MODULES)"
+
+
+info-parse-transform:
+	@echo "BOOTSTRAP_MODULES = $(BOOTSTRAP_MODULES)"
+	@echo "ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_OPT_FOR_PT)"
+	@echo "META_BEAM_FILES = $(META_BEAM_FILES)"
 	@echo "ERLANG_COMPILER_PARSE_TRANSFORM_OPT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT)"
 
 

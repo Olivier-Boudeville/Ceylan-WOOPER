@@ -69,8 +69,7 @@
 		  delete_synchronously_any_instance_referenced_in/2,
 		  safe_delete_synchronously_any_instance_referenced_in/2,
 		  delete_synchronously_instance/1, delete_synchronously_instances/1,
-		  safe_delete_synchronously_instances/1
-		]).
+		  safe_delete_synchronously_instances/1 ]).
 
 
 % Infrequently-called functions for state management:
@@ -84,20 +83,17 @@
 -export([ log_info/1, log_info/2,
 		  log_warning/1, log_warning/2,
 		  log_error/1, log_error/2, log_error/3,
-		  on_failed_request/7, on_failed_oneway/6
-		]).
+		  on_failed_request/7, on_failed_oneway/6 ]).
 
 
 -ifdef(wooper_debug).
 
 % State-related helpers (only available in debug mode):
--export([
-		 virtual_table_to_string/1,
-		 instance_to_string/1,
-		 display_state/1,
-		 display_virtual_table/1,
-		 display_instance/1
-		]).
+-export([ virtual_table_to_string/1,
+		  instance_to_string/1,
+		  display_state/1,
+		  display_virtual_table/1,
+		  display_instance/1 ]).
 
 -endif. % wooper_debug
 
@@ -135,8 +131,27 @@
 %
 -type method_name() :: meta_utils:function_name().
 
+
+% Name of a request method:
 -type request_name() :: method_name().
+
+% Name of a oneway method:
 -type oneway_name()  :: method_name().
+
+% Name of a static method:
+-type static_name()  :: method_name().
+
+
+% Arity of a method:
+-type method_arity() :: meta_utils:function_arity().
+
+
+-type method_id() :: { method_name(), method_arity() }.
+
+-type request_id() :: { request_name(), request_arity() }.
+-type oneway_id() :: { oneway_name(), oneway_arity() }.
+-type static_id() :: { static_name(), static_arity() }.
+
 
 
 % A method argument can be any type:
@@ -204,8 +219,11 @@
 
 % We prefer having it prefixed by wooper:
 -export_type([ classname/0,
-			   method_name/0, request_name/0, oneway_name/0,
-			   method_argument/0, method_arguments/0, method_qualifier/0,
+			   method_name/0, request_name/0, oneway_name/0, static_name/0,
+			   method_arity/0,
+			   method_id/0, request_id/0, oneway_id/0, static_id/0,
+			   method_argument/0, method_arguments/0,
+			   method_qualifier/0,
 			   construction_parameters/0,
 			   requests_outcome/0, method_internal_result/0,
 			   request_result/1, request_result/0,

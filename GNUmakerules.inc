@@ -5,6 +5,10 @@
 # modules from Ceylan-Myriad.
 
 
+# Allows any upper layer to override as a whole the WOOPER rules used to compile
+# classes:
+#
+ifndef OVERRIDE_WOOPER_BUILD_RULES
 
 class_%.beam: class_%.erl class_%.hrl class_%_dependencies
 	@echo "		Compiling WOOPER class with header $<"
@@ -36,3 +40,5 @@ class_%.beam: class_%.erl
 #Emakefile:
 #	@echo "     Generating Emakefile"
 #	@echo "{'*',[debug_info,{i,\"$(WOOPER_INC)\"}]}." > Emakefile
+
+endif
