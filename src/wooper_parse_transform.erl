@@ -1,6 +1,6 @@
 % Copyright (C) 2014-2018 Olivier Boudeville
 %
-% This file is part of the WOOPER library.
+% This file is part of the Ceylan-WOOPER library.
 %
 % This library is free software: you can redistribute it and/or modify
 % it under the terms of the GNU Lesser General Public License or
@@ -124,7 +124,7 @@
 %
 % - example for a (plain) function:
 %       -spec f( float() ) -> integer().
-
+%
 % - example for a oneway method:
 %       -oneway_spec setColor( wooper:state(), color() ) -> void().
 %
@@ -135,7 +135,7 @@
 %       -static_spec get_mean_count( foo() ) -> count().
 
 
-% To better report errors
+% To better report errors:
 -define( origin_layer, "WOOPER" ).
 
 
@@ -144,8 +144,9 @@
 
 
 
--export([ run_standalone/1, parse_transform/2, apply_wooper_transform/1,
-		  generate_ast_from/1, class_info_to_string/1 ]).
+-export([ run_standalone/1, run_standalone/2,
+		  parse_transform/2, apply_wooper_transform/1,
+		  generate_class_info_from/1, generate_module_info_from/1 ]).
 
 
 
@@ -171,23 +172,26 @@
 -type ast() :: ast_base:ast().
 -type located_form() :: ast_info:located_form().
 -type module_info() :: ast_info:module_info().
--type attribute_info() :: wooper_info:attribute_info().
+%-type attribute_info() :: wooper_info:attribute_info().
 -type class_info() :: wooper_info:class_info().
-
+-type function_info() :: ast_info:function_info().
+-type marker_table() :: ast_info:section_marker_table().
 
 
 % For debugging:
--export([ get_class_info_from/1, check_class_info/1 ]).
+-export([ check_class_info/1 ]).
 
 
 % tmp:
 -export([add_function/4, add_constructor/3, register_destructor/2 ,add_request/4, add_oneway/4, add_static/4, identify_function/3, infer_function_type/1, infer_fun_type/2,
-		 get_new_variation_names/0]).
+		 get_new_variation_names/0, get_attribute_forms/1
+]).
 
 
 
 % Runs the WOOPER parse transform defined here in a standalone way (i.e. without
-% being triggered by the usual, integrated compilation process).
+% being triggered by the usual, integrated compilation process), with no
+% specific preprocessor option.
 %
 % This allows to benefit from all compilation error and warning messages,
 % whereas they are seldom available from a code directly run as a parse
@@ -196,8 +200,24 @@
 %
 -spec run_standalone( file_utils:file_name() ) -> { ast(), class_info() }.
 run_standalone( FileToTransform ) ->
+	run_standalone( FileToTransform, _PreprocessorOptions=[] ).
 
-	InputAST = ast_utils:erl_to_ast( FileToTransform ),
+
+
+% Runs the WOOPER parse transform defined here in a standalone way (i.e. without
+% being triggered by the usual, integrated compilation process), with specified
+% preprocessor options.
+%
+% This allows to benefit from all compilation error and warning messages,
+% whereas they are seldom available from a code directly run as a parse
+% transform (ex: 'undefined parse transform 'foobar'' as soon as a function or a
+% module is not found).
+%
+-spec run_standalone( file_utils:file_name(),
+			  [ ast_utils:preprocessor_option() ] ) -> { ast(), class_info() }.
+run_standalone( FileToTransform, PreprocessorOptions ) ->
+
+	InputAST = ast_utils:erl_to_ast( FileToTransform, PreprocessorOptions ),
 
 	% Returns { WOOPERAST, ClassInfo }:
 	apply_wooper_transform( InputAST ).
@@ -211,7 +231,6 @@ run_standalone( FileToTransform ) ->
 -spec parse_transform( ast(), list() ) -> ast().
 parse_transform( InputAST, _Options ) ->
 
-	%trace_utils:info_fmt( "(applying parse transform '~p')", [ ?MODULE ] ),
 
 	%trace_utils:trace_fmt( "WOOPER input AST:~n~p~n", [ InputAST ] ),
 
@@ -235,12 +254,12 @@ parse_transform( InputAST, _Options ) ->
 -spec apply_wooper_transform( ast() ) -> { ast(), class_info() }.
 apply_wooper_transform( InputAST ) ->
 
-	%trace_utils:debug_fmt( "  (applying parse transform '~p')", [ ?MODULE ] ),
+	trace_utils:debug_fmt( "  (applying parse transform '~p')", [ ?MODULE ] ),
 
 	%trace_utils:debug_fmt( "~n## INPUT ####################################" ),
 	%trace_utils:debug_fmt( "WOOPER input AST:~n~p~n~n", [ InputAST ] ),
 
-	%ast_utils:write_ast_to_file( InputAST, "WOOPER-input-AST.txt" ),
+	ast_utils:write_ast_to_file( InputAST, "WOOPER-input-AST.txt" ),
 
 	% This allows to compare input and output ASTs more easily:
 	ast_utils:write_ast_to_file( lists:sort( InputAST ),
@@ -251,28 +270,54 @@ apply_wooper_transform( InputAST ) ->
 	% to benefit from its corresponding module_info record:
 	% (no Myriad-level transformation performed yet)
 	%
-	ModuleInfo = ast_info:extract_module_info_from_ast( InputAST ),
+	InputModuleInfo = ast_info:extract_module_info_from_ast( InputAST ),
 
-	io:format( "Module information as obtained from Myriad: ~s",
-			   [ ast_info:module_info_to_string( ModuleInfo ) ] ),
+	%trace_utils:debug_fmt( "Module information, directly as obtained "
+	%					   "from Myriad (untransformed): ~s",
+	%					   [ ast_info:module_info_to_string( InputModuleInfo ) ] ),
 
 	% Then promote this Myriad-level information into a WOOPER one:
-	ClassInfo = generate_class_info_from( ModuleInfo ),
+	ClassInfo = generate_class_info_from( InputModuleInfo ),
 
 	% Finally perform WOOPER-specific transformation:
 	NewClassInfo = transform_class_info( ClassInfo ),
 
-	%trace_utils:debug_fmt( "~s", [ class_info_to_string( NewClassInfo ) ] ),
+	%trace_utils:debug_fmt( "Transformed class information: ~s",
+	%                     [ class_info_to_string( NewClassInfo ) ] ),
 
 	% Then translates back this class information in module information:
 	NewModuleInfo = generate_module_info_from( NewClassInfo ),
 
+	% Allows to have still functional class modules during the WOOPER
+	% developments:
+	%
+	EnableWOOPERParseTransform = true,
+	%EnableWOOPERParseTransform = false,
+
+	ModuleInfoOfInterest = case EnableWOOPERParseTransform of
+
+		true ->
+			NewModuleInfo;
+
+		false ->
+			% Do-nothing operation then:
+			InputModuleInfo
+
+	end,
+
+	trace_utils:debug_fmt(
+	  "Module information before Myriad transformation: ~s",
+	  [ ast_info:module_info_to_string( ModuleInfoOfInterest ) ] ),
+
 	% And finally obtain the corresponding updated AST thanks to Myriad:
 	TransformedModuleInfo = myriad_parse_transform:transform_module_info(
-							  NewModuleInfo ),
+							  ModuleInfoOfInterest ),
 
-	OutputAST = ast_info:recompose_ast_from_module_info(
-				  TransformedModuleInfo ),
+	%trace_utils:debug_fmt(
+	%  "Module information after Myriad transformation: ~s",
+	%  [ ast_info:module_info_to_string( TransformedModuleInfo ) ] ),
+
+	OutputAST = ast_info:recompose_ast_from_module_info( TransformedModuleInfo ),
 
 	%trace_utils:debug_fmt( "~n~nWOOPER output AST:~n~p~n", [ OutputAST ] ),
 
@@ -290,7 +335,8 @@ apply_wooper_transform( InputAST ) ->
 
 
 
-% Returns the class information that were gathered in the module ones.
+% Returns the class-level information that were gathered from the specified
+% module-level ones.
 %
 % (reciprocal of generate_module_info_from/1)
 %
@@ -307,14 +353,15 @@ generate_class_info_from( ModuleInfo ) ->
 
 
 
-% Recomposes class information from module-level ones.
+% Recomposes (WOOPER) class information from (Myriad) module-level ones.
 %
 % The goal is to pick the relevant WOOPER-level information (from the module
-% info) and populate from them the specified class information.
+% info), to transform them and to populate from the result the specified class
+% information.
 %
 -spec create_class_info_from( module_info() ) -> class_info().
 create_class_info_from(
-  % We basically reuse (as they are or after relevant transformations) all
+  % We basically reuse (as they are, or after relevant transformations) all
   % information gathered from the module:
   _ModuleInfo=#module_info{ module=ModuleEntry,
 							compilation_options=CompileOptTable,
@@ -332,13 +379,14 @@ create_class_info_from(
 							functions=FunctionTable,
 							optional_callbacks_defs=OptCallbacksDefs,
 							last_line=LastLine,
+							markers=MarkerTable,
 							errors=Errors,
 							unhandled_forms=UnhandledForms } ) ->
 
 	BlankClassInfo = wooper_info:init_class_info(),
 
-	% For a starting basis, let's init first all the fields we do not plan to
-	% update:
+	% For a starting basis, let's init first all the fields that we do not plan
+	% to update:
 	%
 	% (commented: the fields updated afterwards)
 	%
@@ -370,22 +418,29 @@ create_class_info_from(
 						  %statics
 						  optional_callbacks_defs=OptCallbacksDefs,
 						  last_line=LastLine,
+						  markers=MarkerTable,
 						  errors=Errors,
 						  unhandled_forms=UnhandledForms },
 
-	ClassInClassInfo = manage_classname( ModuleEntry, ClassInfo ),
+
+	% Then taking care of the missing fields, roughly in their original order:
+
+	ClassInClassInfo = manage_classname( ModuleEntry, VerbatimClassInfo ),
 
 	SuperClassInfo = manage_superclasses( ParseAttrTable, ClassInClassInfo ),
 
 	% We extract elements (ex: constructors) from the function table, yet we do
 	% not modify specifically the other related information (ex: exports).
 
-	% Managing { FunctionTable, ClassInfo } pairs:
+	% Managing { FunctionTable, ClassInfo } pairs, in which the first element is
+	% the reference, most up-to-date version to use - not any counterpart that
+	% could be found in the second element:
+	%
 	InitialPair = { FunctionTable, SuperClassInfo },
 
-	ConstructPair = manage_constructors( InitialPair ),
+	ConstructPair = manage_constructors( InitialPair, MarkerTable ),
 
-	DestructPair = manage_destructor( ConstructPair ),
+	DestructPair = manage_destructor( ConstructPair, MarkerTable ),
 
 	% ...
 
@@ -394,8 +449,8 @@ create_class_info_from(
 	ReturnedClassInfo = FinalClassInfo#class_info{
 						  functions=FinalFunctionTable },
 
-	trace_utils:debug_fmt( "Recomposed class information: ~s",
-						   [ class_info_to_string( ReturnedClassInfo ) ] ),
+	%trace_utils:debug_fmt( "Recomposed class information: ~s",
+	%	   [ wooper_info:class_info_to_string( ReturnedClassInfo ) ] ),
 
 	ReturnedClassInfo.
 
@@ -564,23 +619,242 @@ manage_superclasses( ParseAttrTable, ClassInfo ) ->
 %
 % Returns an updated pair thereof.
 %
--spec manage_constructors( compose_pair() ) -> compose_pair().
-manage_constructors( { FunctionTable, ClassInfo } ) ->
-	{ FunctionTable, ClassInfo }.
+-spec manage_constructors( compose_pair(), marker_table() ) -> compose_pair().
+manage_constructors( { FunctionTable, ClassInfo }, _MarkerTable ) ->
+
+	% First element is a list of { arity(), function_info() } pairs
+	% corresponding to the defined constructors, while the second element is the
+	% input function table once these corresponding entries have been removed:
+	%
+	{ ConstructPairs, ShrunkFunctionTable } = extract_constructors_from(
+												FunctionTable ),
+
+	case ConstructPairs of
+
+		[] ->
+			% Better than throw( no_constructor_found ):
+			{ FunctionTable, ClassInfo#class_info{ errors=
+				[ no_constructor_found | ClassInfo#class_info.errors ] } };
+
+		_ ->
+			trace_utils:debug_fmt( "~B constructor(s) found.",
+								   [ length( ConstructPairs ) ] ),
+
+			% Returns { NewFunctionTable, NewClassInfo }:
+			manage_new_operators( ConstructPairs, ShrunkFunctionTable,
+								  ClassInfo )
+
+	end.
 
 
 
-% Extracts the destructors found in the specified function table, and
-% interprets them to enrich the specified class information.
+% Returns a list of { arity(), function_info() } pairs and the shrunk table from
+% which they were extracted.
+%
+% (helper)
+%
+extract_constructors_from( FunctionTable ) ->
+
+	% We are looking, among the keys (i.e. function ids), for those matching
+	% {construct,N}, knowing that the associated values are function_info():
+
+	FunIdInfos = table:enumerate( FunctionTable ),
+
+	filter_constructors( FunIdInfos, _AccPairs=[], _AccFunInfos=[] ).
+
+
+
+filter_constructors( _FunIdInfos=[], AccPairs, AccFunInfos ) ->
+	{ AccPairs, table:new( AccFunInfos ) };
+
+filter_constructors( _FunIdInfos=[ { { construct, Arity }, FunInfo } | T ],
+					 AccPairs, AccFunInfos ) ->
+	filter_constructors( T, [ { Arity, FunInfo } | AccPairs ], AccFunInfos );
+
+% 'Other' expected to be { { _NonConstructFunName, Arity }, FunInfo }:
+%
+filter_constructors( _FunIdInfos=[ Other | T ], AccPairs, AccFunInfos ) ->
+	filter_constructors( T, AccPairs, [ Other | AccFunInfos ] ).
+
+
+
+% Adds the new operators and all their relevant variations for each of the
+% specified constructors construct/N.
+%
+% Returns { NewFunctionTable, NewClassInfo }.
+%
+manage_new_operators( _ConstructPairs=[], FunctionTable, ClassInfo ) ->
+	{ FunctionTable, ClassInfo };
+
+manage_new_operators( _ConstructPairs=[ { Arity, FunInfo } | T ], FunctionTable,
+			  ClassInfo=#class_info{ %function_exports=FunExportTable,
+									 constructors=Constructors } ) ->
+
+	trace_utils:debug_fmt( "Processing constructor of arity ~B: ~s",
+				   [ Arity, ast_info:function_info_to_string( FunInfo ) ] ),
+
+	% First, for the class developer, exporting a constructor is not mandatory;
+	% so, if this constructor is not exported, let's do it automatically:
+	%
+	NewFunInfo = case FunInfo#function_info.exported of
+
+		[] ->
+			FunInfo#function_info{ exported=[ xxxlocate_at ] };
+
+		_ ->
+			FunInfo
+
+	end,
+
+	NewConstructors = table:addNewEntry( _K=Arity, _V=NewFunInfo,
+										 Constructors ),
+
+	RegisteredClassInfo = ClassInfo#class_info{ constructors=NewConstructors },
+
+	% Then, for a constructor of arity N, we have to automatically define and
+	% export here following 14 functions, which all are new operator variations
+	% V (7 base ones, each doubled depending on whether an (atomic) link is
+	% wanted as well between the creator process and the created instance):
+	%
+	% - V1: new/N-1 and new_link/N-1
+	% - V2: synchronous_new/N-1 and synchronous_new_link/N-1
+	% - V3: synchronous_timed_new/N-1 and synchronous_timed_new_link/N-1
+	% - V4: remote_new/N and remote_new_link/N
+	% - V5: remote_synchronous_new/N and remote_synchronous_new_link/N
+	% - V6: remote_synchronisable_new/N and remote_synchronisable_new_link/N
+	% - V7: remote_synchronous_timed_new/N and
+	%       remote_synchronous_timed_new_link/N
+	%
+
+	%V1FunTable = add_v1_operators(
+
+	% We have also to record that these new functions are exported:
+	% function_exports.
+
+	manage_new_operators( T, FunctionTable, RegisteredClassInfo ).
+
+
+
+% Extracts any destructor found in the specified function table, interprets that
+% information to update the specified class information.
 %
 % Returns an updated pair thereof.
 %
--spec manage_destructor( compose_pair() ) -> compose_pair().
-manage_destructor( { FunctionTable, ClassInfo } ) ->
-	{ FunctionTable, ClassInfo }.
+-spec manage_destructor( compose_pair(), marker_table() ) -> compose_pair().
+manage_destructor( { FunctionTable, ClassInfo }, MarkerTable ) ->
+
+	FunIdInfos = table:enumerate( FunctionTable ),
+
+	% First, check that no destruct/N with N =/= 1 exists:
+	{ DestructFunInfo, FilteredFunIdInfos } =
+		case scan_for_destructors( FunIdInfos ) of
+
+			undefined ->
+				% None defined, adding thus a basic, do-nothing one:
+				{ get_default_destructor_info( MarkerTable ), FunIdInfos };
+
+			% Found and extracted as: { DestrFunInfo, OtherFunIdInfos } ->
+			Other ->
+				Other
+
+		end,
+
+	ShrunkFunctionTable = table:new( FilteredFunIdInfos ),
+
+	NewClassInfo = ClassInfo#class_info{ destructor=DestructFunInfo },
+
+	trace_utils:debug_fmt( "Destructor info: ~s",
+		[ wooper_info:destructor_to_string( DestructFunInfo,
+					_DoIncludeForms=true, _IndentationLevel=1 ) ] ),
+
+	{ ShrunkFunctionTable, NewClassInfo }.
 
 
 
+
+
+% Checks arities and extracts any destruct/1 found, returning it and the list of
+% remaining pairs.
+%
+% (helper)
+%
+scan_for_destructors( FunIdInfos ) ->
+	scan_for_destructors( FunIdInfos, _Acc={ undefined, [] } ).
+
+
+scan_for_destructors( _FunIdInfos=[], _Acc={ undefined, _AllFunIdInfos } ) ->
+	% No need to return a list of pairs already known of the caller:
+	undefined;
+
+% Here Acc is { DestFunInfo, RemainingFunIdInfos }:
+scan_for_destructors( _FunIdInfos=[], Acc ) ->
+	Acc;
+
+scan_for_destructors( _FunIdInfos=[ { { destruct, 1 }, DestFunInfo } | T ],
+					  _Acc={ undefined, AccFunIdInfos } ) ->
+	scan_for_destructors( T, { DestFunInfo, AccFunIdInfos } );
+
+scan_for_destructors( _FunIdInfos=[ { { destruct, N }, _DestFunInfo } | _T ],
+					  _Acc ) ->
+	throw( { disallowed_destructor_arity, N } );
+
+scan_for_destructors( _FunIdInfos=[ Other | T ],
+					  _Acc={ DestElem, OtherFunIdInfos } ) ->
+	scan_for_destructors( T, { DestElem, [ Other | OtherFunIdInfos ] } ).
+
+
+
+% Returns a function information corresponding to the default destructor, which is:
+%
+% -spec destruct( wooper:state() ) -> wooper:state().
+% destruct( State ) ->
+%	State.
+%
+-spec get_default_destructor_info( marker_table() ) -> function_info().
+get_default_destructor_info( MarkerTable ) ->
+
+	Line = 0,
+
+	% First, let's define the destructor spec, which is:
+	%   -spec destruct( wooper:state() ) -> wooper:state().
+
+	% Corresponds to wooper:state():
+	StateType = { remote_type, Line,
+				  [ {atom,Line,wooper}, {atom,Line,state}, [] ] },
+
+	SpecForm = { attribute, Line, spec, { {destruct,1},
+	   [ { type, Line, 'fun',
+		   [ { type, Line, product, _Params=[ StateType ] }, _Result=StateType ]
+		 } ] } },
+
+	% Then let's define the destructor function itself, based on:
+	%   destruct( State ) ->
+	%     State.
+
+	StateVar = { var, Line, 'State' },
+
+	% In AST, we shall have { function, Line, destruct, 1, [ DestructClause ] }:
+	DestructClause = { clause, Line, _Pattern=[ StateVar ], [],
+					   _Body=[ StateVar ] },
+
+	% The spec and definition are to be placed together at this definition marker:
+	DefLocation = ast_info:get_default_definition_function_location(
+					MarkerTable ),
+
+	% While the export is to be done in (and will be automatically declared in
+	% that export form):
+	%
+	ExportLocation = ast_info:get_default_export_function_location(
+					   MarkerTable ),
+
+	#function_info{ name=destruct,
+					arity=1,
+					location=DefLocation,
+					line=Line,
+					clauses=[ DestructClause ],
+					spec={ DefLocation, SpecForm },
+					callback=false,
+					exported=[ ExportLocation ] }.
 
 
 
@@ -1075,8 +1349,8 @@ transform_class_info( ClassInfo ) ->
 
 
 
-% Generates back (Myriad-level) module information from specified class
-% information.
+% Generates back (Myriad-level) module-level information from specified
+% class-level information.
 %
 % (reciprocal of generate_class_info_from/1)
 %
@@ -1109,10 +1383,10 @@ generate_module_info_from( #class_info{
 				 function_imports_defs=FunctionImportDefs,
 
 				 function_exports=FunctionExportTable,
-				 functions=_Functions,
+				 functions=FunctionTable,
 
 				 constructors=_ConstructorTable,
-				 destructor=_Destructor,
+				 destructor=MaybeDestructor,
 
 				 request_exports=_RequestExportTable,
 				 requests=_RequestTable,
@@ -1127,22 +1401,57 @@ generate_module_info_from( #class_info{
 
 				 last_line=LastLine,
 
+				 markers=MarkerTable,
+
 				 errors=Errors,
 
-				 unhandled_forms=UnhandledForm } ) ->
+				 unhandled_forms=UnhandledForms } ) ->
 
-	% Adds back the relevant parse attributes that had been interpreted (even
-	% though they might not be so useful then):
+	% Adds back the relevant (WOOPER-related) parse attributes that were
+	% interpreted (even though they might not be so useful now):
 	%
 	FullParseAttrTable = gather_parse_attributes( ParseAttrTable,
 									  MaybeSuperclassesLocDef, AttributeTable ),
+
+	% In addition to the plain, classical functions already in
+	% FunctionExportTable and Functions, we have to add back constructors,
+	% destructor and methods in the function-related fields, i.e. regarding
+	% export and definition:
+
+	% For constructors:
+	WithConstrExpTable = FunctionExportTable,
+	WithConstrFunTable = FunctionTable,
+
+	% For destructor:
+	WithDestrFunTable = case MaybeDestructor of
+
+		undefined ->
+			WithConstrFunTable;
+
+		DestructFunInfo ->
+
+			DestructId = { destruct, 1 },
+
+			% Expected to have already been appropriately exported.
+
+			table:addNewEntry( DestructId, DestructFunInfo,
+							   WithConstrFunTable )
+
+	end,
+
+	% For methods:
+	WithMthdExpTable = WithConstrExpTable,
+	WithMthdFunTable = WithDestrFunTable,
+
+	AllExportTable = WithMthdExpTable,
+	AllFunctionTable = WithMthdFunTable,
 
 	% Directly returned (many fields can be copied verbatim):
 	#module_info{
 
 		% Untouched:
 		module=ClassEntry,
-		compilation_options=CompileOpts,
+		compilation_options=CompileOptTable,
 		compilation_option_defs=CompileOptDefs,
 
 		parse_attributes=FullParseAttrTable,
@@ -1153,13 +1462,14 @@ generate_module_info_from( #class_info{
 		include_defs=IncludeDefs,
 		type_exports=TypeExportTable,
 		types=TypeTable,
-		records=Records,
-		function_imports=FunctionImports,
+		records=RecordTable,
+		function_imports=FunctionImportTable,
 		function_imports_defs=FunctionImportDefs,
-		function_exports=
-		functions=
+		function_exports=AllExportTable,
+		functions=AllFunctionTable,
 		optional_callbacks_defs=OptCallbackDefs,
 		last_line=LastLine,
+		markers=MarkerTable,
 		errors=Errors,
 		unhandled_forms=UnhandledForms }.
 
@@ -1184,7 +1494,7 @@ gather_parse_attributes( ParseAttrTable, MaybeSuperclassesLocDef,
 		SuperclassesLocDef ->
 			% V must be a list of {AttrValue,LocForm} pairs:
 			table:addNewEntry( _K=wooper_superclasses,
-							   _V=[ MaybeSuperclassesLocDef ], ParseAttrTable )
+							   _V=[ SuperclassesLocDef ], ParseAttrTable )
 
 	end.
 

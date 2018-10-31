@@ -1,6 +1,6 @@
 % Copyright (C) 2012-2018 Olivier Boudeville
 %
-% This file is part of the WOOPER library.
+% This file is part of the Ceylan-WOOPER library.
 %
 % This library is free software: you can redistribute it and/or modify
 % it under the terms of the GNU Lesser General Public License or
@@ -145,12 +145,16 @@
 % Arity of a method:
 -type method_arity() :: meta_utils:function_arity().
 
+-type request_arity() :: method_arity().
+-type oneway_arity() ::  method_arity().
+-type static_arity() ::  method_arity().
+
 
 -type method_id() :: { method_name(), method_arity() }.
 
 -type request_id() :: { request_name(), request_arity() }.
--type oneway_id() :: { oneway_name(), oneway_arity() }.
--type static_id() :: { static_name(), static_arity() }.
+-type oneway_id() ::  { oneway_name(),  oneway_arity() }.
+-type static_id() ::  { static_name(),  static_arity() }.
 
 
 

@@ -1,6 +1,6 @@
 % Copyright (C) 2003-2018 Olivier Boudeville
 %
-% This file is part of the WOOPER examples.
+% This file is part of the Ceylan-WOOPER examples.
 %
 % It has been placed in the public domain.
 %
@@ -71,9 +71,7 @@ construct( State, ?wooper_construct_parameters ) ->
 	setAttributes( OvoviviparousMammalState, [
 		  { nozzle_color, NozzleColor },
 		  { alternate_names, [ hector, edgar, roger, sean ] },
-		  { cat_pid, undefined }
-
-		 ] ).
+		  { cat_pid, undefined } ] ).
 
 
 
@@ -81,7 +79,7 @@ construct( State, ?wooper_construct_parameters ) ->
 % able to determine that this function will never be called, as WOOPER handles
 % it at runtime):
 %
--spec destruct( wooper:state() ) ->  wooper:state().
+-spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
 	State.
 

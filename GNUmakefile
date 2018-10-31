@@ -36,7 +36,6 @@ help-wooper:
 	@cd $(MYRIAD_TOP) && $(MAKE) -s help-myriad
 
 
-
 register-version-in-header:
 	@if [ -z "$(VERSION_FILE)" ] ; then \
 	echo "Error, no version file defined." 1>&2 ; exit 51 ; else \

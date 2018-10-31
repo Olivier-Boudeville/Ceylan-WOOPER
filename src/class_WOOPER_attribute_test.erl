@@ -1,6 +1,6 @@
 % Copyright (C) 2003-2018 Olivier Boudeville
 %
-% This file is part of the WOOPER library.
+% This file is part of the Ceylan-WOOPER library.
 %
 % This library is free software: you can redistribute it and/or modify
 % it under the terms of the GNU Lesser General Public License or

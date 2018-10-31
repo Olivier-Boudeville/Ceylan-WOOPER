@@ -1,6 +1,6 @@
 % Copyright (C) 2018-2018 Olivier Boudeville
 %
-% This file is part of the WOOPER library.
+% This file is part of the Ceylan-WOOPER library.
 %
 % This library is free software: you can redistribute it and/or modify
 % it under the terms of the GNU Lesser General Public License or
@@ -54,7 +54,8 @@
 
 
 % The type specification of a method:
--type located_method_spec() :: { location(), method_spec() }.
+-type located_method_spec() :: { ast_info:location(), method_spec() }.
+
 
 
 
@@ -62,27 +63,30 @@
 % Method export tables.
 
 
+
 % Table storing the export declarations for oneway methods.
 %
 % Quite similar to ast_info:function_export_table().
 %
--type oneway_export_table() :: table:table( location(),
+-type oneway_export_table() :: table:table( ast_info:location(),
 						   { ast_base:line(), [ wooper:oneway_id() ] } ).
+
 
 
 % Table storing the export declarations for request methods.
 %
 % Quite similar to ast_info:function_export_table().
 %
--type request_export_table() :: table:table( location(),
+-type request_export_table() :: table:table( ast_info:location(),
 						   { ast_base:line(), [ wooper:request_id() ] } ).
+
 
 
 % Table storing the export declarations for static methods.
 %
 % Quite similar to ast_info:function_export_table().
 %
--type static_export_table() :: table:table( location(),
+-type static_export_table() :: table:table( ast_info:location(),
 						   { ast_base:line(), [ wooper:static_id() ] } ).
 
 
@@ -95,13 +99,14 @@
 
 
 
+
 % Method definition tables.
+
 
 
 % Table storing reference definitions of oneway methods.
 %
 % Quite similar to ast_info:function_table().
-%
 -type oneway_table() :: table:table( wooper:oneway_id(),
 									 wooper_info:oneway_info() ).
 
@@ -138,12 +143,24 @@
 -type attribute_name() :: wooper:attribute_name().
 
 
--export([ attribute_info_to_string/1,
+-export([ init_class_info/0,
 
-		  oneway_info_to_string/1, request_info_to_string/1,
-		  static_info_to_string/1,
+		  class_info_to_string/1, class_info_to_string/2,
+		  class_info_to_string/3,
 
-		  class_info_to_string/1 ]).
+		  class_entry_to_string/2, superclasses_to_string/3,
+		  class_specific_attributes_to_string/3,
+
+		  inherited_attributes_to_string/3,
+		  attribute_info_to_string/2,
+
+		  constructors_to_string/3, destructor_to_string/3,
+
+		  requests_to_string/3, request_info_to_string/3,
+		  oneways_to_string/3, oneway_info_to_string/3,
+		  static_methods_to_string/3, static_method_info_to_string/3
+
+		]).
 
 
 
@@ -155,199 +172,234 @@ init_class_info() ->
 
 	EmptyTable = table:new(),
 
-	% All other fields expected to have a default value defined, or being
-	% initialised at record construction:
+	% All other fields (commented out) expected to have a default value defined,
+	% or being initialised at record construction:
 	%
 	#class_info{ class=undefined,
-				 superclasses={ [], undefined }
+				 superclasses={ [], undefined },
 				 attributes=EmptyTable,
 				 inherited_attributes=EmptyTable,
 				 compilation_options=EmptyTable,
+				 %compilation_option_defs
 				 parse_attributes=EmptyTable,
+				 %remote_spec_defs
+				 %includes
+				 %include_defs
 				 type_exports=EmptyTable,
 				 types=EmptyTable,
 				 records=EmptyTable,
+				 function_imports=EmptyTable,
+				 %function_imports_defs
 				 function_exports=EmptyTable,
+				 functions=EmptyTable,
 				 constructors=EmptyTable,
 				 destructor=undefined,
+				 request_exports=EmptyTable,
 				 requests=EmptyTable,
+				 oneway_exports=EmptyTable,
 				 oneways=EmptyTable,
+				 static_exports=EmptyTable,
 				 statics=EmptyTable,
-				 functions=EmptyTable }.
+				 %optional_callbacks_defs
+				 %last_line
+				 markers=EmptyTable
+				 %errors
+				 %unhandled_forms
+			   }.
 
 
 
+% Returns a textual description of specified class information, not including
+% forms, and based on a default indentation level.
+%
+% Note: here the location information is dropped for all located definitions.
+%
 -spec class_info_to_string( class_info() ) -> text_utils:ustring().
 class_info_to_string( ClassInfo ) ->
-	class_info_to_string( ClassInfo, _IncludeForms=false ).
+	class_info_to_string( ClassInfo, _DoIncludeForms=false ).
 
 
-
-% Returns a textual information of specified class information.
+% Returns a textual description of specified class information, including forms
+% if requested, and with specified indentation level.
+%
+% Note: here the location information is dropped for all located definitions.
 %
 -spec class_info_to_string( class_info(), boolean() ) -> text_utils:ustring().
+class_info_to_string( ClassInfo, DoIncludeForms ) ->
+	class_info_to_string( ClassInfo, DoIncludeForms, _IndentationLevel=0 ).
+
+
+% Returns a textual description of specified class information, including forms
+% if requested, and with specified indentation level.
+%
+% Note: here the location information is dropped for all located definitions.
+%
+-spec class_info_to_string( class_info(), boolean(),
+					 text_utils:indentation_level() ) -> text_utils:ustring().
 class_info_to_string( #class_info{
 						 class=ClassEntry,
 						 superclasses=SuperclassesEntry,
 						 attributes=AttributeTable,
 						 inherited_attributes=InheritedAttributes,
 						 compilation_options=CompileOpts,
-						 compilation_option_defs=_CompileOptDefs,
+						 compilation_option_defs=CompileOptDefs,
 						 parse_attributes=ParseAttributeTable,
 						 remote_spec_defs=RemoteSpecDefs,
 						 includes=Includes,
 						 include_defs=IncludeDefs,
 						 type_exports=TypeExportTable,
-						 types=TypeExportDefs,
-						 records=Records,
-						 function_imports=FunctionImports,
+						 types=TypeTable,
+						 records=RecordTable,
+						 function_imports=FunctionImportTable,
 						 function_imports_defs=FunctionImportDefs,
-						 function_exports=FunctionExportTable,
+						 function_exports=_FunctionExportTable,
 						 functions=FunctionTable,
-						 constructors=Constructors,
-						 destructor=Destructor,
-						 request_exports=RequestExports,
-						 requests=Requests,
-						 oneway_exports=OnewayExports,
-						 oneways=Oneways,
-						 static_exports=StaticExports,
-						 statics=Statics,
-						 optional_callbacks_defs=OptCallbackDefs,
+						 constructors=ConstructorTable,
+						 destructor=DestructorInfo,
+						 request_exports=_RequestExports,
+						 requests=RequestTable,
+						 oneway_exports=_OnewayExports,
+						 oneways=OnewayTable,
+						 static_exports=_StaticExports,
+						 statics=StaticTable,
+						 optional_callbacks_defs=OptCallbacksDefs,
 						 last_line=LastLineLocDef,
+						 markers=MarkerTable,
 						 errors=Errors,
 						 unhandled_forms=UnhandledForms },
-					  IncludeForms ) ->
+					  DoIncludeForms,
+					  IndentationLevel ) ->
 
-	% To mark an additional offset for the sublists:
-	NextIndentationLevel = 1,
+	% For this textual description, we mostly rely on the higher-level
+	% information available.
 
-	ClassnameStrings = class_entry_to_strings( ClassEntry, IncludeForms ),
+	% As the next strings will be collected at a level of their own:
+	NextIndentationLevel = IndentationLevel + 1,
 
-	SuperclassStrings = superclasses_to_strings( SuperclassesEntry,
-												 IncludeForms ),
+	% Information gathered in the order of the fields (basically in a compatible
+	% order with the ast_info:module_info_to_string/3 counterpart function):
 
-	ClassSpecificAttrStrings = class_specific_attributes_to_string(
-								AttributeTable, IncludeForms ),
+	ClassnameString = class_entry_to_string( ClassEntry, DoIncludeForms ),
 
-	InheritedAttrStrings = inherited_attributes_to_string( InheritedAttributes,
-														   IncludeForms ),
+	Infos = [ superclasses_to_string( SuperclassesEntry, DoIncludeForms,
+									  NextIndentationLevel ),
 
-	CompilationOptStrings = ast_info:compilation_options_to_string( CompileOpts,
-						  CompileOptDefs, IncludeForms, NextIndentationLevel ),
+			  class_specific_attributes_to_string( AttributeTable,
+									   DoIncludeForms, NextIndentationLevel ),
 
-	ParseAttrStrings = ast_info:parse_attribute_table_to_string(
-						 ParseAttributeTable, IncludeForms ),
+			  inherited_attributes_to_string( InheritedAttributes,
+									   DoIncludeForms, NextIndentationLevel ),
 
-	RemoteSpecDefStrings =
+			  ast_info:compilation_options_to_string( CompileOpts,
+						CompileOptDefs, DoIncludeForms, NextIndentationLevel ),
 
-	IncludeStrings = ast_info:includes_to_string( Includes, IncludeDefs,
-												  NextIndentationLevel ),
+			  ast_info:optional_callbacks_to_string( OptCallbacksDefs,
+								   DoIncludeForms, NextIndentationLevel ),
 
+			  ast_info:parse_attribute_table_to_string( ParseAttributeTable,
+										 DoIncludeForms, NextIndentationLevel ),
 
-	Infos = ClassnameStrings ++ SuperclassStrings
-		++ ClassSpecificAttrStrings ++ InheritedAttrString
-		++ CompilationOptString ++ ParseAttrStrings ++ IncludeStrings
+			  ast_info:remote_spec_definitions_to_string( RemoteSpecDefs,
+										DoIncludeForms, NextIndentationLevel ),
 
+			  ast_info:includes_to_string( Includes, IncludeDefs,
+										DoIncludeForms, NextIndentationLevel ),
 
-
-
-
-
-			  text_utils:format( "~B type definitions: ~p~n",
-								 [ length( TypeDefs ), TypeDefs ] ),
-
-			  text_utils:format( "type definitions: ~p~n", [ TypeDefsDefs ] ),
-
+			  % No form to manage:
 			  ast_info:type_exports_to_string( TypeExportTable,
 											   NextIndentationLevel ),
 
+			  ast_info:types_to_string( TypeTable, DoIncludeForms,
+										NextIndentationLevel ),
 
-			  text_utils:format( "type export definitions: ~p~n",
-								 [ TypeExportDefs ] ),
+			  ast_info:records_to_string( RecordTable, NextIndentationLevel ),
 
-			  text_utils:format( "~B function exports~n",
-					 [ table:size( FunctionExportTable ) ] ),
+			  ast_info:function_imports_to_string( FunctionImportTable,
+				  FunctionImportDefs, DoIncludeForms, NextIndentationLevel ),
 
-			  text_utils:format( "~B class-specific attributes: ~p~n",
-					 [ length( ClassAttributes ), ClassAttributes ] ),
+			  ast_info:functions_to_string( FunctionTable, DoIncludeForms,
+											NextIndentationLevel ),
 
-			  text_utils:format( "~B inherited attributes: ~p~n",
-					 [ length( InheritedAttributes ), InheritedAttributes ] ),
+			  constructors_to_string( ConstructorTable, DoIncludeForms,
+									  NextIndentationLevel ),
 
-			  text_utils:format( "~B constructors, with arities: ~p~n",
-								 [ table:size( Constructors ),
-								   table:keys( Constructors ) ] ),
+			  destructor_to_string( DestructorInfo, DoIncludeForms,
+									NextIndentationLevel ),
 
-			  text_utils:format( "destructor: ~p~n", [ Destructor ] ),
+			  requests_to_string( RequestTable, DoIncludeForms,
+								  NextIndentationLevel ),
 
-			  text_utils:format( "~B request methods: ~p~n",
-								 [ table:size( Requests ),
-								   table:keys( Requests ) ] ),
+			  oneways_to_string( OnewayTable, DoIncludeForms,
+								 NextIndentationLevel ),
 
-			  text_utils:format( "~B oneway methodss: ~p~n",
-								 [ table:size( Oneways ),
-								   table:keys( Oneways ) ] ),
+			  static_methods_to_string( StaticTable, DoIncludeForms,
+										NextIndentationLevel ),
 
-			  text_utils:format( "~B static methods: ~p~n",
-								 [ table:size( Statics ),
-								   table:keys( Statics ) ] ),
+			  ast_info:last_line_to_string( LastLineLocDef ),
 
-			  text_utils:format( "~B plain functions: ~p~n",
-								 [ table:size( Functions ),
-								   table:keys( Functions ) ] ),
+			  ast_info:markers_to_string( MarkerTable, NextIndentationLevel ),
 
-			  ast_info:last_line_to_string( LastLineLocDef ) ],
+			  ast_info:errors_to_string( Errors, NextIndentationLevel ),
 
-	text_utils:format( "Information about class '~s':~n~s",
-					   [ Class, text_utils:strings_to_string( Infos ) ] ).
+			  ast_info:unhandled_forms_to_string( UnhandledForms,
+							 DoIncludeForms, NextIndentationLevel ) ],
+
+		text_utils:format( "Information about class ~s:~s", [ ClassnameString,
+				 text_utils:strings_to_string( Infos, IndentationLevel ) ] ).
+
+
+
+
+
 
 
 
 % Returns a textual representation of the name of the class corresponding to
-% specified entry.
+% specified entry, possibly with forms.
 %
--spec class_entry_to_strings( class_entry(), boolean() ) ->
-									[ text_utils:ustring() ].
-class_entry_to_strings( _ClassEntry=undefined, _IncludeForms ) ->
-	[ "(unnamed class)" ];
+-spec class_entry_to_string( class_entry(), boolean() ) -> text_utils:ustring().
+class_entry_to_string( _ClassEntry=undefined, _DoIncludeForms ) ->
+	"(unnamed class)";
 
-class_entry_to_strings( _ClassEntry={ ThisClassname, _ClassLocDef },
-						_IncludeForms=false ) ->
-	[ text_utils:atom_to_string( ThisClassname ) ];
+class_entry_to_string( _ClassEntry={ ThisClassname, _ClassLocDef },
+						_DoIncludeForms=false ) ->
+	text_utils:atom_to_string( ThisClassname );
 
-class_entry_to_strings( _ClassEntry={ ThisClassname, ClassLocDef },
-						_IncludeForms=true ) ->
-	[ text_utils:atom_to_string( ThisClassname ),
-	  text_utils:format( "classname located definition: ~p",
-						 [ ClassLocDef ] ) ].
+class_entry_to_string( _ClassEntry={ ThisClassname,
+						_ClassLocDef={ _Loc, Form } },
+						_DoIncludeForms=true ) ->
+	text_utils:format( "~s (represented as form '~p')",
+					   [ ThisClassname, Form ] ).
 
 
 
 % Returns a textual representation of the superclasses corresponding to
 % specified entry.
 %
--spec superclasses_to_strings( superclasses_entry(), boolean() ) ->
-									[ text_utils:ustring() ].
-superclasses_to_strings( _SuperclassesEntry={ _SuperclassNames=[],
-								  _SuperclassesLocDef }, _IncludeForms ) ->
-	[ "no known superclass" ];
+-spec superclasses_to_string( superclasses_entry(), boolean(),
+					  text_utils:indentation_level() ) -> text_utils:ustring().
+superclasses_to_string( _SuperclassesEntry={ _SuperclassNames=[],
+											 _SuperclassesLocDef },
+						_DoIncludeForms,
+						_IndentationLevel ) ->
+	"no known superclass";
 
-superclasses_to_strings( _SuperclassesEntry={ SuperclassNames,
-									  SuperclassesLocDef }, IncludeForms ) ->
+superclasses_to_string( _SuperclassesEntry={ SuperclassNames,
+											 SuperclassesLocDef },
+						DoIncludeForms,
+						_NextIndentationLevel ) ->
 
 	BaseString = text_utils:format( "~B known superclasses: ~p",
 							 [ length( SuperclassNames ), SuperclassNames ] ),
 
-	case IncludeForms of
+	case DoIncludeForms of
 
 		true ->
-			DefString = text_utils:format( "superclasses definition: ~p",
-										   [ SuperclassesLocDef ] ),
-			[ BaseString, DefString ];
-
+			text_utils:format( "~s (defined as ~p)",
+							   [ BaseString, SuperclassesLocDef ] );
 
 		false ->
-			[ BaseString ]
+			BaseString
 
 	end.
 
@@ -355,24 +407,26 @@ superclasses_to_strings( _SuperclassesEntry={ SuperclassNames,
 
 % Returns a textual representation of the specified class-specific attributes.
 %
--spec class_specific_attributes_to_string( attribute_table(), boolean() ) ->
-												[ text_utils:ustring() ].
-class_specific_attributes_to_string( AttributeTable, IncludeForms ) ->
+-spec class_specific_attributes_to_string( attribute_table(), boolean(),
+				text_utils:indentation_level() ) -> text_utils:ustring().
+class_specific_attributes_to_string( AttributeTable, DoIncludeForms,
+									 IndentationLevel ) ->
 
-	% Attribute names are also aming their information:
+	% Attribute names are also in their information record:
 	case table:values( AttributeTable ) of
 
 		[] ->
-			[ "no known class-specific attribute" ];
+			"no known class-specific attribute";
 
 		AttrInfos ->
 
-			AttrStrings = [ attribute_info_to_string( AttrInfo, IncludeForms )
+			AttrStrings = [ attribute_info_to_string( AttrInfo, DoIncludeForms )
 							|| AttrInfo <- AttrInfos ],
 
 			text_utils:format( "~B known class-specific attribute(s): ~s",
 							   [ length( AttrInfos ),
-								 text_utils:strings_to_string( AttrStrings ) ] )
+								 text_utils:strings_to_string( AttrStrings,
+														IndentationLevel ) ] )
 
 	end.
 
@@ -381,24 +435,182 @@ class_specific_attributes_to_string( AttributeTable, IncludeForms ) ->
 % Returns a textual representation of the specified inherited (class)
 % attributes.
 %
--spec inherited_attributes_to_string( attribute_table(), boolean() ) ->
-											[ text_utils:ustring() ].
+-spec inherited_attributes_to_string( attribute_table(), boolean(),
+		  text_utils:indentation_level() ) -> text_utils:ustring().
+inherited_attributes_to_string( AttributeTable, DoIncludeForms,
+								IndentationLevel ) ->
 
-inherited_attributes_to_string( AttributeTable, IncludeForms ) ->
-
-	% Attribute names are also aming their information:
+	% Attribute names are also in their information record:
 	case table:values( AttributeTable ) of
 
 		[] ->
-			[ "no known inherited attribute" ];
+			"no known inherited attribute";
 
 		AttrInfos ->
 
-			AttrStrings = [ attribute_info_to_string( AttrInfo, IncludeForms )
+			AttrStrings = [ attribute_info_to_string( AttrInfo, DoIncludeForms )
 							|| AttrInfo <- AttrInfos ],
 
 			text_utils:format( "~B known inherited attribute(s): ~s",
 							   [ length( AttrInfos ),
-								 text_utils:strings_to_string( AttrStrings ) ] )
+								 text_utils:strings_to_string( AttrStrings,
+														 IndentationLevel ) ] )
 
 	end.
+
+
+
+% Returns a textual representation of the specified attribute information.
+%
+-spec attribute_info_to_string( attribute_info(), boolean() ) ->
+									  text_utils:ustring().
+attribute_info_to_string( _AttributeInfo, _DoIncludeForms ) ->
+	"attribute info".
+
+
+
+% Returns a textual representation of the specified constructor information.
+%
+-spec constructors_to_string( constructor_table(), boolean(),
+					  text_utils:indentation_level() ) -> text_utils:ustring().
+constructors_to_string( ConstructorTable, DoIncludeForms, IndentationLevel ) ->
+
+	case table:enumerate( ConstructorTable ) of
+
+		[] ->
+			"no constructor defined";
+
+		ArityFunInfoPairs ->
+
+			% Sort by increasing arity:
+			SortedPairs = lists:keysort( _Index=1, ArityFunInfoPairs ),
+
+			ConstructString = text_utils:strings_to_string( [
+				begin
+
+					FunString = ast_info:function_info_to_string(
+						  ConstructFunInfo, DoIncludeForms, IndentationLevel ),
+
+					text_utils:format( "of arity ~B, implemented as: ~s",
+									   [ Arity, FunString ] )
+
+				end || { Arity, ConstructFunInfo } <- SortedPairs ] ),
+
+			text_utils:format( "~B constructor(s) defined: ~s",
+						   [ length( SortedPairs ), ConstructString ] )
+
+	end.
+
+
+
+% Returns a textual representation of the specified destructor information.
+%
+-spec destructor_to_string( maybe( ast_info:function_info() ), boolean(),
+					text_utils:indentation_level() ) -> text_utils:ustring().
+destructor_to_string( _DestructorInfo=undefined, _DoIncludeForms,
+					  _IndentationLevel ) ->
+	"no destructor defined";
+
+destructor_to_string( DestructorFunInfo, DoIncludeForms, IndentationLevel ) ->
+	text_utils:format( "following destructor defined: ~s",
+					   [ ast_info:function_info_to_string( DestructorFunInfo,
+								DoIncludeForms, IndentationLevel ) ] ).
+
+
+
+% Returns a textual representation of the specified information about requests.
+%
+-spec requests_to_string( wooper_info:request_table(), boolean(),
+				  text_utils:indentation_level() ) -> text_utils:ustring().
+requests_to_string( RequestTable, DoIncludeForms, IndentationLevel ) ->
+
+	case table:values( RequestTable ) of
+
+		[] ->
+			"no request defined";
+
+		ReqInfos ->
+
+			ReqString = text_utils:strings_to_string( [ request_info_to_string(
+							ReqInfo, DoIncludeForms, IndentationLevel )
+										|| ReqInfo <- ReqInfos ] ),
+			text_utils:format( "~B request(s) defined: ~s",
+							   [ length( ReqInfos ), ReqString ] )
+
+	end.
+
+
+
+% Returns a textual representation of the specified request information.
+%
+-spec request_info_to_string( request_info(), boolean(),
+				   text_utils:indentation_level() ) -> text_utils:ustring().
+request_info_to_string( _RequestInfo, _DoIncludeForms, _IndentationLevel ) ->
+	"request info".
+
+
+
+% Returns a textual representation of the specified information about oneways.
+%
+-spec oneways_to_string( wooper_info:oneway_table(), boolean(),
+				  text_utils:indentation_level() ) -> text_utils:ustring().
+oneways_to_string( OnewayTable, DoIncludeForms, IndentationLevel ) ->
+
+	case table:values( OnewayTable ) of
+
+		[] ->
+			"no oneway defined";
+
+		OnwInfos ->
+
+			OnwString = text_utils:strings_to_string( [ oneway_info_to_string(
+							OnwInfo, DoIncludeForms, IndentationLevel )
+										|| OnwInfo <- OnwInfos ] ),
+			text_utils:format( "~B oneway(s) defined: ~s",
+							   [ length( OnwInfos ), OnwString ] )
+
+	end.
+
+
+
+% Returns a textual representation of the specified oneway information.
+%
+-spec oneway_info_to_string( oneway_info(), boolean(),
+				   text_utils:indentation_level() ) -> text_utils:ustring().
+oneway_info_to_string( _OnewayInfo, _DoIncludeForms, _IndentationLevel ) ->
+	"oneway info".
+
+
+
+% Returns a textual representation of the specified information about static
+% methods.
+%
+-spec static_methods_to_string( wooper_info:static_table(), boolean(),
+				  text_utils:indentation_level() ) -> text_utils:ustring().
+static_methods_to_string( StaticTable, DoIncludeForms, IndentationLevel ) ->
+
+	case table:values( StaticTable ) of
+
+		[] ->
+			"no static method defined";
+
+		StatInfos ->
+
+			StatString = text_utils:strings_to_string( [
+				static_method_info_to_string( StatInfo, DoIncludeForms,
+							 IndentationLevel ) || StatInfo <- StatInfos ] ),
+
+			text_utils:format( "~B static method(s) defined: ~s",
+							   [ length( StatInfos ), StatString ] )
+
+	end.
+
+
+
+% Returns a textual representation of the specified static method information.
+%
+-spec static_method_to_string( static_info(), boolean(),
+				   text_utils:indentation_level() ) -> text_utils:ustring().
+static_method_info_to_string( _StaticInfo, _DoIncludeForms,
+							  _IndentationLevel ) ->
+	"static info".

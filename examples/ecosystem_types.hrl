@@ -1,6 +1,6 @@
 % Copyright (C) 2012-2018 Olivier Boudeville
 %
-% This file is part of the WOOPER examples.
+% This file is part of the Ceylan-WOOPER examples.
 %
 % It has been placed in the public domain.
 %

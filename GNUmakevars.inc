@@ -133,6 +133,32 @@ else
 endif
 
 
+# Compiler section.
+
+
+# Modules needed for the bootstrapping for others (hence to be built first, and
+# not parse-transformed; typically *used* by parse-transforms, or being a
+# parse-transform themselves)
+#
+# (see the 'Bootstrap section' in GNUmakerules.inc for their special-cased
+# build)
+#
+ifndef BOOTSTRAP_MODULES
+
+	# We want to bootstrap all relevant WOOPER modules (Myriad expected to be
+	# already fully built)
+
+
+	# We list here all the WOOPER-level prerequisites of the WOOPER
+	# parse-transform:
+	#
+	# - wooper_info: to manage class-level information
+
+	BOOTSTRAP_MODULES = $(WOOPER_TOP)/src/wooper_info.beam
+
+endif
+
+
 ifndef COMPILER_OPT_FOR_WOOPER_CLASSES
 
 	   COMPILER_OPT_FOR_WOOPER_CLASSES =                      \

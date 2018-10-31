@@ -1,6 +1,6 @@
 % Copyright (C) 2003-2018 Olivier Boudeville
 %
-% This file is part of the WOOPER library.
+% This file is part of the Ceylan-WOOPER library.
 %
 % This library is free software: you can redistribute it and/or modify
 % it under the terms of the GNU Lesser General Public License or
@@ -72,6 +72,24 @@
 
 
 
+
+% Stores and centralises WOOPER-level information gathered about a given
+% request.
+%
+% This record is to strictly supersede the Myriad-level function_info one.
+%
+% See also: the function_info counterpart Myriad records, defined in
+% ast_info.hrl.
+%
+-record( request_info, {
+
+} ).
+
+
+-type request_info() :: #request_info{}.
+
+
+
 % Stores and centralises WOOPER-level information gathered about a given oneway
 % method.
 %
@@ -119,25 +137,17 @@
 
 		   % Tells whether this oneway has been exported, as a (possibly
 		   % empty) list of the location(s) of its actual export(s), knowing
-		   % that a oneway can be exported more than once or never:
+		   % that a oneway can be exported more than once or never.
+		   %
+		   % Note: must be kept in synch with the oneway_exports field of the
+		   % class_info record.
 		   %
 		   exported = [] :: [ ast_info:location() ]
 
 } ).
 
 
-
-% Stores and centralises WOOPER-level information gathered about a given
-% request.
-%
-% This record is to strictly supersede the Myriad-level function_info one.
-%
-% See also: the function_info counterpart Myriad records, defined in
-% ast_info.hrl.
-%
--record( request_info, {
-
-} ).
+-type oneway_info() :: #oneway_info{}.
 
 
 
@@ -153,6 +163,8 @@
 
 } ).
 
+
+-type static_info() :: #static_info{}.
 
 
 
@@ -184,7 +196,7 @@
 
 		% All inherited attribute definitions for this class:
 		%
-		inherited_attributes = [] :: wooper_info:attribute_table(),
+		inherited_attributes :: wooper_info:attribute_table(),
 
 
 		% A table, whose keys are compilation options (ex: no_auto_import,
@@ -291,18 +303,17 @@
 		% (this field must be kept synchronised with the table in the
 		% 'function_exports' field)
 		%
-		functions = ast_info:function_table(),
+		functions :: ast_info:function_table(),
 
 
 		% All information about the constructor(s) of that class:
 		%
-		constructors :: wooper_info:constructor_info(),
+		constructors :: wooper_info:constructor_table(),
 
 
 		% All information about the destructor (if any) of that class:
 		%
 		destructor = undefined :: maybe( ast_info:function_info() ),
-
 
 
 		% Whether a request is exported is recorded primarily in its own
@@ -316,7 +327,7 @@
 		% (this field must be kept synchronised with the table in the
 		% corresponding 'requests' field)
 		%
-		request_exports :: method_export_table(),
+		request_exports :: wooper_info:request_export_table(),
 
 
 		% All information about the class-specific (member) request methods
@@ -325,7 +336,7 @@
 		% (this field must be kept synchronised with the table in the
 		% 'request_exports' field)
 		%
-		requests :: method_table(),
+		requests :: wooper_info:request_table(),
 
 
 
@@ -340,7 +351,7 @@
 		% (this field must be kept synchronised with the table in the
 		% corresponding 'oneways' field)
 		%
-		oneway_exports :: method_export_table(),
+		oneway_exports :: wooper_info:oneway_export_table(),
 
 
 		% All information about the class-specific (member) oneway methods
@@ -349,7 +360,7 @@
 		% (this field must be kept synchronised with the table in the
 		% 'oneway_exports' field)
 		%
-		oneways :: method_table(),
+		oneways :: wooper_info:oneway_table(),
 
 
 
@@ -365,7 +376,7 @@
 		% (this field must be kept synchronised with the table in the
 		% corresponding 'statics' field)
 		%
-		static_exports :: method_export_table(),
+		static_exports :: wooper_info:static_export_table(),
 
 
 		% All information about the class-specific (member) static methods
@@ -374,7 +385,7 @@
 		% (this field must be kept synchronised with the table in the
 		% 'static_exports' field)
 		%
-		statics :: method_table(),
+		statics :: wooper_info:static_table(),
 
 
 
@@ -388,6 +399,11 @@
 		% (any added code will be put afterwards)
 		%
 		last_line :: ast_base:line(),
+
+
+		% Section markers, offering reference locations to AST transformations.
+		%
+		markers :: ast_info:section_marker_table(),
 
 
 		% Error information collected when traversing the AST
