@@ -193,6 +193,7 @@ init_class_info() ->
 				 function_exports=EmptyTable,
 				 functions=EmptyTable,
 				 constructors=EmptyTable,
+				 new_operators=EmptyTable,
 				 destructor=undefined,
 				 request_exports=EmptyTable,
 				 requests=EmptyTable,
@@ -255,6 +256,7 @@ class_info_to_string( #class_info{
 						 function_exports=_FunctionExportTable,
 						 functions=FunctionTable,
 						 constructors=ConstructorTable,
+						 new_operators=NewOperatorTable,
 						 destructor=DestructorInfo,
 						 request_exports=_RequestExports,
 						 requests=RequestTable,
@@ -322,6 +324,9 @@ class_info_to_string( #class_info{
 
 			  constructors_to_string( ConstructorTable, DoIncludeForms,
 									  NextIndentationLevel ),
+
+			  "regarding new operators, " ++ ast_info:functions_to_string(
+				   NewOperatorTable, DoIncludeForms, NextIndentationLevel ),
 
 			  destructor_to_string( DestructorInfo, DoIncludeForms,
 									NextIndentationLevel ),
@@ -497,7 +502,7 @@ constructors_to_string( ConstructorTable, DoIncludeForms, IndentationLevel ) ->
 				end || { Arity, ConstructFunInfo } <- SortedPairs ] ),
 
 			text_utils:format( "~B constructor(s) defined: ~s",
-						   [ length( SortedPairs ), ConstructString ] )
+							   [ length( SortedPairs ), ConstructString ] )
 
 	end.
 

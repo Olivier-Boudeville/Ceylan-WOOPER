@@ -170,7 +170,9 @@
 
 
 % Special case of construction parameters:
--type construction_parameters() :: [ method_argument() ].
+-type construction_parameter() :: method_argument().
+
+-type construction_parameters() :: [ construction_parameter() ].
 
 
 -type requests_outcome() :: 'success' | { 'failure', [ pid() ] }.
@@ -228,7 +230,7 @@
 			   method_id/0, request_id/0, oneway_id/0, static_id/0,
 			   method_argument/0, method_arguments/0,
 			   method_qualifier/0,
-			   construction_parameters/0,
+			   construction_parameter/0, construction_parameters/0,
 			   requests_outcome/0, method_internal_result/0,
 			   request_result/1, request_result/0,
 			   request_return/1, oneway_return/0,

@@ -26,8 +26,10 @@
 		 synchronous_timed_new/2, synchronous_timed_new_link/2,
 		 remote_new/3, remote_new_link/3, remote_synchronous_new/3,
 		 remote_synchronous_new_link/3, remote_synchronisable_new_link/3,
-		 remote_synchronous_timed_new/3, remote_synchronous_timed_new_link/3,
-		 construct/3, destruct/1 ).
+		 remote_synchronous_timed_new/3, remote_synchronous_timed_new_link/3 ).
+%		 remote_synchronous_timed_new/3, remote_synchronous_timed_new_link/3,
+%		 construct/3, destruct/1 ).
+%		 construct/3 ).
 
 
 
@@ -54,7 +56,7 @@
 -spec construct( wooper:state(), age(), gender() ) -> wooper:state().
 construct( State, ?wooper_construct_parameters ) ->
 	% No mother class.
-	setAttributes(State, [ { age, Age }, { gender, Gender } ] ).
+	setAttributes( State, [ { age, Age }, { gender, Gender } ] ).
 
 
 
@@ -62,7 +64,8 @@ construct( State, ?wooper_construct_parameters ) ->
 % able to determine that this function will never be called, as WOOPER performs
 % the appropriate test is made beforehand):
 %
--spec destruct( wooper:state() ) -> wooper:state().
+% Allows to test also the automatic destructor generation:
+%-spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
 	State.
 

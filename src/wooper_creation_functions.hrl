@@ -152,14 +152,14 @@
 % Creation is asynchronous: new returns as soon as the creation is triggered,
 % without waiting for it to complete.
 %
-new( ?wooper_construct_parameters ) ->
+%% new( ?wooper_construct_parameters ) ->
 
-	%io:format("new operator: spawning ~w:wooper_construct_and_run "
-	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
+%%	%trace_utils:debug_fmt("new operator: spawning ~w:wooper_construct_and_run "
+%%	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
 
-	spawn( fun() ->
-				   wooper_construct_and_run( [ ?wooper_construct_parameters ] )
-		   end ).
+%%	spawn( fun() ->
+%%				   wooper_construct_and_run( [ ?wooper_construct_parameters ] )
+%%		   end ).
 
 
 
@@ -190,7 +190,7 @@ new_link( ?wooper_construct_parameters ) ->
 %
 synchronous_new( ?wooper_construct_parameters ) ->
 
-	%io:format("synchronous_new operator: spawning ~w:wooper_construct_and_run "
+	%trace_utils:debug_fmt("synchronous_new operator: spawning ~w:wooper_construct_and_run "
 	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
 
 	CreatorPid = self(),
@@ -224,7 +224,7 @@ synchronous_new( ?wooper_construct_parameters ) ->
 %
 synchronous_new_link( ?wooper_construct_parameters ) ->
 
-	%io:format( "synchronous_new_link for ~s with parameters:~n~p.~n",
+	%trace_utils:debug_fmt( "synchronous_new_link for ~s with parameters:~n~p.~n",
 	%		  [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
 
 	CreatorPid = self(),
@@ -243,7 +243,7 @@ synchronous_new_link( ?wooper_construct_parameters ) ->
 	receive
 
 		{ spawn_successful, SpawnedPid } ->
-			%io:format( "synchronous_new_link: spawned ~w.~n", [SpawnedPid] ),
+			%trace_utils:debug_fmt( "synchronous_new_link: spawned ~w.~n", [SpawnedPid] ),
 			SpawnedPid
 
 	end.
@@ -401,7 +401,7 @@ remote_new_link( Node, ?wooper_construct_parameters ) ->
 %
 remote_synchronous_new( Node, ?wooper_construct_parameters ) ->
 
-	%io:format( "remote_synchronous_new operator: "
+	%trace_utils:debug_fmt( "remote_synchronous_new operator: "
 	% "spawning ~w:wooper_construct_and_run_synchronous "
 	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
 	%timer:sleep(200),
@@ -438,7 +438,7 @@ remote_synchronous_new( Node, ?wooper_construct_parameters ) ->
 %
 remote_synchronous_new_link( Node, ?wooper_construct_parameters ) ->
 
-	%io:format( "remote_synchronous_new_link operator: "
+	%trace_utils:debug_fmt( "remote_synchronous_new_link operator: "
 	% "spawning ~w:wooper_construct_and_run_synchronous "
 	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
 	%timer:sleep(200),
@@ -477,7 +477,7 @@ remote_synchronous_new_link( Node, ?wooper_construct_parameters ) ->
 %
 remote_synchronisable_new_link( Node, ?wooper_construct_parameters ) ->
 
-	%io:format( "remote_synchronisable_new_link operator: "
+	%trace_utils:debug_fmt( "remote_synchronisable_new_link operator: "
 	% "spawning ~w:wooper_construct_and_run_synchronous "
 	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
 	%timer:sleep(200),
@@ -506,7 +506,7 @@ remote_synchronisable_new_link( Node, ?wooper_construct_parameters ) ->
 %
 remote_synchronous_timed_new( Node, ?wooper_construct_parameters ) ->
 
-	%io:format( "remote_synchronous_timed_new operator: "
+	%trace_utils:debug_fmt( "remote_synchronous_timed_new operator: "
 	% "spawning ~w:wooper_construct_and_run_synchronous "
 	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
 	%timer:sleep(200),
@@ -548,7 +548,7 @@ remote_synchronous_timed_new( Node, ?wooper_construct_parameters ) ->
 %
 remote_synchronous_timed_new_link( Node, ?wooper_construct_parameters ) ->
 
-	%io:format( "remote_synchronous_timed_new_link operator: "
+	%trace_utils:debug_fmt( "remote_synchronous_timed_new_link operator: "
 	%		  "spawning ~w:wooper_construct_and_run_synchronous "
 	%		  "with parameters ~w on node ~w from node ~w.~n",
 	%		  [ ?MODULE, [ ?wooper_construct_parameters ] , Node, node() ] ),
@@ -569,7 +569,7 @@ remote_synchronous_timed_new_link( Node, ?wooper_construct_parameters ) ->
 	receive
 
 		{ spawn_successful, SpawnedPid } ->
-			%io:format( "remote_synchronous_timed_new_link: returning ~w.~n",
+			%trace_utils:debug_fmt( "remote_synchronous_timed_new_link: returning ~w.~n",
 			%		  [ SpawnedPid ] ),
 			SpawnedPid
 
@@ -609,15 +609,15 @@ remote_synchronous_timed_new_link( Node, ?wooper_construct_parameters ) ->
 % Creation is asynchronous: new returns as soon as the creation is triggered,
 % without waiting for it to complete.
 %
--spec new() -> pid().
-new() ->
+%% -spec new() -> pid().
+%% new() ->
 
-	%io:format("new operator: spawning ~w:wooper_construct_and_run "
-	%	"with no parameter.~n", [ ?MODULE ] ),
+%%	%trace_utils:debug_fmt("new operator: spawning ~w:wooper_construct_and_run "
+%%	%	"with no parameter.~n", [ ?MODULE ] ),
 
-	spawn( fun() ->
-				   wooper_construct_and_run( _ConstructParams=[] )
-		   end ).
+%%	spawn( fun() ->
+%%				   wooper_construct_and_run( _ConstructParams=[] )
+%%		   end ).
 
 
 
@@ -647,7 +647,7 @@ new_link() ->
 -spec synchronous_new() -> pid().
 synchronous_new() ->
 
-	%io:format("synchronous_new operator: spawning ~w "
+	%trace_utils:debug_fmt("synchronous_new operator: spawning ~w "
 	%	"with no parameter.~n", [ ?MODULE ] ),
 
 	CreatorPid = self(),
@@ -832,7 +832,7 @@ remote_new_link( Node ) ->
 -spec remote_synchronous_new( net_utils:node_name() ) -> pid().
 remote_synchronous_new( Node ) ->
 
-	%io:format("synchronous_new operator: spawning ~w "
+	%trace_utils:debug_fmt("synchronous_new operator: spawning ~w "
 	%	"with no parameter.~n", [ ?MODULE ]),
 
 	CreatorPid = self(),
@@ -903,7 +903,7 @@ remote_synchronous_new_link( Node ) ->
 %
 remote_synchronisable_new_link( Node ) ->
 
-	%io:format( "remote_synchronisable_new_link operator: "
+	%trace_utils:debug_fmt( "remote_synchronisable_new_link operator: "
 	% "spawning ~w:wooper_construct_and_run_synchronous "
 	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
 	%timer:sleep(200),
@@ -1012,8 +1012,8 @@ remote_synchronous_timed_new_link( Node ) ->
 -spec wooper_construct_and_run( construction_parameters() ) -> no_return().
 wooper_construct_and_run( ConstructionParameters ) ->
 
-	%io:format("wooper_construct_and_run called with parameters ~w, "
-	%	"whose length is ~B.~n",
+	%trace_utils:debug_fmt("wooper_construct_and_run called with parameters ~w,"
+	%	" whose length is ~B.~n",
 	%   [ ConstructionParameters, length( ConstructionParameters ) ] ),
 
 	wooper:construct_and_run( _Classname=?MODULE, ConstructionParameters ).
@@ -1028,8 +1028,8 @@ wooper_construct_and_run( ConstructionParameters ) ->
 											pid() ) -> no_return().
 wooper_construct_and_run_synchronous( ConstructionParameters, SpawnerPid ) ->
 
-	%io:format("wooper_construct_and_run called with parameters ~w, "
-	%	"whose length is ~B.~n",
+	%trace_utils:debug_fmt("wooper_construct_and_run called with parameters ~w,"
+	%	" whose length is ~B.~n",
 	%   [ ConstructionParameters, length( ConstructionParameters ) ] ),
 
 	wooper:construct_and_run_synchronous( _Classname=?MODULE,

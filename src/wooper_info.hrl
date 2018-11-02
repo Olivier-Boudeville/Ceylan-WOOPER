@@ -311,6 +311,12 @@
 		constructors :: wooper_info:constructor_table(),
 
 
+		% All information about the new operators (ex: remote_new_link/N) of
+		% that class:
+		%
+		new_operators :: ast_info:function_table(),
+
+
 		% All information about the destructor (if any) of that class:
 		%
 		destructor = undefined :: maybe( ast_info:function_info() ),
