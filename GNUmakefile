@@ -21,6 +21,7 @@ WOOPER_RELEASES = $(WOOPER_RELEASE_ARCHIVE_BZ2) \
 				  $(WOOPER_RELEASE_ARCHIVE_XZ)
 
 
+# Sourceforge is mostly obsolete now:
 SF_USER = wondersye
 
 
@@ -56,14 +57,17 @@ add-prerequisite-plts: link-plt
 
 # As upper layers may rely on the 'wooper' naming:
 link-plt:
-	@/bin/ln -s $(PLT_FILE) $(WOOPER_PLT_FILE)
+	@/bin/ln -s --force $(PLT_FILE) $(WOOPER_PLT_FILE)
 
 
 # Note: the source archives are not produced in this directory, but in its
 # parent, so that everything related to WOOPER (including these rules) remains
 # self-contained.
 
-send-release: release
+send-release: send-release-sourceforge
+
+
+send-release-sourceforge: release
 	@echo "     Sending WOOPER releases $(WOOPER_RELEASES) to Sourceforge"
 	@cd .. && rsync -avP -e ssh $(WOOPER_RELEASES) \
 	$(SF_USER)@frs.sourceforge.net:uploads/
@@ -106,7 +110,7 @@ clean: clean-release clean-archive
 
 
 clean-release:
-	@echo "     Cleaning release archive for WOOPER"
+	@echo "   Cleaning release archive for WOOPER"
 	-@cd .. && /bin/rm -rf $(WOOPER_RELEASE_BASE)
 
 

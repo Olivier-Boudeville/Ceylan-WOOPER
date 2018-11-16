@@ -142,6 +142,10 @@
 % Used for iterated (re)composition of class information:
 -type compose_pair() :: { ast_info:function_table(), class_info() }.
 
+% For clarity:
+-type operator_table() :: function_table().
+
+-export_type([ compose_pair/0, operator_table/0 ]).
 
 
 -export([ run_standalone/1, run_standalone/2,
@@ -168,14 +172,12 @@
 % Local shorthands:
 
 -type ast() :: ast_base:ast().
--type form_element() :: ast_base:form_element().
 -type located_form() :: ast_info:located_form().
 -type module_info() :: ast_info:module_info().
-%-type attribute_info() :: wooper_info:attribute_info().
 -type class_info() :: wooper_info:class_info().
 -type function_info() :: ast_info:function_info().
--type function_table() ::  ast_info:function_table().
--type marker_table() :: ast_info:section_marker_table().
+-type function_table() :: ast_info:function_table().
+
 
 
 % For debugging:
@@ -183,7 +185,7 @@
 
 
 % tmp:
--export([manage_constructors/1, add_function/4, add_constructor/3, register_destructor/2 ,add_request/4, add_oneway/4, add_static/4, identify_function/3, infer_function_type/1, infer_fun_type/2,
+-export([add_function/4, add_request/4, add_oneway/4, add_static/4, identify_function/3, infer_function_type/1, infer_fun_type/2,
 		 get_new_variation_names/0, get_attribute_forms/1
 ]).
 
@@ -242,7 +244,7 @@ parse_transform( InputAST, _Options ) ->
 
 	%trace_utils:trace_fmt( "WOOPER output AST:~n~p~n", [ WOOPERAST ] ),
 
-	%ast_utils:write_ast_to_file( WOOPERAST, "WOOPER-output-AST.txt" ),
+	ast_utils:write_ast_to_file( WOOPERAST, "WOOPER-output-AST.txt" ),
 
 	WOOPERAST.
 
@@ -282,7 +284,7 @@ apply_wooper_transform( InputAST ) ->
 	NewClassInfo = transform_class_info( ClassInfo ),
 
 	%trace_utils:debug_fmt( "Transformed class information: ~s",
-	%                     [ class_info_to_string( NewClassInfo ) ] ),
+	%			   [ wooper_info:class_info_to_string( NewClassInfo ) ] ),
 
 	% Then translates back this class information in module information:
 	NewModuleInfo = generate_module_info_from( NewClassInfo ),
@@ -439,19 +441,23 @@ create_class_info_from(
 	%
 	InitialPair = { FunctionTable, SuperClassInfo },
 
-	ConstructPair = manage_constructors( InitialPair ),
+	ConstructPair = wooper_instance_construction:manage_constructors(
+					  InitialPair ),
 
-	DestructPair = manage_destructor( ConstructPair ),
+	DestructPair = wooper_instance_destruction:manage_destructor(
+					 ConstructPair ),
+
+	MethodPair = wooper_method_management:manage_methods( DestructPair ),
 
 	% ...
 
-	_FinalPair = { FinalFunctionTable, FinalClassInfo } = DestructPair,
+	_FinalPair = { FinalFunctionTable, FinalClassInfo } = MethodPair,
 
 	ReturnedClassInfo = FinalClassInfo#class_info{
 						  functions=FinalFunctionTable },
 
-	trace_utils:debug_fmt( "Recomposed class information: ~s",
-		   [ wooper_info:class_info_to_string( ReturnedClassInfo ) ] ),
+	%trace_utils:debug_fmt( "Recomposed class information: ~s",
+	%	   [ wooper_info:class_info_to_string( ReturnedClassInfo ) ] ),
 
 	ReturnedClassInfo.
 
@@ -615,402 +621,6 @@ manage_superclasses( ParseAttrTable, ClassInfo ) ->
 
 
 
-% Extracts the constructors found in the specified function table, and
-% interprets them to enrich the specified class information.
-%
-% Returns an updated pair thereof.
-%
--spec manage_constructors( compose_pair() ) -> compose_pair().
-manage_constructors( { FunctionTable, ClassInfo } ) ->
-
-	% First element is a list of { arity(), function_info() } pairs
-	% corresponding to the defined constructors, while the second element is the
-	% input function table once these corresponding entries have been removed:
-	%
-	{ ConstructPairs, ShrunkFunctionTable } = extract_constructors_from(
-												FunctionTable ),
-
-	case ConstructPairs of
-
-		[] ->
-			% Better than throw( no_constructor_found ):
-			{ FunctionTable, ClassInfo#class_info{ errors=
-				[ no_constructor_found | ClassInfo#class_info.errors ] } };
-
-		_ ->
-			trace_utils:debug_fmt( "~B constructor(s) found.",
-								   [ length( ConstructPairs ) ] ),
-
-			% Returns { NewFunctionTable, NewClassInfo }:
-			manage_new_operators( ConstructPairs, ShrunkFunctionTable,
-								  ClassInfo )
-
-	end.
-
-
-
-% Returns a list of { arity(), function_info() } pairs and the shrunk table from
-% which they were extracted.
-%
-% (helper)
-%
-extract_constructors_from( FunctionTable ) ->
-
-	% We are looking, among the keys (i.e. function ids), for those matching
-	% {construct,N}, knowing that the associated values are function_info():
-
-	FunIdInfos = table:enumerate( FunctionTable ),
-
-	filter_constructors( FunIdInfos, _AccPairs=[], _AccFunInfos=[] ).
-
-
-
-filter_constructors( _FunIdInfos=[], AccPairs, AccFunInfos ) ->
-	{ AccPairs, table:new( AccFunInfos ) };
-
-filter_constructors( _FunIdInfos=[ { { construct, Arity }, FunInfo } | T ],
-					 AccPairs, AccFunInfos ) ->
-	filter_constructors( T, [ { Arity, FunInfo } | AccPairs ], AccFunInfos );
-
-% 'Other' expected to be { { _NonConstructFunName, Arity }, FunInfo }:
-%
-filter_constructors( _FunIdInfos=[ Other | T ], AccPairs, AccFunInfos ) ->
-	filter_constructors( T, AccPairs, [ Other | AccFunInfos ] ).
-
-
-
-% Adds the new operators and all their relevant variations for each of the
-% specified constructors construct/N.
-%
-% Returns { NewFunctionTable, NewClassInfo }.
-%
-manage_new_operators( _ConstructPairs=[], FunctionTable, ClassInfo ) ->
-	{ FunctionTable, ClassInfo };
-
-manage_new_operators( _ConstructPairs=[ { Arity, FunInfo } | T ], FunctionTable,
-					  ClassInfo=#class_info{
-								   class={ Classname, _ClassLocForm },
-								   constructors=Constructors,
-								   new_operators=NewOpTable,
-								   markers=MarkerTable  } ) ->
-
-	trace_utils:debug_fmt( "Processing constructor of arity ~B: ~s",
-				   [ Arity, ast_info:function_info_to_string( FunInfo ) ] ),
-
-	ExportLoc = ast_info:get_default_export_function_location( MarkerTable ),
-
-	% First, for the class developer, exporting a constructor is not mandatory;
-	% so, if this constructor is not exported, let's do it automatically:
-	%
-	NewFunInfo = case FunInfo#function_info.exported of
-
-		[] ->
-			% Never exported, so exporting it at the standard location:
-			FunInfo#function_info{ exported=[ ExportLoc ] };
-
-		_ ->
-			FunInfo
-
-	end,
-
-	NewConstructors = table:addNewEntry( _K=Arity, _V=NewFunInfo,
-										 Constructors ),
-
-	% Then, for a constructor of arity N, we have to automatically define and
-	% export here following 14 functions, which all are new operator variations
-	% V (7 base ones, each doubled depending on whether an (atomic) link is
-	% wanted as well between the creator process and the created instance):
-	%
-	% - V1: new/N-1 and new_link/N-1
-	% - V2: synchronous_new/N-1 and synchronous_new_link/N-1
-	% - V3: synchronous_timed_new/N-1 and synchronous_timed_new_link/N-1
-	% - V4: remote_new/N and remote_new_link/N
-	% - V5: remote_synchronous_new/N and remote_synchronous_new_link/N
-	% - V6: remote_synchronisable_new/N and remote_synchronisable_new_link/N
-	% - V7: remote_synchronous_timed_new/N and
-	%       remote_synchronous_timed_new_link/N
-	%
-
-	DefinitionLoc = ast_info:get_default_definition_function_location(
-					  MarkerTable ),
-
-	V1OpTable = add_v1_operators( Classname, Arity, ExportLoc, DefinitionLoc,
-								  NewOpTable ),
-
-
-	V7OpTable = V1OpTable,
-
-	FinalClassInfo = ClassInfo#class_info{ constructors=NewConstructors,
-										   new_operators=V7OpTable },
-
-	manage_new_operators( T, FunctionTable, FinalClassInfo ).
-
-
-
-
-% Adds the V1 operators: new/N-1 and new_link/N-1.
-%
--spec add_v1_operators( wooper:classname(), arity(), ast_base:form_location(),
-			ast_base:form_location(), function_table() ) -> function_table().
-add_v1_operators( Classname, Arity, ExportLocation, DefinitionLoc,
-				  OperatorTable ) ->
-
-	% Let's create from scratch the corresponding operator definition, export
-	% and spec:
-	%
-	% (Arity N is the one of the corresponding constructor)
-
-	% Let's start with new/N-1:
-
-	NewName = "new",
-	NewArity = Arity - 1,
-
-	trace_utils:debug_fmt( "Adding {new,new_link}/~B.", [ NewArity ] ),
-
-	NewId = { NewName, NewArity },
-
-	Line = 0,
-
-	% Its definition is, if N=3:
-	% new( A, B ) ->
-	%     spawn( fun() ->
-	%		  wooper:construct_and_run( class_Foo, [ A, B ] )
-	% end ).
-
-	% Ex: [ {var,0,'Myriad_Param_1'}, {var,0,'Myriad_Param_2'} ]
-	HeaderParams = ast_generation:get_header_params( NewArity ),
-
-	RunCall = get_run_call(),
-
-	% Ex: [ {atom,0,class_Foo},
-	% {cons,0,{var,0,'Myriad_Param_1'},{cons,0,{var,0,'Myriad_Param_2'},{nil,0}}}
-	% ].
-
-	CallParams = [ {atom,Line,Classname},
-				   ast_generation:list_variables( NewArity ) ],
-
-	NewClause = { clause, Line, HeaderParams, [],
-				  [{ call, Line, {atom,Line,spawn},
-					 [ {'fun', Line,
-						{ clauses,
-						  [ { clause, Line,[],[],
-							  [ { call, Line, RunCall,
-								  CallParams }]
-							}]
-						}}]
-				   }]},
-
-
-	ConstructParamTypes = get_construction_types( NewArity ),
-
-	% Its spec is '-spec new( wooper:construction_parameter(),
-	% wooper:construction_parameter() ) -> pid().':
-	%
-	NewSpecForm = { attribute, Line, spec, { NewId,
-	   [ { type, Line, 'fun',
-		   [ { type, Line, product, ConstructParamTypes },
-			 _Result={ type, Line, pid, [] } ]
-		 } ] } },
-
-	NewOpInfo = #function_info{ name=NewName,
-								arity=NewArity,
-								location=DefinitionLoc,
-								line=Line,
-								clauses=[ NewClause ],
-								spec={ DefinitionLoc, NewSpecForm },
-								callback=false,
-								exported=[ ExportLocation ] },
-
-	% May override any prior operator definition:
-	table:addEntries( [ { NewId, NewOpInfo } ], OperatorTable ).
-
-
-
-
-
-% Returns the form element corresponding to wooper:construct_and_run/2.
-%
--spec get_run_call() -> form_element().
-get_run_call() ->
-	{ remote, Line, {atom,Line,wooper}, {atom,Line,construct_and_run} }.
-
-
-
-% Returns a list of adequate types for the specified number of construction
-% parameters.
-%
--spec get_construction_types( basic_utils:count() ) -> form_element().
-get_construction_types( Count ) ->
-	Line = 0,
-	Type = { remote_type, Line, [ {atom,Line,wooper},
-								  {atom,Line,construction_parameter}, [] ] },
-	lists:duplicate( Count, Type ).
-
-
-
-% Extracts any destructor found in the specified function table, interprets that
-% information to update the specified class information.
-%
-% Returns an updated pair thereof.
-%
--spec manage_destructor( compose_pair() ) -> compose_pair().
-manage_destructor( { FunctionTable, ClassInfo } ) ->
-
-	FunIdInfos = table:enumerate( FunctionTable ),
-
-	% First, check that no destruct/N with N =/= 1 exists:
-	{ DestructFunInfo, FilteredFunIdInfos } =
-		case scan_for_destructors( FunIdInfos ) of
-
-			undefined ->
-				MarkerTable = ClassInfo#class_info.markers,
-				% None defined, adding thus a basic, do-nothing one:
-				{ get_default_destructor_info( MarkerTable ), FunIdInfos };
-
-			% Found and extracted as:
-			{ DestrFunInfo, OtherFunIdInfos } ->
-				% Here the developer may have defined destruct/1, yet may or may
-				% not have exported it:
-				NewDestrFunInfo = case DestrFunInfo#function_info.exported of
-
-					[] ->
-						% Never exported, so exporting it at the standard location:
-						MarkerTable = ClassInfo#class_info.markers,
-
-						ExportLocation =
-								 ast_info:get_default_export_function_location(
-								   MarkerTable ),
-
-						DestrFunInfo#function_info{ exported=[ ExportLocation ] };
-
-					_ ->
-						DestrFunInfo
-
-				end,
-
-				{ NewDestrFunInfo, OtherFunIdInfos }
-
-		end,
-
-	ShrunkFunctionTable = table:new( FilteredFunIdInfos ),
-
-	NewClassInfo = ClassInfo#class_info{ destructor=DestructFunInfo },
-
-	%trace_utils:debug_fmt( "Destructor info: ~s",
-	%	[ wooper_info:destructor_to_string( DestructFunInfo,
-	%				_DoIncludeForms=true, _IndentationLevel=1 ) ] ),
-
-	{ ShrunkFunctionTable, NewClassInfo }.
-
-
-
-
-
-% Checks arities and extracts any destruct/1 found, returning it and the list of
-% remaining pairs.
-%
-% (helper)
-%
-scan_for_destructors( FunIdInfos ) ->
-	scan_for_destructors( FunIdInfos, _Acc={ undefined, [] } ).
-
-
-scan_for_destructors( _FunIdInfos=[], _Acc={ undefined, _AllFunIdInfos } ) ->
-	% No need to return a list of pairs already known of the caller:
-	undefined;
-
-% Here Acc is { DestFunInfo, RemainingFunIdInfos }:
-scan_for_destructors( _FunIdInfos=[], Acc ) ->
-	Acc;
-
-scan_for_destructors( _FunIdInfos=[ { { destruct, 1 }, DestFunInfo } | T ],
-					  _Acc={ undefined, AccFunIdInfos } ) ->
-	scan_for_destructors( T, { DestFunInfo, AccFunIdInfos } );
-
-scan_for_destructors( _FunIdInfos=[ { { destruct, N }, _DestFunInfo } | _T ],
-					  _Acc ) ->
-	throw( { disallowed_destructor_arity, N } );
-
-scan_for_destructors( _FunIdInfos=[ Other | T ],
-					  _Acc={ DestElem, OtherFunIdInfos } ) ->
-	scan_for_destructors( T, { DestElem, [ Other | OtherFunIdInfos ] } ).
-
-
-
-% Returns a function information corresponding to the default destructor, which is:
-%
-% -spec destruct( wooper:state() ) -> wooper:state().
-% destruct( State ) ->
-%	State.
-%
--spec get_default_destructor_info( marker_table() ) -> function_info().
-get_default_destructor_info( MarkerTable ) ->
-
-	Line = 0,
-
-	% First, let's define the destructor spec, which is:
-	%   -spec destruct( wooper:state() ) -> wooper:state().
-
-	% Corresponds to wooper:state():
-	StateType = get_state_type(),
-
-	SpecForm = { attribute, Line, spec, { {destruct,1},
-	   [ { type, Line, 'fun',
-		   [ { type, Line, product, _Params=[ StateType ] }, _Result=StateType ]
-		 } ] } },
-
-	% Then let's define the destructor function itself, based on:
-	%   destruct( State ) ->
-	%     State.
-
-	StateVar = get_state_var(),
-
-	% In AST, we shall have { function, Line, destruct, 1, [ DestructClause ] }:
-	DestructClause = { clause, Line, _Pattern=[ StateVar ], [],
-					   _Body=[ StateVar ] },
-
-	% The spec and definition are to be placed together at this definition marker:
-	DefLocation = ast_info:get_default_definition_function_location(
-					MarkerTable ),
-
-	% While the export is to be done in (and will be automatically declared in
-	% that export form):
-	%
-	ExportLocation = ast_info:get_default_export_function_location(
-					   MarkerTable ),
-
-	#function_info{ name=destruct,
-					arity=1,
-					location=DefLocation,
-					line=Line,
-					clauses=[ DestructClause ],
-					spec={ DefLocation, SpecForm },
-					callback=false,
-					exported=[ ExportLocation ] }.
-
-
-
-% Returns a form element corresponding to wooper:state().
-%
-% (shorthand)
-%
--spec get_state_type() -> form_element().
-get_state_type() ->
-	Line=0,
-	{ remote_type, Line, [ {atom,Line,wooper}, {atom,Line,state}, [] ] }.
-
-
-
-% Returns a form element corresponding to the State variable.
-%
-% (shorthand)
-%
--spec get_state_var() -> form_element().
-get_state_var() ->
-	Line=0,
-	{ var, Line, 'State' }.
-
-
 
 %% % Function definition section:
 %% %
@@ -1135,53 +745,6 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 	end,
 
 	table:addEntry( _K=FunId, _V=FunInfo, FunctionTable ).
-
-
-
-% Adds specified constructor into the corresponding table.
-%
-add_constructor( Arity, Form, ConstructorTable ) ->
-
-	% Its spec might have been found before its definition:
-
-	FunInfo = case table:lookupEntry( Arity, ConstructorTable ) of
-
-		key_not_found ->
-			% New entry then:
-			#function_info{ name=construct,
-							arity=Arity,
-							clauses=Form
-							% Implicit:
-							%spec=undefined
-							};
-
-		{ value, F=#function_info{ clauses=undefined } } ->
-			% Just add the form then:
-			F#function_info{ clauses=Form };
-
-		% Here a definition was already set:
-		_ ->
-			raise_error( { multiple_definition_for_constructor, Arity } )
-
-	end,
-
-	table:addEntry( _K=Arity, _V=FunInfo, ConstructorTable ).
-
-
-
-% Registers specified destructor.
-%
-register_destructor( Form, undefined ) ->
-	% No spec:
-	#function_info{ name=destruct, arity=1, clauses=Form };
-
-register_destructor( Form, F=#function_info{ clauses=undefined } ) ->
-	% Already a spec:
-	F#function_info{ clauses=Form };
-
-register_destructor( _Form, _FunInfo ) ->
-	% Here a definition was already set:
-	raise_error( multiple_destructors_defined ).
 
 
 
@@ -1589,10 +1152,14 @@ generate_module_info_from( #class_info{
 	% For new operators:
 
 	% (we do not use merge/2, as we want to detect any clash between
-	% user-defined functions and these automatically-generated new operators:
+	% user-defined functions and these automatically-generated new operators):
 	%
-	WithNewOpFunTable = table:addNewEntries( table:enumerate( OperatorTable ),
-											 WithConstrFunTable ),
+
+	%trace_utils:debug_fmt( "Integrating the new operators: ~p",
+	%					   [ table:keys( OperatorTable ) ] ),
+
+	WithNewOpFunTable = register_functions( table:enumerate( OperatorTable ),
+											WithConstrFunTable ),
 
 	% For destructor:
 	WithDestrFunTable = case MaybeDestructor of
@@ -1612,11 +1179,13 @@ generate_module_info_from( #class_info{
 
 	% Probably useless now that locations are determined directly:
 	WithMthdExpTable = FunctionExportTable,
+	AllExportTable = WithMthdExpTable,
 
 	WithMthdFunTable = WithDestrFunTable,
-
-	AllExportTable = WithMthdExpTable,
 	AllFunctionTable = WithMthdFunTable,
+
+	%trace_utils:debug_fmt( "Complete function table: ~s",
+	%					   [ table:toString( AllFunctionTable ) ] ),
 
 	% Directly returned (many fields can be copied verbatim):
 	#module_info{
@@ -1645,6 +1214,35 @@ generate_module_info_from( #class_info{
 		errors=Errors,
 		unhandled_forms=UnhandledForms }.
 
+
+
+% Registers specified functions in specified (function) table, detecting
+% properly any clash.
+%
+-spec register_functions( [ { meta_utils:function_id(), function_info() } ],
+							function_table() ) -> function_table().
+register_functions( [], FunctionTable ) ->
+	FunctionTable;
+
+register_functions( [ { FunId, FunInfo } | T ], FunctionTable ) ->
+	case table:lookupEntry( FunId, FunctionTable ) of
+
+		key_not_found ->
+			NewFunctionTable = table:addEntry( FunId, FunInfo, FunctionTable ),
+			register_functions( T, NewFunctionTable );
+
+		{ value, OtherFunInfo } ->
+			{ FunName, FunArity } = FunId,
+			ast_utils:display_error( "Attempt to declare ~s/~B more than once; "
+									 "whereas already registered as:~n  ~s~n"
+									 "this function has been declared again, "
+									 "as:~n  ~s~n",
+				[ FunName, FunArity,
+				  ast_info:function_info_to_string( OtherFunInfo ),
+				  ast_info:function_info_to_string( FunInfo ) ] ),
+			throw( { multiple_declarations_for, FunId } )
+
+	end.
 
 
 

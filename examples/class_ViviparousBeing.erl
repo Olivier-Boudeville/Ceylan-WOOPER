@@ -13,17 +13,6 @@
 -define( wooper_superclasses, [] ).
 
 
-% Declaring all variations of WOOPER standard life-cycle operations:
-% (template pasted, two replacements performed to update arities)
--define( wooper_construct_export, new/0, new_link/0,
-		 synchronous_new/0, synchronous_new_link/0,
-		 synchronous_timed_new/0, synchronous_timed_new_link/0,
-		 remote_new/1, remote_new_link/1, remote_synchronous_new/1,
-		 remote_synchronous_new_link/1, remote_synchronisable_new_link/1,
-		 remote_synchronous_timed_new/1, remote_synchronous_timed_new_link/1,
-		 construct/1, destruct/1 ).
-
-
 
 % Declarations of class-specific methods (besides inherited ones).
 -define( wooper_method_export, getMeanChildrenCount/1, getBirthGivenCount/1,

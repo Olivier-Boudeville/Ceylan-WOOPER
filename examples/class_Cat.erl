@@ -18,28 +18,6 @@
 -define( wooper_superclasses, [ class_Mammal, class_ViviparousBeing ] ).
 
 
-
-% Parameters taken by the constructor ('construct').
-%
-% They are here the ones of the Mammal mother class (the viviparous being
-% constructor does not need any parameter) plus whisker color.
-%
-% These are class-specific data needing to be set in the constructor:
--define( wooper_construct_parameters, Age, Gender, FurColor, WhiskerColor ).
-
-
-
-% Declaring all variations of WOOPER standard life-cycle operations:
-% (template pasted, two replacements performed to update arities)
--define( wooper_construct_export, new/4, new_link/4,
-		 synchronous_new/4, synchronous_new_link/4,
-		 synchronous_timed_new/4, synchronous_timed_new_link/4,
-		 remote_new/5, remote_new_link/5, remote_synchronous_new/5,
-		 remote_synchronous_new_link/5, remote_synchronisable_new_link/5,
-		 remote_synchronous_timed_new/5, remote_synchronous_timed_new_link/5,
-		 construct/5, destruct/1 ).
-
-
 % Member method declarations.
 -define( wooper_method_export, getTeatCount/1, canEat/2, getWhiskerColor/1,
 		 terminate/2, toString/1 ).
@@ -61,7 +39,7 @@
 % Constructs a new Cat.
 -spec construct( wooper:state(), age(), gender(), fur_color(), whisker_color() )
 			   -> wooper:state().
-construct( State, ?wooper_construct_parameters ) ->
+construct( State, Age, Gender, FurColor, WhiskerColor ) ->
 
 	% First the direct mother classes:
 	MammalState = class_Mammal:construct( State, Age, Gender, FurColor ),

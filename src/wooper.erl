@@ -40,6 +40,12 @@
 -export([ get_classname/1, get_attribute_pairs/1, state_to_string/1 ]).
 
 
+% Settings helpers:
+%
+-export([ get_synchronous_time_out/1 ]).
+
+
+
 % Communication helpers:
 %
 -export([ execute_request/3, execute_request/4, send_requests/3,
@@ -846,11 +852,13 @@ construct_and_run( Classname, ConstructionParameters ) ->
 			% as by convention no attribute should be introduced outside of the
 			% constructor:
 			%
-			TunedTable = ?wooper_table_type:optimise(
-							ConstructState#state_holder.attribute_table ),
+			% (now useless with more advanced tables)
+			%
+			%TunedTable = ?wooper_table_type:optimise(
+			AttrTable = ConstructState#state_holder.attribute_table,
 
 			ReadyState = ConstructState#state_holder{
-						   attribute_table=TunedTable },
+						   attribute_table=AttrTable },
 
 			% Otherwise, in wooper_destruct/1 and all, ?MODULE will be 'wooper'
 			% instead of the right class:
@@ -861,9 +869,9 @@ construct_and_run( Classname, ConstructionParameters ) ->
 		Other ->
 
 			log_error( "~nWOOPER error for PID ~w of class ~s: "
-				"constructor did not return a state, but returned '~p' instead."
-				" Construction parameters were:~n~p.",
-				[ self(), Classname, Other, ConstructionParameters ] ),
+					   "constructor did not return a state, but returned '~p' "
+					   "instead. Construction parameters were:~n~p.",
+					   [ self(), Classname, Other, ConstructionParameters ] ),
 
 			throw( { invalid_constructor, Classname } )
 
@@ -948,11 +956,13 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 			% as by convention no attribute should be introduced outside of the
 			% constructor:
 			%
-			TunedTable = ?wooper_table_type:optimise(
-							ConstructState#state_holder.attribute_table ),
+			% (now useless with more advanced tables)
+			%
+			% TunedTable = ?wooper_table_type:optimise(
+			AttrTable = ConstructState#state_holder.attribute_table,
 
 			ReadyState = ConstructState#state_holder{
-						   attribute_table=TunedTable },
+						   attribute_table=AttrTable },
 
 			% Otherwise, in wooper_destruct/1 and all, ?MODULE will be 'wooper'
 			% instead of the right class:
@@ -1010,10 +1020,11 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 	% Enforces a closer-to-ideal load factor of the hashtable if needed, as by
 	% convention no attribute should be introduced outside of the constructor:
 	%
-	TunedTable = ?wooper_table_type:optimise(
-							ConstructState#state_holder.attribute_table ),
+	% (now useless with more advanced tables)
+	%TunedTable = ?wooper_table_type:optimise(
+	AttrTable = ConstructState#state_holder.attribute_table,
 
-	ReadyState = ConstructState#state_holder{ attribute_table=TunedTable },
+	ReadyState = ConstructState#state_holder{ attribute_table=AttrTable },
 
 	% Otherwise, in wooper_destruct/1 and all, ?MODULE will be 'wooper' instead
 	% of the right class:
@@ -1334,6 +1345,24 @@ state_to_string( State ) ->
 			[ self(), get_classname( State ), length( Attributes ) ] ),
 
 		SortedAttributes ).
+
+
+
+
+% Returns the time-out to be used for synchronous operations, depending on the
+% debug mode.
+%
+-spec get_synchronous_time_out( boolean() ) -> time_utils:time_out().
+get_synchronous_time_out( _IsDebugMode=true ) ->
+	% Suitable for most applications (5 seconds, to benefit from earlier
+	% reports):
+	5000;
+
+get_synchronous_time_out( _IsDebugMode=false ) ->
+	% Better for applications in production (30 minutes):
+	30*60*1000.
+
+
 
 
 

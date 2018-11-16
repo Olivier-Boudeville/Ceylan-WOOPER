@@ -25,6 +25,13 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
 
+%% IMPORTANT NOTE
+%%
+%% This file is not used anymore. It has been replaced as a whole by the WOOPER
+%% parse transform. It is staged for deletion.
+
+
+
 % Modular WOOPER header gathering the primitives to manage the creation of
 % instances.
 
@@ -171,12 +178,12 @@
 % Creation is asynchronous: new_link returns as soon as the creation is
 % triggered, without waiting for it to complete.
 %
-new_link( ?wooper_construct_parameters ) ->
+%% new_link( ?wooper_construct_parameters ) ->
 
-	spawn_link( fun() ->
-						wooper_construct_and_run(
-						  [ ?wooper_construct_parameters ] )
-				end ).
+%%	spawn_link( fun() ->
+%%						wooper_construct_and_run(
+%%						  [ ?wooper_construct_parameters ] )
+%%				end ).
 
 
 
@@ -188,29 +195,30 @@ new_link( ?wooper_construct_parameters ) ->
 % Creation is synchronous: synchronous_new will return only when the created
 % process reports it is up and running.
 %
-synchronous_new( ?wooper_construct_parameters ) ->
+%% synchronous_new( ?wooper_construct_parameters ) ->
 
-	%trace_utils:debug_fmt("synchronous_new operator: spawning ~w:wooper_construct_and_run "
-	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
+%%	%trace_utils:debug_fmt("synchronous_new operator: spawning "
+%%	%    "~w:wooper_construct_and_run with parameters ~w.~n",
+%%	%    [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
 
-	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-	SpawnedPid = spawn( fun() ->
-								wooper_construct_and_run_synchronous(
-								  [ ?wooper_construct_parameters ], CreatorPid )
-						end ),
+%%	SpawnedPid = spawn( fun() ->
+%%								wooper_construct_and_run_synchronous(
+%%								  [ ?wooper_construct_parameters ], CreatorPid )
+%%						end ),
 
-	% Blocks until the spawned process answers:
-	%
-	% (no risk of synchronous spawns mismatch, as each synchronous call is
-	% waited for)
-	%
-	receive
+%%	% Blocks until the spawned process answers:
+%%	%
+%%	% (no risk of synchronous spawns mismatch, as each synchronous call is
+%%	% waited for)
+%%	%
+%%	receive
 
-		{ spawn_successful, SpawnedPid } ->
-			SpawnedPid
+%%		{ spawn_successful, SpawnedPid } ->
+%%			SpawnedPid
 
-	end.
+%%	end.
 
 
 
@@ -222,31 +230,31 @@ synchronous_new( ?wooper_construct_parameters ) ->
 % Creation is synchronous: synchronous_new_link will return only when the
 % created process reports it is up and running.
 %
-synchronous_new_link( ?wooper_construct_parameters ) ->
+%% synchronous_new_link( ?wooper_construct_parameters ) ->
 
-	%trace_utils:debug_fmt( "synchronous_new_link for ~s with parameters:~n~p.~n",
-	%		  [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
+%%	%trace_utils:debug_fmt( "synchronous_new_link for ~s with parameters:~n~p.~n",
+%%	%		  [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
 
-	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-	SpawnedPid = spawn_link( fun() ->
-									 wooper_construct_and_run_synchronous(
-									   [ ?wooper_construct_parameters ],
-									   CreatorPid )
-							 end ),
+%%	SpawnedPid = spawn_link( fun() ->
+%%									 wooper_construct_and_run_synchronous(
+%%									   [ ?wooper_construct_parameters ],
+%%									   CreatorPid )
+%%							 end ),
 
-	% Blocks until the spawned process answers:
-	%
-	% (no risk of synchronous spawns mismatch, as each synchronous call is
-	% waited for)
-	%
-	receive
+%%	% Blocks until the spawned process answers:
+%%	%
+%%	% (no risk of synchronous spawns mismatch, as each synchronous call is
+%%	% waited for)
+%%	%
+%%	receive
 
-		{ spawn_successful, SpawnedPid } ->
-			%trace_utils:debug_fmt( "synchronous_new_link: spawned ~w.~n", [SpawnedPid] ),
-			SpawnedPid
+%%		{ spawn_successful, SpawnedPid } ->
+%%			%trace_utils:debug_fmt( "synchronous_new_link: spawned ~w.~n", [SpawnedPid] ),
+%%			SpawnedPid
 
-	end.
+%%	end.
 
 
 
@@ -266,31 +274,32 @@ synchronous_new_link( ?wooper_construct_parameters ) ->
 % Creation is synchronous: synchronous_timed_new will return only when the
 % created process reports it is up and running, or when a time-out occurs.
 %
-synchronous_timed_new( ?wooper_construct_parameters ) ->
+%-spec synchronous_timed_new() -> pid().
+%% synchronous_timed_new( ?wooper_construct_parameters ) ->
 
-	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-	SpawnedPid = spawn(
-				   fun() ->
-						   wooper_construct_and_run_synchronous(
-							 [ ?wooper_construct_parameters ], CreatorPid )
-				   end ),
+%%	SpawnedPid = spawn(
+%%				   fun() ->
+%%						   wooper_construct_and_run_synchronous(
+%%							 [ ?wooper_construct_parameters ], CreatorPid )
+%%				   end ),
 
-	% Blocks until the spawned process answers or a time-out occurs:
-	%
-	% (no risk of synchronous spawns mismatch, as each synchronous call is
-	% waited for)
-	%
-	receive
+%%	% Blocks until the spawned process answers or a time-out occurs:
+%%	%
+%%	% (no risk of synchronous spawns mismatch, as each synchronous call is
+%%	% waited for)
+%%	%
+%%	receive
 
-		{ spawn_successful, SpawnedPid } ->
-			SpawnedPid
+%%		{ spawn_successful, SpawnedPid } ->
+%%			SpawnedPid
 
-	after ?synchronous_time_out ->
+%%	after ?synchronous_time_out ->
 
-		throw( { synchronous_time_out, ?MODULE } )
+%%		throw( { synchronous_time_out, ?MODULE } )
 
-	end.
+%%	end.
 
 
 
@@ -302,31 +311,31 @@ synchronous_timed_new( ?wooper_construct_parameters ) ->
 % Creation is synchronous: synchronous_timed_new_link will return only when the
 % created process reports it is up and running, or when a time-out occurs.
 %
-synchronous_timed_new_link( ?wooper_construct_parameters ) ->
+%% synchronous_timed_new_link( ?wooper_construct_parameters ) ->
 
-	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-	SpawnedPid = spawn_link( fun() ->
-									 wooper_construct_and_run_synchronous(
-									   [ ?wooper_construct_parameters ],
-									   CreatorPid )
-							 end ),
+%%	SpawnedPid = spawn_link( fun() ->
+%%									 wooper_construct_and_run_synchronous(
+%%									   [ ?wooper_construct_parameters ],
+%%									   CreatorPid )
+%%							 end ),
 
-	% Blocks until the spawned process answers or a time-out occurs:
-	%
-	% (no risk of synchronous spawns mismatch, as each synchronous call is
-	% waited for)
-	%
-	receive
+%%	% Blocks until the spawned process answers or a time-out occurs:
+%%	%
+%%	% (no risk of synchronous spawns mismatch, as each synchronous call is
+%%	% waited for)
+%%	%
+%%	receive
 
-		{ spawn_successful, SpawnedPid } ->
-			SpawnedPid
+%%		{ spawn_successful, SpawnedPid } ->
+%%			SpawnedPid
 
-	after ?synchronous_time_out ->
+%%	after ?synchronous_time_out ->
 
-		throw( { synchronous_linked_time_out, ?MODULE } )
+%%		throw( { synchronous_linked_time_out, ?MODULE } )
 
-	end.
+%%	end.
 
 
 
@@ -363,12 +372,12 @@ synchronous_timed_new_link( ?wooper_construct_parameters ) ->
 % Creation is asynchronous: remote_new returns as soon as the creation is
 % triggered, without waiting for it to complete.
 %
-remote_new( Node, ?wooper_construct_parameters ) ->
+%% remote_new( Node, ?wooper_construct_parameters ) ->
 
-	spawn( Node, fun() ->
-						 wooper_construct_and_run(
-						   [ ?wooper_construct_parameters ] )
-				 end ).
+%%	spawn( Node, fun() ->
+%%						 wooper_construct_and_run(
+%%						   [ ?wooper_construct_parameters ] )
+%%				 end ).
 
 
 
@@ -382,12 +391,12 @@ remote_new( Node, ?wooper_construct_parameters ) ->
 % Creation is asynchronous: remote_new_link returns as soon as the creation is
 % triggered, without waiting for it to complete.
 %
-remote_new_link( Node, ?wooper_construct_parameters ) ->
+%% remote_new_link( Node, ?wooper_construct_parameters ) ->
 
-	spawn_link( Node, fun() ->
-							  wooper_construct_and_run(
-								[ ?wooper_construct_parameters ] )
-					  end ).
+%%	spawn_link( Node, fun() ->
+%%							  wooper_construct_and_run(
+%%								[ ?wooper_construct_parameters ] )
+%%					  end ).
 
 
 
@@ -399,32 +408,32 @@ remote_new_link( Node, ?wooper_construct_parameters ) ->
 % Creation is synchronous: remote_synchronous_new will return only when the
 % created process reports it is up and running.
 %
-remote_synchronous_new( Node, ?wooper_construct_parameters ) ->
+%% remote_synchronous_new( Node, ?wooper_construct_parameters ) ->
 
-	%trace_utils:debug_fmt( "remote_synchronous_new operator: "
-	% "spawning ~w:wooper_construct_and_run_synchronous "
-	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
-	%timer:sleep(200),
+%%	%trace_utils:debug_fmt( "remote_synchronous_new operator: "
+%%	% "spawning ~w:wooper_construct_and_run_synchronous "
+%%	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
+%%	%timer:sleep(200),
 
-	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-	SpawnedPid = spawn( Node, fun() ->
-									  wooper_construct_and_run_synchronous(
-										[ ?wooper_construct_parameters ],
-										CreatorPid )
-							  end ),
+%%	SpawnedPid = spawn( Node, fun() ->
+%%									  wooper_construct_and_run_synchronous(
+%%										[ ?wooper_construct_parameters ],
+%%										CreatorPid )
+%%							  end ),
 
-	% Blocks until the spawned process answers:
-	%
-	% (no risk of synchronous spawns mismatch, as each synchronous call is
-	% waited for)
-	%
-	receive
+%%	% Blocks until the spawned process answers:
+%%	%
+%%	% (no risk of synchronous spawns mismatch, as each synchronous call is
+%%	% waited for)
+%%	%
+%%	receive
 
-		{ spawn_successful, SpawnedPid } ->
-			SpawnedPid
+%%		{ spawn_successful, SpawnedPid } ->
+%%			SpawnedPid
 
-	end.
+%%	end.
 
 
 
@@ -436,32 +445,32 @@ remote_synchronous_new( Node, ?wooper_construct_parameters ) ->
 % Creation is synchronous: remote_synchronous_new_link will return only when the
 % created process reports it is up and running.
 %
-remote_synchronous_new_link( Node, ?wooper_construct_parameters ) ->
+%% remote_synchronous_new_link( Node, ?wooper_construct_parameters ) ->
 
-	%trace_utils:debug_fmt( "remote_synchronous_new_link operator: "
-	% "spawning ~w:wooper_construct_and_run_synchronous "
-	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
-	%timer:sleep(200),
+%%	%trace_utils:debug_fmt( "remote_synchronous_new_link operator: "
+%%	% "spawning ~w:wooper_construct_and_run_synchronous "
+%%	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
+%%	%timer:sleep(200),
 
-	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-	SpawnedPid = spawn_link( Node, fun() ->
-										   wooper_construct_and_run_synchronous(
-											 [ ?wooper_construct_parameters ],
-											 CreatorPid )
-								   end ),
+%%	SpawnedPid = spawn_link( Node, fun() ->
+%%										   wooper_construct_and_run_synchronous(
+%%											 [ ?wooper_construct_parameters ],
+%%											 CreatorPid )
+%%								   end ),
 
-	% Blocks until the spawned process answers:
-	%
-	% (no risk of synchronous spawns mismatch, as each synchronous call is
-	% waited for)
-	%
-	receive
+%%	% Blocks until the spawned process answers:
+%%	%
+%%	% (no risk of synchronous spawns mismatch, as each synchronous call is
+%%	% waited for)
+%%	%
+%%	receive
 
-		{ spawn_successful, SpawnedPid } ->
-			SpawnedPid
+%%		{ spawn_successful, SpawnedPid } ->
+%%			SpawnedPid
 
-	end.
+%%	end.
 
 
 
@@ -475,20 +484,20 @@ remote_synchronous_new_link( Node, ?wooper_construct_parameters ) ->
 % instance is up and running. This allows to perform the actual instance
 % creations in parallel, by waiting bulks of creations.
 %
-remote_synchronisable_new_link( Node, ?wooper_construct_parameters ) ->
+%% remote_synchronisable_new_link( Node, ?wooper_construct_parameters ) ->
 
-	%trace_utils:debug_fmt( "remote_synchronisable_new_link operator: "
-	% "spawning ~w:wooper_construct_and_run_synchronous "
-	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
-	%timer:sleep(200),
+%%	%trace_utils:debug_fmt( "remote_synchronisable_new_link operator: "
+%%	% "spawning ~w:wooper_construct_and_run_synchronous "
+%%	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
+%%	%timer:sleep(200),
 
-	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-	spawn_link( Node, fun() ->
-							  wooper_construct_and_run_synchronous(
-								[ ?wooper_construct_parameters ],
-								CreatorPid )
-					  end ).
+%%	spawn_link( Node, fun() ->
+%%							  wooper_construct_and_run_synchronous(
+%%								[ ?wooper_construct_parameters ],
+%%								CreatorPid )
+%%					  end ).
 
 
 
@@ -504,36 +513,36 @@ remote_synchronisable_new_link( Node, ?wooper_construct_parameters ) ->
 % only when the created process reports it is up and running, or when
 % a time-out occurs.
 %
-remote_synchronous_timed_new( Node, ?wooper_construct_parameters ) ->
+ %% remote_synchronous_timed_new( Node, ?wooper_construct_parameters ) ->
 
-	%trace_utils:debug_fmt( "remote_synchronous_timed_new operator: "
-	% "spawning ~w:wooper_construct_and_run_synchronous "
-	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
-	%timer:sleep(200),
+ %%		%trace_utils:debug_fmt( "remote_synchronous_timed_new operator: "
+ %%		% "spawning ~w:wooper_construct_and_run_synchronous "
+ %%		% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
+ %%		%timer:sleep(200),
 
-	CreatorPid = self(),
+ %%		CreatorPid = self(),
 
-	SpawnedPid = spawn( Node, fun() ->
-									  wooper_construct_and_run_synchronous(
-										[ ?wooper_construct_parameters ],
-										CreatorPid )
-							  end ),
+ %%		SpawnedPid = spawn( Node, fun() ->
+ %%										  wooper_construct_and_run_synchronous(
+ %%											[ ?wooper_construct_parameters ],
+ %%											CreatorPid )
+ %%								  end ),
 
-	% Blocks until the spawned process answers or a time-out occurs:
-	%
-	% (no risk of synchronous spawns mismatch, as each synchronous call is
-	% waited for)
-	%
-	receive
+ %%		% Blocks until the spawned process answers or a time-out occurs:
+ %%		%
+ %%		% (no risk of synchronous spawns mismatch, as each synchronous call is
+ %%		% waited for)
+ %%		%
+ %%		receive
 
-		{ spawn_successful, SpawnedPid } ->
-			SpawnedPid
+ %%			{ spawn_successful, SpawnedPid } ->
+ %%				SpawnedPid
 
-	after ?synchronous_time_out ->
+ %%		after ?synchronous_time_out ->
 
-		throw( { remote_synchronous_time_out, Node, ?MODULE } )
+ %%			throw( { remote_synchronous_time_out, Node, ?MODULE } )
 
-	end.
+ %%		end.
 
 
 
@@ -546,42 +555,42 @@ remote_synchronous_timed_new( Node, ?wooper_construct_parameters ) ->
 % when the created process reports it is up and running, or when a time-out
 % occurs.
 %
-remote_synchronous_timed_new_link( Node, ?wooper_construct_parameters ) ->
+%% remote_synchronous_timed_new_link( Node, ?wooper_construct_parameters ) ->
 
-	%trace_utils:debug_fmt( "remote_synchronous_timed_new_link operator: "
-	%		  "spawning ~w:wooper_construct_and_run_synchronous "
-	%		  "with parameters ~w on node ~w from node ~w.~n",
-	%		  [ ?MODULE, [ ?wooper_construct_parameters ] , Node, node() ] ),
+%%	%trace_utils:debug_fmt( "remote_synchronous_timed_new_link operator: "
+%%	%		  "spawning ~w:wooper_construct_and_run_synchronous "
+%%	%		  "with parameters ~w on node ~w from node ~w.~n",
+%%	%		  [ ?MODULE, [ ?wooper_construct_parameters ] , Node, node() ] ),
 
-	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-	SpawnedPid = spawn_link( Node, fun() ->
-										   wooper_construct_and_run_synchronous(
-											 [ ?wooper_construct_parameters ],
-											 CreatorPid )
-								   end ),
+%%	SpawnedPid = spawn_link( Node, fun() ->
+%%										   wooper_construct_and_run_synchronous(
+%%											 [ ?wooper_construct_parameters ],
+%%											 CreatorPid )
+%%								   end ),
 
-	% Blocks until the spawned process answers or a time-out occurs:
-	%
-	% (no risk of synchronous spawns mismatch, as each synchronous call is
-	% waited for)
-	%
-	receive
+%%	% Blocks until the spawned process answers or a time-out occurs:
+%%	%
+%%	% (no risk of synchronous spawns mismatch, as each synchronous call is
+%%	% waited for)
+%%	%
+%%	receive
 
-		{ spawn_successful, SpawnedPid } ->
-			%trace_utils:debug_fmt( "remote_synchronous_timed_new_link: returning ~w.~n",
-			%		  [ SpawnedPid ] ),
-			SpawnedPid
+%%		{ spawn_successful, SpawnedPid } ->
+%%			%trace_utils:debug_fmt( "remote_synchronous_timed_new_link: returning ~w.~n",
+%%			%		  [ SpawnedPid ] ),
+%%			SpawnedPid
 
-	after ?synchronous_time_out ->
+%%	after ?synchronous_time_out ->
 
-		io:format( "(remote_synchronous_timed_new_link: throwing time-out "
-				   "on node ~p for module ~p after ~p milliseconds)~n",
-				   [ Node, ?MODULE, ?synchronous_time_out ] ),
+%%		io:format( "(remote_synchronous_timed_new_link: throwing time-out "
+%%				   "on node ~p for module ~p after ~p milliseconds)~n",
+%%				   [ Node, ?MODULE, ?synchronous_time_out ] ),
 
-		throw( { remote_synchronous_linked_time_out, Node, ?MODULE } )
+%%		throw( { remote_synchronous_linked_time_out, Node, ?MODULE } )
 
-	end.
+%%	end.
 
 
 
@@ -628,12 +637,12 @@ remote_synchronous_timed_new_link( Node, ?wooper_construct_parameters ) ->
 % Creation is asynchronous: new_link returns as soon as the creation is
 % triggered, without waiting for it to complete.
 %
--spec new_link() -> pid().
-new_link() ->
+%% -spec new_link() -> pid().
+%% new_link() ->
 
-	spawn_link( fun() ->
-						wooper_construct_and_run( _ConstructParams=[] )
-				end ).
+%%	spawn_link( fun() ->
+%%						wooper_construct_and_run( _ConstructParams=[] )
+%%				end ).
 
 
 
@@ -644,26 +653,26 @@ new_link() ->
 % Creation is synchronous: synchronous_new will return only when the created
 % process reports it is up and running.
 %
--spec synchronous_new() -> pid().
-synchronous_new() ->
+%% -spec synchronous_new() -> pid().
+%% synchronous_new() ->
 
-	%trace_utils:debug_fmt("synchronous_new operator: spawning ~w "
-	%	"with no parameter.~n", [ ?MODULE ] ),
+%%	%trace_utils:debug_fmt("synchronous_new operator: spawning ~w "
+%%	%	"with no parameter.~n", [ ?MODULE ] ),
 
-	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-	SpawnedPid = spawn( fun() ->
-								wooper_construct_and_run_synchronous(
-								  _ConstructParams=[], CreatorPid )
-						end ),
+%%	SpawnedPid = spawn( fun() ->
+%%								wooper_construct_and_run_synchronous(
+%%								  _ConstructParams=[], CreatorPid )
+%%						end ),
 
-	% Blocks until the spawned process answers:
-	receive
+%%	% Blocks until the spawned process answers:
+%%	receive
 
-		{ spawn_successful, SpawnedPid } ->
-			SpawnedPid
+%%		{ spawn_successful, SpawnedPid } ->
+%%			SpawnedPid
 
-	end.
+%%	end.
 
 
 
@@ -673,27 +682,27 @@ synchronous_new() ->
 % Creation is synchronous: synchronous_new_link will return only when the
 % created process reports it is up and running.
 %
--spec synchronous_new_link() -> pid().
-synchronous_new_link() ->
+%% -spec synchronous_new_link() -> pid().
+%% synchronous_new_link() ->
 
-	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-	SpawnedPid = spawn_link( fun() ->
-									 wooper_construct_and_run_synchronous(
-									   _ConstructParams=[], CreatorPid )
-							 end ),
+%%	SpawnedPid = spawn_link( fun() ->
+%%									 wooper_construct_and_run_synchronous(
+%%									   _ConstructParams=[], CreatorPid )
+%%							 end ),
 
-	% Blocks until the spawned process answers:
-	%
-	% (no risk of synchronous spawns mismatch, as each synchronous call is
-	% waited for)
-	%
-	receive
+%%	% Blocks until the spawned process answers:
+%%	%
+%%	% (no risk of synchronous spawns mismatch, as each synchronous call is
+%%	% waited for)
+%%	%
+%%	receive
 
-		{ spawn_successful, SpawnedPid } ->
-			SpawnedPid
+%%		{ spawn_successful, SpawnedPid } ->
+%%			SpawnedPid
 
-	end.
+%%	end.
 
 
 
@@ -709,27 +718,27 @@ synchronous_new_link() ->
 % Creation is synchronous: synchronous_timed_new will return only when the
 % created process reports it is up and running, or when a time-out occurs.
 %
--spec synchronous_timed_new() -> pid().
-synchronous_timed_new() ->
+%% -spec synchronous_timed_new() -> pid().
+%% synchronous_timed_new() ->
 
-	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-	SpawnedPid = spawn( fun() ->
-								wooper_construct_and_run_synchronous(
-									   _ConstructParams=[], CreatorPid )
-						end ),
+%%	SpawnedPid = spawn( fun() ->
+%%								wooper_construct_and_run_synchronous(
+%%									   _ConstructParams=[], CreatorPid )
+%%						end ),
 
-	% Blocks until the spawned process answers or a time-out occurs:
-	receive
+%%	% Blocks until the spawned process answers or a time-out occurs:
+%%	receive
 
-		{ spawn_successful, SpawnedPid } ->
-			SpawnedPid
+%%		{ spawn_successful, SpawnedPid } ->
+%%			SpawnedPid
 
-	after ?synchronous_time_out ->
+%%	after ?synchronous_time_out ->
 
-		throw( { synchronous_time_out, ?MODULE } )
+%%		throw( { synchronous_time_out, ?MODULE } )
 
-	end.
+%%	end.
 
 
 
@@ -740,27 +749,27 @@ synchronous_timed_new() ->
 % Creation is synchronous: synchronous_timed_new will return only when the
 % created process reports it is up and running, or when a time-out occurs.
 %
--spec synchronous_timed_new_link() -> pid().
-synchronous_timed_new_link() ->
+%% -spec synchronous_timed_new_link() -> pid().
+%% synchronous_timed_new_link() ->
 
-	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-	SpawnedPid = spawn_link( fun() ->
-									 wooper_construct_and_run_synchronous(
-									   _ConstructParams=[], CreatorPid )
-							 end ),
+%%	SpawnedPid = spawn_link( fun() ->
+%%									 wooper_construct_and_run_synchronous(
+%%									   _ConstructParams=[], CreatorPid )
+%%							 end ),
 
-	% Blocks until the spawned process answers or a time-out occurs:
-	receive
+%%	% Blocks until the spawned process answers or a time-out occurs:
+%%	receive
 
-		{ spawn_successful, SpawnedPid } ->
-			SpawnedPid
+%%		{ spawn_successful, SpawnedPid } ->
+%%			SpawnedPid
 
-	after ?synchronous_time_out ->
+%%	after ?synchronous_time_out ->
 
-		throw( { synchronous_linked_time_out, ?MODULE } )
+%%		throw( { synchronous_linked_time_out, ?MODULE } )
 
-	end.
+%%	end.
 
 
 
@@ -796,11 +805,11 @@ synchronous_timed_new_link() ->
 % Creation is asynchronous: remote_new returns as soon as the creation is
 % triggered, without waiting for it to complete.
 %
--spec remote_new( net_utils:node_name() ) -> pid().
-remote_new( Node ) ->
-	spawn( Node, fun() ->
-						 wooper_construct_and_run( _ConstructParams=[] )
-				 end ).
+%% -spec remote_new( net_utils:node_name() ) -> pid().
+%% remote_new( Node ) ->
+%%	spawn( Node, fun() ->
+%%						 wooper_construct_and_run( _ConstructParams=[] )
+%%				 end ).
 
 
 
@@ -814,11 +823,11 @@ remote_new( Node ) ->
 % Creation is asynchronous: remote_new_link returns as soon as the creation is
 % triggered, without waiting for it to complete.
 %
--spec remote_new_link( net_utils:node_name() ) -> pid().
-remote_new_link( Node ) ->
-	spawn_link( Node, fun() ->
-							  wooper_construct_and_run( _ConstructParams=[] )
-					  end ).
+%% -spec remote_new_link( net_utils:node_name() ) -> pid().
+%% remote_new_link( Node ) ->
+%%	spawn_link( Node, fun() ->
+%%							  wooper_construct_and_run( _ConstructParams=[] )
+%%					  end ).
 
 
 
@@ -829,31 +838,31 @@ remote_new_link( Node ) ->
 % Creation is synchronous: remote_synchronous_new will return only when the
 % created process reports it is up and running.
 %
--spec remote_synchronous_new( net_utils:node_name() ) -> pid().
-remote_synchronous_new( Node ) ->
+%% -spec remote_synchronous_new( net_utils:node_name() ) -> pid().
+%% remote_synchronous_new( Node ) ->
 
-	%trace_utils:debug_fmt("synchronous_new operator: spawning ~w "
-	%	"with no parameter.~n", [ ?MODULE ]),
+%%	%trace_utils:debug_fmt("synchronous_new operator: spawning ~w "
+%%	%	"with no parameter.~n", [ ?MODULE ]),
 
-	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-	SpawnedPid = spawn( Node,
-						fun() ->
-								wooper_construct_and_run_synchronous(
-								  _ConstructParams=[], CreatorPid )
-						end ),
+%%	SpawnedPid = spawn( Node,
+%%						fun() ->
+%%								wooper_construct_and_run_synchronous(
+%%								  _ConstructParams=[], CreatorPid )
+%%						end ),
 
-	% Blocks until the spawned process answers:
-	%
-	% (no risk of synchronous spawns mismatch, as each synchronous call is
-	% waited for)
-	%
-	receive
+%%	% Blocks until the spawned process answers:
+%%	%
+%%	% (no risk of synchronous spawns mismatch, as each synchronous call is
+%%	% waited for)
+%%	%
+%%	receive
 
-		{ spawn_successful, SpawnedPid } ->
-			SpawnedPid
+%%		{ spawn_successful, SpawnedPid } ->
+%%			SpawnedPid
 
-	end.
+%%	end.
 
 
 
@@ -865,27 +874,27 @@ remote_synchronous_new( Node ) ->
 % Creation is synchronous: remote_synchronous_new_link will return only when the
 % created process reports it is up and running.
 %
--spec remote_synchronous_new_link( net_utils:node_name() ) -> pid().
-remote_synchronous_new_link( Node ) ->
+%% -spec remote_synchronous_new_link( net_utils:node_name() ) -> pid().
+%% remote_synchronous_new_link( Node ) ->
 
-	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-	SpawnedPid = spawn_link( Node, fun() ->
-										   wooper_construct_and_run_synchronous(
-											 _ConstructParams=[], CreatorPid )
-								   end ),
+%%	SpawnedPid = spawn_link( Node, fun() ->
+%%										   wooper_construct_and_run_synchronous(
+%%											 _ConstructParams=[], CreatorPid )
+%%								   end ),
 
-	% Blocks until the spawned process answers:
-	%
-	% (no risk of synchronous spawns mismatch, as each synchronous call is
-	% waited for)
-	%
-	receive
+%%	% Blocks until the spawned process answers:
+%%	%
+%%	% (no risk of synchronous spawns mismatch, as each synchronous call is
+%%	% waited for)
+%%	%
+%%	receive
 
-		{ spawn_successful, SpawnedPid } ->
-			SpawnedPid
+%%		{ spawn_successful, SpawnedPid } ->
+%%			SpawnedPid
 
-	end.
+%%	end.
 
 
 
@@ -901,19 +910,19 @@ remote_synchronous_new_link( Node ) ->
 % This allows to perform the actual instance creations in parallel, by waiting
 % bulks of creations.
 %
-remote_synchronisable_new_link( Node ) ->
+%% remote_synchronisable_new_link( Node ) ->
 
-	%trace_utils:debug_fmt( "remote_synchronisable_new_link operator: "
-	% "spawning ~w:wooper_construct_and_run_synchronous "
-	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
-	%timer:sleep(200),
+%%	%trace_utils:debug_fmt( "remote_synchronisable_new_link operator: "
+%%	% "spawning ~w:wooper_construct_and_run_synchronous "
+%%	% "with parameters ~w.~n", [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
+%%	%timer:sleep(200),
 
-	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-	spawn_link( Node, fun() ->
-							  wooper_construct_and_run_synchronous(
-								_ConstructParams=[], CreatorPid )
-					  end ).
+%%	spawn_link( Node, fun() ->
+%%							  wooper_construct_and_run_synchronous(
+%%								_ConstructParams=[], CreatorPid )
+%%					  end ).
 
 
 
@@ -927,31 +936,31 @@ remote_synchronisable_new_link( Node ) ->
 % Creation is synchronous: remote_synchronous_timed_new will return only when
 % the created process reports it is up and running, or when a time-out occurs.
 %
--spec remote_synchronous_timed_new( net_utils:node_name() ) -> pid().
-remote_synchronous_timed_new( Node ) ->
+%% -spec remote_synchronous_timed_new( net_utils:node_name() ) -> pid().
+%% remote_synchronous_timed_new( Node ) ->
 
-	CreatorPid = self(),
+%% 	CreatorPid = self(),
 
-	SpawnedPid = spawn( Node, fun() ->
-									  wooper_construct_and_run_synchronous(
-										_ConstructParams=[], CreatorPid )
-							  end ),
+%% 	SpawnedPid = spawn( Node, fun() ->
+%% 									  wooper_construct_and_run_synchronous(
+%% 										_ConstructParams=[], CreatorPid )
+%% 							  end ),
 
-	% Blocks until the spawned process answers or a time-out occurs:
-	%
-	% (no risk of synchronous spawns mismatch, as each synchronous call is
-	% waited for)
-	%
-	receive
+%% 	% Blocks until the spawned process answers or a time-out occurs:
+%% 	%
+%% 	% (no risk of synchronous spawns mismatch, as each synchronous call is
+%% 	% waited for)
+%% 	%
+%% 	receive
 
-		{ spawn_successful, SpawnedPid } ->
-			SpawnedPid
+%% 		{ spawn_successful, SpawnedPid } ->
+%% 			SpawnedPid
 
-	after ?synchronous_time_out ->
+%% 	after ?synchronous_time_out ->
 
-		throw( { remote_synchronous_time_out, Node, ?MODULE } )
+%% 		throw( { remote_synchronous_time_out, Node, ?MODULE } )
 
-	end.
+%% 	end.
 
 
 
@@ -964,31 +973,31 @@ remote_synchronous_timed_new( Node ) ->
 % when the created process reports it is up and running, or when a time-out
 % occurs.
 %
--spec remote_synchronous_timed_new_link( net_utils:node_name() ) -> pid().
-remote_synchronous_timed_new_link( Node ) ->
+%% -spec remote_synchronous_timed_new_link( net_utils:node_name() ) -> pid().
+%% remote_synchronous_timed_new_link( Node ) ->
 
-	CreatorPid = self(),
+%% 	CreatorPid = self(),
 
-	SpawnedPid = spawn_link( Node, fun() ->
-										   wooper_construct_and_run_synchronous(
-											 _ConstructParams=[], CreatorPid )
-								   end ),
+%% 	SpawnedPid = spawn_link( Node, fun() ->
+%% 										   wooper_construct_and_run_synchronous(
+%% 											 _ConstructParams=[], CreatorPid )
+%% 								   end ),
 
-	% Blocks until the spawned process answers or a time-out occurs:
-	%
-	% (no risk of synchronous spawns mismatch, as each synchronous call is
-	% waited for)
-	%
-	receive
+%% 	% Blocks until the spawned process answers or a time-out occurs:
+%% 	%
+%% 	% (no risk of synchronous spawns mismatch, as each synchronous call is
+%% 	% waited for)
+%% 	%
+%% 	receive
 
-		{ spawn_successful, SpawnedPid } ->
-			SpawnedPid
+%% 		{ spawn_successful, SpawnedPid } ->
+%% 			SpawnedPid
 
-	after ?synchronous_time_out ->
+%% 	after ?synchronous_time_out ->
 
-		throw( { remote_synchronous_linked_time_out, Node, ?MODULE } )
+%% 		throw( { remote_synchronous_linked_time_out, Node, ?MODULE } )
 
-	end.
+%% 	end.
 
 
 
@@ -1009,14 +1018,14 @@ remote_synchronous_timed_new_link( Node ) ->
 %
 % Allows to obtain the virtual table from the instance, not from its parent.
 %
--spec wooper_construct_and_run( construction_parameters() ) -> no_return().
-wooper_construct_and_run( ConstructionParameters ) ->
+%% -spec wooper_construct_and_run( construction_parameters() ) -> no_return().
+%% wooper_construct_and_run( ConstructionParameters ) ->
 
-	%trace_utils:debug_fmt("wooper_construct_and_run called with parameters ~w,"
-	%	" whose length is ~B.~n",
-	%   [ ConstructionParameters, length( ConstructionParameters ) ] ),
+%%	%trace_utils:debug_fmt("wooper_construct_and_run called with parameters ~w,"
+%%	%	" whose length is ~B.~n",
+%%	%   [ ConstructionParameters, length( ConstructionParameters ) ] ),
 
-	wooper:construct_and_run( _Classname=?MODULE, ConstructionParameters ).
+%%	wooper:construct_and_run( _Classname=?MODULE, ConstructionParameters ).
 
 
 
@@ -1024,13 +1033,13 @@ wooper_construct_and_run( ConstructionParameters ) ->
 %
 % Allows to obtain the virtual table from the instance, not from its parent.
 %
--spec wooper_construct_and_run_synchronous( construction_parameters(),
-											pid() ) -> no_return().
-wooper_construct_and_run_synchronous( ConstructionParameters, SpawnerPid ) ->
+%% -spec wooper_construct_and_run_synchronous( construction_parameters(),
+%%											pid() ) -> no_return().
+%% wooper_construct_and_run_synchronous( ConstructionParameters, SpawnerPid ) ->
 
-	%trace_utils:debug_fmt("wooper_construct_and_run called with parameters ~w,"
-	%	" whose length is ~B.~n",
-	%   [ ConstructionParameters, length( ConstructionParameters ) ] ),
+%%	%trace_utils:debug_fmt("wooper_construct_and_run called with parameters ~w,"
+%%	%	" whose length is ~B.~n",
+%%	%   [ ConstructionParameters, length( ConstructionParameters ) ] ),
 
-	wooper:construct_and_run_synchronous( _Classname=?MODULE,
-										  ConstructionParameters, SpawnerPid ).
+%%	wooper:construct_and_run_synchronous( _Classname=?MODULE,
+%%										  ConstructionParameters, SpawnerPid ).

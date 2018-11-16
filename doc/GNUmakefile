@@ -39,13 +39,14 @@ GITHUB_PAGES_BASE := $(shell basename "(WOOPER_WEB_MIRROR_BRANCH)")
 		info-web clean clean-doc
 
 
-
 # Default do-nothing target:
+doc:
+
+
 all:
 	@echo "  Run 'make full-doc' to generate the manual of the WOOPER-$(CURRENT_VERSION) layer."
 
 
-doc:
 
 
 full-doc: $(CURRENT_WOOPER_HTML)

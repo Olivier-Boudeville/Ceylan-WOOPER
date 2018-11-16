@@ -1,7 +1,7 @@
 # Add all WOOPER-specific rules below.
 
 
-# Outside prerequisites: $(WOOPER_SRC)/wooper.hrl wooper_class_manager and
+# Outside prerequisites: $(WOOPER_SRC)/wooper.hrl wooper_class_manager and the
 # modules from Ceylan-Myriad.
 
 
@@ -79,5 +79,10 @@ clean-ast-debug-wooper:
 
 # See also: in GNUmakevars.inc, the BOOTSTRAP_MODULES variable.
 
-# No need for a special build here:
-#$(WOOPER_TOP)/src/wooper_info.beam: $(WOOPER_TOP)/src/wooper_info.erl
+
+# We still need a special build here, so that the BEAM is generated in src
+# rather than at the root of WOOPER:
+#
+$(WOOPER_TOP)/src/wooper_info.beam: $(WOOPER_TOP)/src/wooper_info.erl
+	@echo "		Compiling bootstrap module $<"
+	@$(ERLANG_COMPILER) $(ERLANG_COMPILER_OPT_FOR_STANDARD_MODULES) -o src $<

@@ -400,6 +400,13 @@
 		optional_callbacks_defs = [] :: [ ast_info:located_form() ],
 
 
+		% Tells whether this class shall be compiled and run in debug mode,
+		% hence with extended checks for example (slower, safer, easier to
+		% debug).
+		%
+		debug_mode = true :: boolean(),
+
+
 		% The number of the last line in the original source file:
 		%
 		% (any added code will be put afterwards)

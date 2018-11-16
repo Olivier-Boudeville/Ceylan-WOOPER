@@ -50,7 +50,7 @@
 
 
 % The form corresponding to a method specification:
--type method_spec() :: meta_utils:form().
+-type method_spec() :: ast_base:form().
 
 
 % The type specification of a method:
@@ -136,7 +136,8 @@
 			   oneway_export_table/0, request_export_table/0,
 			   static_export_table/0,
 			   constructor_table/0,
-			   oneway_table/0, request_table/0, static_table/0 ]).
+			   oneway_table/0, request_table/0, static_table/0,
+			   oneway_info/0, request_info/0, static_info/0 ]).
 
 
 % Shorthands:
@@ -158,9 +159,11 @@
 
 		  requests_to_string/3, request_info_to_string/3,
 		  oneways_to_string/3, oneway_info_to_string/3,
-		  static_methods_to_string/3, static_method_info_to_string/3
+		  static_methods_to_string/3, static_method_info_to_string/3,
 
-		]).
+		  get_wooper_builtins/0, get_metadata_builtins/0, get_state_builtins/0,
+		  get_execution_builtins/0, get_inner_builtins/0, get_helper_builtins/0,
+		  get_serialisation_builtins/0 ]).
 
 
 
@@ -202,6 +205,7 @@ init_class_info() ->
 				 static_exports=EmptyTable,
 				 statics=EmptyTable,
 				 %optional_callbacks_defs
+				 %debug_mode
 				 %last_line
 				 markers=EmptyTable
 				 %errors
@@ -265,6 +269,7 @@ class_info_to_string( #class_info{
 						 static_exports=_StaticExports,
 						 statics=StaticTable,
 						 optional_callbacks_defs=OptCallbacksDefs,
+						 debug_mode=IsDebugMode,
 						 last_line=LastLineLocDef,
 						 markers=MarkerTable,
 						 errors=Errors,
@@ -283,6 +288,16 @@ class_info_to_string( #class_info{
 
 	ClassnameString = class_entry_to_string( ClassEntry, DoIncludeForms ),
 
+	DebugString = case IsDebugMode of
+
+		true ->
+			"in debug mode";
+
+		false ->
+			"not in debug mode"
+
+	end,
+
 	Infos = [ superclasses_to_string( SuperclassesEntry, DoIncludeForms,
 									  NextIndentationLevel ),
 
@@ -297,6 +312,8 @@ class_info_to_string( #class_info{
 
 			  ast_info:optional_callbacks_to_string( OptCallbacksDefs,
 								   DoIncludeForms, NextIndentationLevel ),
+
+			  DebugString,
 
 			  ast_info:parse_attribute_table_to_string( ParseAttributeTable,
 										 DoIncludeForms, NextIndentationLevel ),
@@ -619,3 +636,132 @@ static_methods_to_string( StaticTable, DoIncludeForms, IndentationLevel ) ->
 static_method_info_to_string( _StaticInfo, _DoIncludeForms,
 							  _IndentationLevel ) ->
 	"static info".
+
+
+
+
+
+% Section for built-in functions, notably to be able to filter them out.
+%
+% Note: over time, at least some of them are meant to be implemented by the
+% WOOPER parse trandsform, and thus are to disappear from here.
+
+
+% Returns the function identifiers of all WOOPER builtins.
+%
+-spec get_wooper_builtins() -> [ ast_info:function_id() ].
+get_wooper_builtins() ->
+	get_metadata_builtins() ++ get_state_builtins() ++ get_execution_builtins()
+		++ get_inner_builtins() ++ get_helper_builtins()
+		++ get_serialisation_builtins().
+
+
+
+% Returns the function identifiers of the WOOPER builtins regarding class
+% metadata.
+%
+-spec get_metadata_builtins() -> [ ast_info:function_id() ].
+get_metadata_builtins() ->
+	[ {getSuperclasses,1},
+	  {get_superclasses,0},
+
+	  {getClassname,1},
+	  {get_classname,0} ].
+
+
+
+% Returns the function identifiers of the WOOPER builtins regarding state.
+%
+-spec get_state_builtins() -> [ ast_info:function_id() ].
+get_state_builtins() ->
+	[ {hasAttribute,2},
+	  {removeAttribute,2},
+
+	  {getAttribute,2},
+	  {getAttributes,2},
+
+	  {setAttribute,3},
+	  {setAttributes,2},
+
+	  {incrementAttribute,2},
+	  {decrementAttribute,2},
+
+
+	  {appendToAttribute,3},
+	  {popFromAttribute,2},
+
+	  {deleteFromAttribute,3},
+	  {concatToAttribute,3},
+
+	  {addToAttribute,3},
+	  {subtractFromAttribute,3},
+
+	  {toggleAttribute,2},
+
+	  {addKeyValueToAttribute,4} ].
+
+
+
+% Returns the function identifiers of the WOOPER builtins regarding behaviour
+% (execution).
+%
+-spec get_execution_builtins() -> [ ast_info:function_id() ].
+get_execution_builtins() ->
+	[ {executeRequest,2},
+	  {executeRequest,3},
+	  {executeRequestWith,3},
+	  {executeRequestWith,4},
+
+	  {executeOneway,2},
+	  {executeOneway,3},
+	  {executeOnewayWith,3},
+	  {executeOnewayWith,4} ].
+
+
+
+% Returns the function identifiers of the WOOPER inner builtins (defined for its
+% own mode of operation).
+%
+-spec get_inner_builtins() -> [ ast_info:function_id() ].
+get_inner_builtins() ->
+	[ {wooper_main_loop,1},
+	  {wooper_lookup_method,3},
+
+	  {wooper_execute_method,3},
+	  {wooper_execute_method_with,4},
+	  {wooper_effective_method_execution,4},
+
+	  {wooper_handle_local_request_execution,3},
+	  {wooper_handle_local_request_execution_with,4},
+	  {wooper_handle_remote_request_execution,4},
+
+	  {wooper_handle_local_oneway_execution,3},
+	  {wooper_handle_local_oneway_execution_with,4},
+	  {wooper_handle_remote_oneway_execution,3},
+
+	  {chain_parent_destructors,1},
+	  {trigger_destruct_error,4},
+
+	  {wooper_destruct,1} ].
+
+
+
+% Returns the function identifiers of the WOOPER helper builtins.
+%
+-spec get_helper_builtins() -> [ ast_info:function_id() ].
+get_helper_builtins() ->
+	[ {is_wooper_debug,0},
+	  {wooper_check_undefined,2} ].
+
+
+
+% Returns the function identifiers of the WOOPER serialisation builtins.
+%
+-spec get_serialisation_builtins() -> [ ast_info:function_id() ].
+get_serialisation_builtins() ->
+	[ {pre_serialise_hook,1},
+	  {serialise,3},
+	  {post_deserialise_hook,1},
+	  {post_serialise_hook,3},
+
+	  {pre_deserialise_hook,2} ].

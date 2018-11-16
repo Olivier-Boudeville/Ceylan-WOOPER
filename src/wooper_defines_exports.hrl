@@ -125,8 +125,15 @@
 %
 % (no wooper_result atom added any more in debug mode)
 %
--define( wooper_return_state_result( State, Result ), { State, Result } ).
--define( wooper_return_state_only( State ), State ).
+%-define( wooper_return_state_result( State, Result ), { State, Result } ).
+%-define( wooper_return_state_only( State ), State ).
+%
+% Finally, using retrocompatibility macros, resulting in the same code:
+%
+-define( wooper_return_state_result( S, R ),
+		 wooper:return_state_result( (S), (R) ) ).
+
+-define( wooper_return_state_only( S ), wooper:return_state( (S) ) ).
 
 
 

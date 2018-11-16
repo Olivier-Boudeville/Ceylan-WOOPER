@@ -13,22 +13,6 @@
 -define( wooper_superclasses, [] ).
 
 
-% Parameters taken by the constructor ('construct'):
--define( wooper_construct_parameters, Age, Gender ).
-
-
-% Construction-related exported operators, declaring all variations of WOOPER
-% standard life-cycle operations:
-%
--define( wooper_construct_export, new/2, new_link/2,
-		 synchronous_new/2, synchronous_new_link/2,
-		 synchronous_timed_new/2, synchronous_timed_new_link/2,
-		 remote_new/3, remote_new_link/3, remote_synchronous_new/3,
-		 remote_synchronous_new_link/3, remote_synchronisable_new_link/3,
-		 remote_synchronous_timed_new/3, remote_synchronous_timed_new_link/3,
-		 construct/3, destruct/1 ).
-
-
 
 % Declarations of class-specific methods (besides inherited ones).
 % isHotBlooded/1 and canEat/2 are abstract here, hence not mentioned:
@@ -51,7 +35,7 @@
 
 % Constructs a new Creature.
 -spec construct( wooper:state(), age(), gender() ) -> wooper:state().
-construct( State, ?wooper_construct_parameters ) ->
+construct( State, Age, Gender ) ->
 	% No mother class.
 	setAttributes(State, [ { age, Age }, { gender, Gender } ] ).
 

@@ -184,3 +184,5 @@
 -include("wooper_main_loop_functions.hrl").
 -include("wooper_serialisation_functions.hrl").
 -include("wooper_state_functions.hrl").
+
+% Nothing needed for static methods.

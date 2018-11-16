@@ -39,7 +39,7 @@
 
 :Organisation: Copyright (C) 2008-2018 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
-:Creation Date: Thursday, February 25, 2008
+:Creation Date: Wednesday, November 14, 2018
 :Lastly Updated: Thursday, July 5, 2018
 
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
@@ -153,24 +153,9 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
  % Determines what are the mother classes of this class (if any):
  -define(wooper_superclasses,[class_Mammal,class_ViviparousBeing]).
 
- % Parameters taken by the constructor ('construct').
- % They are here the ones of the Mammal mother class (the viviparous being
- % constructor does not need any parameter) plus whisker color.
- % These are class-specific data needing to be set in the constructor:
- -define(wooper_construct_parameters,Age,Gender,FurColor,WhiskerColor).
-
- % Declaring all variations of WOOPER standard life-cycle operations:
- % (this is just a pasted template, with updated arities)
- -define( wooper_construct_export, new/4, new_link/4,
-	synchronous_new/4, synchronous_new_link/4,
-	synchronous_timed_new/4, synchronous_timed_new_link/4,
-	remote_new/5, remote_new_link/5, remote_synchronous_new/5,
-	remote_synchronous_new_link/5, remote_synchronous_timed_new/5,
-	remote_synchronous_timed_new_link/5, construct/5, destruct/1 ).
-
  % Member method declarations:
  -define( wooper_method_export,getWhiskerColor/1,setWhiskerColor/2,
-	canEat/2 ).
+		  canEat/2 ).
 
  % Static method declarations:
  -define( wooper_static_method_export, get_default_whisker_color()/0 ).
@@ -179,7 +164,7 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
  -include("wooper.hrl").
 
  % Constructs a new Cat.
- construct( State, ?wooper_construct_parameters ) ->
+ construct(State,Age,Gender,FurColor,WhiskerColor) ->
 	% First the direct mother classes:
 	MammalState = class_Mammal:construct( State, Age, Gender, FurColor ),
 	ViviparousMammalState = class_ViviparousBeing:construct(MammalState),
@@ -222,7 +207,7 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
 
 Straightforward, isn't it? We will discuss it in-depth, though.
 
-To test this class (provided that ``GNU make`` and ``Erlang 20.0`` or more recent are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on `Ceylan-Myriad <http://myriad.esperide.org>`_, hence to be installed first:
+To test this class (provided that ``GNU make`` and ``Erlang 21.0`` or more recent are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on `Ceylan-Myriad <http://myriad.esperide.org>`_, hence to be installed first:
 
 .. code:: bash
 
@@ -249,13 +234,13 @@ In the ``examples`` directory, the test defined in `class_Cat_test.erl <https://
 .. code:: bash
 
  Running unitary test class_Cat_run (second form)
- Erlang/OTP 20 [erts-9.0.1] [source] [64-bit] [smp:8:8] [..]
+
  --> Testing module class_Cat_test.
  [..]
- Deleting cat <0.70.0>! (overridden destructor)
- Deleting mammal <0.68.0>! (overridden destructor)
+ Deleting cat <0.80.0>! (overridden destructor)
+ Deleting mammal <0.80.0>! (overridden destructor)
  Actual class from destructor: class_Cat.
- Deleting mammal <0.70.0>! (overridden destructor)
+ Deleting mammal <0.82.0>! (overridden destructor)
  This cat could be created and be synchronously deleted, as expected.
  --> Successful end of test.
  (test finished, interpreter halted)
@@ -273,14 +258,14 @@ Why Adding Object-Oriented Capabilities To Erlang?
 
 Although applying blindly an OOP approach while using languages based on other paradigms (Erlang ones are functional and concurrent; the language is not specifically targeting OOP) is a common mistake, there are some problems that may be deemed inherently "object-oriented", i.e. that cannot be effectively modelled without encapsulated abstractions sharing behaviours.
 
-Examples of this kind of systems are multi-agent simulations. If they often need massive concurrency, robustness, distribution, etc. (Erlang is particularly suitable for that), the various types of agents have also often to largely share states and behaviours, while still being able to be further specialised on a per-type basis.
+Examples of this kind of systems are multi-agent simulations. If they often need massive concurrency, robustness, distribution, etc. (Erlang is particularly suitable for that), the various types of agents have also often to rely on similar kinds of states and behaviours, while still being able to be further specialised on a per-type basis.
 
 The example_ mentioned in this document is an illustration [#]_ of the interacting lives of numerous animals of various species. Obviously, they have to share behaviours (ex: all ovoviviparous beings may lay eggs, all creatures can live and die, all have an age, etc.), which cannot be mapped easily (read: automatically) to Erlang concepts without adding some generic constructs.
 
-.. [#] This example is not a *simulation*, it is just a multi-agent system. For real, massive, discrete-time simulations of complex systems in Erlang (using WOOPER), one may refer to `Sim-Diasca <http://www.sim-diasca.com>`_.
+.. [#] This example is not a *simulation*, it is just a multi-agent system. For real, massive, discrete-time simulations of complex systems in Erlang (using WOOPER), one may refer to `Sim-Diasca <http://www.sim-diasca.com>`_ instead.
 
 
-WOOPER, which stands for *Wrapper for OOP in Erlang*, is a lightweight yet effective (performance-wise, but also regarding the overall developing efforts) means of making these constructs available, notably in terms of state management and multiple inheritance.
+WOOPER, which stands for *Wrapper for OOP in Erlang*, is a lightweight yet effective (performance-wise, but also regarding the user-side  developing efforts) means of making these constructs available, notably in terms of state management and multiple inheritance.
 
 The same programs could certainly be implemented without such OOP constructs, but at the expense of way too much manually-crafted, specific (per-class) code. This process would be tedious, error-prone, and most often the result could hardly be maintained.
 
@@ -312,7 +297,7 @@ With WOOPER, each class has a unique name, such as ``class_Cat``.
 
 To allow for **encapsulation**, a WOOPER class is mapped to an Erlang module, whose name is by convention made from the ``class_`` prefix followed by the class name, in the so-called `CamelCase <http://en.wikipedia.org/wiki/CamelCase>`_: all words are spelled in lower-case except their first letter, and there are no separators between words, like in: *ThisIsAnExample*.
 
-For example, a class modeling a cat should translate into an Erlang module named ``class_Cat``, thus in a file named ``class_Cat.erl``. At the top of this file, the corresponding module would be therefore declared with: ``-module(class_Cat).``.
+So a class modeling, for example, a cat should translate into an Erlang module named ``class_Cat``, thus in a file named ``class_Cat.erl``. At the top of this file, the corresponding module would be therefore declared with: ``-module(class_Cat).``.
 
 Similarly, a pink flamingo class could be declared as ``class_PinkFlamingo``, in ``class_PinkFlamingo.erl``, which would include a ``-module(class_PinkFlamingo).`` declaration.
 
@@ -1628,31 +1613,31 @@ Instance Creation: ``new``/``new_link`` And ``construct``
 Role of a  ``new`` /``construct`` Pair
 ______________________________________
 
-Whereas the purpose of ``new`` / ``new_link`` is to create a working instance on the user's behalf, the role of ``construct`` is to initialise an instance of that class while being able to be chained for inheritance, as explained later.
+Whereas the purpose of the ``new`` / ``new_link`` operators is to *create* a working instance on the user's behalf, the role of ``construct`` is to *initialise* an instance of that class (regardless of how it was created), while being able to be chained for inheritance, as explained later.
 
 Such an initialisation is of course part of the instance creation: all calls to any of the``new`` operators result in an underlying call to the (single) corresponding ``construct`` operator.
 
-For example, both creations stemming from ``MyCat = class_Cat:new(A,B,C,D)`` and ``MyCat = class_Cat:new_link(A,B,C,D)`` will rely on ``class_Cat:construct/5`` to set up a proper initial state for the ``MyCat`` instance; the same ``class_Cat:construct(State,A,B,C,D)`` will be called for all creation cases.
+For example, both creations stemming from ``MyCat = class_Cat:new(A,B,C,D)`` and ``MyCat = class_Cat:new_link(A,B,C,D)`` will rely on ``class_Cat:construct/5`` to set up a proper initial state for the ``MyCat`` instance; the same ``class_Cat:construct(State,A,B,C,D)`` will be called for all creation cases (one may note that, because of its first parameter, which accounts for the WOOPER-provided initial ``State`` parameter, the arity of ``construct`` is equal to the one of ``new`` / ``new_link`` plus one).
 
 The ``new_link`` operator behaves exactly as the ``new`` operator, except that it creates an instance that is Erlang-linked with the process that called that operator, exactly like ``spawn_link`` behaves compared to ``spawn`` [#]_.
 
 .. [#] For example it induces no race condition between linking and termination in the case of a very short-lived spawned process.
 
 
-The ``new`` and ``new_link`` operators are automatically defined by WOOPER, but they rely on the class-specific user-defined ``construct`` operator (only WOOPER is expected to make use of it). This ``construct`` operator is the one that must be implemented by the class developer (the machinery related to ``new`` being managed by WOOPER).
+The ``new`` and ``new_link`` operators are automatically defined by WOOPER (thanks to a relevant parse transform), but they rely on the class-specific user-defined ``construct`` operator (only WOOPER is expected to make use of it). This ``construct`` operator is the one that must be implemented by the class developer (the machinery related to ``new`` operators being automatically managed by WOOPER).
 
-Currently a single ``construct`` operator can be defined, i.e. a single arity is supported [#]_, possibly with multiple clauses that, as usual, are selected based on pattern-matching.
+At least one ``construct`` operator must be defined by the class developer (otherwise a ``no_constructor_defined`` error will be triggered when compiling that class), knowing that any number of them can then be defined, each with its own arity (ex: ``construct/1, construct/2, construct/3``, etc.), and each with possibly multiple clauses that will be, as usual, selected at runtime based on pattern-matching.
 
-.. [#] Even if generally workarounds can easily be devised (for example by tagging construction parameters with atom so that a single arity can federate all cases), this limitation is planned to be removed.
+``construct`` operators may not be exported explicitly by the class developer, as WOOPER will automatically take care of that if necessary.
 
 
 For example:
 
 .. code:: erlang
 
-  % Selection based on pattern-matching:
-  MyFirstDog  = Class_Dog:new(create_from_weight,4.4),
-  MySecondDog = Class_Dog:new(create_from_colors,[sand,white]).
+  % If having defined class_Dog:construct/{1,3}:
+  MyFirstDog  = class_Dog:new(),
+  MySecondDog = class_Dog:new(_Weight=4.4,_Colors=[sand,white]).
 
 
 
@@ -1676,7 +1661,7 @@ For a class whose instances can be constructed from ``N`` actual parameters, the
   - blocking creation: ``remote_synchronous_new/N+1`` and ``remote_synchronous_new_link/N+1``
   - blocking creation with time-out: ``remote_synchronous_timed_new/N+1`` and ``remote_synchronous_timed_new_link/N+1``
 
-.. Note:: All ``remote_*`` variations require one more parameter (to be specified first), since the remote node on which the instance should be created has of course to be specified.
+.. Note:: All ``remote_*`` variations require one additional parameter (that shall be specified first), since the remote node on which the instance should be created has of course to be specified.
 
 
 All supported ``new`` variations are detailed below.
@@ -1685,7 +1670,7 @@ All supported ``new`` variations are detailed below.
 Asynchronous new
 ****************
 
-This corresponds to the plain ``new``, ``new_link`` operators etc. discussed earlier, relying internally on the usual ``spawn*`` primitives . These basic operators are **asynchronous** (non-blocking): they trigger the creation of a new instance, and return immediately, without waiting for it to complete, and the execution of the calling process continues while (hopefully, i.e. with no guarantee) the instance is being created and executed.
+This corresponds to the plain ``new``, ``new_link`` operators discussed earlier, relying internally on the usual ``spawn*`` primitives . These basic operators are **asynchronous** (non-blocking): they trigger the creation of a new instance, and return immediately, without waiting for it to complete, and the execution of the calling process continues while (hopefully, i.e. with no guarantee - the corresponding process may immediately crash) the instance is being created and executed.
 
 
 Synchronous new
@@ -1695,9 +1680,9 @@ As mentioned, with the previous asynchronous forms, the caller has no way of kno
 
 Thus two counterpart operators, ``synchronous_new/synchronous_new_link`` are also available.
 
-They behave like ``new/new_link`` except they will return only when (and if) the created instance is up and running: they are blocking, synchronous, operators.
+They behave like ``new/new_link`` except that they will return only when (and if) the created instance is up and running: they are blocking, synchronous, operators.
 
-For example, after ``MyMammal = class_Mammal:synchronous_new(...)``, one knows that the ``MyMammal`` instance is fully created and waiting for incoming messages.
+For example, once (if) ``MyMammal = class_Mammal:synchronous_new(...)`` returns, one knows that the ``MyMammal`` instance is fully created and waiting for incoming messages.
 
 The implementation of these synchronous operations relies on a message (precisely: ``{spawn_successful,InstancePid}``) being automatically sent by the created instance to the WOOPER code on the caller side, so that the ``synchronous_new`` operator will return to the user code only once successfully constructed and ready to handle messages.
 
@@ -1705,23 +1690,17 @@ The implementation of these synchronous operations relies on a message (precisel
 Timed Synchronous new
 *********************
 
-Note that, should the instance creation fail, the caller of a synchronous new would then be blocked for ever, as the awaited message would actually never be sent by the failed new instance.
+Note that, should the instance creation fail, the caller of a synchronous new would then be blocked for ever, as the awaited message would actually never be sent by the failed new instance. In some cases a time-out may be useful, so that the caller may be unblocked and may react appropriately.
 
-This is why the ``synchronous_timed_new*`` operators have been introduced: if the caller-side time-out (whose default duration is 5 seconds) expires while waiting for the created instance to answer, then they will throw an appropriate exception, among:
+This is why the ``synchronous_timed_new*`` operators have been introduced: if the caller-side time-out [#]_ expires while waiting for the created instance to answer, then they will throw an appropriate exception:
 
-- ``{synchronous_time_out,InstanceModule}``
-- ``{synchronous_linked_time_out,InstanceModule}``
-- ``{remote_synchronous_time_out,Node,InstanceModule}``
-- ``{remote_synchronous_linked_time_out,Node,InstanceModule}``
-- ``{synchronous_time_out,InstanceModule}``
-- ``{synchronous_linked_time_out,InstanceModule}``
-- ``{remote_synchronous_time_out,Node,InstanceModule}``
-- ``{remote_synchronous_linked_time_out,Node,InstanceModule}``
+- either ``{synchronous_time_out,Classname}`` if it was a node-local creation (where ``Classname`` is the name of the class corresponding to the instance to create; ex: ``class_Cat``)
+- or ``{remote_synchronous_time_out,Node,Classname}``, where ``Node`` is the name of the node (as an atom) on which the instance was to be created
+
+.. [#] Depending on whether or not the class to instantiate was compiled in debug mode, the time-out is to last by default for, respectively, 5 seconds (shorter, to ease debugging) or for 30 minutes (longer, to favor robustness).
 
 Then the caller may or may not catch this exception.
 
-
-.. comment return the ``time_out`` atom instead of the PID of the created instance. The caller is then able to check whether the creation succeeded thanks to a simple pattern-matching.
 
 
 Remote new
@@ -1757,7 +1736,7 @@ Knowing that a cat can be created out of four parameters (Age, Gender, FurColor,
 .. code:: erlang
 
   % Local asynchronous creation:
-  MyFirstCat = class_Cat:new(1,male,brown,white),
+  MyFirstCat = class_Cat:new(_Age=1,male,brown,white),
 
   % The same, but a crash of this cat will crash the current process too:
   MySecondCat = class_Cat:new_link(2,female,black,white),
@@ -1809,7 +1788,7 @@ For example, let's suppose ``class_Cat`` inherits directly both from ``class_Mam
 
 The fact that the ``Mammal`` class itself inherits from the ``Creature`` class does not have to appear here: it is to be managed directly by ``class_Mammal:construct`` (at any given inheritance level, only direct mother classes must be taken into account).
 
-One should ensure that, in constructors, the successive states are always built from the last updated one, unlike:
+One should ensure that, in constructors, the successive states are always built from the last updated one, unlike this case (where no mother class has been declared):
 
 .. code:: erlang
 
@@ -1842,16 +1821,16 @@ Recommended form:
 
 .. Note::
 
-  There is no strict relationship between construction parameters and instance attributes, neither in terms of cardinality, type or value.
+  There is no strict relationship between *construction parameters* and *instance attributes*, neither in terms of cardinality, type nor value.
 
-  For examples, attributes could be set to default values, a point could be created from an angle and a distance but its actual state may consist on two cartesian coordinates instead, etc.
+  For example, attributes could be set to default values, a point could be created from an angle and a distance but its actual state may consist on two cartesian coordinates instead, etc.
 
   Therefore both have to be defined by the class developer, and, in the general case, attributes cannot be inferred from construction parameters.
 
 
 .. Finally, a class can define multiple constructors: the proper one will be called, based on its arity (determined thanks to the number of parameters specified) and on pattern-matching performed on these parameters, to select the relevant clause of the constructor.
 
-Finally, a class can define multiple clauses for its constructor: the proper one will be called based on the pattern-matching performed on these parameters.
+Finally, a class can define multiple clauses for any of its constructors: the proper one will be called based on the pattern-matching performed on these parameters.
 
 
 Instance Deletion
@@ -1867,9 +1846,11 @@ Conversely, with WOOPER, when defining a destructor for a class (``destruct/1``)
 
 Once the user-specified actions have been processed by the destructor (ex: releasing a resource, unsubscribing from a registry, deleting other instances, closing properly a file, etc.), it is expected to return an updated state, which will be given to the destructors of the instance superclasses.
 
-.. WOOPER will automatically export and make use of any user-defined destructor, otherwise the de
-
 WOOPER will automatically make use of any user-defined destructor, otherwise the default one will be used, doing nothing (i.e. returning the exact same state that it was given).
+
+Note also that, as always, there is a single destructor associated to a given class.
+
+As constructors, destructors may not be exported, as WOOPER will automatically take care of that if necessary.
 
 
 
@@ -1889,7 +1870,7 @@ More precisely, either the class implementer does not define at all a ``destruct
 
 In both cases (default or user-defined destructor), when the instance will be deleted (ex: ``MyInstance ! delete`` is issued), WOOPER will take care of:
 
-- calling any destructor defined for that class
+- calling any user-defined destructor for that class
 - then calling the ones of the direct mother classes, which will in turn call the ones of their mother classes, and so on
 
 Note that the destructors for direct mother classes will be called in the reverse order of the one according to the constructors ought to have been called: if a class ``class_X`` declares ``class_A`` and ``class_B`` as mother classes (in that order), then in the ``class_X:construct`` definition the implementer is expected to call ``class_A:construct`` and then ``class_B:construct``, whereas on deletion the WOOPER-enforced order of execution will be: ``class_X:delete``, then ``class_B:delete``, then ``class_A:delete``, for the sake of symmetry.
@@ -1913,7 +1894,10 @@ WOOPER automatically defines as well a way of deleting *synchronously* a given i
 
 The class implementer does not have to do anything to support this feature, as the synchronous deletion is automatically built by WOOPER on top of the usual asynchronous one (both thus rely on ``destruct/1``).
 
+For a more concise way of doing the same, see also:
 
+- ``wooper:delete_synchronously_instance/1`` (for a single instance)
+- ``wooper:delete_synchronously_instances/1`` (for multiple ones)
 
 
 
@@ -1934,7 +1918,7 @@ This function is especially useful in destructors.
 For example, if ``State`` contains:
 
 - an attribute named ``my_pid`` whose value is the PID of an instance
-- and also an attribute named ``my_list_of_pid`` containing a list of PID instances
+- and also an attribute named ``my_pids`` containing a list of PID instances
 
 and if the deleted instance took ownership of these instances, then:
 
@@ -1942,7 +1926,7 @@ and if the deleted instance took ownership of these instances, then:
 
  delete(State) ->
   TempState = wooper:delete_any_instance_referenced_in(State,my_pid),
-  wooper:delete_any_instance_referenced_in(TempState,my_list_of_pid).
+  wooper:delete_any_instance_referenced_in(TempState,my_pids).
 
 will automatically delete all these instances (if any) and return an updated state.
 
@@ -1988,7 +1972,7 @@ It will just notify the signal to the user, by displaying a message like::
 Monitors
 --------
 
-Quite similarly to ``EXIT`` messages, monitors and ``nodeup`` / ``nodedown`` messages are also managed by WOOPER.
+Quite similarly to ``EXIT`` messages, monitors and ``nodeup`` / ``nodedown`` messages are also managed by WOOPER, see ``onWOOPERNodeConnection/3`` and ``onWOOPERNodeDisconnection/3``.
 
 
 
@@ -2023,7 +2007,7 @@ To help declaring the right defines in the right order, using the WOOPER `templa
 
 One may also have a look at the full `test examples <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples>`_, as a source of inspiration.
 
-For examples of re-use of WOOPER by upper layers, one may refer to `Ceylan-Traces <http://traces.esperide.org>`_ or the `Sim-Diasca <http://sim-diasca.com>_` simulation engine.
+For examples of re-use of WOOPER by upper layers, one may refer to `Ceylan-Traces <http://traces.esperide.org>`_ or the `Sim-Diasca <http://sim-diasca.com>`_ simulation engine.
 
 .. comment Note:: To be updated, notably with respect to parse transforms.
 
@@ -2294,7 +2278,7 @@ We try to ensure that the main line (in the ``master`` branch) always stays func
 
 This layer, ``Ceylan-WOOPER``, relies (only) on:
 
-- `Erlang <http://www.erlang.org/>`_, version 20.2 or higher
+- `Erlang <http://www.erlang.org/>`_, version 21.0 or higher
 - the `Ceylan-Myriad <http://myriad.esperide.org>`_ base layer
 
 
@@ -2469,6 +2453,25 @@ Released on Sunday, July 22, 2007. Already fully functional!
 WOOPER Inner Workings
 =====================
 
+
+General Principles
+------------------
+
+
+Understanding Compilation
+.........................
+
+WOOPER is the second level of a software stack beginning with Erlang and then Myriad.
+
+If the initial versions of WOOPER were mostly based on macros and headers, newer ones rely on the Erlang way of doing metaprogramming, namely parse-transforms.
+
+More precisely, the sources of a user-defined class are transformed by the standard Erlang toolchain (``erlc`` compiler) into an AST (*Abstract Syntax Tree*), which is first transformed by WOOPER (ex: to generate the new operators, to export any destructor, etc.) and then Myriad (ex: to support newer types such as ``void/0``, ``maybe/0`` or ``table/2``).
+
+
+
+Understanding the Mode of Operation of a WOOPER Instance
+........................................................
+
 Each instance runs a main loop (``wooper_main_loop/1``, defined in `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl>`_) that keeps its internal state and, through a blocking ``receive``, serves the methods as specified by incoming messages, quite similarly to a classical server that loops on an updated state, like in:
 
 .. code:: erlang
@@ -2528,6 +2531,9 @@ As the table is built only once and is theoritically shared by all instances [#]
 .. [#] Provided that Erlang does not copy these shared immutable structures, which unfortunately does not seem to be currently the case with the vanilla virtual machine. In a later version of WOOPER, the per-class table will be precompiled and shared as a module, thus fully removing that per-instance overhead.
 
 .. (except for binaries, which are of no use here), inducing a large per-instance overhead which, in turn, reduces a lot the scalability that can be achieved thanks to these WOOPER versions.
+
+
+
 
 
 
