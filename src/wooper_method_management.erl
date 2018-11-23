@@ -42,7 +42,12 @@
 -include("wooper_info.hrl").
 
 
-% The (WOOPER-level) nature of a given Erlang function:
+% The (WOOPER-level) nature of a given Erlang function.
+%
+% Note that 'function' is a default; a later analysis may class a function into
+% a more precise category (ex: if the actual returns are done only in helper
+% functions).
+%
 -type function_nature() :: 'function' | 'request' | 'oneway' | 'static'.
 
 
@@ -64,12 +69,14 @@ manage_methods( { FunctionTable,
 										 oneways=OnewayTable,
 										 statics=StaticTable } } ) ->
 
-	% We do not want to analyse any WOOPER builtin, as they will not teach us
-	% anything and are expected to be already in a final form:
+	AllFunctions = table:values( FunctionTable ),
+
+	% We do not want to analyse any WOOPER builtin function, as they will not
+	% teach us anything about the class at hand, and are expected to be already
+	% in a final form:
 	%
 	Builtins = wooper_info:get_wooper_builtins(),
 
-	AllFunctions = table:values( FunctionTable ),
 
 	{ NewHelperFunTable, NewRequestTable, NewOnewayTable, NewStaticTable } =
 		sort_out_functions( AllFunctions, _FunctionTable=table:new(),
@@ -82,8 +89,8 @@ manage_methods( { FunctionTable,
 
 
 
-% Transforms and categorises each function according to its real nature (ex:
-% a given Erlang function may actually be a WOOPER oneway).
+% Transforms and categorises each of the specified functions according to its
+% real nature (ex: a given Erlang function may actually be a WOOPER oneway).
 %
 sort_out_functions( _Functions=[], FunctionTable, RequestTable, OnewayTable,
 					StaticTable, _Builtins ) ->
@@ -94,7 +101,7 @@ sort_out_functions( _Functions=[
 			F=#function_info{
 				 name=FunName,
 				 arity=Arity,
-				 clauses=Clauses=[ C | _OtherClauses ] } | T ],
+				 clauses=AllClauses=[ C | _OtherClauses ] } | T ],
 			FunctionTable, RequestTable, OnewayTable, StaticTable, Builtins ) ->
 
 	FunId = { FunName, Arity },
@@ -109,14 +116,14 @@ sort_out_functions( _Functions=[
 
 		false ->
 
-			%trace_utils:debug_fmt( "Examining function ~s/~B",
-			%                       [ FunName, Arity ] ),
+			trace_utils:debug_fmt( "Examining function ~s/~B",
+								   [ FunName, Arity ] ),
 
 			% Use the first clause to guess:
 			FunNature = infer_function_nature_from( C ),
 
-			% Then check and transform all clauses, for all natures:
-			NewClauses = transform_method_returns( Clauses, FunNature ),
+			% Then check and transform all clauses, for any given nature:
+			NewClauses = transform_method_returns( AllClauses, FunNature ),
 
 			NewFunInfo = F#function_info{ clauses=NewClauses },
 
@@ -149,7 +156,19 @@ sort_out_functions( _Functions=[
 
 			end
 
-	end.
+	end;
+
+sort_out_functions( _Functions=[ #function_info{ name=FunName,
+												 arity=Arity } | _T ],
+					_FunctionTable, _RequestTable, _OnewayTable, _StaticTable,
+					_Builtins ) ->
+
+	trace_utils:error_fmt( "No clause found for ~s/~B; function exported "
+						   "yet not defined?", [ FunName, Arity ] ),
+
+	ast_utils:raise_error( { clauseless_function, { FunName, Arity } } ).
+
+
 
 
 
@@ -158,9 +177,41 @@ sort_out_functions( _Functions=[
 %
 -spec infer_function_nature_from( meta_utils:clause_def() ) ->
 										function_nature().
-infer_function_nature_from( _Clause ) ->
-	%trace_utils:debug_fmt( " - examining clause ~p", [ Clause ] ),
-	function.
+infer_function_nature_from( Clause ) ->
+
+	trace_utils:debug_fmt( " - examining nature of clause ~p", [ Clause ] ),
+
+	AllLeaves = get_call_leaves_for_clause( Clause ),
+
+	trace_utils:debug_fmt( " - call leaves found: ~p", [ AllLeaves ] ),
+
+	case list_utils:uniquify( AllLeaves ) of
+
+		% At least one occurrence of, and no other, different element than:
+		[ { wooper, return_state_result, 2 } ] ->
+			request;
+
+		[ E={ wooper, return_state_result, _Incorrect } ] ->
+			ast_utils:raise_error( { faulty_request_return, E } );
+
+		[ { wooper, return_state_only, 1 } ] ->
+			oneway;
+
+		[ E={ wooper, return_state_only, _Incorrect } ] ->
+			ast_utils:raise_error( { faulty_oneway_return, E } );
+
+
+		[ { wooper, return_static, 1 } ] ->
+			static;
+
+		[ E={ wooper, return_static, _Incorrect } ] ->
+			ast_utils:raise_error( { faulty_static_return, E } );
+
+		_ ->
+			function
+
+	end.
+
 
 
 % Transforms specified clauses according to their specified nature.
@@ -176,8 +227,8 @@ transform_method_returns_in( _ClauseForm={ clause, Line, Patterns, Guards,
 	%trace_utils:debug_fmt( " - ignoring patterns ~p", [ Patterns ] ),
 	%trace_utils:debug_fmt( " - ignoring guards ~p", [ Guards ] ),
 
-	%trace_utils:debug_fmt( " - transforming, as '~s', following body:~n~p",
-	%					   [ FunNature, Body ] ),
+	trace_utils:debug_fmt( " - transforming, as '~s', following body:~n~p",
+						   [ FunNature, Body ] ),
 
 	NewBody = transform_body( Body, FunNature ),
 
@@ -188,9 +239,89 @@ transform_method_returns_in( _ClauseForm={ clause, Line, Patterns, Guards,
 % Transforms specified body of specified clause, according to the function
 % nature.
 %
-transform_body( Body, _FunNature=function ) ->
+%transform_body( Body, _FunNature=function ) ->
+transform_body( Body, _FunNature ) ->
+
+	% Traverses recursively the body to obtain all leaves:
+	%Leaves = get_all_leaves( Body ),
+
+	%trace_utils:debug_fmt( "Leaves are: ~s",
+	%					   [ text_utils:terms_to_string( Leaves ) ] ),
+
 	Body.
 
+
+
+% Returns (recursively) all leaves (terminal expressions) of specified function
+% clause that are remote calls, as {ModuleName,FunctionName,Arity}.
+%
+% Examples of returned values: [], or [ {wooper,return_state_result,2},
+% {wooper,return_state_result,2}, {lists,sort,1} ], etc.
+%
+-spec get_call_leaves_for_clause( meta_utils:clause_def() ) -> [ mfa() ].
+get_call_leaves_for_clause( _Clause={ clause, _Line, _Patterns, _Guards,
+									  Body } ) ->
+	get_call_leaves_for_clause( Body, _Acc=[] ).
+
+
+% Only the last expression of a given (possibly nested) clause matters:
+get_call_leaves_for_clause( _ClauseBody=[ L ], Acc ) ->
+	% This is the last expression, hence select it for scanning:
+	get_call_leaves_for_expression( L, Acc );
+
+get_call_leaves_for_clause( _ClauseBody=[ _E | T ], Acc ) ->
+	% Skip non-last expressions:
+	get_call_leaves_for_clause( T, Acc ).
+
+
+
+
+% Handles each possible branching construct of the expression.
+%
+% (anonymous mute variables correspond to lines)
+%
+get_call_leaves_for_expression(
+  _Expr={ 'case', _Line, _Patterns, _Guards, Body }, Acc ) ->
+	get_call_leaves_for_clause( Body ) ++ Acc;
+
+get_call_leaves_for_expression(
+  _Expr={ 'catch', _Line, _Patterns, _Guards, Body }, Acc ) ->
+	get_call_leaves_for_clause( Body ) ++ Acc;
+
+% Intercept calls to WOOPER method terminators:
+get_call_leaves_for_expression(
+  _Expr={ 'call', _Line,
+		  { remote, _, {atom,_,wooper}, {atom,_,return_state_result} },
+		  Params }, Acc ) ->
+	[ { wooper, return_state_result, length( Params ) } | Acc ];
+
+get_call_leaves_for_expression(
+  _Expr={ 'call', _Line,
+		  { remote, _, {atom,_,wooper}, {atom,_,return_state_only} },
+		  Params }, Acc ) ->
+	[ { wooper, return_state_only, length( Params ) } | Acc ];
+
+get_call_leaves_for_expression(
+  _Expr={ 'call', _Line,
+		  { remote, _, {atom,_,wooper}, {atom,_,return_static} },
+		  Params }, Acc ) ->
+	[ { wooper, return_static, length( Params ) } | Acc ];
+
+get_call_leaves_for_expression( Expr, _Acc ) ->
+	ast_utils:raise_error( { unhandled_expression, Expr } ).
+
+
+
+% Intercept WOOPER calls:
+%
+% (anonymous mute variables are line numbers)
+%
+%% get_call_leaves_for_clause( _Clause={ 'call', _Line, {remote,_,{atom,_,Module},{atom,_,Function}}, SubClause },
+%%				Acc ) ->
+%%	get_call_leaves_for_clause( SubClause ) ++ Acc;
+
+%% get_call_leaves_for_clause( _Clause=E, _Acc ) ->
+%%	throw( { unsupported_clause_element, E } ).
 
 
 
