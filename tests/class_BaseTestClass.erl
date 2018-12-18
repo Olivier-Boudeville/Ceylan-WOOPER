@@ -14,9 +14,6 @@
 -define( wooper_superclasses, [] ).
 
 
--define( wooper_method_export, getName/1 ).
-
-
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
 

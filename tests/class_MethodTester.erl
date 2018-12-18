@@ -16,9 +16,19 @@
 -define( wooper_superclasses, [] ).
 
 
--define( wooper_method_export, getName/1, setName/2 ).
+%-define( wooper_method_export, getName/1, setName/2 ).
 
--define( wooper_static_method_export, get_static_info/2 ).
+%-define( wooper_static_method_export, get_static_info/2 ).
+
+%-wooper_request_export([...]).
+%-wooper_oneway_export([...]).
+%-wooper_static_export([...]).
+
+
+%-wooper_method_export([
+%			{ getName, 1 }, request, [const],
+%
+%					  ]).
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -48,8 +58,15 @@ destruct( State ) ->
 
 % Returns the name of this instance.
 %
+% (const request)
+%
 -spec getName( wooper:state() ) -> request_return( name() ).
 getName( State ) ->
+	nested_in_request( State ).
+
+
+% (helper)
+nested_in_request( State ) ->
 	wooper:return_state_result( State, ?getAttr(name) ).
 
 

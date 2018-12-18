@@ -174,10 +174,12 @@
 -type ast() :: ast_base:ast().
 -type located_form() :: ast_info:located_form().
 -type module_info() :: ast_info:module_info().
--type class_info() :: wooper_info:class_info().
 -type function_info() :: ast_info:function_info().
 -type function_table() :: ast_info:function_table().
-
+-type class_info() :: wooper_info:class_info().
+-type request_table() :: wooper_info:request__info().
+-type oneway_table() :: wooper_info:oneway_info().
+-type static_table() :: wooper_info:static_info().
 
 
 % For debugging:
@@ -185,9 +187,9 @@
 
 
 % tmp:
--export([add_function/4, add_request/4, add_oneway/4, add_static/4, identify_function/3, infer_function_type/1, infer_fun_type/2,
-		 get_new_variation_names/0, get_attribute_forms/1
-]).
+-export([ add_function/4, add_request/4, add_oneway/4, add_static/4,
+		  identify_function/3, infer_function_type/1, infer_fun_type/2,
+		  get_new_variation_names/0, get_attribute_forms/1 ]).
 
 
 
@@ -269,15 +271,16 @@ apply_wooper_transform( InputAST ) ->
 
 	% First preprocesses the AST based on the Myriad parse transform, in order
 	% to benefit from its corresponding module_info record:
-	% (no Myriad-level transformation performed yet)
+	% (however no Myriad-level transformation performed yet)
 	%
 	InputModuleInfo = ast_info:extract_module_info_from_ast( InputAST ),
 
 	%trace_utils:debug_fmt( "Module information, directly as obtained "
-	%					   "from Myriad (untransformed): ~s",
-	%					   [ ast_info:module_info_to_string( InputModuleInfo ) ] ),
+	%			   "from Myriad (untransformed): ~s",
+	%			   [ ast_info:module_info_to_string( InputModuleInfo ) ] ),
 
 	% Then promote this Myriad-level information into a WOOPER one:
+	% (here is the real WOOPER magic)
 	ClassInfo = generate_class_info_from( InputModuleInfo ),
 
 	% Finally perform WOOPER-specific transformation:
@@ -290,7 +293,7 @@ apply_wooper_transform( InputAST ) ->
 	NewModuleInfo = generate_module_info_from( NewClassInfo ),
 
 	% Allows to have still functional class modules during the WOOPER
-	% developments:
+	% developments, by bypassing the WOOPER transformations as a whole:
 	%
 	EnableWOOPERParseTransform = true,
 	%EnableWOOPERParseTransform = false,
@@ -311,6 +314,10 @@ apply_wooper_transform( InputAST ) ->
 	%  [ ast_info:module_info_to_string( ModuleInfoOfInterest ) ] ),
 
 	% And finally obtain the corresponding updated AST thanks to Myriad:
+	%
+	% (should be done as a final step as WOOPER may of course rely on
+	% Myriad-introducted facilities such as void, maybe, table, etc.)
+	%
 	TransformedModuleInfo = myriad_parse_transform:transform_module_info(
 							  ModuleInfoOfInterest ),
 
@@ -318,7 +325,8 @@ apply_wooper_transform( InputAST ) ->
 	%  "Module information after Myriad transformation: ~s",
 	%  [ ast_info:module_info_to_string( TransformedModuleInfo ) ] ),
 
-	OutputAST = ast_info:recompose_ast_from_module_info( TransformedModuleInfo ),
+	OutputAST = ast_info:recompose_ast_from_module_info(
+				  TransformedModuleInfo ),
 
 	%trace_utils:debug_fmt( "WOOPER output AST:~n~p", [ OutputAST ] ),
 
@@ -348,6 +356,7 @@ generate_class_info_from( ModuleInfo ) ->
 
 	ExtractedClassInfo = create_class_info_from( ModuleInfo ),
 
+	% Optional:
 	check_class_info( ExtractedClassInfo ),
 
 	ExtractedClassInfo.
@@ -357,8 +366,8 @@ generate_class_info_from( ModuleInfo ) ->
 % Recomposes (WOOPER) class information from (Myriad) module-level ones.
 %
 % The goal is to pick the relevant WOOPER-level information (from the module
-% info), to transform them and to populate from the result the specified class
-% information.
+% info), to transform them and to populate the specified class information with
+% the result.
 %
 -spec create_class_info_from( module_info() ) -> class_info().
 create_class_info_from(
@@ -387,10 +396,10 @@ create_class_info_from(
 	BlankClassInfo = wooper_info:init_class_info(),
 
 	% For a starting basis, let's init first all the fields that we do not plan
-	% to update:
+	% to update, as they are:
 	%
-	% (commented out, to check for completeness: the fields that will be updated
-	% afterwards)
+	% (the fields that will be updated afterwards are commented out, to be able
+	% to check for completeness more easily)
 	%
 	VerbatimClassInfo = BlankClassInfo#class_info{
 						  %class
@@ -435,9 +444,10 @@ create_class_info_from(
 	% not modify specifically the other related information (ex: exports).
 
 	% We manage here { FunctionTable, ClassInfo } pairs, in which the first
-	% element is the reference, most up-to-date version to use - not any
-	% counterpart that could be found in the second element and that will be
-	% updated later from the first:
+	% element is the reference, most up-to-date version of the function table
+	% that shall be used (extracted-out for convenience) - not any counterpart
+	% that could be found in the second element and that will be updated later
+	% from the first:
 	%
 	InitialPair = { FunctionTable, SuperClassInfo },
 
@@ -1108,13 +1118,13 @@ generate_module_info_from( #class_info{
 				 destructor=MaybeDestructor,
 
 				 request_exports=_RequestExportTable,
-				 requests=_RequestTable,
+				 requests=RequestTable,
 
 				 oneway_exports=_OnewayExportTable,
-				 oneways=_OnewayTable,
+				 oneways=OnewayTable,
 
 				 static_exports=_StaticExportTable,
-				 statics=_StaticTable,
+				 statics=StaticTable,
 
 				 optional_callbacks_defs=OptCallbackDefs,
 
@@ -1177,11 +1187,13 @@ generate_module_info_from( #class_info{
 
 	% For methods:
 
-	% Probably useless now that locations are determined directly:
+	% Probably useless now that locations are determined directly if implicit:
 	WithMthdExpTable = FunctionExportTable,
 	AllExportTable = WithMthdExpTable,
 
-	WithMthdFunTable = WithDestrFunTable,
+	WithMthdFunTable = merge_methods_as_fun( RequestTable, OnewayTable,
+											 StaticTable, WithDestrFunTable ),
+
 	AllFunctionTable = WithMthdFunTable,
 
 	%trace_utils:debug_fmt( "Complete function table: ~s",
@@ -1216,6 +1228,29 @@ generate_module_info_from( #class_info{
 
 
 
+% Recreates a complete table of parse attributes, from specified arguments.
+%
+-spec gather_parse_attributes( ast_info:attribute_table(),
+	   maybe( ast_info:located_form() ), wooper_info:attribute_table()  ) ->
+									 ast_info:attribute_table().
+gather_parse_attributes( ParseAttrTable, MaybeSuperclassesLocDef,
+						 _AttributeTable ) ->
+
+	% AttributeTable not yet populated.
+
+	case MaybeSuperclassesLocDef of
+
+		undefined ->
+			ParseAttrTable;
+
+		SuperclassesLocDef ->
+			% V must be a list of {AttrValue,LocForm} pairs:
+			table:addNewEntry( _K=wooper_superclasses,
+							   _V=[ SuperclassesLocDef ], ParseAttrTable )
+
+	end.
+
+
 % Registers specified functions in specified (function) table, detecting
 % properly any clash.
 %
@@ -1246,27 +1281,15 @@ register_functions( [ { FunId, FunInfo } | T ], FunctionTable ) ->
 
 
 
-% Recreates a complete table of parse attributes, from specified arguments.
+% Merges back all kinds of methods as mere functions, in specified function
+% table.
 %
--spec gather_parse_attributes( ast_info:attribute_table(),
-	   maybe( ast_info:located_form() ), wooper_info:attribute_table()  ) ->
-									 ast_info:attribute_table().
-gather_parse_attributes( ParseAttrTable, MaybeSuperclassesLocDef,
-						 _AttributeTable ) ->
-
-	% AttributeTable not yet populated.
-
-	case MaybeSuperclassesLocDef of
-
-		undefined ->
-			ParseAttrTable;
-
-		SuperclassesLocDef ->
-			% V must be a list of {AttrValue,LocForm} pairs:
-			table:addNewEntry( _K=wooper_superclasses,
-							   _V=[ SuperclassesLocDef ], ParseAttrTable )
-
-	end.
+-spec merge_methods_as_fun( request_table(), oneway_table(), static_table(),
+							function_table() ) -> function_table().
+merge_methods_as_fun( RequestTable, OnewayTable, StaticTable,
+					  InitFunctionTable ) ->
+	table:merge_unique( [ RequestTable, OnewayTable, StaticTable,
+						  InitFunctionTable ] ).
 
 
 

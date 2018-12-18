@@ -47,8 +47,9 @@ all:
 	@echo "  Run 'make full-doc' to generate the manual of the WOOPER-$(CURRENT_VERSION) layer."
 
 
-full-doc: $(DOC_GENERATED_FILES)
-	@/bin/cat $(CURRENT_WOOPER_HTML) | sed 's|^</head>|<link href="wooper-icon.png" rel="icon"></head>|1' > /tmp/.wooper.tmp ; /bin/mv -f /tmp/.wooper.tmp $(CURRENT_WOOPER_HTML)
+
+
+full-doc: $(CURRENT_WOOPER_HTML)
 
 
 # Creates a separate repository for the GitHub pages branch:

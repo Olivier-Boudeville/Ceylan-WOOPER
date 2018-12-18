@@ -69,21 +69,26 @@ manage_destructor( { FunctionTable, ClassInfo } ) ->
 				% None defined, adding thus a basic, do-nothing one:
 				{ get_default_destructor_info( MarkerTable ), FunIdInfos };
 
+
 			% Found and extracted as:
 			{ DestrFunInfo, OtherFunIdInfos } ->
-				% Here the developer may have defined destruct/1, yet may or may
-				% not have exported it:
+
+				% Here the developer has defined destruct/1, yet may or may not
+				% have exported it:
+				%
 				NewDestrFunInfo = case DestrFunInfo#function_info.exported of
 
 					[] ->
-						% Never exported, so exporting it at the standard location:
+						% Never exported, so exporting it at the standard
+						% location:
 						MarkerTable = ClassInfo#class_info.markers,
 
 						ExportLocation =
 								 ast_info:get_default_export_function_location(
 								   MarkerTable ),
 
-						DestrFunInfo#function_info{ exported=[ ExportLocation ] };
+						DestrFunInfo#function_info{
+						  exported=[ ExportLocation ] };
 
 					_ ->
 						DestrFunInfo
@@ -96,6 +101,7 @@ manage_destructor( { FunctionTable, ClassInfo } ) ->
 
 	ShrunkFunctionTable = table:new( FilteredFunIdInfos ),
 
+	% In all cases a destructor is defined then:
 	NewClassInfo = ClassInfo#class_info{ destructor=DestructFunInfo },
 
 	%trace_utils:debug_fmt( "Destructor info: ~s",
@@ -109,7 +115,7 @@ manage_destructor( { FunctionTable, ClassInfo } ) ->
 
 
 % Checks arities and extracts any destruct/1 found, returning it and the list of
-% remaining pairs.
+% remaining pairs, if found, otherwise undefined.
 %
 % (helper)
 %
@@ -139,7 +145,8 @@ scan_for_destructors( _FunIdInfos=[ Other | T ],
 
 
 
-% Returns a function information corresponding to the default destructor, which is:
+% Returns a function information corresponding to the default destructor, which
+% is:
 %
 % -spec destruct( wooper:state() ) -> wooper:state().
 % destruct( State ) ->
@@ -171,7 +178,9 @@ get_default_destructor_info( MarkerTable ) ->
 	DestructClause = { clause, Line, _Pattern=[ StateVar ], [],
 					   _Body=[ StateVar ] },
 
-	% The spec and definition are to be placed together at this definition marker:
+	% The spec and definition are to be placed together at this definition
+	% marker:
+	%
 	DefLocation = ast_info:get_default_definition_function_location(
 					MarkerTable ),
 

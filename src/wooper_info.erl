@@ -761,6 +761,7 @@ get_helper_builtins() ->
 get_serialisation_builtins() ->
 	[ {pre_serialise_hook,1},
 	  {serialise,3},
+
 	  {post_deserialise_hook,1},
 	  {post_serialise_hook,3},
 
