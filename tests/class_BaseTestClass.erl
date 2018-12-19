@@ -11,8 +11,7 @@
 
 
 % Determines what are the mother classes of this class (if any):
--define( wooper_superclasses, [] ).
-
+-superclasses([]).
 
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
@@ -22,13 +21,19 @@
 -type gender() :: maybe( 'male' | 'female' ).
 
 
+% Class-specific attributes:
+-attributes([ { name, 'name()', [ const, protected ], "Name of this creature" },
+			  { gender, 'gender()', "Gender of this creature" },
+			  { age, 'integer()', { initial, 0 },
+				"The current age of this creature" } ]).
+
+
 % Constructs a new instance.
 %
 -spec construct( wooper:state(), name(), gender() ) -> wooper:state().
 construct( State, Name, Gender ) ->
 	% No mother class.
 	setAttributes( State, [ { name, Name }, { gender, Gender } ] ).
-
 
 
 % This useless destructor overriding was made to silence Dialyzer (which is not
@@ -44,6 +49,8 @@ destruct( State ) ->
 
 % Method implementations.
 
+% One method of each nature, with or without a spec.
+
 
 % Returns the name of this creature.
 %
@@ -53,3 +60,20 @@ destruct( State ) ->
 getName( State ) ->
 	Name = ?getAttr(name),
 	wooper:return_state_result( State, Name ).
+
+
+% Sets the name of this creature.
+%
+% (oneway)
+%
+setName( State, Name ) ->
+	NewState = setAttribute( State, name, Name ),
+	wooper:return_state_only( NewState ).
+
+
+% Returns a mean count.
+%
+% (static)
+%
+get_some_mean_count() ->
+	wooper:return_static( 6 ).

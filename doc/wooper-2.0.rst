@@ -1137,58 +1137,140 @@ The current state of an instance can be thought as a list of ``{attribute_name,a
  [ {color,black}, {fur_color,sand}, {age,13}, {name,"Tortilla"} ].
 
 
+
+
 State Implementation Details
 ............................
 
 
-.. comment Current Implementation
-.. comment ______________________
-
-.. comment Starting from the 2.x versions of WOOPER, the list of attributes which defines a state is a class-specific, inheritance-aware, predetermined record.
-
-.. comment This record gathers exactly all attributes of an instance: the ones that were defined directly in its class, as well as the ones that were inherited, directly or not.
-
-.. comment This record is defined at compile-time, thanks to parse transforms. Once these mechanisms to determine it have been set-up, it is surely the solution that allows for the best overall performances.
-
-.. comment So a class developer just has to specify the list of attributes that this class specifically introduces: all other attributes are inherited, and thus will be automatically deduced, at compile-time, from the list of the specified superclasses.
-
-.. comment Class-specific attributes can be declared with some qualifiers.
-
-.. comment More generally an attribute can be declared with:
-
-.. comment - just its name, ex: ``whisker_color``
-.. comment - a pair made of its name and a single qualifier, ex: ``{fur_color,protected}``
-.. comment - a pair made of its name and a list of qualifiers, ex: ``{mew_volume,[private,{const,35}]}``
+Instance Attributes
+___________________
 
 
-.. comment Known attribute qualifiers are:
 
-.. comment - in terms of accessibility:
+Specifying them
+***************
 
-.. comment   - ``public``: for this attribute, a getter/setter pair is automatically generated; for example if ``whisker_color`` is declared as public, then ``getWhiskerColor/1`` and ``setWhiskerColor/2`` are automatically defined by WOOPER
-.. comment   - ``protected``: the attribute can be modified either by the class that defined it or by any of its child classes
-.. comment   - ``private``: the attribute can be modified only by the class that defined it, not by any of its child classes
+Class-specific attributes may be declared, with some qualifiers.
 
-.. comment - in terms of mutability:
+Attribute declarations are fully optional.
 
-.. comment   - ``{const,Value}``: the value of the attribute will never change over time, none can modify it (once an attribute is const, there is no point in specifying that his access is protected or private)
+Specifying them is nevertheless recommended, at the first place for the developer and for any upcoming maintainer. Future versions of WOOPER may make use of these information as well.
+
+The most general form of an attribute declaration includes the following four information::
+
+ {Name,TypeAsAtom,QualifierInfo,Description}
+
+where:
+
+ - ``Name`` is the name of that attribute, as an atom (ex: ``fur_color``)
+ - ``TypeAsAtom`` is an atom [#]_ containing the `type specification <http://erlang.org/doc/reference_manual/typespec.html>`_ of that attribute (ex: ``'[ atom() ]'``, ``'foo:color_index()'``)
+ - ``QualifierInfo`` is detailed below
+ - ``Description`` is a plain string describing the purpose of this attribute; this is a comment aimed only at humans (ex: ``"describes the color of the fur of this animal (not including whiskers)"``)
 
 
-.. comment Unless specified otherwise, an attribute is protected and non-const.
+.. [#] :: We would have preferred that, instead of ``'integer()'``, one could have specified directly ``integer()``, yet this does not seem possible with parse-transforms, as in the latter case it would trigger a parse error earlier in the transformation process.
+
+		  This error could be intercepted in the AST (ex: ``{error,{24,erl_parse,"bad attribute"}},``), however the content of the original ``-attributes(...)`` parse attribute, short of being successfully parsed, would not be available in the AST, and thus would be lost for good (the WOOPER parse transform would not have access to any information thereof). So, at least currently, attribute types have to be specified as atoms.
 
 
-.. comment For example an attribute declaration can be::
+A qualifier information is either a single qualifier, or a list of qualifiers.
 
-.. comment   % Determines what are the class-specific attributes of this class (if any):
-.. comment   get_attributes() ->
+A qualifier can be:
+
+- a *scope* qualifier: ``public``, ``protected`` or ``private``; in future versions, a public attribute will result in accessor methods being automatically generated; for example, should the ``fur_color`` attribute be public, then:
+
+  - the ``getFurColor/1`` const request would be added (with its spec): ``getFurColor(State) -> wooper:return_state_result(State,?getAttr(fur_color)).``
+
+  - the ``setFurColor/2`` oneway would be added (with its spec): ``setFurColor(State,FurColor) -> wooper:return_state_only(setAttribute(State,fur_color,FurColor)).``
+
+- an *initialisation* qualifier: ``{initial,18}`` would denote that the initial value of the corresponding attribute is ``18`` (this value is then set even before entering any constructor)
+
+- a *mutability* qualifier: ``{const,24}`` would denote that the corresponding attribute is ``const`` and that its (fixed) value is ``24`` (thus ``const`` implies here ``initial``, which should not specified in that case); ``const`` can also be specified just by itself (with no initial value), so that it can be initialised later, and, of course, just once (this is useful for non-immediate yet const values)
+
+- the *none* qualifier: ``none`` implies that no specific qualifier is specified, and as a result the defaults apply
+
+
+The defaults are:
+
+- ``private``
+- mutable (i.e. non-``const``)
+- no specific initial value enforced (not even ``undefined``)
+
+
+
+So an example of attribute declaration could be::
+
+ { age, 'integer()', {initial,18}, "stores the current age of this creature" }
+
+
+.. Note:: Currently, these information are only of use for the developer (i.e. for documentation purpose). No check is made about whether they are used, whether no other attributes are used, whether the type is meaningful and indeed enforced, the default initial value is not set, etc. Some of these information might be handled by future WOOPER versions.
+
+
+Shorter attribute declarations can also used, then with less than the 4 five aforementioned pieces of information mentioned:
+
+- 3 of them: ``{Name,TypeAsAtom,Description}`` (implying: qualifier is ``none``)
+- 2 of them: ``{Name,Description}`` (implying: type is ``any()``, qualifier is ``none``)
+- 1 of them: ``Name`` (implying: type is ``any()``, qualifier is ``none``, no description)
+
+(and, of course, any number of attributes may not be specified at all)
+
+
+
+
+
+More generally an attribute can be declared with:
+
+- just its name, ex: ``whisker_color``
+- a pair made of its name and a single qualifier, ex: ``{fur_color,protected}``
+- a pair made of its name and a list of qualifiers, ex: ``{mew_volume,[private,{const,35}]}``
+
+
+Known attribute qualifiers are:
+
+- in terms of accessibility:
+
+  - ``public``: for this attribute, a getter/setter pair is automatically generated; for example if ``whisker_color`` is declared as public, then ``getWhiskerColor/1`` and ``setWhiskerColor/2`` are automatically defined by WOOPER
+  - ``protected``: the attribute can be modified either by the class that defined it or by any of its child classes
+  - ``private``: the attribute can be modified only by the class that defined it, not by any of its child classes
+
+- in terms of mutability:
+
+  - ``{const,Value}``: the value of the attribute will never change over time, none can modify it (once an attribute is const, there is no point in specifying that his access is protected or private)
+
+
+Unless specified otherwise, an attribute is protected and non-const.
+
+
+For example an attribute declaration can be::
+
+  % Determines what are the class-specific attributes of this class (if any):
+  get_attributes() ->
 .. comment	[ {fur_color,protected}, whisker_color, {mew_volume,[private,{const,35}]} ].
 
 
-.. comment Once the instance will be created by WOOPER, the initial state will notably be made of a record, whose fields are exactly the attributes supported by this class, whether they are class-specific or inherited (directly or not).
+Once the instance will be created by WOOPER, the initial state will notably be made of a record, whose fields are exactly the attributes supported by this class, whether they are class-specific or inherited (directly or not).
 
-.. comment Const attributes will already be set to their associated values, all others being initially set to the value ``undefined``.
+Const attributes will already be set to their associated values, all others being initially set to the value ``undefined``.
 
-.. comment This empty initial state will be given to the constructor, so that it is able first to call the counterpart constructors of the direct mother classes to update this state, then to set class-specific values afterwards, before returning the resulting state.
+This empty initial state will be given to the constructor, so that it is able first to call the counterpart constructors of the direct mother classes to update this state, then to set class-specific values afterwards, before returning the resulting state.
+
+
+
+
+Storing them
+************
+
+In experimental, post-1.x versions of WOOPER, the attributes that defined (among other information) the state of an instance used to be transformed into a class-specific, inheritance-aware, predetermined **record**.
+
+This automatically-generated record gathered exactly *all* attributes of an instance: the ones that were defined directly in its class, as well as the ones that were inherited, directly or not.
+
+This record was defined at compile-time, thanks to parse transforms. So a class developer just had to specify the list of attributes that a given class specifically introduced: all other attributes were to be inherited, and thus will be automatically deduced, at compile-time, from the list of the specified superclasses.
+
+However this solution has finally not been retained: not only updating an attribute of a record containing several dozens of fields could be potentially less efficient that updating a corresponding map, but also, more significantly, in the body defining a constructor of a given class, this record could not be transmitted to the constructors of the parent classes, as they expected each a record of their own (of a different type, containing each a subset of the attributes of the class at hand).
+
+So it appeared that storing all attributes in a dynamic datastructure (i.e. a table, based on a standard map) is a better choice.
+
 
 
 The conceptual attribute list is actually an associative table [#]_ (ultimately relying on the ``map`` datatype now; previously on our ``hashtable`` module), selected for genericity, dynamicity and efficiency reasons.

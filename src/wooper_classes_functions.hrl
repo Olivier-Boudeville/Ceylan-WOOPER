@@ -34,9 +34,9 @@
 %
 % Defined mostly for explanation purpose.
 %
--spec get_classname() -> classname().
-get_classname() ->
-	?MODULE.
+%-spec get_classname() -> classname().
+%get_classname() ->
+%	?MODULE.
 
 
 
@@ -45,9 +45,9 @@ get_classname() ->
 %
 % Generally not to be called by the user, see getSuperclasses/1 instead.
 %
--spec get_superclasses() -> [ classname() ].
-get_superclasses() ->
-	?wooper_superclasses.
+%-spec get_superclasses() -> [ classname() ].
+%get_superclasses() ->
+%	?wooper_superclasses.
 
 
 

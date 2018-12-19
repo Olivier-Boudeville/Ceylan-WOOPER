@@ -84,15 +84,6 @@
 % wooper_get_foo() function.
 
 
-% Regarding WOOPER superclasses.
-%
-% They used to be defined with:
-% '-define( wooper_superclasses, [ class_A, class_B ] ).'.
-%
-% Now they are defined with the optional:
-%
-% '-wooper_superclasses( [ class_A, class_B ] ).
-
 
 % Regarding function/method exports:
 %
@@ -135,10 +126,6 @@
 %       -static_spec get_mean_count( foo() ) -> count().
 
 
-% To better report errors:
--define( origin_layer, "WOOPER" ).
-
-
 % Used for iterated (re)composition of class information:
 -type compose_pair() :: { ast_info:function_table(), class_info() }.
 
@@ -176,8 +163,9 @@
 -type module_info() :: ast_info:module_info().
 -type function_info() :: ast_info:function_info().
 -type function_table() :: ast_info:function_table().
+
 -type class_info() :: wooper_info:class_info().
--type request_table() :: wooper_info:request__info().
+-type request_table() :: wooper_info:request_info().
 -type oneway_table() :: wooper_info:oneway_info().
 -type static_table() :: wooper_info:static_info().
 
@@ -190,6 +178,13 @@
 -export([ add_function/4, add_request/4, add_oneway/4, add_static/4,
 		  identify_function/3, infer_function_type/1, infer_fun_type/2,
 		  get_new_variation_names/0, get_attribute_forms/1 ]).
+
+
+
+% Implementation notes:
+
+% For log output, even if io:format/{1,2} and ast_utils:display_*/* work, we
+% recommend using trace_utils:*/*.
 
 
 
@@ -268,16 +263,15 @@ apply_wooper_transform( InputAST ) ->
 	%ast_utils:write_ast_to_file( lists:sort( InputAST ),
 	%							 "WOOPER-input-AST-sorted.txt" ),
 
-
 	% First preprocesses the AST based on the Myriad parse transform, in order
 	% to benefit from its corresponding module_info record:
 	% (however no Myriad-level transformation performed yet)
 	%
 	InputModuleInfo = ast_info:extract_module_info_from_ast( InputAST ),
 
-	%trace_utils:debug_fmt( "Module information, directly as obtained "
-	%			   "from Myriad (untransformed): ~s",
-	%			   [ ast_info:module_info_to_string( InputModuleInfo ) ] ),
+	%ast_utils:display_debug( "Module information, directly as obtained "
+	%				"from Myriad (untransformed): ~s",
+	%				[ ast_info:module_info_to_string( InputModuleInfo ) ] ),
 
 	% Then promote this Myriad-level information into a WOOPER one:
 	% (here is the real WOOPER magic)
@@ -318,7 +312,8 @@ apply_wooper_transform( InputAST ) ->
 	% (should be done as a final step as WOOPER may of course rely on
 	% Myriad-introducted facilities such as void, maybe, table, etc.)
 	%
-	TransformedModuleInfo = myriad_parse_transform:transform_module_info(
+	{ TransformedModuleInfo, _MyriadTransforms } =
+		myriad_parse_transform:transform_module_info(
 							  ModuleInfoOfInterest ),
 
 	%trace_utils:debug_fmt(
@@ -436,9 +431,14 @@ create_class_info_from(
 
 	% Then taking care of the missing fields, roughly in their original order:
 
-	ClassInClassInfo = manage_classname( ModuleEntry, VerbatimClassInfo ),
+	ClassInClassInfo = wooper_class_management:manage_classname( ModuleEntry,
+															VerbatimClassInfo ),
 
-	SuperClassInfo = manage_superclasses( ParseAttrTable, ClassInClassInfo ),
+	SuperClassInfo = wooper_class_management:manage_superclasses(
+					   ParseAttrTable, ClassInClassInfo ),
+
+
+	AttrClassInfo = wooper_state_management:manage_attributes( SuperClassInfo ),
 
 	% We extract elements (ex: constructors) from the function table, yet we do
 	% not modify specifically the other related information (ex: exports).
@@ -449,7 +449,8 @@ create_class_info_from(
 	% that could be found in the second element and that will be updated later
 	% from the first:
 	%
-	InitialPair = { FunctionTable, SuperClassInfo },
+	InitialPair = { FunctionTable, AttrClassInfo },
+
 
 	ConstructPair = wooper_instance_construction:manage_constructors(
 					  InitialPair ),
@@ -458,6 +459,7 @@ create_class_info_from(
 					 ConstructPair ),
 
 	MethodPair = wooper_method_management:manage_methods( DestructPair ),
+
 
 	% ...
 
@@ -472,50 +474,6 @@ create_class_info_from(
 	ReturnedClassInfo.
 
 
-
-% Registers the corresponding classname into specified class information.
-%
--spec manage_classname( module_entry(), class_info() ) -> class_info().
-manage_classname( _ModuleEntry=undefined, _ClassInfo ) ->
-	raise_error( no_module_name_defined );
-
-manage_classname( _ModuleEntry={ _ModuleName=Classname, ModuleDef },
-				  ClassInfo ) ->
-	check_classname( Classname ),
-	ClassDef = ModuleDef,
-	ClassInfo#class_info{ class={ Classname, ClassDef } }.
-
-
-
-% Registers the declared superclasses (if any) into specified class information.
-%
--spec manage_superclasses( ast_info:attribute_table(), class_info() ) ->
-							  class_info().
-manage_superclasses( ParseAttrTable, ClassInfo ) ->
-
-	case table:lookupEntry( wooper_superclasses, ParseAttrTable ) of
-
-		% A single declaration expected:
-		{ value, [ E={ SuperclassList, _SuperclassDef } ] } ->
-			[ check_classname( Class ) || Class <- SuperclassList ],
-			ShrunkParseAttrTable = table:removeEntry( wooper_superclasses,
-													  ParseAttrTable ),
-			% Any prior value superseded, no merging here:
-			ClassInfo#class_info{ superclasses=E,
-								  parse_attributes=ShrunkParseAttrTable };
-
-		% Cannot be empty, hence more than one declaration:
-		{ value, L } ->
-			raise_error( { multiple_superclass_declarations, L } );
-
-		key_not_found ->
-
-			%trace_utils:warning( "no superclass specified" ),
-			ClassInfo#class_info{ superclasses={ [], undefined } }
-
-			%raise_error( superclasses_not_defined )
-
-	end.
 
 
 
@@ -706,7 +664,7 @@ manage_superclasses( ParseAttrTable, ClassInfo ) ->
 
 %% get_info( _AST=[ H | T ], Infos ) ->
 %%	trace_utils:warning_fmt( "~p not managed.", [ H ] ),
-%%	%raise_error( { unhandled_form, H } ),
+%%	%wooper_internals:raise_error( { unhandled_form, H } ),
 %%	get_info( T, Infos ).
 
 %% % Useless because of eof:
@@ -750,7 +708,7 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 
 		% Here a definition was already set:
 		_ ->
-			raise_error( { multiple_definition_for, FunId } )
+			wooper_internals:raise_error( { multiple_definition_for, FunId } )
 
 	end,
 
@@ -783,7 +741,8 @@ add_request( Name, Arity, Form, RequestTable ) ->
 
 		% Here a definition was already set:
 		_ ->
-			raise_error( { multiple_definitions_for_request, RequestId } )
+			wooper_internals:raise_error(
+			  { multiple_definitions_for_request, RequestId } )
 
 	end,
 
@@ -816,7 +775,8 @@ add_oneway( Name, Arity, Form, OnewayTable ) ->
 
 		% Here a definition was already set:
 		_ ->
-			raise_error( { multiple_definitions_for_oneway, OnewayId } )
+			wooper_internals:raise_error(
+			  { multiple_definitions_for_oneway, OnewayId } )
 
 	end,
 
@@ -849,30 +809,12 @@ add_static( Name, Arity, Form, StaticTable ) ->
 
 		% Here a definition was already set:
 		_ ->
-			raise_error( { multiple_definitions_for_static, StaticId } )
+			wooper_internals:raise_error(
+			  { multiple_definitions_for_static, StaticId } )
 
 	end,
 
 	table:addEntry( _K=StaticId, _V=StaticInfo, StaticTable ).
-
-
-
-% Ensures that specified name is a legit class name.
-%
-check_classname( Name ) when is_atom( Name ) ->
-
-	case text_utils:atom_to_string( Name ) of
-
-		"class_" ++ _ ->
-			ok;
-
-		InvalidName ->
-			raise_error( { invalid_classname, no_class_prefix, InvalidName } )
-
-	end;
-
-check_classname( Other ) ->
-	raise_error( { invalid_classname, not_atom, Other } ).
 
 
 
@@ -892,8 +834,6 @@ get_attribute_forms( _AttributeTable ) ->
 
 
 
-
-
 % Tells whether specified clause belongs to a request, a oneway, a constuctor,
 % etc.
 %
@@ -906,7 +846,7 @@ identify_function( _Name=destruct, _Arity=1, _Clause ) ->
 	destructor;
 
 identify_function( _Name=destruct, Arity, _Clause ) ->
-	raise_error( { destructor_arity_must_be_one, Arity } );
+	wooper_internals:raise_error( { destructor_arity_must_be_one, Arity } );
 
 identify_function( Name, _Arity,
 				   _Clause={ clause, _Line, _Vars, _, AST } ) ->
@@ -914,7 +854,8 @@ identify_function( Name, _Arity,
 	case lists:member( Name, get_new_variation_names() ) of
 
 		true ->
-			%raise_error( { new_variations_are_reserved, Name } );
+			%wooper_internals:raise_error(
+			%    { new_variations_are_reserved, Name } );
 			fixme;
 
 		false ->
@@ -927,7 +868,8 @@ identify_function( Name, _Arity,
 	case StringName of
 
 		"wooper" ++ _ ->
-			%raise_error( { wooper_prefix_is_reserved, Name } );
+			%wooper_internals:raise_error(
+			%    { wooper_prefix_is_reserved, Name } );
 			fixme;
 
 		_ ->
@@ -1019,8 +961,8 @@ infer_fun_type( Term={ call, CallLine, { remote, _L2,
 			DetectedType;
 
 		OtherType ->
-			raise_error( { inconsistent_function_type, CurrentType, OtherType,
-						   CallLine } )
+			wooper_internals:raise_error( { inconsistent_function_type,
+											CurrentType, OtherType, CallLine } )
 
 	end,
 
@@ -1043,7 +985,7 @@ check_class_info( #class_info{ constructors=Constructors } ) ->
 	case table:isEmpty( Constructors ) of
 
 		true ->
-			raise_error( no_constructor_defined );
+			wooper_internals:raise_error( no_constructor_defined );
 
 		false ->
 			ok
@@ -1290,22 +1232,3 @@ merge_methods_as_fun( RequestTable, OnewayTable, StaticTable,
 					  InitFunctionTable ) ->
 	table:merge_unique( [ RequestTable, OnewayTable, StaticTable,
 						  InitFunctionTable ] ).
-
-
-
-% Raises a (compile-time, rather ad hoc) error when applying this parse
-% transform, to stop the build on failure and report the actual error.
-%
--spec raise_error( term() ) -> no_return().
-raise_error( ErrorTerm ) ->
-	raise_error( ErrorTerm, _Context=undefined ).
-
-
-
-% Raises a (compile-time, rather ad hoc) error, with specified context, when
-% applying this parse transform, to stop the build on failure and report the
-% actual error.
-%
--spec raise_error( term(), ast_base:form_context() ) -> no_return().
-raise_error( ErrorTerm, Context ) ->
-	ast_utils:raise_error( ErrorTerm, Context, ?origin_layer ).

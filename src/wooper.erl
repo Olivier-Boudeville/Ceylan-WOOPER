@@ -1263,8 +1263,9 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
 -spec get_classname( wooper:state() ) -> classname().
 get_classname( State ) ->
 
-	% Note: a mere ?MODULE would not work (ex: case of an inherited method,
-	% compiled with the module name of the parent class).
+	% Note: a mere ?MODULE would not work (ex: in the case of an inherited
+	% method, it would already be compiled with the module name of the parent
+	% class).
 
 	State#state_holder.actual_class.
 

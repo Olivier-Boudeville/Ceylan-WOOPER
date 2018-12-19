@@ -30,8 +30,7 @@
 
 % These methods/functions are defined for all classes:
 %
--export([ get_classname/0, get_superclasses/0, 
-		  getClassname/1, getSuperclasses/1 ]).
+-export([ getClassname/1, getSuperclasses/1 ]).
 
 
 

@@ -419,13 +419,13 @@
 		markers :: ast_info:section_marker_table(),
 
 
-		% Error information collected when traversing the AST
+		% Error information collected when traversing the AST.
 		%
 		errors = [] :: [ ast_info:error() ],
 
 
-		% List of all the located forms that are unhandled, which are typically
-		% errors, like:
+		% List of all the located forms that are unhandled, which might be
+		% typically errors, like:
 		%
 		% '{error,{LineNumber,erl_parse, ["syntax error before: ","')'"]}}''.
 		%

@@ -133,7 +133,8 @@ sort_out_functions( _FunEntries=[], FunctionTable, RequestTable, OnewayTable,
 					StaticTable, _ScanContext ) ->
 	{ FunctionTable, RequestTable, OnewayTable, StaticTable };
 
-sort_out_functions( _FunEntries=[ { FunId={ FunName, Arity }, FunInfo } | T ],
+%sort_out_functions( _FunEntries=[ { FunId={ FunName, Arity }, FunInfo } | T ],
+sort_out_functions( _FunEntries=[ { FunId, FunInfo } | T ],
 					FunctionTable, RequestTable, OnewayTable, StaticTable,
 					ScanContext=#scan_context{ builtins=Builtins } ) ->
 
@@ -151,14 +152,14 @@ sort_out_functions( _FunEntries=[ { FunId={ FunName, Arity }, FunInfo } | T ],
 
 		false ->
 
-			trace_utils:debug_fmt( "Examining Erlang function ~s/~B",
-								   [ FunName, Arity ] ),
+			%trace_utils:debug_fmt( "Examining Erlang function ~s/~B",
+			%					   [ FunName, Arity ] ),
 
 			% Use the first clause to guess:
 			FunNature = infer_function_nature( FunId, ScanContext ),
 
-			trace_utils:debug_fmt( "## ~s/~B is a ~s",
-								   [ FunName, Arity, FunNature ] ),
+			%trace_utils:debug_fmt( "## ~s/~B is a ~s",
+			%					   [ FunName, Arity, FunNature ] ),
 
 			OriginalClauses = FunInfo#function_info.clauses,
 
@@ -212,7 +213,8 @@ sort_out_functions( _Functions=[ #function_info{ name=FunName,
 	trace_utils:error_fmt( "No clause found for ~s/~B; function exported "
 						   "yet not defined?", [ FunName, Arity ] ),
 
-	ast_utils:raise_error( { clauseless_function, { FunName, Arity } } ).
+	% Error raised directly, could be appended to the class_info.errors:
+	wooper_internals:raise_error( { clauseless_function, { FunName, Arity } } ).
 
 
 
@@ -249,11 +251,11 @@ infer_function_nature( FunId, ScanContext ) ->
 										 scan_context() ) -> function_nature().
 infer_function_nature_from_clause( Clause, ScanContext ) ->
 
-	trace_utils:debug_fmt( " - examining nature of clause ~p", [ Clause ] ),
+	%trace_utils:debug_fmt( " - examining nature of clause ~p", [ Clause ] ),
 
 	Leaf = get_first_call_leaf_for_clause( Clause, ScanContext ),
 
-	trace_utils:debug_fmt( " - first call leaf found: ~p", [ Leaf ] ),
+	%trace_utils:debug_fmt( " - first call leaf found: ~p", [ Leaf ] ),
 
 	case Leaf of
 
@@ -262,7 +264,7 @@ infer_function_nature_from_clause( Clause, ScanContext ) ->
 			request;
 
 		E={ wooper, return_state_result, _Incorrect } ->
-			ast_utils:raise_error( { faulty_request_return, E } );
+			wooper_internals:raise_error( { faulty_request_return, E } );
 
 
 		% Oneway detected:
@@ -270,7 +272,7 @@ infer_function_nature_from_clause( Clause, ScanContext ) ->
 			oneway;
 
 		E={ wooper, return_state_only, _Incorrect } ->
-			ast_utils:raise_error( { faulty_oneway_return, E } );
+			wooper_internals:raise_error( { faulty_oneway_return, E } );
 
 
 		% Static method detected:
@@ -278,7 +280,7 @@ infer_function_nature_from_clause( Clause, ScanContext ) ->
 			static;
 
 		E={ wooper, return_static, _Incorrect } ->
-			ast_utils:raise_error( { faulty_static_return, E } );
+			wooper_internals:raise_error( { faulty_static_return, E } );
 
 		% Not a WOOPER method terminator, hence should be a simple function:
 		{ _OtherModule, _FunctionName, _Arity } ->
@@ -381,7 +383,7 @@ get_first_call_leaf_for_expression(
 % This is a local call that is not immediate:
 %get_first_call_leaf_for_expression(
 %  _Expr={ 'call', _, FunExpr, Params }, _ScanContext ) ->
-%	ast_utils:raise_error( { non_immediate_local_call, FunExpr,
+%	wooper_internals:raise_error( { non_immediate_local_call, FunExpr,
 %						   length( Params ) } );
 
 % Module-local call; now we consider instead that this cannot denote a method,
@@ -423,13 +425,29 @@ get_first_call_leaf_for_expression( _Expr={ 'receive', _,
 	% We rely on the first:
 	get_first_call_leaf_for_case_clause( C, ScanContext );
 
-% Immediate value, here an atom:
+% Immediate values:
 get_first_call_leaf_for_expression( _Expr={ 'atom', _, _Atom },
 									_ScanContext ) ->
 	immediate_value;
 
+get_first_call_leaf_for_expression( _Expr={ 'char', _, _Atom },
+									_ScanContext ) ->
+	immediate_value;
+
+get_first_call_leaf_for_expression( _Expr={ 'float', _, _Atom },
+									_ScanContext ) ->
+	immediate_value;
+
+get_first_call_leaf_for_expression( _Expr={ 'integer', _, _Atom },
+									_ScanContext ) ->
+	immediate_value;
+
+get_first_call_leaf_for_expression( _Expr={ 'string', _, _Atom },
+									_ScanContext ) ->
+	immediate_value;
+
 get_first_call_leaf_for_expression( Expr, _Acc ) ->
-	ast_utils:raise_error( { unhandled_expression, Expr } ).
+	wooper_internals:raise_error( { unhandled_expression, Expr } ).
 
 
 
@@ -462,12 +480,12 @@ check_terminators_in( _Clauses=[ C | T ], FunNature ) ->
 								   function_nature() ) -> void().
 check_terminators_in_clause( Clause, FunNature ) ->
 
-	trace_utils:debug_fmt( "- checking that the following clause corresponds "
-						   "to a ~s:~n~p", [ FunNature, Clause ] ),
+	%trace_utils:debug_fmt( "- checking that the following clause corresponds "
+	%					   "to a ~s:~n~p", [ FunNature, Clause ] ),
 
 	AllLeaves = get_call_leaves_for_clause( Clause ),
 
-	trace_utils:debug_fmt( " - call leaves found: ~p", [ AllLeaves ] ),
+	%trace_utils:debug_fmt( " - call leaves found: ~p", [ AllLeaves ] ),
 
 	case list_utils:uniquify( AllLeaves ) of
 
@@ -479,14 +497,15 @@ check_terminators_in_clause( Clause, FunNature ) ->
 					ok;
 
 				_ ->
-					ast_utils:raise_error( { inconsistant_function_terminators,
+					wooper_internals:raise_error(
+					  { inconsistent_function_terminators,
 						{ detected_as, FunNature },
 						{ found, return_state_result, 2 } } )
 
 			end;
 
 		[ E={ wooper, return_state_result, _Incorrect } ] ->
-			ast_utils:raise_error( { faulty_request_return, E } );
+			wooper_internals:raise_error( { faulty_request_return, E } );
 
 		[ { wooper, return_state_only, 1 } ] ->
 			case FunNature of
@@ -495,14 +514,15 @@ check_terminators_in_clause( Clause, FunNature ) ->
 					ok;
 
 				_ ->
-					ast_utils:raise_error( { inconsistant_function_terminators,
+					wooper_internals:raise_error(
+					  { inconsistent_function_terminators,
 						{ detected_as, FunNature },
 						{ found, return_state_only, 1 } } )
 
 			end;
 
 		[ E={ wooper, return_state_only, _Incorrect } ] ->
-			ast_utils:raise_error( { faulty_oneway_return, E } );
+			wooper_internals:raise_error( { faulty_oneway_return, E } );
 
 
 		[ { wooper, return_static, 1 } ] ->
@@ -512,14 +532,15 @@ check_terminators_in_clause( Clause, FunNature ) ->
 					ok;
 
 				_ ->
-					ast_utils:raise_error( { inconsistant_function_terminators,
+					wooper_internals:raise_error(
+					  { inconsistent_function_terminators,
 						{ detected_as, FunNature },
 						{ found, return_static, 1 } } )
 
 			end;
 
 		[ E={ wooper, return_static, _Incorrect } ] ->
-			ast_utils:raise_error( { faulty_static_return, E } );
+			wooper_internals:raise_error( { faulty_static_return, E } );
 
 		Other ->
 			case FunNature of
@@ -528,7 +549,8 @@ check_terminators_in_clause( Clause, FunNature ) ->
 					ok;
 
 				_ ->
-					ast_utils:raise_error( { inconsistant_function_terminators,
+					wooper_internals:raise_error(
+					  { inconsistent_function_terminators,
 						{ detected_as, FunNature }, { found, Other } } )
 
 			end
@@ -601,14 +623,40 @@ get_call_leaves_for_expression(
 		  _Params }, Acc ) ->
 	Acc;
 
-% Terminating on a local call, recursing:
+% Terminating on a local call, cannot say anything more here:
 get_call_leaves_for_expression(
   _Expr={ 'call', _Line, _FunExpr, _Params }, Acc ) ->
 	Acc;
 
 
+get_call_leaves_for_expression(
+  _Expr={ 'receive', _Line, CaseClauses }, Acc ) ->
+	get_call_leaves_for_clause( CaseClauses ) ++ Acc;
+
+
+% Immediate values, no information :
+get_call_leaves_for_expression(
+  _Expr={ 'atom', _Line, _Value }, Acc ) ->
+	Acc;
+
+get_call_leaves_for_expression(
+  _Expr={ 'char', _Line, _Value }, Acc ) ->
+	Acc;
+
+get_call_leaves_for_expression(
+  _Expr={ 'float', _Line, _Value }, Acc ) ->
+	Acc;
+
+get_call_leaves_for_expression(
+  _Expr={ 'integer', _Line, _Value }, Acc ) ->
+	Acc;
+
+get_call_leaves_for_expression(
+  _Expr={ 'string', _Line, _Value }, Acc ) ->
+	Acc;
+
 get_call_leaves_for_expression( Expr, _Acc ) ->
-	ast_utils:raise_error( { unhandled_expression, Expr } ).
+	wooper_internals:raise_error( { unhandled_expression, Expr, call_leaves } ).
 
 
 
@@ -625,26 +673,26 @@ transform_method_returns( Clauses, FunNature ) ->
 transform_method_returns_in(
   _ClauseForm={ clause, Line, Patterns, Guards, Body }, FunNature ) ->
 
-	case Patterns of
-
-		[] ->
-			ok;
-
-		_ ->
-			trace_utils:debug_fmt( " - ignoring patterns ~p", [ Patterns ] )
-
-	end,
+	%case Patterns of
+	%
+	%	[] ->
+	%		ok;
+	%
+	%	_ ->
+	%		trace_utils:debug_fmt( "- ignoring patterns ~p", [ Patterns ] )
+	%
+	%end,
 
 	% Nothing to transform in very limited, BIF-based guards:
 	%trace_utils:debug_fmt( " - ignoring guards ~p", [ Guards ] ),
 
-	trace_utils:debug_fmt( " - transforming, as '~s', following body:~n~p",
-						   [ FunNature, Body ] ),
+	%trace_utils:debug_fmt( " - transforming, as '~s', following body:~n~p",
+	%					   [ FunNature, Body ] ),
 
 	NewBody = transform_body( Body, FunNature ),
 
-	trace_utils:debug_fmt( " - corresponding transformed body is:~n~p",
-						   [ NewBody ] ),
+	%trace_utils:debug_fmt( " - corresponding transformed body is:~n~p",
+	%					   [ NewBody ] ),
 
 	{ clause, Line, Patterns, Guards, NewBody }.
 
@@ -750,7 +798,7 @@ transform_method_terminator( LineCall,
 		Params,
 		_FunNature=request,
 		_TransformState ) ->
-	ast_utils:raise_error( { wrong_arity, { at, LineCall },
+	wooper_internals:raise_error( { wrong_arity, { at, LineCall },
 		{ wooper, FunName, { got, length( Params ) }, { expected, 2 } } } );
 
 
@@ -761,7 +809,7 @@ transform_method_terminator( LineCall,
 		Params,
 		FunNature,
 		_TransformState ) ->
-	ast_utils:raise_error( { wrong_terminator, { at, LineCall },
+	wooper_internals:raise_error( { wrong_terminator, { at, LineCall },
 		{ method_nature, FunNature }, { wooper, FunName, length( Params ) } } );
 
 
@@ -783,7 +831,7 @@ transform_method_terminator( LineCall,
 		Params,
 		_FunNature=oneway,
 		_TransformState ) ->
-	ast_utils:raise_error( { wrong_arity, { at, LineCall },
+	wooper_internals:raise_error( { wrong_arity, { at, LineCall },
 							 { wooper, FunName,
 							   { got, length( Params ) }, { expected, 1 } } } );
 
@@ -795,7 +843,7 @@ transform_method_terminator( LineCall,
 		Params,
 		FunNature,
 		_TransformState ) ->
-	ast_utils:raise_error( { wrong_terminator, { at, LineCall },
+	wooper_internals:raise_error( { wrong_terminator, { at, LineCall },
 							 { method_nature, FunNature },
 							 { wooper, FunName, length( Params ) } } );
 
@@ -818,7 +866,7 @@ transform_method_terminator( LineCall,
 		Params,
 		_FunNature=static,
 		_TransformState ) ->
-	ast_utils:raise_error( { wrong_arity, { at, LineCall },
+	wooper_internals:raise_error( { wrong_arity, { at, LineCall },
 							 { wooper, FunName,
 							   { got, length( Params ) }, { expected, 1 } } } );
 
@@ -829,7 +877,7 @@ transform_method_terminator( LineCall,
 		Params,
 		FunNature,
 		_TransformState ) ->
-	ast_utils:raise_error( { wrong_terminator, {at,LineCall},
+	wooper_internals:raise_error( { wrong_terminator, {at,LineCall},
 							 { method_nature, FunNature },
 							 { wooper, FunName, length( Params ) } } );
 
@@ -862,8 +910,8 @@ transform_method_terminator( LineCall, CallFunctionRef, Params,
 -spec ensure_exported( function_info(), marker_table() ) -> function_info().
 ensure_exported( FunInfo=#function_info{ exported=[] }, MarkerTable ) ->
 
-	trace_utils:debug_fmt( "- auto-exporting ~s",
-						 [ ast_info:function_info_to_string( FunInfo ) ] ),
+	%trace_utils:debug_fmt( "- auto-exporting ~s",
+	%					 [ ast_info:function_info_to_string( FunInfo ) ] ),
 
 	% Not exported yet, hence to export:
 	ExportLoc = ast_info:get_default_export_function_location( MarkerTable ),

@@ -208,19 +208,24 @@ chain_parent_destructors( State ) ->
 
 	% Then automatically call the direct mother destructors.
 	%
-	% Using foldr, not foldl: the destructors of mother classes are called in
-	% the reverse order compared to the order that was used for construction,
-	% for the sake of symmetry.
-	%
 	% The final state is returned.
-	%
+
 	% This would be incorrect, as it would return the superclasses of the
 	% current instance, never recursing back in the inheritance graph:
 	%
 	%{ _State, Superclasses } = executeRequest( State, getSuperclasses ),
+	%
+	% Note also that auto-generating get_superclasses/0 leads to have to
+	% auto-generate in turn
+	% wooper_destruction_functions:chain_parent_destructors/1, and thus
+	% wooper_destruct/1, etc. - unless we prefix this call with ?MODULE, as in :
+	%
+	Superclasses = ?MODULE:get_superclasses( State ),
 
-	Superclasses = get_superclasses(),
-
+	% Using foldr, not foldl: the destructors of mother classes are called in
+	% the reverse order compared to the order that was used for construction,
+	% for the sake of symmetry.
+	%
 	lists:foldr(
 
 		fun( Class, NewState ) ->

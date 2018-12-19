@@ -331,9 +331,9 @@ add_v1_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 									callback=false,
 									exported=[ ExportLocation ] },
 
-	% May override any prior operator definition:
-	table:addEntries( [ { NewId, NewOpInfo }, { NewLinkId, NewLinkOpInfo } ],
-					  OperatorTable ).
+	% Ensure not already defined (ex: by an unwary user):
+	table:addNewEntries( [ { NewId, NewOpInfo }, { NewLinkId, NewLinkOpInfo } ],
+						 OperatorTable ).
 
 
 
@@ -459,9 +459,10 @@ add_v2_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 						   callback=false,
 						   exported=[ ExportLocation ] },
 
-	% May override any prior operator definition:
-	table:addEntries( [ { SyncNewId, SyncNewOpInfo },
-						{ SyncNewLinkId, SyncNewLinkOpInfo } ], OperatorTable ).
+	% Ensure not already defined (ex: by an unwary user):
+	table:addNewEntries( [ { SyncNewId, SyncNewOpInfo },
+						   { SyncNewLinkId, SyncNewLinkOpInfo } ],
+						 OperatorTable ).
 
 
 
@@ -588,9 +589,9 @@ add_v3_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 									callback=false,
 									exported=[ ExportLocation ] },
 
-	% May override any prior operator definition:
-	table:addEntries( [ { OpNewId, OpNewInfo },
-						{ OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
+	% Ensure not already defined (ex: by an unwary user):
+	table:addNewEntries( [ { OpNewId, OpNewInfo },
+						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
 
 
 
@@ -710,9 +711,9 @@ add_v4_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 									callback=false,
 									exported=[ ExportLocation ] },
 
-	% May override any prior operator definition:
-	table:addEntries( [ { OpNewId, OpNewInfo },
-						{ OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
+	% Ensure not already defined (ex: by an unwary user):
+	table:addNewEntries( [ { OpNewId, OpNewInfo },
+						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
 
 
 
@@ -851,9 +852,9 @@ add_v5_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 									callback=false,
 									exported=[ ExportLocation ] },
 
-	% May override any prior operator definition:
-	table:addEntries( [ { OpNewId, OpNewInfo },
-						{ OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
+	% Ensure not already defined (ex: by an unwary user):
+	table:addNewEntries( [ { OpNewId, OpNewInfo },
+						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
 
 
 
@@ -983,9 +984,9 @@ add_v6_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 									callback=false,
 									exported=[ ExportLocation ] },
 
-	% May override any prior operator definition:
-	table:addEntries( [ { OpNewId, OpNewInfo },
-						{ OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
+	% Ensure not already defined (ex: by an unwary user):
+	table:addNewEntries( [ { OpNewId, OpNewInfo },
+						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
 
 
 
@@ -1124,9 +1125,9 @@ add_v7_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 									callback=false,
 									exported=[ ExportLocation ] },
 
-	% May override any prior operator definition:
-	table:addEntries( [ { OpNewId, OpNewInfo },
-						{ OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
+	% Ensure not already defined (ex: by an unwary user):
+	table:addNewEntries( [ { OpNewId, OpNewInfo },
+						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
 
 
 

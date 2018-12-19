@@ -130,11 +130,6 @@
 							| ?term_restoration_marker.
 
 
-% Dummy entry for this special case:
--define( wooper_superclasses, [] ).
-
-
-
 
 % Now, function definitions:
 
