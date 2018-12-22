@@ -138,6 +138,8 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo } | T ],
 					FunctionTable, RequestTable, OnewayTable, StaticTable,
 					ScanContext=#scan_context{ builtins=Builtins } ) ->
 
+	%trace_utils:debug_fmt( "sorting ~p", [ FunId ] ),
+
 	case lists:member( FunId, Builtins ) of
 
 		true ->
@@ -236,11 +238,17 @@ infer_function_nature( FunId, ScanContext ) ->
 	% Available by design:
 	FunInfo = table:getEntry( FunId, ScanContext#scan_context.function_table ),
 
-	% At least one clause per function:
-	FirstClause = hd( FunInfo#function_info.clauses ),
+	% At least one clause per function normally:
+	case FunInfo#function_info.clauses of
 
-	infer_function_nature_from_clause( FirstClause, ScanContext ).
+		[] ->
+			wooper_internals:raise_error(
+			  { function_exported_yet_not_defined, FunId } );
 
+		[ FirstClause | _T ] ->
+			infer_function_nature_from_clause( FirstClause, ScanContext )
+
+	end.
 
 
 
@@ -287,7 +295,7 @@ infer_function_nature_from_clause( Clause, ScanContext ) ->
 			function;
 
 		% Here these configurations denote with certainty a function:
-		immediate_value ->
+		direct_value ->
 			function;
 
 		local_call ->
@@ -425,26 +433,32 @@ get_first_call_leaf_for_expression( _Expr={ 'receive', _,
 	% We rely on the first:
 	get_first_call_leaf_for_case_clause( C, ScanContext );
 
+
+get_first_call_leaf_for_expression( _Expr={ 'var', _, _VarAtomName },
+									_ScanContext ) ->
+	direct_value;
+
+
 % Immediate values:
 get_first_call_leaf_for_expression( _Expr={ 'atom', _, _Atom },
 									_ScanContext ) ->
-	immediate_value;
+	direct_value;
 
-get_first_call_leaf_for_expression( _Expr={ 'char', _, _Atom },
+get_first_call_leaf_for_expression( _Expr={ 'char', _, _Char },
 									_ScanContext ) ->
-	immediate_value;
+	direct_value;
 
-get_first_call_leaf_for_expression( _Expr={ 'float', _, _Atom },
+get_first_call_leaf_for_expression( _Expr={ 'float', _, _Float },
 									_ScanContext ) ->
-	immediate_value;
+	direct_value;
 
-get_first_call_leaf_for_expression( _Expr={ 'integer', _, _Atom },
+get_first_call_leaf_for_expression( _Expr={ 'integer', _, _Integer },
 									_ScanContext ) ->
-	immediate_value;
+	direct_value;
 
-get_first_call_leaf_for_expression( _Expr={ 'string', _, _Atom },
+get_first_call_leaf_for_expression( _Expr={ 'string', _, _String },
 									_ScanContext ) ->
-	immediate_value;
+	direct_value;
 
 get_first_call_leaf_for_expression( Expr, _Acc ) ->
 	wooper_internals:raise_error( { unhandled_expression, Expr } ).
@@ -570,6 +584,10 @@ get_call_leaves_for_clause( _Clause={ clause, _Line, _Patterns, _Guards,
 	get_call_leaves_for_clause( Body, _Acc=[] ).
 
 
+body: take last expression
+receive: take all case clauses
+
+
 % Only the last expression of a given (possibly nested) clause matters:
 get_call_leaves_for_clause( _ClauseBody=[ L ], Acc ) ->
 	% This is the last expression, hence select it for scanning:
@@ -580,6 +598,7 @@ get_call_leaves_for_clause( _ClauseBody=[ _E | T ], Acc ) ->
 	get_call_leaves_for_clause( T, Acc ).
 
 
+
 % Returns (recursively) all leaves (terminal expressions) of the specified
 % expression that are remote calls, as {ModuleName,FunctionName,Arity}.
 %
@@ -587,15 +606,15 @@ get_call_leaves_for_clause( _ClauseBody=[ _E | T ], Acc ) ->
 %
 % (anonymous mute variables correspond to lines)
 %
--spec get_call_leaves_for_expression( ast_expression() ) -> [ mfa() ].
+-spec get_call_leaves_for_expression( ast_expression(), [ mfa() ] ) -> [ mfa() ].
 % First, body-level:
 get_call_leaves_for_expression(
   _Expr={ 'case', _Line, _Patterns, _Guards, Body }, Acc ) ->
-	get_call_leaves_for_clause( Body ) ++ Acc;
+	get_call_leaves_for_clause( Body, Acc );
 
 get_call_leaves_for_expression(
   _Expr={ 'catch', _Line, _Patterns, _Guards, Body }, Acc ) ->
-	get_call_leaves_for_clause( Body ) ++ Acc;
+	get_call_leaves_for_clause( Body, Acc );
 
 % Then, expression-level:
 % Intercepts calls to the 3 WOOPER method terminators:
@@ -631,8 +650,12 @@ get_call_leaves_for_expression(
 
 get_call_leaves_for_expression(
   _Expr={ 'receive', _Line, CaseClauses }, Acc ) ->
-	get_call_leaves_for_clause( CaseClauses ) ++ Acc;
+	get_call_leaves_for_clause( CaseClauses, Acc );
 
+
+get_call_leaves_for_expression( _Expr={ 'var', _Line, _VarAtomName },
+								Acc ) ->
+	Acc;
 
 % Immediate values, no information :
 get_call_leaves_for_expression(
@@ -657,7 +680,6 @@ get_call_leaves_for_expression(
 
 get_call_leaves_for_expression( Expr, _Acc ) ->
 	wooper_internals:raise_error( { unhandled_expression, Expr, call_leaves } ).
-
 
 
 
