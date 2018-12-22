@@ -332,7 +332,8 @@ manage_method_terminators( Clauses, FunId ) ->
 						 {atom,_,return_state_result} },
 		  Params=[ _StateExpr, _ResExpr ],
 		  Transforms=#ast_transforms{
-			transformation_state=undefined } ) ->
+			transformation_state=S } )
+							 when S =:= undefined orelse S =:= request ->
 
 			%trace_utils:debug_fmt( "~s/~B detected as a request.",
 			%					   pair:to_list( FunId ) ),
@@ -365,7 +366,7 @@ manage_method_terminators( Clauses, FunId ) ->
 			transformation_state=OtherNature } ) ->
 			wooper_internals:raise_error( { method_terminator_mismatch,
 				{ was, OtherNature }, { detected, request },
-				{ line, LineCall }, FunId } );
+				FunId, { line, LineCall } } );
 
 
 
@@ -375,7 +376,8 @@ manage_method_terminators( Clauses, FunId ) ->
 						 {atom,_,return_state_only} },
 		  Params=[ _StateExpr ],
 		  Transforms=#ast_transforms{
-			transformation_state=undefined } ) ->
+			transformation_state=S } )
+							 when S =:= undefined orelse S =:= oneway ->
 
 			%trace_utils:debug_fmt( "~s/~B detected as a oneway.",
 			%					   pair:to_list( FunId ) ),
@@ -407,7 +409,7 @@ manage_method_terminators( Clauses, FunId ) ->
 			transformation_state=OtherNature } ) when length( Params ) =/= 2 ->
 			wooper_internals:raise_error( { method_terminator_mismatch,
 				{ was, OtherNature }, { detected, oneway },
-				{ line, LineCall }, FunId } );
+				FunId, { line, LineCall } } );
 
 
 
@@ -417,7 +419,8 @@ manage_method_terminators( Clauses, FunId ) ->
 						 {atom,_,return_static} },
 		  Params=[ _StateExpr ],
 		  Transforms=#ast_transforms{
-			transformation_state=undefined } ) ->
+			transformation_state=S } )
+							 when S =:= undefined orelse S =:= static ->
 
 			%trace_utils:debug_fmt( "~s/~B detected as a static method.",
 			%					   pair:to_list( FunId ) ),
@@ -437,7 +440,7 @@ manage_method_terminators( Clauses, FunId ) ->
 		  _Transforms ) when length( Params ) =/= 2 ->
 			wooper_internals:raise_error( { wrong_arity, { line, LineCall },
 			  { wooper, return_static, { got, length( Params ) },
-				{ expected, 1 } }, FunId } );
+				{ expected, 1 }, FunId } } );
 
 
 		% Nature mismatch:
@@ -449,7 +452,7 @@ manage_method_terminators( Clauses, FunId ) ->
 			transformation_state=OtherNature } ) ->
 			wooper_internals:raise_error( { method_terminator_mismatch,
 				{ was, OtherNature }, { detected, static },
-				{ line, LineCall }, FunId } );
+				FunId, { line, LineCall } } );
 
 		% All other calls are to pass through, as they are:
 		( LineCall, FunctionRef, Params, Transforms ) ->
@@ -467,6 +470,7 @@ manage_method_terminators( Clauses, FunId ) ->
 	{ NewClauses, NewTransforms } = ast_clause:transform_function_clauses(
 									  Clauses, Transforms ),
 
+	% Unless found different, a function is a (plain) function:
 	FunNature = case NewTransforms#ast_transforms.transformation_state of
 
 		undefined ->
