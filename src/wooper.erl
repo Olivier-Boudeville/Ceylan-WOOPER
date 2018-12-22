@@ -83,6 +83,12 @@
 -export([ get_all_attributes/1 ]).
 
 
+% Traps to detect any method terminator left untransformed:
+%
+-export([ return_state_result/2, return_state_only/1, return_static/1 ]).
+
+
+
 
 % For log and error reporting:
 %
@@ -2036,3 +2042,22 @@ safe_delete_synchronously_instances( InstanceList ) ->
 			basic_utils:is_alive( InstancePid ) ],
 
 	delete_synchronously_instances( FilteredInstanceList ).
+
+
+% These functions shall never be called, as the WOOPER parse transform is
+% supposed to have replaced them at compilation-time.
+
+
+-spec return_state_result( any(), any() ) -> no_return().
+return_state_result( _State, _Result ) ->
+	throw( untransformed_method_terminator ).
+
+
+-spec return_state_only( any() ) -> no_return().
+return_state_only( _State ) ->
+	throw( untransformed_method_terminator ).
+
+
+-spec return_static( any() ) -> no_return().
+return_static( _Value ) ->
+	throw( untransformed_method_terminator ).
