@@ -13,7 +13,7 @@
 
 
 % Determines what are the mother classes of this class (if any):
--define( wooper_superclasses, [] ).
+-superclasses([]).
 
 
 %-define( wooper_method_export, getName/1, setName/2 ).
@@ -37,6 +37,7 @@
 
 -type name() :: text_utils:ustring().
 
+-attributes([ name ]).
 
 % Simplest possible signature:
 -spec construct( wooper:state() ) -> wooper:state().
@@ -62,11 +63,6 @@ destruct( State ) ->
 %
 -spec getName( wooper:state() ) -> request_return( name() ).
 getName( State ) ->
-	nested_in_request( State ).
-
-
-% (helper)
-nested_in_request( State ) ->
 	wooper:return_state_result( State, ?getAttr(name) ).
 
 
