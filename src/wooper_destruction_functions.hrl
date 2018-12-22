@@ -220,7 +220,7 @@ chain_parent_destructors( State ) ->
 	% wooper_destruction_functions:chain_parent_destructors/1, and thus
 	% wooper_destruct/1, etc. - unless we prefix this call with ?MODULE, as in :
 	%
-	Superclasses = ?MODULE:get_superclasses( State ),
+	Superclasses = ?MODULE:get_superclasses(),
 
 	% Using foldr, not foldl: the destructors of mother classes are called in
 	% the reverse order compared to the order that was used for construction,
