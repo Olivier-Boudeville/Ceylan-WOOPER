@@ -130,10 +130,13 @@
 %
 % Finally, using retrocompatibility macros, resulting in the same code:
 %
--define( wooper_return_state_result( S, R ),
-		 wooper:return_state_result( (S), (R) ) ).
+% (retrocompatibility now shall have been solved, hence these macros are
+% disabled)
+%
+%-define( wooper_return_state_result( S, R ),
+%		 wooper:return_state_result( (S), (R) ) ).
 
--define( wooper_return_state_only( S ), wooper:return_state( (S) ) ).
+%-define( wooper_return_state_only( S ), wooper:return_state( (S) ) ).
 
 
 
