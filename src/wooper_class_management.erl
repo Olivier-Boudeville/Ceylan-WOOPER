@@ -194,7 +194,7 @@ manage_superclasses( ParseAttrTable,
 								 exported=[ ExportLoc ] },
 
 	% Ensure not already defined (ex: by an unwary user):
-	NewFunctionTable =
-				  table:addNewEntry( GeSupFunId, GetSupInfo, FunctionTable ),
+	NewFunctionTable = table:addNewEntry( GeSupFunId, GetSupInfo,
+										  FunctionTable ),
 
 	RegisteredClassInfo#class_info{ functions=NewFunctionTable }.
