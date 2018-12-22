@@ -33,30 +33,24 @@
 -record( attribute_info, {
 
 
-	% The name of this attribute (ex: 'surface'):
+	% The name of this attribute (ex: 'total_surface'):
 	name :: wooper:attribute_name(),
 
 
-	% The type of this attribute, currently as a string (later: as
+	% The type of this attribute, currently as an atom (later: as
 	% type_utils:type()).
 	%
-	% Ex: "{ atom(), [ float() ] }".
+	% Ex: '{ atom(), [ float() ] }'.
 	%
-	type = "" :: maybe( type_utils:type_description() ),
+	type = undefined :: maybe( type_utils:type_description() ),
 
 
 	% The qualifiers (if any) that apply to this attribute:
 	qualifiers = [] :: [ wooper:attribute_qualifier() ],
 
 
-	% The value to which this attribute will be set prior entering in any actual
-	% (class) constructor:
-	%
-	initial_value = undefined :: maybe( wooper:attribute_value() ),
-
-
 	% Textual description (if any) of that attribute (free text):
-	description = "" :: text_utils:ustring()
+	description = undefined :: maybe( text_utils:bin_string() )
 
  } ).
 
