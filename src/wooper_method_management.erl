@@ -53,13 +53,13 @@
 
 % Shorthands:
 
--type line() :: ast_base:line().
+
 -type function_info() :: ast_info:function_info().
 -type marker_table() :: ast_info:section_marker_table().
 -type function_table() :: ast_info:function_table().
 -type compose_pair() :: wooper_parse_transform:compose_pair().
--type ast_expression() :: ast_expression:ast_expression().
--type transformation_state() :: ast_transform:transformation_state().
+
+
 
 
 
@@ -79,6 +79,40 @@
 } ).
 
 -type scan_context() :: #scan_context{}.
+
+-export_type([ scan_context/0 ]).
+
+
+
+% Implementation notes:
+
+
+% To determine whether a function is a method and, if yes, of what kind it is
+% (request, oneway, etc.), we have to traverse recursively at least one of its
+% clauses until finding at least one final expression in order to examine, check
+% and possibly transform any method terminator found.
+%
+% Recursing in nested local calls is not needed here, as by convention the
+% method terminators should be local to the method body.
+%
+% For that we can either follow exactly the AST legit structure that we can
+% foresee (typically based on http://erlang.org/doc/apps/erts/absform.html), at
+% the risk of rejecting correct code - should our traversal be not perfect, or
+% we can "blindly" rewrite calls for example corresponding to
+% wooper:return_state_result( S, R ) as { S, R } (and check we have no
+% incompatible method terminators).
+%
+% We preferred initially here the latter solution (lighter, simpler, safer), but
+% we had already a full logic (in Myriad's meta) to traverse and transform ASTs
+% or part thereof, so we rely on it for the best, now that it has been enriched
+% so that it can apply and maintain a transformation state.
+%
+% A combination of ast_transform:get_remote_call_transform_table/1 with
+% ast_expression:transform_expression/2 would have been close to what we needed,
+% yet we do not want to replace a *call* by another, we want it to be replaced
+% by a tuple creation, i.e. an expression. Moreover we need to be stateful, to
+% remember any past method terminator and check their are consistent with the
+% newer ones being found.
 
 
 
@@ -144,7 +178,8 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo } | T ],
 
 		true ->
 
-			% Skip any builtin, we currently just consider them as functions:
+			% Skip any builtin, we currently just consider them as plain
+			% functions:
 			%
 			NewFunctionTable = table:addNewEntry( FunId, FunInfo,
 												  FunctionTable ),
@@ -157,22 +192,15 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo } | T ],
 			%trace_utils:debug_fmt( "Examining Erlang function ~s/~B",
 			%					   [ FunName, Arity ] ),
 
-			% Use the first clause to guess:
-			FunNature = infer_function_nature( FunId, ScanContext ),
-
-			%trace_utils:debug_fmt( "## ~s/~B is a ~s",
-			%					   [ FunName, Arity, FunNature ] ),
-
 			OriginalClauses = FunInfo#function_info.clauses,
 
-			% Checks that the terminators in all leaves of all clauses are
-			% consistent with the detected nature (this is an optional step, yet
-			% it allows to better report errors):
+			% We used to infer the function nature based on its first clause,
+			% and then to make a custom full traversal to transform method
+			% terminators. Now we reuse the Myriad ast_transforms instead, and
+			% perform everything (guessing/checking/transforming) in one pass:
 			%
-			check_terminators_in( OriginalClauses, FunNature ),
-
-			% Then check and transform all clauses, for any given nature:
-			NewClauses = transform_method_returns( OriginalClauses, FunNature ),
+			{ NewClauses, FunNature } =
+				manage_method_terminators( OriginalClauses, FunId ),
 
 			NewFunInfo = FunInfo#function_info{ clauses=NewClauses },
 
@@ -220,708 +248,239 @@ sort_out_functions( _Functions=[ #function_info{ name=FunName,
 
 
 
-% Infers the nature of the corresponding function.
+% Infers the nature of the corresponding function, ensures all method
+% terminators correspond, and transform them appropriately, in one pass.
 %
 % We consider that all actual clauses of a method must explicitly terminate with
 % a WOOPER method terminator (of course the same for all clauses), rather than
 % calling an helper function that would use such a terminator (otherwise the
-% methods could not be auto-detected, as there would be no way to determine
-% whether said helper should be considered as a method or not).
+% nature of methods could not be auto-detected, as there would be no way to
+% determine whether said helper should be considered as a method or not).
 %
--spec infer_function_nature( meta_utils:function_id(), scan_context() ) ->
-								   function_nature().
-infer_function_nature( FunId, ScanContext ) ->
-
-	% For that, we rely on the analysis of the first call leaf of the first
-	% clause:
-
-	% Available by design:
-	FunInfo = table:getEntry( FunId, ScanContext#scan_context.function_table ),
-
-	% At least one clause per function normally:
-	case FunInfo#function_info.clauses of
-
-		[] ->
-			wooper_internals:raise_error(
+-spec manage_method_terminators( meta_utils:clause_def(),
+								 meta_utils:function_id() ) ->
+							{ meta_utils:clause_def(), function_nature() }.
+manage_method_terminators( _Clauses=[], FunId ) ->
+	wooper_internals:raise_error(
 			  { function_exported_yet_not_defined, FunId } );
 
-		[ FirstClause | _T ] ->
-			infer_function_nature_from_clause( FirstClause, ScanContext )
+manage_method_terminators( Clauses, FunId ) ->
 
-	end.
+	% We define first the transformation functions in charge of the
+	% guessing/checking/transforming of the method terminators.
+	%
+	% The body transform-fun will be used to skip all expressions of a body but
+	% the last one, while the call transform-fun will be applied to call
+	% expressions found there, as:
+	%
+	% { NewExpr, NewTransforms } = TransformFun( LineCall, FunctionRef,
+	%                                            Params, Transforms )
+	%
+	% Transforms is an ast_transforms record that contains a
+	% transformation_state field, which is of type maybe( function_nature() ):
+	% it starts as 'undefined', then the first terminal call branch of the first
+	% clause allows to detect and set the function nature, and afterwards all
+	% other branches are checked against it, and transformed.
+
+	% As empty bodies may happen (ex: 'receive' without an 'after'):
+	BodyTransformFun = fun
+
+		( _BodyExprs=[], Transforms ) ->
+			{ [], Transforms };
+
+		% Commented-out as the last expression is managed differently (we cannot
+		% recurse easily), but the spirit remains:
+		%( _BodyExprs=[ LastExpr ], Transforms ) ->
+		%    ast_expression:transform_expressions( LastExpr, Transforms );
+
+		% At least an element exists:
+		( BodyExprs, Transforms ) -> % superfluous: when is_list( BodyExprs ) ->
+
+			% Warning: we currently skip intermediate expressions as a whole (we
+			% do not transform them at all, as currently WOOPER does not have
+			% any need for that), but maybe in the future this will have to be
+			% changed.
+			%
+			% We cannot use easily a Y-combinator here, as the signature of this
+			% anonymous function is constrained:
+			%{ [ Expr | SomeFun(T) ] }, Transforms }
+			%
+			% More efficient that list_utils:extract_last_element/2 and then
+			% recreating the list:
+			[ LastExpr | RevFirstExprs ] = lists:reverse( BodyExprs ),
+
+			{ NewLastExpr, NewTransforms } =
+				ast_expression:transform_expression( LastExpr, Transforms ),
+
+			NewExprs = lists:reverse( [ NewLastExpr | RevFirstExprs ] ),
+
+			{ NewExprs, NewTransforms }
+
+	end,
+
+	% In charge of managing the method terminators:
+	%
+	% (anonymous mute variables correspond to line numbers)
+	%
+	CallTransformFun = fun
+
+		% First, requests:
+
+		% First (correct) request detection:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_state_result} },
+		  Params=[ _StateExpr, _ResExpr ],
+		  Transforms=#ast_transforms{
+			transformation_state=undefined } ) ->
+
+			%trace_utils:debug_fmt( "~s/~B detected as a request.",
+			%					   pair:to_list( FunId ) ),
+
+			% So that wooper:return_state_result( S, R ) becomes simply:
+			% { S, R }:
+			NewExpr = { tuple, LineCall, Params },
+			NewTransforms = Transforms#ast_transforms{
+							  transformation_state=request },
+			{ NewExpr, NewTransforms };
+
+
+		% Faulty request arity:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_state_result} },
+		  Params,
+		  _Transforms ) when length( Params ) =/= 2 ->
+			wooper_internals:raise_error( { wrong_arity, { line, LineCall },
+			  { wooper, return_state_result, { got, length( Params ) },
+				{ expected, 2 } }, FunId } );
+
+
+		% Nature mismatch:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_state_result} },
+		  _Params,
+		  _Transforms=#ast_transforms{
+			transformation_state=OtherNature } ) ->
+			wooper_internals:raise_error( { method_terminator_mismatch,
+				{ was, OtherNature }, { detected, request },
+				{ line, LineCall }, FunId } );
 
 
 
-% Infers the nature of the corresponding function, based on its specified
-% clause.
-%
--spec infer_function_nature_from_clause( meta_utils:clause_def(),
-										 scan_context() ) -> function_nature().
-infer_function_nature_from_clause( Clause, ScanContext ) ->
+		% First (correct) oneway detection:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_state_only} },
+		  Params=[ _StateExpr ],
+		  Transforms=#ast_transforms{
+			transformation_state=undefined } ) ->
 
-	%trace_utils:debug_fmt( " - examining nature of clause ~p", [ Clause ] ),
+			%trace_utils:debug_fmt( "~s/~B detected as a oneway.",
+			%					   pair:to_list( FunId ) ),
 
-	Leaf = get_first_call_leaf_for_clause( Clause, ScanContext ),
-
-	%trace_utils:debug_fmt( " - first call leaf found: ~p", [ Leaf ] ),
-
-	case Leaf of
-
-		% Request detected:
-		{ wooper, return_state_result, 2 } ->
-			request;
-
-		E={ wooper, return_state_result, _Incorrect } ->
-			wooper_internals:raise_error( { faulty_request_return, E } );
+			% So that wooper:return_state_only( R ) becomes simply R:
+			NewExpr = { tuple, LineCall, Params },
+			NewTransforms = Transforms#ast_transforms{
+							  transformation_state=oneway },
+			{ NewExpr, NewTransforms };
 
 
-		% Oneway detected:
-		{ wooper, return_state_only, 1 } ->
-			oneway;
+		% Faulty oneway arity:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_state_only} },
+		  Params=[ _State ],
+		  _Transforms ) ->
+			wooper_internals:raise_error( { wrong_arity, { line, LineCall },
+			  { wooper, return_state_only, { got, length( Params ) },
+				{ expected, 1 } }, FunId } );
 
-		E={ wooper, return_state_only, _Incorrect } ->
-			wooper_internals:raise_error( { faulty_oneway_return, E } );
+
+		% Nature mismatch:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_state_only} },
+		  Params,
+		  _Transforms=#ast_transforms{
+			transformation_state=OtherNature } ) when length( Params ) =/= 2 ->
+			wooper_internals:raise_error( { method_terminator_mismatch,
+				{ was, OtherNature }, { detected, oneway },
+				{ line, LineCall }, FunId } );
 
 
-		% Static method detected:
-		{ wooper, return_static, 1 } ->
-			static;
 
-		E={ wooper, return_static, _Incorrect } ->
-			wooper_internals:raise_error( { faulty_static_return, E } );
+		% First (correct) static method detection:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_static} },
+		  Params=[ _StateExpr ],
+		  Transforms=#ast_transforms{
+			transformation_state=undefined } ) ->
 
-		% Not a WOOPER method terminator, hence should be a simple function:
-		{ _OtherModule, _FunctionName, _Arity } ->
+			%trace_utils:debug_fmt( "~s/~B detected as a static method.",
+			%					   pair:to_list( FunId ) ),
+
+			% So that wooper:return_static( R ) becomes simply R:
+			NewExpr = { tuple, LineCall, Params },
+			NewTransforms = Transforms#ast_transforms{
+							  transformation_state=static },
+			{ NewExpr, NewTransforms };
+
+
+		% Faulty static arity:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_static} },
+		  Params,
+		  _Transforms ) when length( Params ) =/= 2 ->
+			wooper_internals:raise_error( { wrong_arity, { line, LineCall },
+			  { wooper, return_static, { got, length( Params ) },
+				{ expected, 1 } }, FunId } );
+
+
+		% Nature mismatch:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_static} },
+		  _Params,
+		  _Transforms=#ast_transforms{
+			transformation_state=OtherNature } ) ->
+			wooper_internals:raise_error( { method_terminator_mismatch,
+				{ was, OtherNature }, { detected, static },
+				{ line, LineCall }, FunId } );
+
+		% All other calls are to pass through, as they are:
+		( LineCall, FunctionRef, Params, Transforms ) ->
+			SameExpr = { call, LineCall, FunctionRef, Params },
+			{ SameExpr, Transforms }
+
+	end,
+
+	TransformTable = table:new( [ { body, BodyTransformFun },
+								  { call, CallTransformFun } ] ),
+
+	Transforms = #ast_transforms{ transform_table=TransformTable,
+								  transformation_state=undefined },
+
+	{ NewClauses, NewTransforms } = ast_clause:transform_function_clauses(
+									  Clauses, Transforms ),
+
+	FunNature = case NewTransforms#ast_transforms.transformation_state of
+
+		undefined ->
+			%trace_utils:debug_fmt( "~s/~B detected as a plain function.",
+			%					   pair:to_list( FunId ) ),
 			function;
-
-		% Here these configurations denote with certainty a function:
-		direct_value ->
-			function;
-
-		local_call ->
-			function;
-
-		% Expected to be mostly expressions or remote calls:
-		_ ->
-			trace_utils:warning_fmt( "Call leaf ~p supposed denoting a "
-									 "plain function.", [ Leaf ] ),
-			function
-
-	end.
-
-
-
-% Returns the first (arbitrarily nested) leaf (terminal expression) of the
-% specified function clause that is a remote call, as
-% {ModuleName,FunctionName,Arity}, or returns other atoms to denote plain
-% functions.
-%
-% Note: this used to be recursively done through all nested local function calls
-% possibly ultimately ending with a WOOPER method terminator, but such cases are
-% now disallowed (clearer, simpler, no need for explicit exports to avoid having
-% an helper function be wrongly identified as methods).
-%
--spec get_first_call_leaf_for_clause( meta_utils:clause_def(),
-									  scan_context() ) -> maybe( mfa() ).
-get_first_call_leaf_for_clause(
-  _Clause={ clause, _Line, _Patterns, _Guards, Body }, ScanContext ) ->
-	get_first_call_leaf_for_body( Body, ScanContext ).
-
-
-
-% Only the last (possibly nested) expression stemming from a given body matters:
-get_first_call_leaf_for_body( _ClauseBody=[ E ], ScanContext ) ->
-	% This is the last expression, hence select it for scanning:
-	get_first_call_leaf_for_expression( E, ScanContext );
-
-get_first_call_leaf_for_body( _ClauseBody=[ _E | T ], ScanContext ) ->
-	% Skip all non-last expressions:
-	get_first_call_leaf_for_body( T, ScanContext ).
-
-
-
-
-% Handles each possible branching construct of the specified expression.
-%
-% (anonymous mute variables correspond to line numbers)
-%
-% First, body-level:
-get_first_call_leaf_for_expression(
-  _Expr={ 'case', _, _Patterns, _Guards, Body }, ScanContext ) ->
-	get_first_call_leaf_for_body( Body, ScanContext );
-
-get_first_call_leaf_for_expression(
-  _Expr={ 'catch', _, _Patterns, _Guards, Body }, ScanContext ) ->
-	get_first_call_leaf_for_body( Body, ScanContext );
-
-% Then, expression-level:
-% Intercepts calls to the three WOOPER method terminators:
-get_first_call_leaf_for_expression(
-  _Expr={ 'call', _,
-		  { remote, _, {atom,_,wooper}, {atom,_,return_state_result} },
-		  Params }, _ScanContext ) ->
-	{ wooper, return_state_result, length( Params ) };
-
-get_first_call_leaf_for_expression(
-  _Expr={ 'call', _,
-		  { remote, _, {atom,_,wooper}, {atom,_,return_state_only} },
-		  Params }, _ScanContext ) ->
-	{ wooper, return_state_only, length( Params ) };
-
-get_first_call_leaf_for_expression(
-  _Expr={ 'call', _,
-		  { remote, _, {atom,_,wooper}, {atom,_,return_static} },
-		  Params }, _ScanContext ) ->
-	{ wooper, return_static, length( Params ) };
-
-% Terminating on another remote call, cannot say anything more here except that
-% we expect immediate method terminators:
-%
-get_first_call_leaf_for_expression(
-  _Expr={ 'call', _,
-		  { remote, _, ModExpr, FunNameExpr }, Params }, _ScanContext ) ->
-	{ ModExpr, FunNameExpr, length( Params ) };
-
-% Terminating on an (immediate) local call, we used to recurse:
-%get_first_call_leaf_for_expression(
-%  _Expr={ 'call', _, _FunExpr={ atom, _, FunName }, Params }, ScanContext ) ->
-%	LocalCallFunId = { FunName, length( Params ) },
-%	infer_function_nature( LocalCallFunId, ScanContext );
-
-% This is a local call that is not immediate:
-%get_first_call_leaf_for_expression(
-%  _Expr={ 'call', _, FunExpr, Params }, _ScanContext ) ->
-%	wooper_internals:raise_error( { non_immediate_local_call, FunExpr,
-%						   length( Params ) } );
-
-% Module-local call; now we consider instead that this cannot denote a method,
-% hence this must be a function:
-%
-get_first_call_leaf_for_expression(
-  _Expr={ 'call', _, _FunExpr, _Params }, _ScanContext ) ->
-	local_call;
-
-
-% Try/catch expression, here with no case clause (try B catch Tc_1 ; ... ; Tc_k
-% ...):
-get_first_call_leaf_for_expression(
-  _Expr={ 'try', _, Body, _CaseClauses=[], _CatchClauses, _AfterBody },
-  ScanContext ) ->
-	get_first_call_leaf_for_body( Body, ScanContext );
-
-
-% Try/catch expression, here with at least one case clause (try B of Cc_1 ;
-% ... ; Cc_k ...)
-%
-get_first_call_leaf_for_expression(
-  _Expr={ 'try', _, _Body, _CaseClauses=[ C | _T ], _CatchClauses, _AfterBody },
-  ScanContext ) ->
-	% We rely on the first case clause:
-	infer_function_nature_from_clause( C, ScanContext );
-
-% Match expression: {match,LINE,Rep(P_1),Rep(P_2)}.
-get_first_call_leaf_for_expression(
-  _Expr={ 'match', _, FirstPattern, _SecondPattern },
-  ScanContext ) ->
-	% We rely on the first pattern:
-	get_first_call_leaf_for_expression( FirstPattern, ScanContext );
-
-% Receive expression: receive Cc_1 ; ... ; Cc_k end
-get_first_call_leaf_for_expression( _Expr={ 'receive', _,
-											_CaseClauses=[ C | _T ] },
-									ScanContext ) ->
-	% We rely on the first:
-	get_first_call_leaf_for_case_clause( C, ScanContext );
-
-
-get_first_call_leaf_for_expression( _Expr={ 'var', _, _VarAtomName },
-									_ScanContext ) ->
-	direct_value;
-
-
-% Immediate values:
-get_first_call_leaf_for_expression( _Expr={ 'atom', _, _Atom },
-									_ScanContext ) ->
-	direct_value;
-
-get_first_call_leaf_for_expression( _Expr={ 'char', _, _Char },
-									_ScanContext ) ->
-	direct_value;
-
-get_first_call_leaf_for_expression( _Expr={ 'float', _, _Float },
-									_ScanContext ) ->
-	direct_value;
-
-get_first_call_leaf_for_expression( _Expr={ 'integer', _, _Integer },
-									_ScanContext ) ->
-	direct_value;
-
-get_first_call_leaf_for_expression( _Expr={ 'string', _, _String },
-									_ScanContext ) ->
-	direct_value;
-
-get_first_call_leaf_for_expression( Expr, _Acc ) ->
-	wooper_internals:raise_error( { unhandled_expression, Expr } ).
-
-
-
-% Handles (any kind of) case clause, {clause,LINE,[Rep(P)],[],Rep(B)}.
-%
-get_first_call_leaf_for_case_clause(
-  { 'clause', _, _Patterns, _Guards, Body }, ScanContext ) ->
-	get_first_call_leaf_for_body( Body, ScanContext ).
-
-
-
-% Ensures that the specified function of the specified nature uses the expected
-% terminators.
-%
--spec check_terminators_in( [ meta_utils:clause_def() ], function_nature() ) ->
-								  void().
-check_terminators_in( _Clauses=[], _FunNature ) ->
-	ok;
-
-check_terminators_in( _Clauses=[ C | T ], FunNature ) ->
-	check_terminators_in_clause( C, FunNature ),
-	check_terminators_in( T, FunNature ).
-
-
-
-% Ensures that the specified clause of the specified nature uses the
-% corresponding terminators.
-%
--spec check_terminators_in_clause( meta_utils:clause_def(),
-								   function_nature() ) -> void().
-check_terminators_in_clause( Clause, FunNature ) ->
-
-	%trace_utils:debug_fmt( "- checking that the following clause corresponds "
-	%					   "to a ~s:~n~p", [ FunNature, Clause ] ),
-
-	AllLeaves = get_call_leaves_for_clause( Clause ),
-
-	%trace_utils:debug_fmt( " - call leaves found: ~p", [ AllLeaves ] ),
-
-	case list_utils:uniquify( AllLeaves ) of
-
-		% At least one occurrence of, and no other, different element than:
-		[ { wooper, return_state_result, 2 } ] ->
-			case FunNature of
-
-				request ->
-					ok;
-
-				_ ->
-					wooper_internals:raise_error(
-					  { inconsistent_function_terminators,
-						{ detected_as, FunNature },
-						{ found, return_state_result, 2 } } )
-
-			end;
-
-		[ E={ wooper, return_state_result, _Incorrect } ] ->
-			wooper_internals:raise_error( { faulty_request_return, E } );
-
-		[ { wooper, return_state_only, 1 } ] ->
-			case FunNature of
-
-				oneway ->
-					ok;
-
-				_ ->
-					wooper_internals:raise_error(
-					  { inconsistent_function_terminators,
-						{ detected_as, FunNature },
-						{ found, return_state_only, 1 } } )
-
-			end;
-
-		[ E={ wooper, return_state_only, _Incorrect } ] ->
-			wooper_internals:raise_error( { faulty_oneway_return, E } );
-
-
-		[ { wooper, return_static, 1 } ] ->
-			case FunNature of
-
-				static ->
-					ok;
-
-				_ ->
-					wooper_internals:raise_error(
-					  { inconsistent_function_terminators,
-						{ detected_as, FunNature },
-						{ found, return_static, 1 } } )
-
-			end;
-
-		[ E={ wooper, return_static, _Incorrect } ] ->
-			wooper_internals:raise_error( { faulty_static_return, E } );
 
 		Other ->
-			case FunNature of
+			Other
 
-				function ->
-					ok;
+	end,
 
-				_ ->
-					wooper_internals:raise_error(
-					  { inconsistent_function_terminators,
-						{ detected_as, FunNature }, { found, Other } } )
+	{ NewClauses, FunNature }.
 
-			end
-
-	end.
-
-
-% Returns (recursively) all leaves (terminal expressions) of the specified
-% function clause that are remote calls, as {ModuleName,FunctionName,Arity}.
-%
-% Examples of returned values: [], or [ {wooper,return_state_result,2},
-% {wooper,return_state_result,2}, {lists,sort,1} ], etc.
-%
--spec get_call_leaves_for_clause( meta_utils:clause_def() ) -> [ mfa() ].
-get_call_leaves_for_clause( _Clause={ clause, _Line, _Patterns, _Guards,
-									  Body } ) ->
-	get_call_leaves_for_clause( Body, _Acc=[] ).
-
-
-body: take last expression
-receive: take all case clauses
-
-
-% Only the last expression of a given (possibly nested) clause matters:
-get_call_leaves_for_clause( _ClauseBody=[ L ], Acc ) ->
-	% This is the last expression, hence select it for scanning:
-	get_call_leaves_for_expression( L, Acc );
-
-get_call_leaves_for_clause( _ClauseBody=[ _E | T ], Acc ) ->
-	% Skip non-last expressions:
-	get_call_leaves_for_clause( T, Acc ).
-
-
-
-% Returns (recursively) all leaves (terminal expressions) of the specified
-% expression that are remote calls, as {ModuleName,FunctionName,Arity}.
-%
-% Handles each possible branching constructs.
-%
-% (anonymous mute variables correspond to lines)
-%
--spec get_call_leaves_for_expression( ast_expression(), [ mfa() ] ) -> [ mfa() ].
-% First, body-level:
-get_call_leaves_for_expression(
-  _Expr={ 'case', _Line, _Patterns, _Guards, Body }, Acc ) ->
-	get_call_leaves_for_clause( Body, Acc );
-
-get_call_leaves_for_expression(
-  _Expr={ 'catch', _Line, _Patterns, _Guards, Body }, Acc ) ->
-	get_call_leaves_for_clause( Body, Acc );
-
-% Then, expression-level:
-% Intercepts calls to the 3 WOOPER method terminators:
-get_call_leaves_for_expression(
-  _Expr={ 'call', _Line,
-		  { remote, _, {atom,_,wooper}, {atom,_,return_state_result} },
-		  Params }, Acc ) ->
-	[ { wooper, return_state_result, length( Params ) } | Acc ];
-
-get_call_leaves_for_expression(
-  _Expr={ 'call', _Line,
-		  { remote, _, {atom,_,wooper}, {atom,_,return_state_only} },
-		  Params }, Acc ) ->
-	[ { wooper, return_state_only, length( Params ) } | Acc ];
-
-get_call_leaves_for_expression(
-  _Expr={ 'call', _Line,
-		  { remote, _, {atom,_,wooper}, {atom,_,return_static} },
-		  Params }, Acc ) ->
-	[ { wooper, return_static, length( Params ) } | Acc ];
-
-% Terminating on another remote call, cannot say anything more here:
-get_call_leaves_for_expression(
-  _Expr={ 'call', _Line, { remote, _, _ModExpr, _FunExpr },
-		  _Params }, Acc ) ->
-	Acc;
-
-% Terminating on a local call, cannot say anything more here:
-get_call_leaves_for_expression(
-  _Expr={ 'call', _Line, _FunExpr, _Params }, Acc ) ->
-	Acc;
-
-
-get_call_leaves_for_expression(
-  _Expr={ 'receive', _Line, CaseClauses }, Acc ) ->
-	get_call_leaves_for_clause( CaseClauses, Acc );
-
-
-get_call_leaves_for_expression( _Expr={ 'var', _Line, _VarAtomName },
-								Acc ) ->
-	Acc;
-
-% Immediate values, no information :
-get_call_leaves_for_expression(
-  _Expr={ 'atom', _Line, _Value }, Acc ) ->
-	Acc;
-
-get_call_leaves_for_expression(
-  _Expr={ 'char', _Line, _Value }, Acc ) ->
-	Acc;
-
-get_call_leaves_for_expression(
-  _Expr={ 'float', _Line, _Value }, Acc ) ->
-	Acc;
-
-get_call_leaves_for_expression(
-  _Expr={ 'integer', _Line, _Value }, Acc ) ->
-	Acc;
-
-get_call_leaves_for_expression(
-  _Expr={ 'string', _Line, _Value }, Acc ) ->
-	Acc;
-
-get_call_leaves_for_expression( Expr, _Acc ) ->
-	wooper_internals:raise_error( { unhandled_expression, Expr, call_leaves } ).
-
-
-
-
-% Transforms specified clauses according to their specified nature.
-transform_method_returns( Clauses, FunNature ) ->
-	[ transform_method_returns_in( C, FunNature ) || C <- Clauses ].
-
-
-
-% Transforms specified clause according to the specified nature of its function.
-%
-transform_method_returns_in(
-  _ClauseForm={ clause, Line, Patterns, Guards, Body }, FunNature ) ->
-
-	%case Patterns of
-	%
-	%	[] ->
-	%		ok;
-	%
-	%	_ ->
-	%		trace_utils:debug_fmt( "- ignoring patterns ~p", [ Patterns ] )
-	%
-	%end,
-
-	% Nothing to transform in very limited, BIF-based guards:
-	%trace_utils:debug_fmt( " - ignoring guards ~p", [ Guards ] ),
-
-	%trace_utils:debug_fmt( " - transforming, as '~s', following body:~n~p",
-	%					   [ FunNature, Body ] ),
-
-	NewBody = transform_body( Body, FunNature ),
-
-	%trace_utils:debug_fmt( " - corresponding transformed body is:~n~p",
-	%					   [ NewBody ] ),
-
-	{ clause, Line, Patterns, Guards, NewBody }.
-
-
-
-% Transforms specified (top-level) body of specified clause, according to the
-% function nature.
-%
-transform_body( Body, _FunNature=function ) ->
-	% Nothing to change in plain functions:
-	Body;
-
-% We have a method here; its transformation can only happen in the last
-% top-level expression of the body, as we are only interested here in method
-% terminators:
-%
-transform_body( _Body=[ LastExpression ], FunNature ) ->
-
-	% We have to traverse recursively this final expression to handle all its
-	% local leaves (recursing in nested calls is not needed here, as by
-	% convention the method terminators should be local to the method body), in
-	% order to transform all method terminators found.
-	%
-	% For that we can either follow exactly the AST legit structure that we can
-	% foresee (typically based on http://erlang.org/doc/apps/erts/absform.html),
-	% at the risk of rejecting correct code - should our traversal be not
-	% perfect, or we can "blindly" rewrite calls for example corresponding to
-	% wooper:return_state_result( S, R ) as { S, R } (and check we have no
-	% incompatible method terminators).
-	%
-	% We preferred initially here the latter solution (lighter, simpler, safer),
-	% but we have already a full logic (in Myriad's meta) to traverse and
-	% transform, so we rely on it for the best, now that it has been enriched so
-	% that it can maintain a transformation state.
-	%
-	% A combination of ast_transform:get_remote_call_transform_table/1 with
-	% ast_expression:transform_expression/2 would be close to what we need, yet
-	% we do not want to replace a *call* by another, we want it to be replaced
-	% by a tuple creation, i.e. an expression. So:
-
-	% Closure so that the callback transformer (whose signature must be
-	% standard) is parametrised by the nature of the function that shall be
-	% transformed:
-	%
-	CallTransformFun =
-		fun( LineCall, CallFunctionRef, Params, TransformState ) ->
-				transform_method_terminator( LineCall, CallFunctionRef, Params,
-											 FunNature, TransformState )
-		end,
-
-	TransformTable = table:new( [ { call, CallTransformFun } ] ),
-
-	% We create and drop after use our own transforms:
-	MethodTerminatorTransforms = #ast_transforms{ expressions=TransformTable },
-
-	% Replace the method terminators with the actual return code we want:
-	{ NewExpression, _NewTransforms } =
-		ast_expression:transform_expression( LastExpression,
-											 MethodTerminatorTransforms ),
-
-	[ NewExpression ];
-
-
-% Select only the last top-level expression:
-transform_body( _Body=[ E | T ], FunNature ) ->
-	% One of the very few body-recursise cases:
-	[ E | transform_body( T, FunNature ) ].
-
-
-
-% Transformer so that calls corresponding to method terminators are "inlined",
-% i.e. for example so that wooper:return_state_result( S, R ) are replaced with
-% { S, R }.
-%
-% (anonymous mute variables correspond to line numbers)
-%
--spec transform_method_terminator( line(),
-		  ast_expression:function_ref_expression(),
-		  ast_expression:params_expression(), function_nature(),
-		  transformation_state() ) -> ast_expression().
-% Rewrites only the right WOOPER functions, i.e. the method terminators:
-% Correct case for requests:
-transform_method_terminator( LineCall,
-		_CallFunctionRef={ remote, _, {atom,_, wooper},
-						   { atom, _, _FunName=return_state_result } },
-		Params=[ _StateExpr, _ResExpr ],
-		_FunNature=request,
-		TransformState ) ->
-
-	% So that wooper:return_state_result( S, R ) becomes simply { S, R }:
-	NewExpr = { tuple, LineCall, Params },
-
-	%trace_utils:debug_fmt( "Request terminator replaced with: ~p.~n",
-	%					   [ NewExpr ] ),
-
-	{ NewExpr, TransformState };
-
-
-% Incorrect arity for requests:
-transform_method_terminator( LineCall,
-		_CallFunctionRef={ remote, _, {atom,_,wooper},
-						   {atom,_,FunName=return_state_result} },
-		Params,
-		_FunNature=request,
-		_TransformState ) ->
-	wooper_internals:raise_error( { wrong_arity, { at, LineCall },
-		{ wooper, FunName, { got, length( Params ) }, { expected, 2 } } } );
-
-
-% Incorrect method terminator, as we have not a request here:
-transform_method_terminator( LineCall,
-		_CallFunctionRef={ remote, _, {atom,_,wooper},
-						   {atom,_,FunName=return_state_result} },
-		Params,
-		FunNature,
-		_TransformState ) ->
-	wooper_internals:raise_error( { wrong_terminator, { at, LineCall },
-		{ method_nature, FunNature }, { wooper, FunName, length( Params ) } } );
-
-
-% Correct case for oneways:
-transform_method_terminator( _LineCall,
-		_CallFunctionRef={ remote, _, {atom,_,wooper},
-						   {atom,_,_FunName=return_state_only} },
-		_Params=[ StateExpr ],
-		_FunNature=oneway,
-		TransformState ) ->
-	% wooper:return_state_only( S ) becomes S:
-	{ StateExpr, TransformState };
-
-
-% Incorrect arity for oneways:
-transform_method_terminator( LineCall,
-		_CallFunctionRef={ remote, _, {atom,_,wooper},
-						   {atom,_,FunName=return_state_only} },
-		Params,
-		_FunNature=oneway,
-		_TransformState ) ->
-	wooper_internals:raise_error( { wrong_arity, { at, LineCall },
-							 { wooper, FunName,
-							   { got, length( Params ) }, { expected, 1 } } } );
-
-
-% Incorrect method terminator, as we have not a oneway here:
-transform_method_terminator( LineCall,
-		_CallFunctionRef={ remote, _, {atom,_,wooper},
-						   {atom,_,FunName=return_state_only} },
-		Params,
-		FunNature,
-		_TransformState ) ->
-	wooper_internals:raise_error( { wrong_terminator, { at, LineCall },
-							 { method_nature, FunNature },
-							 { wooper, FunName, length( Params ) } } );
-
-
-% Correct case for static methods:
-transform_method_terminator( _LineCall,
-		_CallFunctionRef={ remote, _, {atom,_,wooper},
-						   {atom,_,_FunName=return_static} },
-		_Params=[ StateExpr ],
-		_FunNature=static,
-		TransformState ) ->
-	% wooper:return_static( S ) becomes S:
-	{ StateExpr, TransformState };
-
-
-% Incorrect arity for static methods:
-transform_method_terminator( LineCall,
-		_CallFunctionRef={ remote, _, {atom,_,wooper},
-						   {atom,_,FunName=return_static} },
-		Params,
-		_FunNature=static,
-		_TransformState ) ->
-	wooper_internals:raise_error( { wrong_arity, { at, LineCall },
-							 { wooper, FunName,
-							   { got, length( Params ) }, { expected, 1 } } } );
-
-% Incorrect method terminator, as we have not a static method here:
-transform_method_terminator( LineCall,
-		_CallFunctionRef={ remote, _, {atom,_,wooper},
-						   {atom,_,FunName=return_static} },
-		Params,
-		FunNature,
-		_TransformState ) ->
-	wooper_internals:raise_error( { wrong_terminator, {at,LineCall},
-							 { method_nature, FunNature },
-							 { wooper, FunName, length( Params ) } } );
-
-% All other calls are to pass through, as they are:
-transform_method_terminator( LineCall, CallFunctionRef, Params,
-							 _FunNature, TransformState ) ->
-	NewExpr = { call, LineCall, CallFunctionRef, Params },
-	{ NewExpr, TransformState }.
-
-
-
-% Intercept WOOPER calls:
-%
-% (anonymous mute variables are line numbers)
-%
-%% get_call_leaves_for_clause( _Clause={ 'call', _Line,
-%% {remote,_,{atom,_,Module},{atom,_,Function}}, SubClause },
-%%				Acc ) ->
-%%	get_call_leaves_for_clause( SubClause ) ++ Acc;
-
-%% get_call_leaves_for_clause( _Clause=E, _Acc ) ->
-%%	throw( { unsupported_clause_element, E } ).
 
 
 % Ensures that the specified information is exported, auto-exporting it if
