@@ -449,7 +449,9 @@ create_class_info_from(
 	% that could be found in the second element and that will be updated later
 	% from the first:
 	%
-	InitialPair = { FunctionTable, AttrClassInfo },
+	InitialFunctionTable = AttrClassInfo#class_info.functions,
+
+	InitialPair = { InitialFunctionTable, AttrClassInfo },
 
 
 	ConstructPair = wooper_instance_construction:manage_constructors(
