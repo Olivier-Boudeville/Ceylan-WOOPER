@@ -16,11 +16,7 @@
 
 
 % Determines what are the mother classes of this class (if any):
--define( wooper_superclasses, [] ).
-
-
-% Method declarations.
--define( wooper_method_export, test/1 ).
+-superclasses([]).
 
 
 
@@ -33,6 +29,7 @@
 -include("wooper.hrl").
 
 
+-attributes([ test_attribute ]).
 
 
 % Constructs a new test instance.
@@ -96,7 +93,7 @@ test( State ) ->
 
 	test_facilities:display(
 							"Successful ending of attribute management test." ),
-	?wooper_return_state_result( SubState, test_ok ).
+	wooper:return_state_result( SubState, test_ok ).
 
 
 
@@ -111,7 +108,7 @@ not_crashing_examples( State ) ->
 	not_crashing_test_undefined( State ),
 	not_crashing_test_hashtable( State ),
 
-	?wooper_return_state_result( OtherNewState, test_ok ).
+	wooper:return_state_result( OtherNewState, test_ok ).
 
 
 
@@ -137,7 +134,7 @@ crashing_examples( State ) ->
 	crashing_test_undefined( State ),
 
 	%?getAttr(non_existing),
-	?wooper_return_state_result( State, test_ok ).
+	wooper:return_state_result( State, test_ok ).
 
 
 

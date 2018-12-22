@@ -14,10 +14,7 @@
 
 
 % Determines what are the mother classes of this class (if any):
--define( wooper_superclasses, [] ).
-
-
--define( wooper_method_export, getName/1, getGender/1 ).
+-superclasses([]).
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -28,6 +25,8 @@
 
 -type gender() :: atom().
 
+
+-attributes([ name, gender ]).
 
 
 % Constructs a new instance from two construction parameters.
@@ -75,11 +74,11 @@ destruct( State ) ->
 %
 -spec getName( wooper:state() ) -> request_return( name() ).
 getName( State ) ->
-	?wooper_return_state_result( State, ?getAttr(name) ).
+	wooper:return_state_result( State, ?getAttr(name) ).
 
 
 % Returns the gender of this instance.
 %
 -spec getGender( wooper:state() ) -> request_return( gender() ).
 getGender( State ) ->
-	?wooper_return_state_result( State, ?getAttr(gender) ).
+	wooper:return_state_result( State, ?getAttr(gender) ).

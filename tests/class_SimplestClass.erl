@@ -25,6 +25,8 @@
 -include("ecosystem_types.hrl").
 
 
+-attributes([ age, gender ]).
+
 % Constructs a new Creature.
 -spec construct( wooper:state(), age(), gender() ) -> wooper:state().
 construct( State, Age, Gender ) ->
