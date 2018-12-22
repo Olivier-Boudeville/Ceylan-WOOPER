@@ -59,7 +59,7 @@
 %
 -spec getClassname( wooper:state() ) -> request_return( classname() ).
 getClassname( State ) ->
-	?wooper_return_state_result( State, State#state_holder.actual_class ).
+	wooper:return_state_result( State, State#state_holder.actual_class ).
 
 
 
@@ -73,7 +73,7 @@ getClassname( State ) ->
 getSuperclasses( State ) ->
 	ActualModule = State#state_holder.actual_class,
 	SuperClasses = ActualModule:get_superclasses(),
-	?wooper_return_state_result( State, SuperClasses ).
+	wooper:return_state_result( State, SuperClasses ).
 
 
 
@@ -88,7 +88,7 @@ getSuperclasses( State ) ->
 % (const request)
 %
 wooper_get_instance_description( State ) ->
-	?wooper_return_state_result( State, wooper:instance_to_string( State ) ).
+	wooper:return_state_result( State, wooper:instance_to_string( State ) ).
 
 
 -endif. % wooper_debug

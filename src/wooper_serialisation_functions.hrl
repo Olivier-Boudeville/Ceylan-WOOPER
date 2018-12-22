@@ -118,7 +118,7 @@ serialise( State, _EntryTransformer=undefined, UserData ) ->
 	% for the serialisation (ex: with transformed local processes), we want to
 	% continue as we were!
 	%
-	?wooper_return_state_result( State, Res );
+	wooper:return_state_result( State, Res );
 
 
 
@@ -179,7 +179,7 @@ serialise( State, EntryTransformer, UserData ) ->
 	% for the serialisation (ex: with transformed local processes), we want to
 	% continue as we were before the serialisat
 	%
-	?wooper_return_state_result( State, Res ).
+	wooper:return_state_result( State, Res ).
 
 
 
