@@ -11,12 +11,7 @@
 
 
 % Determines what are the mother classes of this class (if any):
--define( wooper_superclasses, [] ).
-
-
-% Declarations of class-specific methods (besides inherited ones).
--define( wooper_method_export, getMeanEggsCount/1, getEggsLaidCount/1,
-		layEggs/2 ).
+-superclasses([]).
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -25,6 +20,9 @@
 
 % Import common types without module prefix:
 -include("ecosystem_types.hrl").
+
+
+-attributes([ eggs_count ]).
 
 
 % Constructs a new Ovoviviparous being (parameter-less constructor).
@@ -43,9 +41,7 @@ construct( State ) ->
 %
 -spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
-
 	% In order to test the crash of a destructor: non_existing:crash(),
-
 	State.
 
 
@@ -56,13 +52,13 @@ destruct( State ) ->
 % (this ought to be a static method, as it does not depend on a state)
 -spec getMeanEggsCount( wooper:state() ) -> request_return( egg_count() ).
 getMeanEggsCount( State ) ->
-	?wooper_return_state_result( State, 1000 ).
+	wooper:return_state_result( State, 1000 ).
 
 
 % Returns the number of eggs this ovoviviparous laid:
 -spec getEggsLaidCount( wooper:state() ) -> request_return( egg_count() ).
 getEggsLaidCount( State ) ->
-	?wooper_return_state_result( State, ?getAttr(eggs_count) ).
+	wooper:return_state_result( State, ?getAttr(eggs_count) ).
 
 
 % Increases the number of eggs that this ovoviviparous being laid:
@@ -71,5 +67,5 @@ layEggs( State, NumberOfNewEggs ) ->
 
 	NewEggCount = ?getAttr(eggs_count) + NumberOfNewEggs,
 
-	?wooper_return_state_only(
+	wooper:return_state_only(
 	   setAttribute( State, eggs_count, NewEggCount ) ).

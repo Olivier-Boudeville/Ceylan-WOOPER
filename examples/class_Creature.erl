@@ -10,15 +10,7 @@
 
 
 % Determines what are the mother classes of this class (if any):
--define( wooper_superclasses, [] ).
-
-
-
-% Declarations of class-specific methods (besides inherited ones).
-% isHotBlooded/1 and canEat/2 are abstract here, hence not mentioned:
--define( wooper_method_export, getAge/1, setAge/2, declareBirthday/1,
-		 getGender/1, getArbitraryNumber/1, testDirectMethodExecution/2,
-		 testSingleExecution/1 ).
+-superclasses([]).
 
 
 % Non-method exported functions:
@@ -33,11 +25,14 @@
 -include("ecosystem_types.hrl").
 
 
+-attributes([ age, gender ]).
+
+
 % Constructs a new Creature.
 -spec construct( wooper:state(), age(), gender() ) -> wooper:state().
 construct( State, Age, Gender ) ->
 	% No mother class.
-	setAttributes(State, [ { age, Age }, { gender, Gender } ] ).
+	setAttributes( State, [ { age, Age }, { gender, Gender } ] ).
 
 
 
@@ -57,7 +52,7 @@ destruct( State ) ->
 % Returns the age of this creature.
 -spec getAge( wooper:state() ) -> request_return( age() ).
 getAge( State ) ->
-	?wooper_return_state_result( State, ?getAttr(age) ).
+	wooper:return_state_result( State, ?getAttr(age) ).
 
 
 
@@ -65,14 +60,14 @@ getAge( State ) ->
 -spec setAge( wooper:state(), age() ) -> oneway_return().
 setAge( State, _NewAge ) ->
 	% Mother implementation chosen faulty to check override:
-	?wooper_return_state_only( setAttribute( State, age, 36 ) ).
+	wooper:return_state_only( setAttribute( State, age, 36 ) ).
 
 
 
 % Increments the age of this creature.
 -spec declareBirthday( wooper:state() ) -> oneway_return().
 declareBirthday( State ) ->
-	?wooper_return_state_only(
+	wooper:return_state_only(
 		setAttribute( State, age, ?getAttr(age)+1 ) ).
 
 
@@ -80,7 +75,7 @@ declareBirthday( State ) ->
 % Returns the gender of this creature.
 -spec getGender( wooper:state() ) -> request_return( gender() ).
 getGender( State ) ->
-	?wooper_return_state_result( State, ?getAttr(gender) ).
+	wooper:return_state_result( State, ?getAttr(gender) ).
 
 
 
@@ -89,7 +84,7 @@ getGender( State ) ->
 % (request)
 -spec getArbitraryNumber( wooper:state() ) -> request_return( number() ).
 getArbitraryNumber( State ) ->
-	?wooper_return_state_result( State, 10 ).
+	wooper:return_state_result( State, 10 ).
 
 
 
@@ -130,7 +125,7 @@ testDirectMethodExecution( State, NewAge ) ->
 
 	io:format( "Direct self-invocation success.~n" ),
 
-	?wooper_return_state_only( OtherState ).
+	wooper:return_state_only( OtherState ).
 
 
 
@@ -146,7 +141,7 @@ testDirectMethodExecution( State, NewAge ) ->
 % (oneway)
 -spec testSingleExecution( wooper:state() ) -> oneway_return().
 testSingleExecution( State ) ->
-	?wooper_return_state_only( setAttribute( side_effect_function( State ),
+	wooper:return_state_only( setAttribute( side_effect_function( State ),
 		age, 10 ) ).
 
 

@@ -10,14 +10,8 @@
 
 
 % Determines what are the mother classes of this class (if any):
--define( wooper_superclasses, [ class_Mammal, class_OvoviviparousBeing ] ).
--wooper_superclasses([ class_Mammal, class_OvoviviparousBeing ] ).
+-superclasses([ class_Mammal, class_OvoviviparousBeing ] ).
 
-
-% Method declarations.
--define( wooper_method_export, getMeanEggsCount/1, getTeatCount/1, canEat/2,
-		 getNozzleColor/1, getAlternateNames/1, popFirstAlternateName/1,
-		 testCreationDeletion/1, onWOOPERExitReceived/3 ).
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -28,6 +22,9 @@
 -include("ecosystem_types.hrl").
 
 
+-attributes([ { nozzle_color, "Color of the nozzle" },
+			  alternate_names,
+			  { cat_pid, 'pid()', "PID of a cat" } ]).
 
 
 % Constructs a new Platypus.
@@ -67,7 +64,7 @@ destruct( State ) ->
 
 -spec getMeanEggsCount( wooper:state() ) -> request_return( egg_count() ).
 getMeanEggsCount( State ) ->
-	?wooper_return_state_result( State, 2 ).
+	wooper:return_state_result( State, 2 ).
 
 
 
@@ -79,7 +76,7 @@ getMeanEggsCount( State ) ->
 %
 -spec getTeatCount( wooper:state() ) -> request_return( teat_count() ).
 getTeatCount( State ) ->
-	?wooper_return_state_result( State, 0 ).
+	wooper:return_state_result( State, 0 ).
 
 
 
@@ -90,19 +87,19 @@ getTeatCount( State ) ->
 % Platypuses are supposed carnivorous though:
 -spec canEat( wooper:state(), food() ) -> request_return( boolean() ).
 canEat( State, leaf ) ->
-	?wooper_return_state_result( State, true );
+	wooper:return_state_result( State, true );
 
 canEat( State,chocolate ) ->
-	?wooper_return_state_result( State, true );
+	wooper:return_state_result( State, true );
 
 canEat( State,weed ) ->
-	?wooper_return_state_result( State, true );
+	wooper:return_state_result( State, true );
 
 canEat( State,fish ) ->
-	?wooper_return_state_result( State, true );
+	wooper:return_state_result( State, true );
 
 canEat( State, _OtherFood ) ->
-	?wooper_return_state_result( State, false ).
+	wooper:return_state_result( State, false ).
 
 
 
@@ -118,7 +115,7 @@ getNozzleColor( State )->
 	%B=2,
 	%A=B,
 
-	?wooper_return_state_result( State, getAttribute( State, nozzle_color ) ).
+	wooper:return_state_result( State, getAttribute( State, nozzle_color ) ).
 
 
 
@@ -128,7 +125,7 @@ getNozzleColor( State )->
 %
 -spec getAlternateNames( wooper:state() ) -> request_return( [atom()] ).
 getAlternateNames( State ) ->
-	?wooper_return_state_result( State, ?getAttr(alternate_names) ).
+	wooper:return_state_result( State, ?getAttr(alternate_names) ).
 
 
 
@@ -139,7 +136,7 @@ getAlternateNames( State ) ->
 -spec popFirstAlternateName( wooper:state() ) -> request_return( atom() ).
 popFirstAlternateName( State ) ->
 	{ NewState, Name } = popFromAttribute( State, alternate_names ),
-	?wooper_return_state_result( NewState, Name ).
+	wooper:return_state_result( NewState, Name ).
 
 
 
@@ -172,7 +169,7 @@ testCreationDeletion( State ) ->
 
 	undefined = getAttribute( DeleteState, cat_pid ),
 
-	?wooper_return_state_only( DeleteState ).
+	wooper:return_state_only( DeleteState ).
 
 
 
@@ -194,4 +191,4 @@ onWOOPERExitReceived( State, Pid, ExitType ) ->
 
 	io:format( "Received exit message '~p' from ~w.~n", [ ExitType, Pid ] ),
 
-	?wooper_return_state_only( State ).
+	wooper:return_state_only( State ).

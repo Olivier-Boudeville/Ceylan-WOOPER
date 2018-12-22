@@ -10,17 +10,7 @@
 
 
 % Determines what are the mother classes of this class (if any):
-
-% TO BE REMOVED ULTIMATELY:
--define( wooper_superclasses, [ class_Creature ] ).
-
--wooper_superclasses( [ class_Creature ] ).
-
-
-% Declarations of class-specific methods (besides inherited ones).
--define(wooper_method_export, setAge/2, isHotBlooded/1, getFurColor/1,
-		getArbitraryNumber/1, testExplicitClassSelection/1 ).
-
+-superclasses( [ class_Creature ] ).
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -29,6 +19,9 @@
 
 % Import common types without module prefix:
 -include("ecosystem_types.hrl").
+
+
+-attributes([ fur_color ]).
 
 
 % Constructs a new Mammal.
@@ -87,7 +80,7 @@ setAge( State, NewAge ) ->
 	%B=2,
 	%A=B,
 
-	?wooper_return_state_only( setAttribute( State, age, NewAge ) ).
+	wooper:return_state_only( setAttribute( State, age, NewAge ) ).
 
 
 
@@ -97,7 +90,7 @@ setAge( State, NewAge ) ->
 %
 -spec isHotBlooded( wooper:state() ) -> request_return( boolean() ).
 isHotBlooded( State ) ->
-	?wooper_return_state_result( State, true ).
+	wooper:return_state_result( State, true ).
 
 
 
@@ -108,7 +101,7 @@ isHotBlooded( State ) ->
 %
 -spec getFurColor( wooper:state() ) -> request_return( fur_color() ).
 getFurColor( State ) ->
-	?wooper_return_state_result( State, ?getAttr(fur_color) ).
+	wooper:return_state_result( State, ?getAttr(fur_color) ).
 
 
 
@@ -132,7 +125,7 @@ getArbitraryNumber( State ) ->
 	% Interesting test for the stack trace, when called from the Mammal test:
 	%throw( exception_throw_test_from_request ),
 
-	?wooper_return_state_result( RequestedState, 15 ).
+	wooper:return_state_result( RequestedState, 15 ).
 
 
 
@@ -152,4 +145,4 @@ testExplicitClassSelection( State ) ->
 
 	36 = getAttribute( NewState, age ),
 
-	?wooper_return_state_only( NewState ).
+	wooper:return_state_only( NewState ).

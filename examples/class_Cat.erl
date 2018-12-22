@@ -18,21 +18,16 @@
 -define( wooper_superclasses, [ class_Mammal, class_ViviparousBeing ] ).
 
 
-% Member method declarations.
--define( wooper_method_export, getTeatCount/1, canEat/2, getWhiskerColor/1,
-		 terminate/2, toString/1 ).
-
-
-% Static method declarations.
--define( wooper_static_method_export, get_mean_life_expectancy/0 ).
-
-
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
 
 
 % Import common types without module prefix:
 -include("ecosystem_types.hrl").
+
+
+-attributes([ { whisker_color, 'whisker_color()', none, 
+				"50 shades of whiskers" } ]).
 
 
 
@@ -65,25 +60,25 @@ destruct( State ) ->
 % No guarantee on biological fidelity:
 -spec getTeatCount( wooper:state() ) -> request_return( teat_count() ).
 getTeatCount( State ) ->
-	?wooper_return_state_result( State, 6 ).
+	wooper:return_state_result( State, 6 ).
 
 
 % Cats are supposed carnivorous though:
 -spec canEat( wooper:state(), food() ) -> request_return( boolean() ).
 canEat( State, soup ) ->
-	?wooper_return_state_result( State, true );
+	wooper:return_state_result( State, true );
 
 canEat( State, chocolate ) ->
-	?wooper_return_state_result( State, true );
+	wooper:return_state_result( State, true );
 
 canEat( State, croquette ) ->
-	?wooper_return_state_result( State, true );
+	wooper:return_state_result( State, true );
 
 canEat( State, meat ) ->
-	?wooper_return_state_result( State, true );
+	wooper:return_state_result( State, true );
 
 canEat( State, _OtherFood ) ->
-	?wooper_return_state_result( State, false ).
+	wooper:return_state_result( State, false ).
 
 
 % Const request:
@@ -92,7 +87,7 @@ getWhiskerColor( State )->
 
 	io:format( "getWhiskerColor/1 request called by ~w.~n", [ ?getSender() ] ),
 
-	?wooper_return_state_result( State, ?getAttr(whisker_color) ).
+	wooper:return_state_result( State, ?getAttr(whisker_color) ).
 
 
 
@@ -105,7 +100,7 @@ terminate( State, crash ) ->
 
 	basic_utils:crash(),
 
-	?wooper_return_state_only( State ).
+	wooper:return_state_only( State ).
 
 
 
@@ -118,7 +113,7 @@ toString( State ) ->
 	Description = text_utils:format( "cat instance with whiskers of color ~p.",
 									 [ ?getAttr(whisker_color) ] ),
 
-	?wooper_return_state_result( State, Description ).
+	wooper:return_state_result( State, Description ).
 
 
 
@@ -126,7 +121,9 @@ toString( State ) ->
 
 
 % Returns the mean life expectancy of a cat, in years.
+%
 % (static)
+%
 -spec get_mean_life_expectancy() -> age().
 get_mean_life_expectancy() ->
-	18.
+	wooper:return_static( 18 ).

@@ -10,13 +10,7 @@
 
 
 % Determines what are the mother classes of this class (if any):
--define( wooper_superclasses, [] ).
-
-
-
-% Declarations of class-specific methods (besides inherited ones).
--define( wooper_method_export, getMeanChildrenCount/1, getBirthGivenCount/1,
-		 giveBirth/2 ).
+-superclasses([]).
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -25,6 +19,9 @@
 
 % Import common types without module prefix:
 -include("ecosystem_types.hrl").
+
+
+-attributes([ { birth_given_count, "the birth count" } ]).
 
 
 % Constructs a new Viviparous being (parameter-less constructor).
@@ -56,7 +53,7 @@ destruct( State ) ->
 -spec getMeanChildrenCount( wooper:state() ) ->
 								request_return( children_count() ).
 getMeanChildrenCount( State ) ->
-	?wooper_return_state_result( State, 4 ).
+	wooper:return_state_result( State, 4 ).
 
 
 
@@ -67,7 +64,7 @@ getMeanChildrenCount( State ) ->
 -spec getBirthGivenCount( wooper:state() ) ->
 								request_return( children_count() ).
 getBirthGivenCount( State ) ->
-	?wooper_return_state_result( State,
+	wooper:return_state_result( State,
 		getAttribute( State, birth_given_count ) ).
 
 
@@ -83,4 +80,4 @@ giveBirth( State, NumberOfNewChildren ) ->
 
 	BirthState = setAttribute( State, birth_given_count, NewChildrenCount ),
 
-	?wooper_return_state_only( BirthState ).
+	wooper:return_state_only( BirthState ).

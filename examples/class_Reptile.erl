@@ -11,15 +11,11 @@
 
 
 % Determines what are the mother classes of this class (if any):
--define( wooper_superclasses, [ class_Creature ] ).
-
-
-% Declarations of class-specific methods (besides inherited ones).
--define( wooper_method_export, setAge/2, isHotBlooded/1, canMoult/1 ).
+-superclasses([ class_Creature ]).
 
 
 % With this class, we will test serialisation hooks:
--define( wooper_serialisation_hooks,).
+-define(wooper_serialisation_hooks,).
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -68,9 +64,11 @@ post_deserialise_hook( State ) ->
 
 
 
-
 % Import common types without module prefix:
 -include("ecosystem_types.hrl").
+
+
+-attributes([]).
 
 
 % Constructs a new Reptile.
@@ -106,7 +104,7 @@ destruct( State ) ->
 setAge( State, NewAge ) ->
 	%throw( exception_throw_test_from_oneway ),
 	%exit( exception_exit_test_from_oneway ),
-	?wooper_return_state_only( setAttribute( State, age, NewAge ) ).
+	wooper:return_state_only( setAttribute( State, age, NewAge ) ).
 
 
 
@@ -120,7 +118,7 @@ setAge( State, NewAge ) ->
 isHotBlooded( State ) ->
 	%throw( exception_throw_test_from_request ),
 	%exit( exception_exit_test_from_request ),
-	?wooper_return_state_result( State, false ).
+	wooper:return_state_result( State, false ).
 
 
 % All reptiles can moult:
@@ -129,4 +127,4 @@ isHotBlooded( State ) ->
 %
 -spec canMoult( wooper:state() ) -> request_return( boolean() ).
 canMoult( State ) ->
-	?wooper_return_state_result( State, true ).
+	wooper:return_state_result( State, true ).
