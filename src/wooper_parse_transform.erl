@@ -241,7 +241,7 @@ parse_transform( InputAST, _Options ) ->
 
 	%trace_utils:trace_fmt( "WOOPER output AST:~n~p~n", [ WOOPERAST ] ),
 
-	ast_utils:write_ast_to_file( WOOPERAST, "WOOPER-output-AST.txt" ),
+	%ast_utils:write_ast_to_file( WOOPERAST, "WOOPER-output-AST.txt" ),
 
 	WOOPERAST.
 
