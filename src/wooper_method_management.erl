@@ -136,6 +136,9 @@ manage_methods( { CompleteFunctionTable,
 	%
 	Builtins = wooper_info:get_wooper_builtins(),
 
+	%trace_utils:debug_fmt( "Registered built-in functions are:~n~p",
+	%					   [ Builtins ] ),
+
 	% Read-only convenience structure:
 	ScanContext = #scan_context{ function_table=CompleteFunctionTable,
 								 builtins=Builtins },
@@ -371,10 +374,10 @@ manage_method_terminators( Clauses, FunId ) ->
 
 
 		% First (correct) oneway detection:
-		( LineCall,
+		( _LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper},
 						 {atom,_,return_state_only} },
-		  Params=[ _StateExpr ],
+		  _Params=[ StateExpr ],
 		  Transforms=#ast_transforms{
 			transformation_state=S } )
 							 when S =:= undefined orelse S =:= oneway ->
@@ -383,7 +386,7 @@ manage_method_terminators( Clauses, FunId ) ->
 			%					   pair:to_list( FunId ) ),
 
 			% So that wooper:return_state_only( R ) becomes simply R:
-			NewExpr = { tuple, LineCall, Params },
+			NewExpr = StateExpr,
 			NewTransforms = Transforms#ast_transforms{
 							  transformation_state=oneway },
 			{ NewExpr, NewTransforms };
@@ -414,10 +417,10 @@ manage_method_terminators( Clauses, FunId ) ->
 
 
 		% First (correct) static method detection:
-		( LineCall,
+		( _LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper},
 						 {atom,_,return_static} },
-		  Params=[ _StateExpr ],
+		  _Params=[ ResultExpr ],
 		  Transforms=#ast_transforms{
 			transformation_state=S } )
 							 when S =:= undefined orelse S =:= static ->
@@ -426,7 +429,7 @@ manage_method_terminators( Clauses, FunId ) ->
 			%					   pair:to_list( FunId ) ),
 
 			% So that wooper:return_static( R ) becomes simply R:
-			NewExpr = { tuple, LineCall, Params },
+			NewExpr = ResultExpr,
 			NewTransforms = Transforms#ast_transforms{
 							  transformation_state=static },
 			{ NewExpr, NewTransforms };
@@ -466,6 +469,8 @@ manage_method_terminators( Clauses, FunId ) ->
 
 	Transforms = #ast_transforms{ transform_table=TransformTable,
 								  transformation_state=undefined },
+
+	%trace_utils:debug_fmt( "transforming now ~p.", [ FunId ] ),
 
 	{ NewClauses, NewTransforms } = ast_clause:transform_function_clauses(
 									  Clauses, Transforms ),
