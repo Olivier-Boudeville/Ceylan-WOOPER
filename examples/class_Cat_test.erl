@@ -250,6 +250,8 @@ run( IsDebug ) ->
 
 	end,
 
+	18 = class_Cat:get_mean_life_expectancy(),
+
 	case IsDebug of
 
 		true ->
