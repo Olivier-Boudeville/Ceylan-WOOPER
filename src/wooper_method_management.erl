@@ -61,29 +61,6 @@
 
 
 
-
-
-% A context used to better scan and interpret functions (of all sorts) within a
-% class.
-%
--record( scan_context, {
-
-	% All the functions known of said class (before their dispatching in
-	% methods):
-	%
-	function_table :: ast_info:function_table(),
-
-	% The function identifiers of the WOOPER builtins:
-	builtins :: [ ast_info:function_id() ]
-
-} ).
-
--type scan_context() :: #scan_context{}.
-
--export_type([ scan_context/0 ]).
-
-
-
 % Implementation notes:
 
 
@@ -130,23 +107,16 @@ manage_methods( { CompleteFunctionTable,
 
 	AllFunEntries = table:enumerate( CompleteFunctionTable ),
 
-	% We do not want to analyse any WOOPER builtin function, as they will not
-	% teach us anything about the class at hand, and are expected to be already
-	% in a final form:
-	%
-	Builtins = wooper_info:get_wooper_builtins(),
-
-	%trace_utils:debug_fmt( "Registered built-in functions are:~n~p",
-	%					   [ Builtins ] ),
-
-	% Read-only convenience structure:
-	ScanContext = #scan_context{ function_table=CompleteFunctionTable,
-								 builtins=Builtins },
+	% We used to filter-out the WOOPER builtin functions (based on
+	% wooper_info:get_wooper_builtins/0), as they would not teach WOOPER
+	% anything about the class at hand, yet we want them to be correctly
+	% identified by WOOPER (they are of different natures); moreover, not all of
+	% them are already in a final form (ex: they still use method terminators),
+	% so their processing shall not be skipped.
 
 	{ NewFunctionTable, NewRequestTable, NewOnewayTable, NewStaticTable } =
 		sort_out_functions( AllFunEntries, _FunctionTable=table:new(),
-							RequestTable, OnewayTable, StaticTable,
-							ScanContext ),
+							RequestTable, OnewayTable, StaticTable ),
 
 	ExportLoc = ast_info:get_default_export_function_location( MarkerTable ),
 
@@ -167,81 +137,64 @@ manage_methods( { CompleteFunctionTable,
 % real nature (ex: a given Erlang function may actually be a WOOPER oneway).
 %
 sort_out_functions( _FunEntries=[], FunctionTable, RequestTable, OnewayTable,
-					StaticTable, _ScanContext ) ->
+					StaticTable ) ->
 	{ FunctionTable, RequestTable, OnewayTable, StaticTable };
 
 %sort_out_functions( _FunEntries=[ { FunId={ FunName, Arity }, FunInfo } | T ],
 sort_out_functions( _FunEntries=[ { FunId, FunInfo } | T ],
-					FunctionTable, RequestTable, OnewayTable, StaticTable,
-					ScanContext=#scan_context{ builtins=Builtins } ) ->
+					FunctionTable, RequestTable, OnewayTable, StaticTable ) ->
 
 	%trace_utils:debug_fmt( "sorting ~p", [ FunId ] ),
 
-	case lists:member( FunId, Builtins ) of
 
-		true ->
+	%trace_utils:debug_fmt( "Examining Erlang function ~s/~B",
+	%                       [ FunName, Arity ] ),
 
-			% Skip any builtin, we currently just consider them as plain
-			% functions:
-			%
-			NewFunctionTable = table:addNewEntry( FunId, FunInfo,
+	OriginalClauses = FunInfo#function_info.clauses,
+
+	% We used to infer the function nature based on its first clause, and then
+	% to make a custom full traversal to transform method terminators. Now we
+	% reuse the Myriad ast_transforms instead, and perform everything
+	% (guessing/checking/transforming) in one pass:
+	%
+	{ NewClauses, FunNature } =
+		manage_method_terminators( OriginalClauses, FunId ),
+
+	NewFunInfo = FunInfo#function_info{ clauses=NewClauses },
+
+	% Stores the result in the right category and recurses:
+	case FunNature of
+
+		function ->
+			NewFunctionTable = table:addNewEntry( FunId, NewFunInfo,
 												  FunctionTable ),
+			sort_out_functions( T, NewFunctionTable, RequestTable,
+								OnewayTable, StaticTable );
 
-			sort_out_functions( T, NewFunctionTable, RequestTable, OnewayTable,
-								StaticTable, ScanContext );
+		request ->
+			NewRequestTable = table:addNewEntry( FunId, NewFunInfo,
+												 RequestTable ),
+			sort_out_functions( T, FunctionTable, NewRequestTable,
+								OnewayTable, StaticTable );
 
-		false ->
+		oneway ->
+			NewOnewayTable = table:addNewEntry( FunId, NewFunInfo,
+												OnewayTable ),
+			sort_out_functions( T, FunctionTable, RequestTable,
+								NewOnewayTable, StaticTable );
 
-			%trace_utils:debug_fmt( "Examining Erlang function ~s/~B",
-			%					   [ FunName, Arity ] ),
-
-			OriginalClauses = FunInfo#function_info.clauses,
-
-			% We used to infer the function nature based on its first clause,
-			% and then to make a custom full traversal to transform method
-			% terminators. Now we reuse the Myriad ast_transforms instead, and
-			% perform everything (guessing/checking/transforming) in one pass:
-			%
-			{ NewClauses, FunNature } =
-				manage_method_terminators( OriginalClauses, FunId ),
-
-			NewFunInfo = FunInfo#function_info{ clauses=NewClauses },
-
-			% Stores the result in the right category and recurses:
-			case FunNature of
-
-				function ->
-					NewFunctionTable = table:addNewEntry( FunId, NewFunInfo,
-														  FunctionTable ),
-					sort_out_functions( T, NewFunctionTable, RequestTable,
-										OnewayTable, StaticTable, ScanContext );
-
-				request ->
-					NewRequestTable = table:addNewEntry( FunId, NewFunInfo,
-														 RequestTable ),
-					sort_out_functions( T, FunctionTable, NewRequestTable,
-										OnewayTable, StaticTable, ScanContext );
-
-				oneway ->
-					NewOnewayTable = table:addNewEntry( FunId, NewFunInfo,
-														OnewayTable ),
-					sort_out_functions( T, FunctionTable, RequestTable,
-									NewOnewayTable, StaticTable, ScanContext );
-
-				static ->
-					NewStaticTable = table:addNewEntry( FunId, NewFunInfo,
-														StaticTable ),
-					sort_out_functions( T, FunctionTable, RequestTable,
-									OnewayTable, NewStaticTable, ScanContext )
-
-			end
+		static ->
+			NewStaticTable = table:addNewEntry( FunId, NewFunInfo,
+												StaticTable ),
+			sort_out_functions( T, FunctionTable, RequestTable,
+								OnewayTable, NewStaticTable )
 
 	end;
 
 sort_out_functions( _Functions=[ #function_info{ name=FunName,
 												 arity=Arity } | _T ],
-					_FunctionTable, _RequestTable, _OnewayTable, _StaticTable,
-					_ScanContext ) ->
+					_FunctionTable, _RequestTable, _OnewayTable,
+					_StaticTable ) ->
 
 	trace_utils:error_fmt( "No clause found for ~s/~B; function exported "
 						   "yet not defined?", [ FunName, Arity ] ),
