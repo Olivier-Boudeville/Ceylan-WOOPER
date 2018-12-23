@@ -15,7 +15,7 @@
 
 
 % Determines what are the mother classes of this class (if any):
--define( wooper_superclasses, [ class_Mammal, class_ViviparousBeing ] ).
+-superclasses([ class_Mammal, class_ViviparousBeing ]).
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -26,7 +26,7 @@
 -include("ecosystem_types.hrl").
 
 
--attributes([ { whisker_color, 'whisker_color()', none, 
+-attributes([ { whisker_color, 'whisker_color()', none,
 				"50 shades of whiskers" } ]).
 
 
