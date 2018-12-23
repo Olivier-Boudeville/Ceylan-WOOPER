@@ -29,27 +29,12 @@
 % definitions).
 
 
-
-% Static method (i.e. a mere function) that returns the name of that class.
-%
-% Defined mostly for explanation purpose.
-%
-%-spec get_classname() -> classname().
-%get_classname() ->
-%	?MODULE.
-
-
-
-% Static method (i.e. a mere function) that returns the list of the superclasses
-% of that class.
-%
-% Generally not to be called by the user, see getSuperclasses/1 instead.
-%
-%-spec get_superclasses() -> [ classname() ].
-%get_superclasses() ->
-%	?wooper_superclasses.
-
-
+% Note: functions below (ex: getClassname/1) are "verbatim" methods: rather than
+% being generated through a parse-transform (which would bring no added value),
+% it is actually more convenient to inject their code thanks to a header file.
+% However these verbatim methods shall not be considered as built-in, as we want
+% to have them registered (known of the WOOPER parse transforms) as methods (ex:
+% so that they are themselves transformed, since they use method terminators).
 
 % Request returning the classname of the instance.
 %
