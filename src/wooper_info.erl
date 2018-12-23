@@ -662,11 +662,18 @@ get_wooper_builtins() ->
 %
 -spec get_metadata_builtins() -> [ ast_info:function_id() ].
 get_metadata_builtins() ->
-	[ {getSuperclasses,1},
-	  {get_superclasses,0},
+	[ {getSuperclasses,1}
 
-	  {getClassname,1},
-	  {get_classname,0} ].
+	  % This static method is generated yet not considered as a built-in, as we
+	  % want it to be sorted among the static methods:
+	  %{get_superclasses,0}
+
+	  % Removed from here, as defined in an header yet still to be transformed:
+	  % {getClassname,1},
+
+	  % Removed from here, as useless as a static method:
+	  % {get_classname,0}
+	].
 
 
 
