@@ -477,9 +477,6 @@ create_class_info_from(
 
 
 
-
-
-
 % Class/module section:
 
 % Any invalid or duplicated module declaration will be caught by the compiler
@@ -542,142 +539,6 @@ create_class_info_from(
 %%	trace_utils:debug_fmt( "Dropping module-related error form ~p.", [ F ] ),
 
 %%	get_info( T, C );
-
-
-
-%% % Compilation options section:
-%% %
-%% get_info( _AST=[ F={ attribute, _Line, compile, _Options } | T ],
-%%		  C=#class_info{ compilation_option_defs=Opts } ) ->
-
-%%	get_info( T, C#class_info{ compilation_option_defs=[ F | Opts ] } );
-
-
-%% % Include section:
-%% %
-%% get_info( _AST=[ F={ attribute, _Line, file, Filename } | T ],
-%%		  C=#class_info{ includes=Inc, include_defs=IncDefs } ) ->
-%%	get_info( T, C#class_info{ includes=[ Filename | Inc ],
-%%							   include_defs=[ F | IncDefs ] } );
-
-
-%% % Type definition section:
-%% %
-%% get_info( _AST=[ F={ attribute, _Line, type,
-%%					 { TypeName, TypeDef, _SubTypeList } } | T ],
-%%		  C=#class_info{ type_definitions=TypeDefs,
-%%						 type_definition_defs=TypeDefsDefs } ) ->
-%%	get_info( T, C#class_info{
-%%				   type_definitions =[ { TypeName, TypeDef } | TypeDefs ],
-%%				   type_definition_defs =[ F | TypeDefsDefs ] } );
-
-
-%% % Type export section:
-%% %
-%% get_info( _AST=[ F={ attribute, _Line, export_type, DeclaredTypes } | T ],
-%%		  C=#class_info{ type_exports=TypeExports,
-%%						 type_export_defs=TypeExportDefs } )
-%%   when is_list( DeclaredTypes ) ->
-%%	get_info( T, C#class_info{
-%%				   type_exports= DeclaredTypes ++ TypeExports,
-%%				   type_export_defs=[ F | TypeExportDefs ] } );
-
-
-%% % Function export section:
-%% %
-%% get_info( _AST=[ F={ attribute, _Line, export, _Filenames } | T ],
-%%		  C=#class_info{ function_exports=FunExports } ) ->
-%%	get_info( T, C#class_info{ function_exports=[ F | FunExports ] } );
-
-
-
-
-%% % Function definition section:
-%% %
-%% get_info( _AST=[ Form={ function, _Line, Name, Arity, Clauses } | T ],
-%%		  C=#class_info{ constructors=Constructors,
-%%						 destructor=Destructor,
-%%						 requests=Requests,
-%%						 oneways=Oneways,
-%%						 statics=Statics,
-%%						 functions=Functions } ) ->
-
-%%	% Other clauses could be checked as well:
-%%	%
-%%	% (when adding a function-like element, we may not check if ever there was a
-%%	% pre-existing one - multiple definitions will be rejected by the compiler
-%%	% anyway)
-%%	%
-%%	NewClassInfo = case identify_function( Name, Arity, hd( Clauses ) ) of
-
-%%		function ->
-%%			NewFunctions = add_function( Name, Arity, Form, Functions ),
-%%			C#class_info{ functions=NewFunctions };
-
-%%		constructor ->
-%%			NewConstructors = add_constructor( Arity, Form, Constructors ),
-%%			C#class_info{ constructors=NewConstructors };
-
-%%		destructor ->
-%%			NewDestructor = register_destructor( Form, Destructor ),
-%%			C#class_info{ destructor=NewDestructor };
-
-%%		request ->
-%%			NewRequests = add_request( Name, Arity, Form, Requests ),
-%%			C#class_info{ requests=NewRequests };
-
-%%		oneway ->
-%%			NewOneways = add_oneway( Name, Arity, Form, Oneways ),
-%%			C#class_info{ oneways=NewOneways };
-
-%%		static ->
-%%			NewStatics = add_static( Name, Arity, Form, Statics ),
-%%			C#class_info{ statics=NewStatics }
-
-%%	end,
-
-%%	trace_utils:debug_fmt( "function ~s/~B with ~B clauses registered.",
-% %						   [ Name, Arity, length( Clauses ) ] ),
-
-%%	get_info( T, NewClassInfo );
-
-
-%% % Spec attributes:
-%% get_info( _AST=[ _F={ attribute, _Line, spec, _FunSpec } | T ], W ) ->
-%%	% Currently dropped!
-%%	get_info( T, W );
-
-
-%% % Other non-WOOPER attribute section:
-%% %
-%% get_info( _AST=[ F={ attribute, _Line, AttributeName, AttributeValue } | T ],
-%%		  C=#class_info{ parse_attributes=Attributes,
-%%						 parse_attribute_defs=AttributeDefs } ) ->
-
-%%	get_info( T, C#class_info{
-%%				   parse_attributes=[ { AttributeName, AttributeValue }
-%%									  | Attributes ],
-%%				   parse_attribute_defs=[ F | AttributeDefs ] } );
-
-
-%% % Expected to be defined once, and not kept as will be added back later:
-%% get_info( _AST=[ _F={ eof, Line } ], C=#class_info{ last_line=undefined } )
-%% -> C#class_info{ last_line=Line };
-
-%% get_info( _AST=[ H | T ], Infos ) ->
-%%	trace_utils:warning_fmt( "~p not managed.", [ H ] ),
-%%	%wooper_internals:raise_error( { unhandled_form, H } ),
-%%	get_info( T, Infos ).
-
-%% % Useless because of eof:
-%% %get_info( _AST=[], Infos, Acc ) ->
-%% %	{ Infos, Acc }.
-
-
-
-%% -spec manage_superclasses() -> [ classname() ].
-%% manage_superclasses() ->
-%%	?wooper_superclasses.
 
 
 
@@ -1189,7 +1050,7 @@ gather_parse_attributes( ParseAttrTable, MaybeSuperclassesLocDef,
 
 		SuperclassesLocDef ->
 			% V must be a list of {AttrValue,LocForm} pairs:
-			table:addNewEntry( _K=wooper_superclasses,
+			table:addNewEntry( _K=superclasses,
 							   _V=[ SuperclassesLocDef ], ParseAttrTable )
 
 	end.
