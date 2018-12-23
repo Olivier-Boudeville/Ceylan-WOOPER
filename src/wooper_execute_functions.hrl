@@ -40,10 +40,6 @@
 
 
 
-% TODO: rename execute*With to execute*As.
-
-
-
 % Implementation section (debug mode managed in the called wooper_* helpers)
 
 
