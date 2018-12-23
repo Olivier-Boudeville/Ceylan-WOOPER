@@ -119,7 +119,7 @@
 % Defined here because embodied instances rely on the main loop which needs that
 % information to destruct the corresponding instance:
 %
--define( wooper_superclasses, [] ).
+-superclasses([]).
 
 
 % For the name of the registered process that keeps the per-class method
