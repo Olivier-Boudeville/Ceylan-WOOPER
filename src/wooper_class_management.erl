@@ -52,6 +52,9 @@
 
 % Implementation notes:
 
+% The implementation of getClassname/1 might be created here rather than bein
+% defined in the wooper_classes_functions.hrl header file.
+
 
 % Regarding WOOPER superclasses.
 %
@@ -175,7 +178,14 @@ manage_superclasses( ParseAttrTable,
 	% Will end up in a { function, Line, GetSupName, GetSupArity, [ GetSupClause
 	% ]... } form:
 	%
-	GetSupClause = { clause, Line, [], [], [ ClassesForm ] },
+	% Note: we could have directly returned the list L of superclasses, but we
+	% prefer returning wooper:return_static( L ) so that the WOOPER parse
+	% transform detects this function as all other static methods.
+	%
+	GetSupClause = { clause, Line, [], [], [
+		{ call, Line, { remote, Line, {atom,Line,wooper},
+						{atom,Line,return_static} },
+		  [ ClassesForm ] } ] } ,
 
 	% Where this generated get_superclasses/0 will be defined:
 	DefinitionLoc = ast_info:get_default_definition_function_location(
