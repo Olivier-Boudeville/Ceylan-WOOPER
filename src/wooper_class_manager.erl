@@ -331,8 +331,8 @@ select_function( wooper_get_virtual_table_description,_ )             -> false ;
 select_function( wooper_pop_from_attribute,_ )                        -> false ;
 select_function( executeOneway,_ )                                    -> false ;
 select_function( executeRequest,_ )                                   -> false ;
-select_function( executeOnewayWith,_ )                                -> false ;
-select_function( executeRequestWith,_ )                               -> false ;
+select_function( executeOnewayAs,_ )                                  -> false ;
+select_function( executeRequestAs,_ )                                 -> false ;
 select_function( module_info,1)                                       -> false ;
 % Includes 'wooper_get_instance_description/1', which could be useful to debug:
 select_function( _, _ )                                               -> true.

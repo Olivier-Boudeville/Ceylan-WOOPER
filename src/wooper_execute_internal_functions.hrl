@@ -65,7 +65,7 @@
 % process)
 %
 % - if a method is called locally (i.e. with either of
-% execute{Oneway|Request}[With]), then an error trace is output and an exception
+% execute{Oneway|Request}[As]), then an error trace is output and an exception
 % is thrown (possibly crashing the instance process)
 
 

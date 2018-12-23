@@ -33,7 +33,7 @@
 
 		 executeRequest/2, executeRequest/3,
 		 executeOneway/2, executeOneway/3,
-		 executeRequestWith/3, executeRequestWith/4,
-		 executeOnewayWith/3, executeOnewayWith/4
+		 executeRequestAs/3, executeRequestAs/4,
+		 executeOnewayAs/3, executeOnewayAs/4
 
 		]).

@@ -716,13 +716,13 @@ get_state_builtins() ->
 get_execution_builtins() ->
 	[ {executeRequest,2},
 	  {executeRequest,3},
-	  {executeRequestWith,3},
-	  {executeRequestWith,4},
+	  {executeRequestAs,3},
+	  {executeRequestAs,4},
 
 	  {executeOneway,2},
 	  {executeOneway,3},
-	  {executeOnewayWith,3},
-	  {executeOnewayWith,4} ].
+	  {executeOnewayAs,3},
+	  {executeOnewayAs,4} ].
 
 
 

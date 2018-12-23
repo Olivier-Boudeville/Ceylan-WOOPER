@@ -166,20 +166,20 @@ executeRequest( StateError, RequestAtomError, _LastArg ) ->
 % Parameter-less request, calling the version of the method as defined in the
 % specified class.
 %
--spec executeRequestWith( wooper:state(), classname(), request_name() ) ->
+-spec executeRequestAs( wooper:state(), classname(), request_name() ) ->
 								{ wooper:state(), method_internal_result() }.
-executeRequestWith( State, Classname, RequestAtom )
+executeRequestAs( State, Classname, RequestAtom )
   when is_record( State, state_holder ) andalso is_atom( Classname )
 	   andalso is_atom( RequestAtom ) ->
 
-	%io:format( "executeRequestWith/3: executing ~s() from ~s with ~s.~n",
+	%io:format( "executeRequestAs/3: executing ~s() from ~s with ~s.~n",
 	%	[ RequestAtom, State#state_holder.actual_class, Classname ]),
 
 	wooper_handle_local_request_execution_with( RequestAtom, State,
 							_ArgumentList=[], Classname );
 
 
-executeRequestWith( StateError, Classname, RequestAtom )
+executeRequestAs( StateError, Classname, RequestAtom )
 		when is_atom( Classname ) andalso is_atom( RequestAtom ) ->
 
 	wooper:log_error( "when executing request ~p in the context of class ~s: "
@@ -189,7 +189,7 @@ executeRequestWith( StateError, Classname, RequestAtom )
 	throw( { wooper_invalid_request_call, RequestAtom } );
 
 
-executeRequestWith( _State, ClassnameError, RequestAtomError ) ->
+executeRequestAs( _State, ClassnameError, RequestAtomError ) ->
 
 	wooper:log_error( "when executing request in a class context: "
 					  "'~p' and '~p' should both be atoms.",
@@ -207,14 +207,14 @@ executeRequestWith( _State, ClassnameError, RequestAtomError ) ->
 %
 % Note: Stripped-down version of wooper_main_loop.
 %
--spec executeRequestWith( wooper:state(), classname(), request_name(),
+-spec executeRequestAs( wooper:state(), classname(), request_name(),
 						  method_arguments() ) ->
 								{ wooper:state(), method_internal_result() }.
-executeRequestWith( State, Classname, RequestAtom, ArgumentList ) when
+executeRequestAs( State, Classname, RequestAtom, ArgumentList ) when
 	  is_record( State, state_holder ) andalso is_atom( Classname )
 	  andalso is_atom( RequestAtom ) andalso is_list( ArgumentList ) ->
 
-	%io:format( "executeRequestWith/4 with list: executing ~s(~w) from ~s "
+	%io:format( "executeRequestAs/4 with list: executing ~s(~w) from ~s "
 	%  "with ~s.~n", [ RequestAtom, ArgumentList,
 	% State#state_holder.actual_class, Classname ] ),
 
@@ -223,11 +223,11 @@ executeRequestWith( State, Classname, RequestAtom, ArgumentList ) when
 
 
 % Here the third parameter is not a list:
-executeRequestWith( State, Classname, RequestAtom, StandaloneArgument ) when
+executeRequestAs( State, Classname, RequestAtom, StandaloneArgument ) when
 	  is_record( State, state_holder ) andalso is_atom( Classname )
 	  andalso is_atom( RequestAtom ) ->
 
-	%io:format( "executeRequestWith/3 with standalone argument: "
+	%io:format( "executeRequestAs/3 with standalone argument: "
 	%	"executing ~s(~w) from ~s with ~s.~n",
 	%	[ RequestAtom, StandaloneArgument, State#state_holder.actual_class,
 	% Classname ] ),
@@ -237,7 +237,7 @@ executeRequestWith( State, Classname, RequestAtom, StandaloneArgument ) when
 
 
 % Error cases below:
-executeRequestWith( StateError, Classname, RequestAtom, _LastArg )
+executeRequestAs( StateError, Classname, RequestAtom, _LastArg )
   when is_atom( Classname ) andalso is_atom( RequestAtom ) ->
 
 	wooper:log_error( "when executing request ~p: "
@@ -248,7 +248,7 @@ executeRequestWith( StateError, Classname, RequestAtom, _LastArg )
 
 
 % Catches all remaining errors:
-executeRequestWith( _State, ClassnameError, RequestAtomError, _LastArg ) ->
+executeRequestAs( _State, ClassnameError, RequestAtomError, _LastArg ) ->
 
 	wooper:log_error( "when executing request: both '~p' (classname) and "
 					  "'~p' (request name) should be atoms.",
@@ -374,13 +374,13 @@ executeOneway( _State, OnewayAtomError, _LastArg ) ->
 						   wooper:state().
 
 
--spec executeOnewayWith( wooper:state(), classname(), oneway_name() ) ->
+-spec executeOnewayAs( wooper:state(), classname(), oneway_name() ) ->
 							   wooper:state().
-executeOnewayWith( State, Classname, OnewayAtom )
+executeOnewayAs( State, Classname, OnewayAtom )
   when is_record( State, state_holder ) andalso is_atom( Classname )
 	   andalso is_atom( OnewayAtom ) ->
 
-	%io:format( "executeOnewayWith/3: executing ~s() from ~s.~n",
+	%io:format( "executeOnewayAs/3: executing ~s() from ~s.~n",
 	%	[ OnewayAtom, State#state_holder.actual_class ] ),
 
 	wooper_handle_local_oneway_execution_with( OnewayAtom, State,
@@ -388,7 +388,7 @@ executeOnewayWith( State, Classname, OnewayAtom )
 
 
 
-executeOnewayWith( State, Classname, OnewayAtom )
+executeOnewayAs( State, Classname, OnewayAtom )
   when is_record( State, state_holder ) ->
 
 	wooper:log_error( "when executing oneway: '~p' (oneway name) and "
@@ -398,7 +398,7 @@ executeOnewayWith( State, Classname, OnewayAtom )
 	throw( { wooper_invalid_oneway_call, OnewayAtom } );
 
 
-executeOnewayWith( StateError, Classname, OnewayAtom ) ->
+executeOnewayAs( StateError, Classname, OnewayAtom ) ->
 
 	wooper:log_error( "when executing oneway ~p with ~s: "
 					  "first parameter should be a state, not '~p'.",
@@ -416,9 +416,9 @@ executeOnewayWith( StateError, Classname, OnewayAtom ) ->
 %
 % Note: Stripped-down version of wooper_main_loop.
 %
--spec executeOnewayWith( wooper:state(), classname(), oneway_name(),
+-spec executeOnewayAs( wooper:state(), classname(), oneway_name(),
 						 method_arguments() ) -> wooper:state().
-executeOnewayWith( State, Classname, OnewayAtom, ArgumentList ) when
+executeOnewayAs( State, Classname, OnewayAtom, ArgumentList ) when
 	  is_record( State, state_holder ) andalso is_atom( Classname )
 	  andalso is_atom( OnewayAtom ) andalso is_list( ArgumentList ) ->
 
@@ -433,7 +433,7 @@ executeOnewayWith( State, Classname, OnewayAtom, ArgumentList ) when
 
 
 % Here third parameter is not a list:
-executeOnewayWith( State, Classname, OnewayAtom, StandaloneArgument ) when
+executeOnewayAs( State, Classname, OnewayAtom, StandaloneArgument ) when
 	  is_record( State, state_holder ) andalso is_atom( Classname )
 	  andalso is_atom( OnewayAtom ) ->
 
@@ -446,7 +446,7 @@ executeOnewayWith( State, Classname, OnewayAtom, StandaloneArgument ) when
 			_ArgumentList=[ StandaloneArgument ], Classname );
 
 
-executeOnewayWith( StateError, Classname, OnewayAtom, _LastArg )
+executeOnewayAs( StateError, Classname, OnewayAtom, _LastArg )
   when is_atom( Classname ) andalso is_atom( OnewayAtom ) ->
 
 	wooper:log_error( "when executing oneway ~p with ~s: "
@@ -457,7 +457,7 @@ executeOnewayWith( StateError, Classname, OnewayAtom, _LastArg )
 
 
 % Catches all remaining errors:
-executeOnewayWith( _State, Classname, OnewayAtomError, _LastArg ) ->
+executeOnewayAs( _State, Classname, OnewayAtomError, _LastArg ) ->
 
 	wooper:log_error( "when executing oneway with ~s: both '~p' "
 					  "and '~p' should be atoms.",
