@@ -16,21 +16,6 @@
 -superclasses([]).
 
 
-%-define( wooper_method_export, getName/1, setName/2 ).
-
-%-define( wooper_static_method_export, get_static_info/2 ).
-
-%-wooper_request_export([...]).
-%-wooper_oneway_export([...]).
-%-wooper_static_export([...]).
-
-
-%-wooper_method_export([
-%			{ getName, 1 }, request, [const],
-%
-%					  ]).
-
-
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
 
@@ -39,9 +24,13 @@
 
 -attributes([ name ]).
 
+
 % Simplest possible signature:
 -spec construct( wooper:state() ) -> wooper:state().
 construct( State ) ->
+
+	trace_utils:trace( "construction" ),
+
 	% No mother class.
 	setAttribute( State, name, "Terry" ).
 
@@ -49,6 +38,9 @@ construct( State ) ->
 
 -spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
+
+	trace_utils:trace( "destruction" ),
+
 	io:format( "  I am ~s, and I am just destructed.~n", [ ?getAttr(name) ] ),
 	State.
 
@@ -63,13 +55,21 @@ destruct( State ) ->
 %
 -spec getName( wooper:state() ) -> request_return( name() ).
 getName( State ) ->
+
+	trace_utils:trace( "getName/1" ),
+
 	wooper:return_state_result( State, ?getAttr(name) ).
 
 
 % Sets the name of this instance.
 %
+% (oneway)
+%
 -spec setName( wooper:state(), name() ) -> oneway_return().
 setName( State, Name ) ->
+
+	trace_utils:trace( "setName/2" ),
+
 	NewState = setAttribute( State, name, Name ),
 	wooper:return_state_only( NewState ).
 
@@ -78,4 +78,7 @@ setName( State, Name ) ->
 %
 -spec get_static_info( integer(), integer() ) -> integer().
 get_static_info( A, B ) ->
+
+	trace_utils:trace( "get_static_info/2" ),
+
 	wooper:return_static( A + B + 10 ).
