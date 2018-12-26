@@ -40,8 +40,7 @@
 :Organisation: Copyright (C) 2008-2018 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation Date: Wednesday, November 14, 2018
-:Lastly Updated: Thursday, July 5, 2018
-
+:Lastly Updated: Sunday, December 23, 2018
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -98,7 +97,7 @@ Understanding WOOPER in Two Steps
 Here is a `class definition <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat.erl>`_, and here is an example of `code using it <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat_test.erl>`_. That's it!
 
 
-Now, let's discuss a bit more in-depth of these subjects.
+Now, let's discuss these subjects a bit more in-depth.
 
 
 Motivations & Purpose
@@ -116,21 +115,22 @@ The WOOPER Mode of Operation in a Nutshell
 
 The WOOPER OOP concepts translate into Erlang constructs according to the following mapping:
 
-======================  =================================================================
-WOOPER base concept     Corresponding mapping to Erlang
-======================  =================================================================
-class definition        module (typically compiled in a ``.beam`` file)
-instance                process
-instance reference      process identifier (PID)
-new operators           WOOPER-provided functions, making use of user-defined ``construct/N`` functions (a.k.a. the constructors)
-delete operator         WOOPER-provided function, making use of any user-defined ``destruct/1`` (a.k.a. the destructor)
-method definition       module function that respects some conventions
-method invocation       sending of an appropriate inter-process message
-method look-up          class-specific virtual table taking into account inheritance transparently
-instance state          instance-specific datastructure storing its attributes, and kept by the instance-specific WOOPER tail-recursive infinite loop
-instance attributes     key/value pairs stored in the instance state
-class (static) method   exported module function
-======================  =================================================================
+=========================  =================================================================
+WOOPER base concept        Corresponding mapping to Erlang
+=========================  =================================================================
+class definition           module (typically compiled in a ``.beam`` file)
+active instance            process
+active instance reference  process identifier (PID)
+passive instance           opaque term
+new operators              WOOPER-provided functions, making use of user-defined ``construct/N`` functions (a.k.a. the constructors)
+delete operator            WOOPER-provided function, making use of any user-defined ``destruct/1`` (a.k.a. the destructor)
+method definition          module function that respects some conventions
+method invocation          sending of an appropriate inter-process message
+method look-up             class-specific virtual table taking into account inheritance transparently
+instance state             instance-specific datastructure storing its attributes, and kept by the instance-specific WOOPER tail-recursive infinite loop
+instance attributes        key/value pairs stored in the instance state
+class (static) method      exported module function
+=========================  =================================================================
 
 In practice, developing a class with WOOPER mostly involves including the `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl>`_ header file and respecting the WOOPER conventions detailed below.
 
@@ -151,17 +151,16 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
  -module(class_Cat).
 
  % Determines what are the mother classes of this class (if any):
- -define(wooper_superclasses,[class_Mammal,class_ViviparousBeing]).
+ -superclasses([class_Mammal,class_ViviparousBeing]).
 
- % Member method declarations:
- -define( wooper_method_export,getWhiskerColor/1,setWhiskerColor/2,
-		  canEat/2 ).
-
- % Static method declarations:
- -define( wooper_static_method_export, get_default_whisker_color()/0 ).
+ % No need to export constructors, destructor or methods.
 
  % Allows to define WOOPER base variables and methods for that class:
  -include("wooper.hrl").
+
+ % Declaration of class-specific attributes:
+ % (optional, yet recommended for clarity)
+ -attributes([ {whisker_color,"The color of this cat's whiskers"} ]).
 
  % Constructs a new Cat.
  construct(State,Age,Gender,FurColor,WhiskerColor) ->
@@ -169,7 +168,7 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
 	MammalState = class_Mammal:construct( State, Age, Gender, FurColor ),
 	ViviparousMammalState = class_ViviparousBeing:construct(MammalState),
 	% Then the class-specific attributes; returns an updated state:
-	setAttributes( ViviparousMammalState, whisker_color, WhiskerColor ).
+	setAttribute( ViviparousMammalState, whisker_color, WhiskerColor ).
 
  destruct(State) ->
 	io:format( "Deleting cat ~w! (overridden destructor)~n", [self()] ),
@@ -179,26 +178,27 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
 
  % A cat-specific const request:
  getWhiskerColor(State)->
-	?wooper_return_state_result( State, ?getAttr(whisker_color) ).
+	wooper:return_state_result( State, ?getAttr(whisker_color) ).
 
- % A (non-const) oneway:
+ % A (non-const) oneway, with a spec:
+ -spec setWhiskerColor(wooper:state(),foo:color()) -> oneway_return().
  setWhiskerColor(State,NewColor)->
 	NewState = setAttribute( State, whisker_color, NewColor ),
-	?wooper_return_state_only( NewState ).
+	wooper:return_state_only( NewState ).
 
  % Overrides any request method defined in the Mammal class:
  % (const request)
  canEat(State,soup) ->
-	?wooper_return_state_result( State, true );
+	wooper:return_state_result( State, true );
 
  canEat(State,croquette) ->
-	?wooper_return_state_result( State, true );
+	wooper:return_state_result( State, true );
 
  canEat(State,meat) ->
-	?wooper_return_state_result( State, true );
+	wooper:return_state_result( State, true );
 
  canEat(State,_OtherFood) ->
-	?wooper_return_state_result( State, false ).
+	wooper:return_state_result( State, false ).
 
  % Static method:
  get_default_whisker_color() ->
@@ -207,7 +207,7 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
 
 Straightforward, isn't it? We will discuss it in-depth, though.
 
-To test this class (provided that ``GNU make`` and ``Erlang 21.0`` or more recent are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on `Ceylan-Myriad <http://myriad.esperide.org>`_, hence to be installed first:
+To test this class (provided that ``GNU make`` and ``Erlang 21.0`` or more recent are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on `Ceylan-Myriad <http://myriad.esperide.org>`_, hence to be installed first [#]_:
 
 .. code:: bash
 
@@ -221,6 +221,7 @@ To test this class (provided that ``GNU make`` and ``Erlang 21.0`` or more recen
  $ cd Ceylan-WOOPER && make all
 
 
+.. [#] Note that, in the Ceylan-Myriad repository, we have a script to streamline the installation of Erlang, see `install-erlang.sh <https://github.com/Olivier-Boudeville/Ceylan-Myriad/blob/master/conf/install-erlang.sh>`_.
 
 
 Running the cat-related example just boils down to:
@@ -302,33 +303,21 @@ So a class modeling, for example, a cat should translate into an Erlang module n
 Similarly, a pink flamingo class could be declared as ``class_PinkFlamingo``, in ``class_PinkFlamingo.erl``, which would include a ``-module(class_PinkFlamingo).`` declaration.
 
 
-The class name can be obtained through its ``get_classname/0`` static method [#]_ (automatically defined by WOOPER):
-
-.. code:: erlang
-
- > class_Cat:get_classname().
- class_Cat
-
-
-.. [#] The ``get_classname/0`` static method has no real interest of its own, it is defined mostly for explanation purpose.
-
-Note that a static method (i.e. a class method that does not apply to any specific instance) of a class X is nothing more than an Erlang function exported from the corresponding ``class_X`` module: all exported functions could be seen as static methods.
-
-
-
 Inheritance & Superclasses
 ..........................
 
 A WOOPER class can inherit from other classes, in which case the state and behaviour defined in the mother classes are readily available to this child class.
 
-Being in a **multiple inheritance** context, a given class can have any number (``[0..n]``) of direct mother classes, which themselves may have mother classes, and so on. This leads to a class hierarchy that forms a graph.
+Being in a **multiple inheritance** context, a given class can have any number (``[0..n]``) of direct mother classes, which themselves may have their mother classes, and so on. This leads to a class hierarchy that forms a direct, acyclic graph.
 
-This is declared in WOOPER thanks to the ``wooper_superclasses`` define. For example, a class with no mother class should specify, once having declared its module:
+This is declared in WOOPER thanks to the ``superclasses`` attribute. For example, a class with no mother class should specify, once having declared its module:
 
 .. code:: erlang
 
- -define(wooper_superclasses,[]).
+ -superclasses([]).
 
+
+In this particular case, with no mother class to be declared, this ``superclasses`` attribute could be omitted as a whole (yet this would be less clear for the reader).
 
 .. comment This is declared in WOOPER thanks to the ``get_superclasses/0`` function. For example, a class with no mother class should specify, once having declared its module, ``get_superclasses() -> [].`` [#]_.
 
@@ -338,19 +327,21 @@ As for our cat, this superb animal could be modelled both as a mammal (itself a 
 
 .. code:: erlang
 
- -define(wooper_superclasses,[class_Mammal,class_ViviparousBeing]).
+ -superclasses([class_Mammal,class_ViviparousBeing]).
+
 
 .. [#] Neither of them is a subset of the other, these are mostly unrelated concepts, at least in the context of that example! (ex: a platypus is a mammal, but not a viviparous being).
 
 
-The superclasses (direct mother classes) of a given class can be known thanks to its ``get_superclasses/0`` static method:
+The superclasses (direct mother classes) of a given class can be known thanks to its ``get_superclasses/0`` static method [#]_ (automatically defined by WOOPER):
 
 .. code:: erlang
 
  > class_Cat:get_superclasses().
  [class_Mammal,class_ViviparousBeing]
 
-.. comment Note::  We will discuss here mostly the WOOPER versions 2.x and higher, originating from a development branch that is sometimes codenamed the "*Zero-Overhead WOOPER*", as opposed to the legacy versions (prior to 2.x), codenamed "*Hashtable-based WOOPER*".
+.. [#] Note that, to anticipate a bit, a static method (i.e. a class method that does not apply to any specific instance) of a class X is nothing more than an Erlang function, exported from the corresponding ``class_X`` module, which would return its result ``R`` as: ``wooper:return_static(R)``.
+
 
 
 
@@ -367,7 +358,7 @@ They are therefore, in UML parlance, *active objects* (each has its own thread o
 
 .. [#] For some uses, such a concurrent feature (with *active* instances) may not be needed, in which case one may deal also with purely *passive* instances (as Erlang terms, not Erlang processes).
 
-	   To anticipate a bit, instead of using ``new/n`` (returning the PID of a new process instance looping over its state), one may rely on ``construct/n+1`` (returning directly to the caller process that corresponding initial state, that can be then stored and interacted upon at will).
+	   To anticipate a bit, instead of using ``new/N`` (returning the PID of a new process instance looping over its state), one may rely on ``new_passive/N``, returning to the caller process an opaque term corresponding to the initial state of a new passive instance, a term that can be then stored and interacted upon at will.
 
 
 Instance State
@@ -798,7 +789,7 @@ In this case the initial state parameter is directly returned, as is, like in:
 .. code:: erlang
 
   getWhiskerColor(State) ->
-	?wooper_return_state_result(State,?getAttr(whisker_color) ).
+	wooper:return_state_result(State,?getAttr(whisker_color) ).
 
 State is unchanged here.
 
@@ -827,7 +818,7 @@ A good practise is to add a comment to each method definition, and to specify wh
  % Returns the current color of the whiskers of that cat instance.
  % (const request)
  getWhiskerColor(State) ->
-	?wooper_return_state_result(State, ?getAttr(whisker_color)).
+	wooper:return_state_result(State, ?getAttr(whisker_color)).
 
 
 .. Note:: When a constructor or a method determines that a fatal error should be raised (for example because it cannot find a required registered process), it should use ``throw``, like in: ``throw({invalid_value,V})``. Using ``exit`` is supported but not recommended.
@@ -837,14 +828,14 @@ A good practise is to add a comment to each method definition, and to specify wh
 For Requests
 ____________
 
-Requests will use ``?wooper_return_state_result(NewState,Result)``: the new state will be kept by the instance, whereas the result will be sent to the caller. Hence ``wooper_return_state_result`` means that the method returns a state **and** a result.
+Requests will use ``wooper:return_state_result(NewState,Result)``: the new state will be kept by the instance, whereas the result will be sent to the caller. Hence ``wooper_return_state_result`` means that the method returns a state **and** a result.
 
 For example a const request will return an unchanged state, and thus will be just useful for its result (and possible side-effects):
 
 .. code:: erlang
 
  getAge(State) ->
-	?wooper_return_state_result(State,?getAttr(age)).
+	wooper:return_state_result(State,?getAttr(age)).
 
 
 All methods are of course given the parameters specified at their call.
@@ -903,14 +894,14 @@ If that macro is called nevertheless from a oneway, then it returns the atom ``u
 For Oneways
 ___________
 
-Oneway will rely on the ``?wooper_return_state_only(NewState)`` macro: the instance state will be updated, but no result will be returned to the caller, which is not even known.
+Oneway will rely on the ``wooper:return_state_only(NewState)`` macro: the instance state will be updated, but no result will be returned to the caller, which is not even known.
 
 For example:
 
 .. code:: erlang
 
   setAge(State,NewAge) ->
-	?wooper_return_state_only( setAttribute(State,age,NewAge) ).
+	wooper:return_state_only( setAttribute(State,age,NewAge) ).
 
 
 This oneway can be called that way:
@@ -927,7 +918,7 @@ Oneways may also be ``const``, i.e. leave the state unchanged, only being called
 
   displayAge(State) ->
 	io:format("My age is ~B~n.",[ ?getAttr(age) ]),
-	?wooper_return_state_only(State).
+	wooper:return_state_only(State).
 
 
 
@@ -936,11 +927,11 @@ _____________________________________
 
 The definition of the ``wooper_return_state_result`` and ``wooper_return_state_only`` macros is actually quite simple; they are just here to structure the method implementations (helping the method developer not mixing updated states and results), and to help ensuring, in debug mode, that methods return well-formed information: an atom is then prepended to the returned tuple and WOOPER matches it during post-invocation, before handling the return, for an increased safety.
 
-For example, in debug mode, ``?wooper_return_state_result(AState,AResult)`` will simply translate into ``{wooper_result,AState,AResult}``, and when the execution of the method is over, the WOOPER main loop of this instance will attempt to match the method returned value with that triplet.
+For example, in debug mode, ``wooper:return_state_result(AState,AResult)`` will simply translate into ``{wooper_result,AState,AResult}``, and when the execution of the method is over, the WOOPER main loop of this instance will attempt to match the method returned value with that triplet.
 
-Similarly, ``?wooper_return_state_only(AState)`` will translate into ``{wooper_result,AState}``.
+Similarly, ``wooper:return_state_only(AState)`` will translate into ``{wooper_result,AState}``.
 
-If not in debug mode, then the ``wooper_result`` atom will not even be added in the returned tuples; for example ``?wooper_return_state_result(AState,AResult)`` will just be ``{AState,AResult}``.
+If not in debug mode, then the ``wooper_result`` atom will not even be added in the returned tuples; for example ``wooper:return_state_result(AState,AResult)`` will just be ``{AState,AResult}``.
 
 Performances should increase a bit, at the expense of a less safe checking of the values returned by methods.
 
@@ -958,7 +949,7 @@ Although doing so is optional, WOOPER strongly recommends declaring type specifi
  % (const request)
  -spec getWhiskerColor(wooper:state()) -> request_return(color()).
  getWhiskerColor(State) ->
-	 ?wooper_return_state_result(State, ?getAttr(whisker_color)).
+	 wooper:return_state_result(State, ?getAttr(whisker_color)).
 
 (of course the developer is responsible for the definition of the ``color()`` type here)
 
@@ -1057,9 +1048,9 @@ For example, a method needing to call ``setAge/2`` from its body would be expect
 
 If ``class_Cat`` overrode ``setAge/2``, any cat instance would then call the overridden ``class_Cat:setAge`` method instead of the original ``class_Creature:setAge``.
 
-What if our specific method of ``class_Cat`` wanted, for any reason, to call the ``class_Creature`` version, now shadowed by an overridden version of it? In this case a ``execute*With`` function should be used.
+What if our specific method of ``class_Cat`` wanted, for any reason, to call the ``class_Creature`` version, now shadowed by an overridden version of it? In this case a ``execute*As`` function should be used.
 
-These functions, which are ``executeRequestWith/{3,4}`` and ``executeOnewayWith/{3,4}``, behave exactly as the previous ``execute*`` functions, except that they take an additional parameter (to be specified just after the state) that is the name of the mother class (direct or not) having defined the version of the method that we want to execute.
+These functions, which are ``executeRequestAs/{3,4}`` and ``executeOnewayAs/{3,4}``, behave exactly as the previous ``execute*`` functions, except that they take an additional parameter (to be specified just after the state) that is the name of the mother class (direct or not) having defined the version of the method that we want to execute.
 
 .. Note::
 
@@ -1070,7 +1061,7 @@ In our example, we should thus use simply:
 
 .. code:: erlang
 
- AgeState = executeOnewayWith(State,class_Creature,setAge,NewAge)
+ AgeState = executeOnewayAs(State,class_Creature,setAge,NewAge)
 
 in order to call the ``class_Creature`` version of the ``setAge/2`` oneway.
 
@@ -2035,7 +2026,7 @@ For example:
   onWOOPERExitReceived(State,Pid,ExitType) ->
 	io:format("MyClass EXIT handler ignored signal '~p'"
 			  " from ~w.~n", [ExitType,Pid]),
-	?wooper_return_state_only(State).
+	wooper:return_state_only(State).
 
 may result in an output like::
 
@@ -2420,12 +2411,29 @@ As mentioned previously, in the future a version of WOOPER making heavy use of p
 
 
 
+Version 2.0 [current stable]
+----------------------------
 
-Version 2.0 [cutting-edge, not available]
------------------------------------------
+Many improvements, notably:
+- multiple different-arity constructors per class supported
+- no more ``wooper_construct_parameters``, longer ``wooper_construct_export`` or ``wooper_construct_export`` defines
+- automatic detection and export of constructors, any destructor and methods
+- WOOPER method terminators introduced (ex: ``wooper:return_state_result/2``, instead of the ``wooper_return_state_result`` macro)
+- the ``-attributes([...])`` optional define introduced
+- ``execute*With`` renamed as ``execute*As`` (clearer)
+- convenience method wrappers such as ``wooper:execute_request/3`` have their parameters reordered (target - either a PID or a passive instance - comes first now)
+- passive instances supported (still a bit experimental, not used a lot)
 
-Not released yet (work-in-progress).
 
+More generally, macros and definitions in the WOOPER header files moved to code generated thanks to a parse-transform.
+
+.. comment The 2.0 release was codenamed the "*Zero-Overhead WOOPER*", as opposed to the legacy versions (prior to 2.x), codenamed "*Hashtable-based WOOPER*".
+
+
+Version 1.x
+-----------
+
+Many minor improvements, API enriched in a backward compatible manner.
 
 
 Version 1.0 [current stable]
@@ -2665,7 +2673,7 @@ Issues & Planned Enhancements
 - integrate automatic persistent storage of instance states, for example in Mnesia databases
 - add a mode to support *passive* instances, i.e. pure data-structures not hosted by a specific process; should be as easy as introducing a ``new_passive`` operator, returning actually the initial state as it is
 - integrate specific constructs for code reflection
-- check that a class specified in ``execute*With`` is indeed a (direct or not) mother class of this one, at least in debug mode
+- check that a class specified in ``execute*As`` is indeed a (direct or not) mother class of this one, at least in debug mode
 - check that referenced attributes are legit (existing, not reserved, etc.)
 - support qualifier-based declarations of methods and attributes (``public``, ``protected``, ``private``, ``final``, ``const``, etc.)
 
