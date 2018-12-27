@@ -152,9 +152,10 @@ manage_new_operators( _ConstructPairs=[ { Arity, FunInfo } | T ], FunctionTable,
 										 Constructors ),
 
 	% Then, for a constructor of arity N, we have to automatically define and
-	% export here following 14 functions, which are all new operator variations
+	% export here following 15 functions, which are all new operator variations
 	% V (7 base ones, each doubled to support whether or not an atomic link is
-	% wanted as well between the creator process and the created instance):
+	% wanted as well between the creator process and the created instance), plus
+	% one passive:
 	%
 	% - V1: new/N-1 and new_link/N-1 (N-1, as no State parameter expected here)
 	% - V2: synchronous_new/N-1 and synchronous_new_link/N-1
@@ -164,7 +165,7 @@ manage_new_operators( _ConstructPairs=[ { Arity, FunInfo } | T ], FunctionTable,
 	% - V6: remote_synchronisable_new/N and remote_synchronisable_new_link/N
 	% - V7: remote_synchronous_timed_new/N and
 	%       remote_synchronous_timed_new_link/N
-
+	% - V8: new_passive/N-1
 
 	% Where the generated 'new*' operators will be defined:
 	DefinitionLoc = ast_info:get_default_definition_function_location(
@@ -191,8 +192,11 @@ manage_new_operators( _ConstructPairs=[ { Arity, FunInfo } | T ], FunctionTable,
 	V7OpTable = add_v7_operators( Classname, Arity, ExportLoc, DefinitionLoc,
 								  IsDebugMode, V6OpTable ),
 
+	V8OpTable = add_v8_operators( Classname, Arity, ExportLoc, DefinitionLoc,
+								  IsDebugMode, V7OpTable ),
+
 	FinalClassInfo = ClassInfo#class_info{ constructors=NewConstructors,
-										   new_operators=V7OpTable },
+										   new_operators=V8OpTable },
 
 	manage_new_operators( T, FunctionTable, FinalClassInfo ).
 
@@ -1128,6 +1132,131 @@ add_v7_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 	% Ensure not already defined (ex: by an unwary user):
 	table:addNewEntries( [ { OpNewId, OpNewInfo },
 						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
+
+
+
+% Adds the V8 operator, i.e. new_passive/N-1 (no other variation makes sense).
+%
+-spec add_v8_operators( wooper:classname(), arity(), ast_base:form_location(),
+			ast_base:form_location(), boolean(), operator_table() ) ->
+							  operator_table().
+add_v8_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
+				  OperatorTable ) ->
+
+	% Same strategy as add_v1_operators/5:
+
+	PassiveNewArity = Arity - 1,
+
+	%trace_utils:debug_fmt( "Adding passive_new/~B.", [ PassiveNewArity ] ),
+
+	PassiveNewName = new_passive,
+
+	PassiveNewId = { PassiveNewName, PassiveNewArity },
+
+	Line = 0,
+
+	% Its definition is, if N=3 (hence SyncNewArity=2):
+	% ('S' standing for statement)
+	%
+	% synchronous_new( A, B ) ->
+	% [S1]  CreatorPid = self(),
+	% [S2]  SpawnedPid = spawn( fun() ->
+	%		  wooper:construct_and_run_synchronous( class_Foo, [ A, B ],
+	%                                               CreatorPid )
+	%                       end ),
+	%
+	% [S3]  receive
+	%
+	%		  { spawn_successful, SpawnedPid } ->
+	%			  SpawnedPid
+	%
+	% end.
+
+
+	S1 = { match, Line, {var,Line,'CreatorPid'},
+		   { call, Line, {atom,Line,self}, [] } },
+
+
+	% For the call to wooper:construct_and_run_synchronous/2:
+	SyncRunCall = get_sync_run_call( Line ),
+
+	CallParams = [ {atom,Line,Classname},
+				   ast_generation:list_variables( SyncNewArity ),
+				   {var,Line,'CreatorPid'} ],
+
+	S2 = { match, Line, {var,Line,'SpawnedPid'},
+		   { call, Line, {atom,Line,spawn},
+			[ {'fun',Line,
+			  { clauses,
+				[ {clause,Line,[],[],
+				   [ {call,Line,SyncRunCall,CallParams} ] } ] } } ] } },
+
+	S3 = get_receive( Line ),
+
+	HeaderParams = ast_generation:get_header_params( SyncNewArity ),
+
+	SyncNewClause = { clause, Line, HeaderParams, [],
+					  [ S1, S2, S3 ] },
+
+
+	% Then, its spec:
+
+	ConstructParamTypes = get_construction_types( SyncNewArity, Line ),
+
+	PidType = forge_pid_type(),
+
+	SyncNewSpecForm = { attribute, Line, spec, { SyncNewId,
+	   [ { type, Line, 'fun',
+		   [ { type, Line, product, ConstructParamTypes },
+			 _Result=PidType ]
+		 } ] } },
+
+	SyncNewOpInfo = #function_info{ name=SyncNewName,
+									arity=SyncNewArity,
+									location=DefinitionLoc,
+									line=Line,
+									clauses=[ SyncNewClause ],
+									spec={ DefinitionLoc, SyncNewSpecForm },
+									callback=false,
+									exported=[ ExportLocation ] },
+
+
+	% Next, roughly the same but with a link:
+
+	SyncNewLinkName = synchronous_new_link,
+
+	SyncNewLinkId = { SyncNewLinkName, SyncNewArity },
+
+	S2Link = { match, Line, {var,Line,'SpawnedPid'},
+			   { call, Line, {atom,Line,spawn_link},
+				 [ {'fun',Line,
+					{ clauses,
+					  [ {clause,Line,[],[],
+						 [ {call,Line,SyncRunCall,CallParams} ] } ] } } ] } },
+
+	SyncNewLinkClause = { clause, Line, HeaderParams, [],
+						  [ S1, S2Link, S3 ] },
+
+	SyncNewLinkSpecForm = { attribute, Line, spec, { SyncNewLinkId,
+	   [ { type, Line, 'fun',
+		   [ { type, Line, product, ConstructParamTypes },
+			 _Result=PidType ]
+		 } ] } },
+
+	SyncNewLinkOpInfo = #function_info{
+						   name=SyncNewLinkName,
+						   arity=SyncNewArity,
+						   location=DefinitionLoc,
+						   line=Line,
+						   clauses=[ SyncNewLinkClause ],
+						   spec={ DefinitionLoc, SyncNewLinkSpecForm },
+						   callback=false,
+						   exported=[ ExportLocation ] },
+
+	% Ensure not already defined (ex: by an unwary user):
+	table:addNewEntries( [ { SyncNewId, SyncNewOpInfo },
+						   { SyncNewLinkId, SyncNewLinkOpInfo } ],
+						 OperatorTable ).
 
 
 
