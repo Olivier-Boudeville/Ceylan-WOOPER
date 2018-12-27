@@ -24,6 +24,10 @@
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Wednesday, December 24, 2014
+
+
+% This test class is useful to test the base services and also to serve as a
+% mother class (see class_ChildTestClass).
 %
 -module(class_BaseTestClass).
 
@@ -37,6 +41,9 @@
 
 -type name() :: text_utils:ustring().
 -type gender() :: maybe( 'male' | 'female' ).
+
+
+-export_type([ name/0, gender/0 ]).
 
 
 % Class-specific attributes:
@@ -79,6 +86,24 @@ getName( State ) ->
 setName( State, Name ) ->
 	NewState = setAttribute( State, name, Name ),
 	wooper:return_state_only( NewState ).
+
+
+% A request not meant to be overridden.
+%
+% (request)
+%
+-spec aRequest( wooper:state(), integer() ) -> request_return( integer() ).
+aRequest( State, Arg ) ->
+		wooper:return_state_result( State, Arg + 5 ).
+
+
+% A request meant to be overridden.
+%
+% (request)
+%
+-spec someRequest( wooper:state(), integer() ) -> request_return( integer() ).
+someRequest( State, Arg ) ->
+		wooper:return_state_result( State, Arg + 7 ).
 
 
 % Returns some mean count.
