@@ -56,10 +56,10 @@
 % Otherwise executeRequest/3 and all reported as unused:
 -include("wooper_execute_exports.hrl").
 
-% To silence wooper_execute_method_with/4 being unused:
+% To silence wooper_execute_method_as/4 being unused:
 -include("wooper_execute_internal_exports.hrl").
 
-% To silence wooper_execute_method_with/4 and all being unused:
+% To silence wooper_execute_method_as/4 and all being unused:
 -include("wooper_serialisation_exports.hrl").
 
 
