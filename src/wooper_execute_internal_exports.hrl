@@ -33,7 +33,7 @@
 %
 -export([
 		 wooper_execute_method/3,
-		 wooper_execute_method_with/4,
+		 wooper_execute_method_as/4,
 
 		 wooper_effective_method_execution/4,
 
