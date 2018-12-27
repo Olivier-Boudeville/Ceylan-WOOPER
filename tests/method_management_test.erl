@@ -45,7 +45,7 @@ run() ->
 
 	TestedPid = class_MethodTester:new_link(),
 
-	test_facilities:display( "Instance ~p created, calling first request.", 
+	test_facilities:display( "Instance ~p created, calling first request.",
 							 [ TestedPid ] ),
 
 	TestedPid ! { getName, [], self() },
