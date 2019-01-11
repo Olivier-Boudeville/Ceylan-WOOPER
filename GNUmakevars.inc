@@ -140,8 +140,8 @@ endif
 # not parse-transformed; typically *used* by parse-transforms, or being a
 # parse-transform themselves)
 #
-# (see the 'Bootstrap section' in GNUmakerules.inc for their special-cased
-# build)
+# (see the 'Bootstrap section' in GNUmakerules-explicit.inc for their
+# special-cased build)
 #
 ifndef BOOTSTRAP_MODULES
 
