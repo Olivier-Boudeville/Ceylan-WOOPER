@@ -347,10 +347,10 @@ execute_request( PassiveInstance, RequestName )
   when is_record( PassiveInstance, ?passive_record )
 	   andalso is_atom( RequestName ) ->
 
-	{ PassiveInstance, { wooper_result, R } } =
+	{ NewPassiveInstance, { wooper_result, R } } =
 		wooper_execute_method( RequestName, _RequestArgs=[], PassiveInstance ),
 
-	{ PassiveInstance, R }.
+	{ NewPassiveInstance, R }.
 
 
 % Sends specified request to specified (active or passive) instance, if active
@@ -377,10 +377,10 @@ execute_request( PassiveInstance, RequestName, RequestArgs )
   when is_record( PassiveInstance, ?passive_record )
 	   andalso is_atom( RequestName ) ->
 
-	{ PassiveInstance, { wooper_result, R } } =
+	{ NewPassiveInstance, { wooper_result, R } } =
 		wooper_execute_method( RequestName, RequestArgs, PassiveInstance ),
 
-	{ PassiveInstance, R }.
+	{ NewPassiveInstance, R }.
 
 
 
@@ -1155,11 +1155,11 @@ execute_oneway( PassiveInstance, OnewayAtom )
    when is_record( PassiveInstance, ?passive_record )
 	   andalso is_atom( OnewayAtom ) ->
 
-	{ PassiveInstance, { wooper_method_returns_void, R } } =
-		wooper_execute_method( OnewayAtom, _OnewayParameters=[],
+	{ NewPassiveInstance, { wooper_method_returns_void, R } } =
+		wooper_execute_oneway( OnewayAtom, _OnewayParameters=[],
 							   PassiveInstance ),
 
-	{ PassiveInstance, R }.
+	{ NewPassiveInstance, R }.
 
 
 
@@ -1172,10 +1172,10 @@ execute_oneway( PassiveInstance, OnewayAtom, OnewayParameters )
    when is_record( PassiveInstance, ?passive_record )
 	   andalso is_atom( OnewayAtom ) andalso is_list( OnewayParameters ) ->
 
-	{ PassiveInstance, { wooper_method_returns_void, R } } =
-		wooper_execute_method( OnewayAtom, OnewayParameters, PassiveInstance ),
+	{ NewPassiveInstance, { wooper_method_returns_void, R } } =
+		wooper_execute_oneway( OnewayAtom, OnewayParameters, PassiveInstance ),
 
-	{ PassiveInstance, R };
+	{ NewPassiveInstance, R };
 
 
 % Promote non-list to list:
