@@ -20,26 +20,21 @@
 % Non-method exported functions:
 -export([ example_fun/0, toString/1 ]).
 
--export([ new_passive/2 ]).
-
 
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
 
 
-
 -attributes([ name, age, gender ]).
 
 
-
 -type name() :: text_utils:ustring().
+-type gender() :: maybe( 'male' | 'female' ).
+-type age() :: non_neg_integer().
 
 
-new_passive( Age, Gender ) ->
-	wooper:construct_passive( ?MODULE, [ Age, Gender ] ).
-
-
-% Constructs a new Creature.
+% Constructs a new child test instance.
+%
 -spec construct( wooper:state(), age(), gender() ) -> wooper:state().
 construct( State, Age, Gender ) ->
 	% No mother class.
