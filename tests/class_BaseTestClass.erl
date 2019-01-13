@@ -35,10 +35,6 @@
 % Determines what are the mother classes of this class (if any):
 -superclasses([]).
 
-% Allows to define WOOPER base variables and methods for that class:
--include("wooper.hrl").
-
-
 -type name() :: text_utils:ustring().
 -type gender() :: maybe( 'male' | 'female' ).
 
@@ -51,6 +47,10 @@
 			  { gender, 'gender()', "Gender of this creature" },
 			  { age, 'integer()', { initial, 0 },
 				"The current age of this creature" } ]).
+
+
+% Allows to define WOOPER base variables and methods for that class:
+-include("wooper.hrl").
 
 
 % Constructs a new instance.
