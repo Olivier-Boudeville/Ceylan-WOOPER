@@ -1147,7 +1147,7 @@ add_v8_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 
 	PassiveNewArity = Arity - 1,
 
-	%trace_utils:debug_fmt( "Adding passive_new/~B.", [ PassiveNewArity ] ),
+	%trace_utils:debug_fmt( "Adding new_passive/~B.", [ PassiveNewArity ] ),
 
 	PassiveNewName = new_passive,
 
@@ -1155,108 +1155,50 @@ add_v8_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 
 	Line = 0,
 
-	% Its definition is, if N=3 (hence SyncNewArity=2):
+	% Its definition is, if N=3 (hence PassiveNewArity=2):
 	% ('S' standing for statement)
 	%
-	% synchronous_new( A, B ) ->
-	% [S1]  CreatorPid = self(),
-	% [S2]  SpawnedPid = spawn( fun() ->
-	%		  wooper:construct_and_run_synchronous( class_Foo, [ A, B ],
-	%                                               CreatorPid )
-	%                       end ),
-	%
-	% [S3]  receive
-	%
-	%		  { spawn_successful, SpawnedPid } ->
-	%			  SpawnedPid
-	%
-	% end.
+	% new_passive( A, B ) ->
+	% [S1] wooper:construct_passive( class_Foo, [ A, B ] ).
 
-
-	S1 = { match, Line, {var,Line,'CreatorPid'},
-		   { call, Line, {atom,Line,self}, [] } },
-
-
-	% For the call to wooper:construct_and_run_synchronous/2:
-	SyncRunCall = get_sync_run_call( Line ),
+	% For the call to wooper:construct_passive/2:
+	PassiveRunCall = { remote, Line, {atom,Line,wooper},
+					   {atom,Line,construct_passive} },
 
 	CallParams = [ {atom,Line,Classname},
-				   ast_generation:list_variables( SyncNewArity ),
-				   {var,Line,'CreatorPid'} ],
+				   ast_generation:list_variables( PassiveNewArity ) ],
 
-	S2 = { match, Line, {var,Line,'SpawnedPid'},
-		   { call, Line, {atom,Line,spawn},
-			[ {'fun',Line,
-			  { clauses,
-				[ {clause,Line,[],[],
-				   [ {call,Line,SyncRunCall,CallParams} ] } ] } } ] } },
+	S1 = { call, Line, PassiveRunCall, CallParams },
 
-	S3 = get_receive( Line ),
+	HeaderParams = ast_generation:get_header_params( PassiveNewArity ),
 
-	HeaderParams = ast_generation:get_header_params( SyncNewArity ),
-
-	SyncNewClause = { clause, Line, HeaderParams, [],
-					  [ S1, S2, S3 ] },
+	PassiveNewClause = { clause, Line, HeaderParams, [], [ S1 ] },
 
 
 	% Then, its spec:
 
-	ConstructParamTypes = get_construction_types( SyncNewArity, Line ),
+	ConstructParamTypes = get_construction_types( PassiveNewArity, Line ),
 
-	PidType = forge_pid_type(),
+	PassiveInstanceType = forge_passive_instance_type( Line ),
 
-	SyncNewSpecForm = { attribute, Line, spec, { SyncNewId,
+	PassiveNewSpecForm = { attribute, Line, spec, { PassiveNewId,
 	   [ { type, Line, 'fun',
 		   [ { type, Line, product, ConstructParamTypes },
-			 _Result=PidType ]
+			 _Result=PassiveInstanceType ]
 		 } ] } },
 
-	SyncNewOpInfo = #function_info{ name=SyncNewName,
-									arity=SyncNewArity,
-									location=DefinitionLoc,
-									line=Line,
-									clauses=[ SyncNewClause ],
-									spec={ DefinitionLoc, SyncNewSpecForm },
-									callback=false,
-									exported=[ ExportLocation ] },
-
-
-	% Next, roughly the same but with a link:
-
-	SyncNewLinkName = synchronous_new_link,
-
-	SyncNewLinkId = { SyncNewLinkName, SyncNewArity },
-
-	S2Link = { match, Line, {var,Line,'SpawnedPid'},
-			   { call, Line, {atom,Line,spawn_link},
-				 [ {'fun',Line,
-					{ clauses,
-					  [ {clause,Line,[],[],
-						 [ {call,Line,SyncRunCall,CallParams} ] } ] } } ] } },
-
-	SyncNewLinkClause = { clause, Line, HeaderParams, [],
-						  [ S1, S2Link, S3 ] },
-
-	SyncNewLinkSpecForm = { attribute, Line, spec, { SyncNewLinkId,
-	   [ { type, Line, 'fun',
-		   [ { type, Line, product, ConstructParamTypes },
-			 _Result=PidType ]
-		 } ] } },
-
-	SyncNewLinkOpInfo = #function_info{
-						   name=SyncNewLinkName,
-						   arity=SyncNewArity,
-						   location=DefinitionLoc,
-						   line=Line,
-						   clauses=[ SyncNewLinkClause ],
-						   spec={ DefinitionLoc, SyncNewLinkSpecForm },
-						   callback=false,
-						   exported=[ ExportLocation ] },
+	PassiveNewOpInfo = #function_info{ name=PassiveNewName,
+									   arity=PassiveNewArity,
+									   location=DefinitionLoc,
+									   line=Line,
+									   clauses=[ PassiveNewClause ],
+									   spec={ DefinitionLoc,
+											  PassiveNewSpecForm },
+									   callback=false,
+									   exported=[ ExportLocation ] },
 
 	% Ensure not already defined (ex: by an unwary user):
-	table:addNewEntries( [ { SyncNewId, SyncNewOpInfo },
-						   { SyncNewLinkId, SyncNewLinkOpInfo } ],
-						 OperatorTable ).
+	table:addNewEntry(  PassiveNewId, PassiveNewOpInfo, OperatorTable ).
 
 
 
@@ -1271,6 +1213,13 @@ forge_pid_type() ->
 forge_node_type( Line ) ->
 	% Corresponds to node():
 	ast_type:forge_remote_type( _ModuleName=net_utils, _TypeName=atom_node_name,
+								_TypeVars=[], Line ).
+
+
+% Returns the form element corresponding to wooper:passive_instance().
+%
+forge_passive_instance_type( Line ) ->
+	ast_type:forge_remote_type( _ModuleName=wooper, _TypeName=passive_instance,
 								_TypeVars=[], Line ).
 
 
