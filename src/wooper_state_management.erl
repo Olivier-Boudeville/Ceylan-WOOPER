@@ -125,8 +125,7 @@ register_attribute( AttributeName, AttributeTable )
 	register_attribute( { AttributeName, Description },
 						AttributeTable );
 
-register_attribute( { AttributeName, Description },
-					AttributeTable ) ->
+register_attribute( { AttributeName, Description }, AttributeTable ) ->
 	Type = 'any()',
 	register_attribute( { AttributeName, Type, Description },
 						AttributeTable );
@@ -175,7 +174,14 @@ check_attribute_name( AttributeName ) ->
 	wooper_internals:raise_error( { invalid_attribute_name, AttributeName } ).
 
 
-% Vetting specified attribute type:
+% Vetting specified attribute type.
+%
+% Note that we would have preferred to support directly a type specification
+% (like: integer()), rather than having to enclose it between single quotes to
+% make it an atom (like: 'integer()'), however unfortunately it is not possible
+% with the Erlang parser: it returns {error,{24,erl_parse,"bad attribute"}} and
+% the actual type information, whose parsing failed, is then lost.
+%
 check_type( Type ) when is_atom( Type ) ->
 	Type;
 
