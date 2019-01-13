@@ -242,7 +242,7 @@ manage_method_terminators( Clauses, FunId ) ->
 	BodyTransformFun = fun
 
 		( _BodyExprs=[], Transforms ) ->
-			{ [], Transforms };
+			{ _Exprs=[], Transforms };
 
 		% Commented-out as the last expression is managed differently (we cannot
 		% recurse easily), but the spirit remains:
@@ -261,11 +261,11 @@ manage_method_terminators( Clauses, FunId ) ->
 			% anonymous function is constrained:
 			%{ [ Expr | SomeFun(T) ] }, Transforms }
 			%
-			% More efficient that list_utils:extract_last_element/2 and then
+			% More efficient than list_utils:extract_last_element/2 and then
 			% recreating the list:
 			[ LastExpr | RevFirstExprs ] = lists:reverse( BodyExprs ),
 
-			{ NewLastExpr, NewTransforms } =
+			{ [ NewLastExpr ], NewTransforms } =
 				ast_expression:transform_expression( LastExpr, Transforms ),
 
 			NewExprs = lists:reverse( [ NewLastExpr | RevFirstExprs ] ),
@@ -299,7 +299,7 @@ manage_method_terminators( Clauses, FunId ) ->
 			NewExpr = { tuple, LineCall, Params },
 			NewTransforms = Transforms#ast_transforms{
 							  transformation_state=request },
-			{ NewExpr, NewTransforms };
+			{ [ NewExpr ], NewTransforms };
 
 
 		% Faulty request arity:
@@ -342,7 +342,7 @@ manage_method_terminators( Clauses, FunId ) ->
 			NewExpr = StateExpr,
 			NewTransforms = Transforms#ast_transforms{
 							  transformation_state=oneway },
-			{ NewExpr, NewTransforms };
+			{ [ NewExpr ], NewTransforms };
 
 
 		% Faulty oneway arity:
@@ -385,7 +385,7 @@ manage_method_terminators( Clauses, FunId ) ->
 			NewExpr = ResultExpr,
 			NewTransforms = Transforms#ast_transforms{
 							  transformation_state=static },
-			{ NewExpr, NewTransforms };
+			{ [ NewExpr ], NewTransforms };
 
 
 		% Faulty static arity:
@@ -413,7 +413,7 @@ manage_method_terminators( Clauses, FunId ) ->
 		% All other calls are to pass through, as they are:
 		( LineCall, FunctionRef, Params, Transforms ) ->
 			SameExpr = { call, LineCall, FunctionRef, Params },
-			{ SameExpr, Transforms }
+			{ [ SameExpr ], Transforms }
 
 	end,
 
@@ -425,8 +425,8 @@ manage_method_terminators( Clauses, FunId ) ->
 
 	%trace_utils:debug_fmt( "transforming now ~p.", [ FunId ] ),
 
-	{ NewClauses, NewTransforms } = ast_clause:transform_function_clauses(
-									  Clauses, Transforms ),
+	{ NewClauses, NewTransforms } =
+		ast_clause:transform_function_clauses( Clauses, Transforms ),
 
 	% Unless found different, a function is a (plain) function:
 	FunNature = case NewTransforms#ast_transforms.transformation_state of
