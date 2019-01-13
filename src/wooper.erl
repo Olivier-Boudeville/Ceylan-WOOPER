@@ -1109,9 +1109,10 @@ construct_passive( Classname, ConstructionParameters ) ->
 
 	trace_utils:debug_fmt( "wooper:construct_passive for class ~s "
 						   "and parameters ~p.~n",
-							[ Classname, ConstructionParameters ] ),
+						   [ Classname, ConstructionParameters ] ),
 
-	check_classname_and_arity( Classname, ConstructionParameters ),
+	cond_utils:if_defined( wooper_debug,
+		   check_classname_and_arity( Classname, ConstructionParameters ) ),
 
 	BlankState = get_blank_state( Classname ),
 
@@ -1154,10 +1155,9 @@ execute_oneway( PassiveInstance, OnewayAtom )
    when is_record( PassiveInstance, ?passive_record )
 	   andalso is_atom( OnewayAtom ) ->
 
-	OnewayParameters = [],
-
 	{ PassiveInstance, { wooper_method_returns_void, R } } =
-		wooper_execute_method( RequestName, _RequestArgs=[], PassiveInstance ),
+		wooper_execute_method( OnewayAtom, _OnewayParameters=[],
+							   PassiveInstance ),
 
 	{ PassiveInstance, R }.
 
