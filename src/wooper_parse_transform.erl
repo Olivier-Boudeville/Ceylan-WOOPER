@@ -269,6 +269,8 @@ apply_wooper_transform( InputAST ) ->
 	%
 	InputModuleInfo = ast_info:extract_module_info_from_ast( InputAST ),
 
+	?display_trace( "Module information extracted." ),
+
 	%ast_utils:display_debug( "Module information, directly as obtained "
 	%				"from Myriad (untransformed): ~s",
 	%				[ ast_info:module_info_to_string( InputModuleInfo ) ] ),
@@ -277,11 +279,16 @@ apply_wooper_transform( InputAST ) ->
 	% (here is the real WOOPER magic)
 	ClassInfo = generate_class_info_from( InputModuleInfo ),
 
+	?display_trace( "Class information generated, "
+					   "transforming it." ),
+
 	% Finally perform WOOPER-specific transformation:
 	NewClassInfo = transform_class_info( ClassInfo ),
 
 	%trace_utils:debug_fmt( "Transformed class information: ~s",
 	%			   [ wooper_info:class_info_to_string( NewClassInfo ) ] ),
+
+	?display_trace( "Generating back module information." ),
 
 	% Then translates back this class information in module information:
 	NewModuleInfo = generate_module_info_from( NewClassInfo ),
@@ -311,7 +318,9 @@ apply_wooper_transform( InputAST ) ->
 	%
 	% (should be done as a final step as WOOPER may of course rely on
 	% Myriad-introducted facilities such as void, maybe, table, etc.)
-	%
+
+	?display_trace( "Performing Myriad-level transformation." ),
+
 	{ TransformedModuleInfo, _MyriadTransforms } =
 		myriad_parse_transform:transform_module_info(
 							  ModuleInfoOfInterest ),
@@ -322,6 +331,8 @@ apply_wooper_transform( InputAST ) ->
 
 	OutputAST = ast_info:recompose_ast_from_module_info(
 				  TransformedModuleInfo ),
+
+	?display_trace( "Recomposing corresponding AST." ),
 
 	%trace_utils:debug_fmt( "WOOPER output AST:~n~p", [ OutputAST ] ),
 
