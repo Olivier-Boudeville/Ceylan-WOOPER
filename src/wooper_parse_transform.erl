@@ -232,6 +232,8 @@ parse_transform( InputAST, _Options ) ->
 
 	%trace_utils:trace_fmt( "WOOPER input AST:~n~p~n", [ InputAST ] ),
 
+	%trace_utils:trace_fmt( "WOOPER options:~n~p~n", [ Options ] ),
+
 	%ast_utils:write_ast_to_file( InputAST, "WOOPER-input-AST.txt" ),
 
 	% In the context of this direct parse transform, the class_info is of no
