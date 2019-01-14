@@ -61,11 +61,19 @@
 % They used to be defined with:
 % '-define( wooper_superclasses, [ class_A, class_B ] ).'.
 %
-% Now they are defined with the optional:
+% Now they are either defined with the optional:
 %
 % '-superclasses( [ class_A, class_B ] ).
 %
 % (which has been finally preferred to '-wooper_superclasses([]).').
+%
+% or with the alternative (optional as well):
+% '-define( superclasses, [ class_A, class_B ] ).'
+%
+% This latter form is less interesting than the former, yet it allows to follow
+% the same convention as '-define( class_attributes, [...])', which is more
+% constrained (due to the parentheses involved in a type declaration, it cannot
+% be a wild attribute like -attributes or -class_attributes ).
 
 
 % Ensures that specified name is a legit class name, and returns it.
@@ -188,8 +196,8 @@ manage_superclasses( ParseAttrTable,
 		  [ ClassesForm ] } ] } ,
 
 	% Where this generated get_superclasses/0 will be defined:
-	DefinitionLoc = ast_info:get_default_definition_function_location(
-					  MarkerTable ),
+	DefinitionLoc =
+		ast_info:get_default_definition_function_location( MarkerTable ),
 
 	% Where this generated get_superclasses/0 will be exported:
 	ExportLoc = ast_info:get_default_export_function_location( MarkerTable ),
