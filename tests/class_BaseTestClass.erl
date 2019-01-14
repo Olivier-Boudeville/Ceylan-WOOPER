@@ -43,14 +43,19 @@
 
 
 % Class-specific attributes:
--attributes([ { name, 'name()', [ const, protected ], "Name of this creature" },
-			  { gender, 'gender()', "Gender of this creature" },
-			  { age, 'integer()', { initial, 0 },
-				"The current age of this creature" } ]).
+-define( attributes,
+		 [ { name, name(), [ const, protected ], "Name of this creature" },
+		   { gender, 'gender()', "Gender of this creature" },
+		   { age, 'integer()', { initial, 0 },
+			 "The current age of this creature" } ]).
+
 
 
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
+
+get_attributes() ->
+	?attributes.
 
 
 % Constructs a new instance.

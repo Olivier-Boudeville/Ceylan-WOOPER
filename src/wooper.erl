@@ -1162,6 +1162,8 @@ execute_oneway( PassiveInstance, OnewayAtom )
 	{ NewPassiveInstance, R }.
 
 
+wooper_execute_oneway(_,_,_) ->
+	ok.
 
 
 % Execution of a oneway on a passive instance.
