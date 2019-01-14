@@ -51,6 +51,31 @@
 -type class_info() :: wooper_info:class_info().
 
 
+% Implementation notes:
+
+% For attributes, we would have liked the user to be able to define them with:
+% -attributes([ { name, name(), [ const, protected ], "Some name" }, ... ] ).
+%
+% However we then end up with {error,{24,erl_parse,"bad attribute"}} (because of
+% name() being interpreted as an unexpected function call), and this user
+% attribute information is lost.
+%
+% The parentheses are necessary for types, as they can be polymorphic, so
+% instead, we can:
+%
+% - either hide the type from the parser, like in:
+% -attributes([ { name, 'name()', [ const, protected ], "Some name" }, ... ] ).
+%
+% - or use the define parse attribute, with is more permissive, for macros:
+% -define( attributes, [ { name, name(), [ const, protected ], "Some name" },
+%                          ... ] ).
+%
+% We finally preferred the latter to the former, even if it somehow is
+% inconsistent with the -superclasses([...]) attribute (as '-attributes(...).'
+% would have thus been expected in turn).
+%
+% One option could be to support: -define(superclasses,[...]).
+
 
 % Processes the class-specific attributes.
 %
@@ -179,8 +204,9 @@ check_attribute_name( AttributeName ) ->
 % Note that we would have preferred to support directly a type specification
 % (like: integer()), rather than having to enclose it between single quotes to
 % make it an atom (like: 'integer()'), however unfortunately it is not possible
-% with the Erlang parser: it returns {error,{24,erl_parse,"bad attribute"}} and
-% the actual type information, whose parsing failed, is then lost.
+% with the Erlang parser: it returns (only) {error,{24,erl_parse,"bad
+% attribute"}}, and the actual type information, whose parsing failed, is then
+% entirely lost.
 %
 check_type( Type ) when is_atom( Type ) ->
 	Type;
