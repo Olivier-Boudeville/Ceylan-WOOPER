@@ -1,4 +1,4 @@
-% Copyright (C) 2014-2018 Olivier Boudeville
+% Copyright (C) 2014-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -45,7 +45,7 @@ perform_direct_ast_operations( TargetSourceFile ) ->
 
 	BaseAST = ast_utils:erl_to_ast( TargetSourceFile ),
 
-	trace_utils:info_fmt( "Base AST:~n~p", [ BaseAST ] ),
+	%trace_utils:info_fmt( "Base AST:~n~p", [ BaseAST ] ),
 
 	BaseModuleInfo = ast_info:extract_module_info_from_ast( BaseAST ),
 
@@ -57,9 +57,11 @@ perform_direct_ast_operations( TargetSourceFile ) ->
 	trace_utils:info_fmt( "Final module info: ~s~n",
 			   [ ast_info:module_info_to_string( FinalModuleInfo ) ] ),
 
-	FinalAST = ast_info:recompose_ast_from_module_info( FinalModuleInfo ),
+	_FinalAST = ast_info:recompose_ast_from_module_info( FinalModuleInfo ),
 
-	trace_utils:info_fmt( "Final AST:~n~p", [ FinalAST ] ).
+	%trace_utils:info_fmt( "Final AST:~n~p", [ FinalAST ] ),
+
+	ok.
 
 
 
@@ -73,10 +75,10 @@ run() ->
 
 	PreprocessorOptions = [ { includes, [ "../src" ] } ],
 
-	TransformedAST = wooper_parse_transform:run_standalone( TargetSourceFile,
+	_TransformedAST = wooper_parse_transform:run_standalone( TargetSourceFile,
 													PreprocessorOptions ),
 
-	trace_utils:info_fmt( "Transformed AST:~n~p", [ TransformedAST ] ),
+	%trace_utils:info_fmt( "Transformed AST:~n~p", [ TransformedAST ] ),
 
 	%ast_utils:write_ast_to_file( TransformedAST, TargetSourceFile ++ ".ast" ),
 

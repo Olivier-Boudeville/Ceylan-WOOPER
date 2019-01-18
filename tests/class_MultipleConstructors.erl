@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER examples.
 %
@@ -14,19 +14,16 @@
 
 
 % Determines what are the mother classes of this class (if any):
--superclasses([]).
+-define( superclasses, [] ).
 
+-define( class_attributes, [ name, gender ] ).
 
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
 
 
 -type name() :: text_utils:ustring().
-
 -type gender() :: atom().
-
-
--attributes([ name, gender ]).
 
 
 % Constructs a new instance from two construction parameters.

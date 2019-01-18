@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER examples.
 %
@@ -10,8 +10,12 @@
 
 
 % Determines what are the mother classes of this class (if any):
--superclasses([ class_Mammal, class_OvoviviparousBeing ] ).
+-define( superclasses, [ class_Mammal, class_OvoviviparousBeing ] ).
 
+
+-define( class_attributes, [ { nozzle_color, "Color of the nozzle" },
+							 alternate_names,
+							 { cat_pid, pid(), "PID of a cat" } ] ).
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -22,9 +26,6 @@
 -include("ecosystem_types.hrl").
 
 
--attributes([ { nozzle_color, "Color of the nozzle" },
-			  alternate_names,
-			  { cat_pid, 'pid()', "PID of a cat" } ]).
 
 
 % Constructs a new Platypus.
@@ -39,26 +40,16 @@ construct( State, Age, Gender, FurColor, NozzleColor ) ->
 	% To test onWOOPERExitReceived/3 (comment to check that the test fails):
 	process_flag( trap_exit, true ),
 
-	OvoviviparousMammalState = class_OvoviviparousBeing:construct(
-		MammalState ),
+	OvoviviparousMammalState =
+		class_OvoviviparousBeing:construct(	MammalState ),
 
-	io:format( "Synchronous time-out is ~p.~n", [ ?synchronous_time_out] ),
+	io:format( "Synchronous time-out is ~p.~n", [ ?synchronous_time_out ] ),
 
 	% Then the class-specific attributes:
 	setAttributes( OvoviviparousMammalState, [
 		  { nozzle_color, NozzleColor },
 		  { alternate_names, [ hector, edgar, roger, sean ] },
 		  { cat_pid, undefined } ] ).
-
-
-
-% This useless destructor overriding was made to silence Dialyzer (which is not
-% able to determine that this function will never be called, as WOOPER handles
-% it at runtime):
-%
--spec destruct( wooper:state() ) -> wooper:state().
-destruct( State ) ->
-	State.
 
 
 
@@ -144,16 +135,17 @@ popFirstAlternateName( State ) ->
 %
 % (oneway)
 %
+-spec testCreationDeletion( wooper:state() ) -> oneway_return().
 testCreationDeletion( State ) ->
 
 	% Initially do-nothing:
-	FirstState = wooper:delete_synchronously_any_instance_referenced_in( [],
-																  State ),
+	FirstState =
+		wooper:delete_synchronously_any_instance_referenced_in( [], State ),
 
 	CatPid = class_Cat:synchronous_new_link( _Age=1, _Gender=male,
 								_FurColor=pink, _WhiskerColor=black ),
 
-	io:format( "Cat ~p created from platypus.~n", [ CatPid ] ),
+	io:format( "Cat ~p just created from platypus.~n", [ CatPid ] ),
 
 	CatState = setAttribute( FirstState, cat_pid, CatPid ),
 
@@ -189,6 +181,7 @@ onWOOPERExitReceived( State, Pid, ExitType ) ->
 	%							badarith}},
 	% [...]"
 
-	io:format( "Received exit message '~p' from ~w.~n", [ ExitType, Pid ] ),
+	trace_utils:debug_fmt( "Received exit message '~p' from ~w.",
+						   [ ExitType, Pid ] ),
 
 	wooper:return_state_only( State ).

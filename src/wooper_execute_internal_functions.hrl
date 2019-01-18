@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -150,7 +150,8 @@
 
 
 % Section for wooper_execute_method/3.
-
+%
+% Note that Parameters must be already a list (no promotion of single elements).
 
 
 -ifdef(wooper_debug).
@@ -161,7 +162,8 @@ wooper_execute_method( MethodAtom, Parameters, State )
 	   andalso is_record( State, state_holder ) ->
 
 	%trace_utils:debug_fmt( "wooper_execute_method: looking up ~s(~w) "
-	%                       "from ~s.", [ MethodAtom, Parameters, ?MODULE ] ),
+	%					   "from ~s (A).",
+	%					   [ MethodAtom, Parameters, ?MODULE ] ),
 
 	% +1: take into account the State additional parameter:
 	MethodArity = length( Parameters ) + 1,
@@ -230,7 +232,8 @@ wooper_execute_method( MethodAtom, Parameters, State )
 wooper_execute_method( MethodAtom, Parameters, State ) ->
 
 	%trace_utils:debug_fmt( "wooper_execute_method: looking up ~s(~w) "
-	%                       "from ~s.", [ MethodAtom, Parameters, ?MODULE ] ),
+	%					   "from ~s (B).",
+	%					   [ MethodAtom, Parameters, ?MODULE ] ),
 
 	% +1: take into account the State additional parameter:
 	MethodArity = length( Parameters ) + 1,
@@ -240,7 +243,7 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 		{ value, LocatedModule } ->
 
 			%trace_utils:debug_fmt( "wooper_execute_method: executing ~s:~s(~w)"
-			%                       " from ~s.",
+			%   " from ~s.",
 			%   [ ?MODULE, MethodAtom, Parameters, LocatedModule ] ),
 
 			wooper_effective_method_execution( LocatedModule, MethodAtom,
@@ -420,7 +423,7 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 								   Parameters ) ->
 
 	%trace_utils:debug_fmt( "WOOPER: effective execution of ~p:~p.~n",
-	%			[ SelectedModule, MethodAtom ] ),
+	%					   [ SelectedModule, MethodAtom ] ),
 
 	case apply( SelectedModule, MethodAtom, [ State | Parameters ] ) of
 

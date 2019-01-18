@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -56,14 +56,9 @@
 
 
 
-% Description of the class name:
--type class_entry() :: maybe( { wooper:classname(), ast_info:located_form() } ).
-
-
-% Description of the superclasses:
--type superclasses_entry() :: { [ wooper:classname() ],
-								maybe( ast_info:located_form() ) }.
-
+% Note: method information do not have an 'exported' field like functions, as
+% they must be exported in all cases anyway (ex: to be callable for child
+% classes).
 
 
 
@@ -76,6 +71,43 @@
 % ast_info.hrl.
 %
 -record( request_info, {
+
+		   % The name of that request:
+		   name = undefined :: wooper:request_name(),
+
+
+		   % The arity of that request:
+		   arity = undefined :: wooper:method_arity(),
+
+
+		   % Qualifiers applying to this request:
+		   qualifiers = [] :: wooper:method_qualifiers(),
+
+
+		   % Corresponds to (our view of) the location of the full form for the
+		   % definition (first clause) of this request (not of the spec):
+		   %
+		   location = undefined :: maybe( ast_info:location() ),
+
+
+		   % Corresponds to the line of the first defined clause (in its source
+		   % file):
+		   %
+		   % (this information is not redundant with the previous field, as they
+		   % are different types of locations)
+		   %
+		   line = undefined :: maybe( ast_base:line() ),
+
+
+		   % Request actual definition, a (non-located) list of the abstract
+		   % forms of its clauses:
+		   %
+		   clauses = [] :: [ meta_utils:clause_def() ],
+
+
+		   % The type specification (if any) of that request, as an abstract
+		   % form:
+		   spec = undefined :: maybe( wooper_info:located_method_spec() )
 
 } ).
 
@@ -93,14 +125,16 @@
 % ast_info.hrl.
 %
 -record( oneway_info, {
-
-
 		   % The name of that oneway:
 		   name = undefined :: wooper:oneway_name(),
 
 
 		   % The arity of that oneway:
 		   arity = undefined :: wooper:method_arity(),
+
+
+		   % Qualifiers applying to this oneway:
+		   qualifiers = [] :: wooper:method_qualifiers(),
 
 
 		   % Corresponds to (our view of) the location of the full form for the
@@ -126,17 +160,8 @@
 
 		   % The type specification (if any) of that oneway, as an abstract
 		   % form:
-		   spec = undefined :: maybe( wooper_info:located_method_spec() ),
+		   spec = undefined :: maybe( wooper_info:located_method_spec() )
 
-
-		   % Tells whether this oneway has been exported, as a (possibly
-		   % empty) list of the location(s) of its actual export(s), knowing
-		   % that a oneway can be exported more than once or never.
-		   %
-		   % Note: must be kept in synch with the oneway_exports field of the
-		   % class_info record.
-		   %
-		   exported = [] :: [ ast_info:location() ]
 
 } ).
 
@@ -155,10 +180,58 @@
 %
 -record( static_info, {
 
+		   % The name of that static method:
+		   name = undefined :: wooper:static_name(),
+
+
+		   % The arity of that static method:
+		   arity = undefined :: wooper:method_arity(),
+
+
+		   % Qualifiers applying to this static method:
+		   qualifiers = [] :: wooper:method_qualifiers(),
+
+
+		   % Corresponds to (our view of) the location of the full form for the
+		   % definition (first clause) of this static (not of the spec):
+		   %
+		   location = undefined :: maybe( ast_info:location() ),
+
+
+		   % Corresponds to the line of the first defined clause (in its source
+		   % file):
+		   %
+		   % (this information is not redundant with the previous field, as they
+		   % are different types of locations)
+		   %
+		   line = undefined :: maybe( ast_base:line() ),
+
+
+		   % Static actual definition, a (non-located) list of the abstract
+		   % forms of its clauses:
+		   %
+		   clauses = [] :: [ meta_utils:clause_def() ],
+
+
+		   % The type specification (if any) of that static, as an abstract
+		   % form:
+		   spec = undefined :: maybe( wooper_info:located_method_spec() )
+
 } ).
 
 
 -type static_info() :: #static_info{}.
+
+
+
+% Description of the class name:
+-type class_entry() :: maybe( { wooper:classname(), ast_info:located_form() } ).
+
+
+% Description of the superclasses:
+-type superclasses_entry() :: { [ wooper:classname() ],
+								maybe( ast_info:located_form() ) }.
+
 
 
 
@@ -432,7 +505,7 @@
 
 
 % Uncomment to enable WOOPER-level traces:
--define( enable_wooper_traces, ).
+%-define( enable_wooper_traces, ).
 
 
 -ifdef(enable_wooper_traces).

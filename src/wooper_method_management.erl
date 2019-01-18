@@ -1,4 +1,4 @@
-% Copyright (C) 2014-2018 Olivier Boudeville
+% Copyright (C) 2014-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -32,7 +32,7 @@
 -module(wooper_method_management).
 
 
--export([ manage_methods/1, ensure_exported/2 ]).
+-export([ manage_methods/1, ensure_exported/2, methods_to_functions/5 ]).
 
 
 % For the function_info record:
@@ -56,9 +56,14 @@
 
 -type function_info() :: ast_info:function_info().
 -type marker_table() :: ast_info:section_marker_table().
+-type location() :: ast_base:form_location().
 -type function_table() :: ast_info:function_table().
+
 -type compose_pair() :: wooper_parse_transform:compose_pair().
 
+-type request_table() :: wooper_info:request_info().
+-type oneway_table() :: wooper_info:oneway_info().
+-type static_table() :: wooper_info:static_info().
 
 
 % Implementation notes:
@@ -146,15 +151,15 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo } | T ],
 
 	%trace_utils:debug_fmt( "sorting ~p", [ FunId ] ),
 
-
 	%trace_utils:debug_fmt( "Examining Erlang function ~s/~B",
 	%                       [ FunName, Arity ] ),
 
 	OriginalClauses = FunInfo#function_info.clauses,
 
 	% We used to infer the function nature based on its first clause, and then
-	% to make a custom full traversal to transform method terminators. Now we
-	% reuse the Myriad ast_transforms instead, and perform everything
+	% to make a custom full traversal to transform method terminators.
+	%
+	% Now we reuse the Myriad ast_transforms instead, and perform everything
 	% (guessing/checking/transforming) in one pass:
 	%
 	{ NewClauses, FunNature } =
@@ -172,19 +177,22 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo } | T ],
 								OnewayTable, StaticTable );
 
 		request ->
-			NewRequestTable = table:addNewEntry( FunId, NewFunInfo,
+			RequestInfo = function_to_request_info( NewFunInfo ),
+			NewRequestTable = table:addNewEntry( FunId, RequestInfo,
 												 RequestTable ),
 			sort_out_functions( T, FunctionTable, NewRequestTable,
 								OnewayTable, StaticTable );
 
 		oneway ->
-			NewOnewayTable = table:addNewEntry( FunId, NewFunInfo,
+			OnewayInfo = function_to_oneway_info( NewFunInfo ),
+			NewOnewayTable = table:addNewEntry( FunId, OnewayInfo,
 												OnewayTable ),
 			sort_out_functions( T, FunctionTable, RequestTable,
 								NewOnewayTable, StaticTable );
 
 		static ->
-			NewStaticTable = table:addNewEntry( FunId, NewFunInfo,
+			StaticInfo = function_to_static_info( NewFunInfo ),
+			NewStaticTable = table:addNewEntry( FunId, StaticInfo,
 												StaticTable ),
 			sort_out_functions( T, FunctionTable, RequestTable,
 								OnewayTable, NewStaticTable )
@@ -484,3 +492,205 @@ ensure_exported_at( FunInfo=#function_info{ exported=[] }, ExportLoc ) ->
 
 ensure_exported_at( FunInfo, _ExportLoc ) ->
 	FunInfo.
+
+
+
+
+% Section for the conversion of information records.
+
+
+% Converts specified (Myriad-level) function information into a (WOOPER-level)
+% request information.
+%
+-spec function_to_request_info( function_info() ) -> request_info().
+function_to_request_info( #function_info{ name=Name,
+										  arity=Arity,
+										  location=Loc,
+										  line=Line,
+										  clauses=Clauses,
+										  spec=Spec,
+										  callback=false,
+										  exported=[] } ) ->
+	#request_info{ name=Name,
+				   arity=Arity,
+				   %qualifiers=[]
+				   location=Loc,
+				   line=Line,
+				   clauses=Clauses,
+				   spec=Spec };
+
+function_to_request_info( Other ) ->
+	throw( { unexpected_function_info, Other, request } ).
+
+
+
+% Converts specified (WOOPER-level) request information into a (Myriad-level)
+% function information.
+%
+-spec request_to_function_info( request_info(), location() ) -> function_info().
+request_to_function_info( #request_info{ name=Name,
+										 arity=Arity,
+										 % Unused: qualifiers
+										 location=Loc,
+										 line=Line,
+										 clauses=Clauses,
+										 spec=Spec },
+						  Location ) ->
+	#function_info{ name=Name,
+					arity=Arity,
+					location=Loc,
+					line=Line,
+					clauses=Clauses,
+					spec=Spec,
+					callback=false,
+					exported=[ Location ] };
+
+request_to_function_info( Other, _Location ) ->
+	throw( { unexpected_request_info, Other, request } ).
+
+
+
+% Converts specified (Myriad-level) function information into a (WOOPER-level)
+% oneway information.
+%
+-spec function_to_oneway_info( function_info() ) -> oneway_info().
+function_to_oneway_info( #function_info{ name=Name,
+										  arity=Arity,
+										  location=Loc,
+										  line=Line,
+										  clauses=Clauses,
+										  spec=Spec,
+										  callback=false,
+										  exported=[] } ) ->
+	#oneway_info{ name=Name,
+				   arity=Arity,
+				   %qualifiers=[]
+				   location=Loc,
+				   line=Line,
+				   clauses=Clauses,
+				   spec=Spec };
+
+function_to_oneway_info( Other ) ->
+	throw( { unexpected_function_info, Other, oneway } ).
+
+
+
+% Converts specified (WOOPER-level) oneway information into a (Myriad-level)
+% function information.
+%
+-spec oneway_to_function_info( oneway_info(), location() ) -> function_info().
+oneway_to_function_info( #oneway_info{ name=Name,
+										 arity=Arity,
+										 % Unused: qualifiers
+										 location=Loc,
+										 line=Line,
+										 clauses=Clauses,
+										 spec=Spec },
+						 Location ) ->
+	#function_info{ name=Name,
+					arity=Arity,
+					location=Loc,
+					line=Line,
+					clauses=Clauses,
+					spec=Spec,
+					callback=false,
+					exported=[ Location ] };
+
+oneway_to_function_info( Other, _Location ) ->
+	throw( { unexpected_oneway_info, Other, oneway } ).
+
+
+
+% Converts specified (Myriad-level) function information into a (WOOPER-level)
+% static information.
+%
+-spec function_to_static_info( function_info() ) -> static_info().
+function_to_static_info( #function_info{ name=Name,
+										 arity=Arity,
+										 location=Loc,
+										 line=Line,
+										 clauses=Clauses,
+										 spec=Spec,
+										 callback=false,
+										 exported=[] } ) ->
+	#static_info{ name=Name,
+				   arity=Arity,
+				   %qualifiers=[]
+				   location=Loc,
+				   line=Line,
+				   clauses=Clauses,
+				   spec=Spec };
+
+function_to_static_info( Other ) ->
+	throw( { unexpected_function_info, Other, static } ).
+
+
+
+% Converts specified (WOOPER-level) static information into a (Myriad-level)
+% function information.
+%
+-spec static_to_function_info( static_info(), location() ) ->
+									 function_info().
+static_to_function_info( #static_info{ name=Name,
+									   arity=Arity,
+									   % Unused: qualifiers
+									   location=Loc,
+									   line=Line,
+									   clauses=Clauses,
+									   spec=Spec },
+						 Location ) ->
+	#function_info{ name=Name,
+					arity=Arity,
+					location=Loc,
+					line=Line,
+					clauses=Clauses,
+					spec=Spec,
+					callback=false,
+					exported=[ Location ] };
+
+static_to_function_info( Other, _Location ) ->
+	throw( { unexpected_static_info, Other, static } ).
+
+
+
+% Transforms the methods in the specified tables into functions, and adds them
+% in specified function table.
+%
+-spec methods_to_functions( request_table(), oneway_table(), static_table(),
+							function_table(), marker_table() ) ->
+								  function_table().
+methods_to_functions( RequestTable, OnewayTable, StaticTable,
+					  InitFunctionTable, MarkerTable ) ->
+
+	% Methods shall not be exported, but their corresponding functions surely
+	% should, otherwise they could be reported as unused:
+	%
+	ExportLoc = ast_info:get_default_export_function_location( MarkerTable ),
+
+	RequestPairs = table:enumerate( RequestTable ),
+
+	RequestAsFunPairs = [
+		 { ReqId, request_to_function_info( ReqInfo, ExportLoc ) }
+						  || { ReqId, ReqInfo } <- RequestPairs ],
+
+	WithRequestsFunTable = table:addNewEntries( RequestAsFunPairs,
+												InitFunctionTable ),
+
+
+	OnewayPairs = table:enumerate( OnewayTable ),
+
+	OnewayAsFunPairs = [
+		 { OnwId, oneway_to_function_info( OnwInfo, ExportLoc ) }
+						  || { OnwId, OnwInfo } <- OnewayPairs ],
+
+	WithOnewaysFunTable = table:addNewEntries( OnewayAsFunPairs,
+											   WithRequestsFunTable ),
+
+
+	StaticPairs = table:enumerate( StaticTable ),
+
+	StaticAsFunPairs = [
+		 { StId, static_to_function_info( StInfo, ExportLoc ) }
+						  || { StId, StInfo } <- StaticPairs ],
+
+	table:addNewEntries( StaticAsFunPairs, WithOnewaysFunTable ).

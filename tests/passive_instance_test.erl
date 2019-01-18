@@ -1,4 +1,4 @@
-% Copyright (C) 2014-2018 Olivier Boudeville
+% Copyright (C) 2014-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -55,10 +55,8 @@ run() ->
 
 	NewName = "John",
 
-	FirstOnwTestInstance = wooper:execute_oneway( FirstReqTestInstance, setName,
-												  [ NewName ] ),
-
-	io:format( "XXX ~p", [ FirstOnwTestInstance ] ),
+	FirstOnwTestInstance =
+		wooper:execute_oneway( FirstReqTestInstance, setName, [ NewName ] ),
 
 	test_facilities:display( "Calling second request." ),
 
@@ -73,8 +71,8 @@ run() ->
 
 	Expected = class_ChildTestClass:get_static_info( A, B ),
 
-	test_facilities:display( "Test success." ),
-
 	wooper:delete_passive( SecondReqTestInstance ),
+
+	test_facilities:display( "Test success." ),
 
 	test_facilities:stop().

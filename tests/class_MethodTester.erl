@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER examples.
 %
@@ -13,7 +13,9 @@
 
 
 % Determines what are the mother classes of this class (if any):
--superclasses([]).
+-define( superclasses, [] ).
+
+-define( class_attributes, [ name ] ).
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -21,8 +23,6 @@
 
 
 -type name() :: text_utils:ustring().
-
--attributes([ name ]).
 
 
 % Simplest possible signature:
@@ -79,6 +79,6 @@ setName( State, Name ) ->
 -spec get_static_info( integer(), integer() ) -> integer().
 get_static_info( A, B ) ->
 
-	trace_utils:trace( "get_static_info/2" ),
+	trace_utils:trace( "get_static_info/2 called" ),
 
 	wooper:return_static( A + B + 10 ).

@@ -1,4 +1,4 @@
-% Copyright (C) 2012-2018 Olivier Boudeville
+% Copyright (C) 2012-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -50,8 +50,6 @@
 % For attribute_name/0:
 -include("wooper_types_exports.hrl").
 
-% To silence getClassname/1, get_superclasses/0 not being used:
--include("wooper_classes_exports.hrl").
 
 % Otherwise executeRequest/3 and all reported as unused:
 -include("wooper_execute_exports.hrl").
@@ -130,6 +128,11 @@
 							| ?term_restoration_marker.
 
 
+% Exported as wooper_serialisation_functions.hrl has to be included, yet this
+% leads to have the function spotted as unused:
+%
+-export([ serialise/3 ]).
+
 
 % Now, function definitions:
 
@@ -147,11 +150,6 @@
 
 % For wooper_execute_method/3:
 -include("wooper_execute_internal_functions.hrl").
-
-
-% For getSuperclasses/1:
--include("wooper_classes_functions.hrl").
-
 
 
 

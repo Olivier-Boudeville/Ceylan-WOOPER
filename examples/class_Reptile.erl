@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER examples.
 %
@@ -11,36 +11,41 @@
 
 
 % Determines what are the mother classes of this class (if any):
--superclasses([ class_Creature ]).
+-define( superclasses, [ class_Creature ] ).
 
+
+-define( class_attributes, [] ).
 
 % With this class, we will test serialisation hooks:
--define(wooper_serialisation_hooks,).
+-define( wooper_serialisation_hooks, ).
 
 
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
 
 
+% Import common types without module prefix:
+-include("ecosystem_types.hrl").
+
 
 % Triggered just before serialisation.
 %
 -spec pre_serialise_hook( wooper:state() ) -> wooper:state().
 pre_serialise_hook( State ) ->
-	io:format( "Pre-serialising a reptile!~n" ),
+	trace_utils:trace( "Pre-serialising a reptile!" ),
 	State.
 
 
 
 % Triggered just after serialisation.
 %
-% (using WOOPER default hook implementation augmented of an io:format)
+% (using WOOPER default hook implementation augmented of an trace_utils:trace)
 %
 -spec post_serialise_hook( classname(),
 						   wooper_serialisation:term_serialisation(),
 						   wooper:state() ) -> term().
 post_serialise_hook( Classname, Entries, _State ) ->
-	io:format( "Post-serialising a reptile!~n" ),
+	trace_utils:trace( "Post-serialising a reptile!" ),
 	{ Classname, Entries }.
 
 
@@ -50,7 +55,7 @@ post_serialise_hook( Classname, Entries, _State ) ->
 -spec pre_deserialise_hook( term(), basic_utils:user_data() ) ->
 							wooper_serialisation:term_serialisation().
 pre_deserialise_hook( _SerialisedEntries={ _Classname, Entries }, _UserData ) ->
-	io:format( "Pre-deserialising a reptile!~n" ),
+	trace_utils:trace( "Pre-deserialising a reptile!" ),
 	Entries.
 
 
@@ -59,16 +64,11 @@ pre_deserialise_hook( _SerialisedEntries={ _Classname, Entries }, _UserData ) ->
 %
 -spec post_deserialise_hook( wooper:state() ) -> wooper:state().
 post_deserialise_hook( State ) ->
-	io:format( "Post-deserialising a reptile!~n" ),
+	trace_utils:trace( "Post-deserialising a reptile!" ),
 	State.
 
 
 
-% Import common types without module prefix:
--include("ecosystem_types.hrl").
-
-
--attributes([]).
 
 
 % Constructs a new Reptile.
@@ -82,7 +82,7 @@ construct( State, Age, Gender ) ->
 % Overridden destructor
 -spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
-	io:format( "Deleting a Reptile." ),
+	trace_utils:trace( "Deleting a Reptile." ),
 	State.
 	% To test destructor checking use instead:
 	%an_unexpected_final_state.

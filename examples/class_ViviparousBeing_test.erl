@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER examples.
 %
@@ -30,7 +30,7 @@ run( IsDebug ) ->
 	test_facilities:start( ?MODULE ),
 
 	test_facilities:display( "Debug mode: ~s.",
-		[ class_ViviparousBeing:is_wooper_debug() ] ),
+							 [ class_ViviparousBeing:is_wooper_debug() ] ),
 
 	MyV = class_ViviparousBeing:new_link(),
 
@@ -56,7 +56,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedSuperclasses } ->
 			test_facilities:fail( "wrong superclasses: ~p",
-				[ UnexpectedSuperclasses ] )
+								  [ UnexpectedSuperclasses ] )
 
 	end,
 
@@ -70,7 +70,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedMeanCount } ->
 			test_facilities:fail( "wrong mean children count: ~p",
-				[ UnexpectedMeanCount ] )
+								  [ UnexpectedMeanCount ] )
 
 
 	end,
@@ -84,7 +84,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedFirstCount } ->
 			test_facilities:fail( "wrong first children count: ~p",
-				[ UnexpectedFirstCount ] )
+								  [ UnexpectedFirstCount ] )
 
 	end,
 

@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER examples.
 %
@@ -14,7 +14,9 @@
 
 
 % Determines what are the mother classes of this class (if any):
--superclasses([ class_BaseTestClass ]).
+-define( superclasses, [ class_BaseTestClass ] ).
+
+-define( class_attributes, [ name, age, { gender, "Some description" } ] ).
 
 
 % Non-method exported functions:
@@ -25,12 +27,10 @@
 -include("wooper.hrl").
 
 
--attributes([ name, age, gender ]).
-
-
 -type name() :: text_utils:ustring().
 -type gender() :: maybe( 'male' | 'female' ).
 -type age() :: non_neg_integer().
+
 
 
 % Constructs a new child test instance.
@@ -42,15 +42,10 @@ construct( State, Age, Gender ) ->
 				   [ { name, "Bob" }, { age, Age }, { gender, Gender } ] ).
 
 
-
-% This useless destructor overriding was made to silence Dialyzer (which is not
-% able to determine that this function will never be called, as WOOPER performs
-% the appropriate test is made beforehand):
-%
 % Allows to test also the automatic destructor generation:
 %-spec destruct( wooper:state() ) -> wooper:state().
-destruct( State ) ->
-	State.
+%destruct( State ) ->
+%	State.
 
 
 
@@ -183,6 +178,16 @@ side_effect_function( State ) ->
 someRequest( State, _Arg ) ->
 		wooper:return_state_result( State, 50 ).
 
+
+
+% Returns a value established in a static context.
+%
+-spec get_static_info( integer(), integer() ) -> integer().
+get_static_info( A, B ) ->
+
+	trace_utils:trace( "get_static_info/2 called" ),
+
+	wooper:return_static( A + B + 10 ).
 
 
 

@@ -1,4 +1,4 @@
-% Copyright (C) 2014-2018 Olivier Boudeville
+% Copyright (C) 2014-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -137,6 +137,10 @@ run() ->
 	V7LinkPid = TestedClass:remote_synchronous_timed_new_link( TargetNode,
 														   V7LinkName, male ),
 	test_instance( V7LinkPid, V7LinkName ),
+
+	V8Name = "created with new_passive",
+	_V8 = TestedClass:new_passive( V8Name, female ),
+	test_facilities:display( " - '~s' created adequately", [ V8Name ] ),
 
 	wooper:delete_synchronously_instances( [ V1Pid, V1LinkPid,
 		V2Pid, V2LinkPid, V3Pid, V3LinkPid, V4Pid, V4LinkPid,

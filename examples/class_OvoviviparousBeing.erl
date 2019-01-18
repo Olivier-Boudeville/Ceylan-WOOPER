@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER examples.
 %
@@ -11,7 +11,11 @@
 
 
 % Determines what are the mother classes of this class (if any):
--superclasses([]).
+-define( superclasses, [] ).
+
+
+-define( class_attributes, [ { eggs_count, "A number of eggs" } ] ).
+
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -22,15 +26,11 @@
 -include("ecosystem_types.hrl").
 
 
--attributes([ eggs_count ]).
-
 
 % Constructs a new Ovoviviparous being (parameter-less constructor).
 -spec construct( wooper:state() ) -> wooper:state() .
 construct( State ) ->
-
 	% In order to test the crash of a constructor: non_existing:crash(),
-
 	setAttribute( State, eggs_count, 0 ).
 
 

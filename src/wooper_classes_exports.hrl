@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -30,7 +30,9 @@
 
 % These methods/functions are defined for all classes:
 %
--export([ getClassname/1, getSuperclasses/1 ]).
+% Not exported anymore, since no method is expected to be specifically exported.
+%
+%-export([ getClassname/1, getSuperclasses/1 ]).
 
 
 
@@ -48,4 +50,3 @@
 % Note that, in this version of WOOPER, the method qualifiers (ex: regarding
 % access rights, i.e. public, protected or private) are mere documentation
 % elements (they are not checked nor enforced).
-

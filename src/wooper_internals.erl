@@ -1,4 +1,4 @@
-% Copyright (C) 2018-2018 Olivier Boudeville
+% Copyright (C) 2018-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -32,7 +32,7 @@
 -module(wooper_internals).
 
 
--export([ raise_error/1, raise_error/2 ]).
+-export([ raise_error/1, raise_error/2, notify_warning/1, notify_warning/2 ]).
 
 
 % To better report errors:
@@ -55,3 +55,26 @@ raise_error( ErrorTerm ) ->
 -spec raise_error( term(), ast_base:form_context() ) -> no_return().
 raise_error( ErrorTerm, Context ) ->
 	ast_utils:raise_error( ErrorTerm, Context, ?origin_layer ).
+
+
+
+% Notifies a (compile-time, rather ad hoc) warning, with no specific context,
+% when applying this parse transform.
+%
+% Does not stop the build.
+%
+-spec notify_warning( [ term() ] ) -> basic_utils:void().
+notify_warning( Elements ) ->
+	notify_warning( Elements, _Context=undefined ).
+
+
+
+% Notifies a (compile-time, rather ad hoc) warning, with specified context, when
+% applying this parse transform.
+%
+% Does not stop the build.
+%
+-spec notify_warning( [ term() ], ast_base:form_context() ) ->
+							basic_utils:void().
+notify_warning( Elements, Context ) ->
+	ast_utils:notify_warning( Elements, Context ).

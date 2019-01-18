@@ -1,4 +1,4 @@
-% Copyright (C) 2014-2018 Olivier Boudeville
+% Copyright (C) 2014-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -33,29 +33,28 @@
 
 
 % Determines what are the mother classes of this class (if any):
--superclasses([]).
+% (one of these two lines may or may not be uncommented)
+%-superclasses([]).
+%-define( superclasses, [] ).
+
 
 -type name() :: text_utils:ustring().
 -type gender() :: maybe( 'male' | 'female' ).
-
 
 -export_type([ name/0, gender/0 ]).
 
 
 % Class-specific attributes:
--define( attributes,
+-define( class_attributes,
 		 [ { name, name(), [ const, protected ], "Name of this creature" },
-		   { gender, 'gender()', "Gender of this creature" },
-		   { age, 'integer()', { initial, 0 },
+		   { gender, gender(), "Gender of this creature" },
+		   { age, integer(), { initial, 0 },
 			 "The current age of this creature" } ]).
 
 
 
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
-
-get_attributes() ->
-	?attributes.
 
 
 % Constructs a new instance.
@@ -99,7 +98,7 @@ setName( State, Name ) ->
 %
 -spec aRequest( wooper:state(), integer() ) -> request_return( integer() ).
 aRequest( State, Arg ) ->
-		wooper:return_state_result( State, Arg + 5 ).
+	wooper:return_state_result( State, Arg + 5 ).
 
 
 % A request meant to be overridden.
@@ -108,7 +107,7 @@ aRequest( State, Arg ) ->
 %
 -spec someRequest( wooper:state(), integer() ) -> request_return( integer() ).
 someRequest( State, Arg ) ->
-		wooper:return_state_result( State, Arg + 7 ).
+	wooper:return_state_result( State, Arg + 7 ).
 
 
 % Returns some mean count.

@@ -1,4 +1,4 @@
-% Copyright (C) 2012-2018 Olivier Boudeville
+% Copyright (C) 2012-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -46,7 +46,7 @@
 
 
 
-% Communication helpers:
+% Communication helpers for active instances:
 %
 -export([ execute_request/3, execute_request/4, send_requests/3,
 
@@ -76,7 +76,8 @@
 		  delete_synchronously_any_instance_referenced_in/2,
 		  safe_delete_synchronously_any_instance_referenced_in/2,
 		  delete_synchronously_instance/1, delete_synchronously_instances/1,
-		  safe_delete_synchronously_instances/1 ]).
+		  safe_delete_synchronously_instances/1,
+		  delete_passive/1 ]).
 
 
 
@@ -181,6 +182,9 @@
 -type static_id() ::  { static_name(),  static_arity() }.
 
 
+% Access qualifier, applying either to a method or to an attribute:
+-type access_qualifier() :: 'public' | 'protected' | 'private'.
+
 
 % A method argument can be any type:
 -type method_argument() :: any().
@@ -189,8 +193,19 @@
 -type method_arguments() :: method_argument() | [ method_argument() ].
 
 
-% Method qualifiers not implemented yet:
--type method_qualifier() :: any().
+% Qualifiers applying to methods:
+-type method_qualifier() :: access_qualifier()
+
+							% This method cannot be overridden:
+						  | 'final'
+
+							% This method does not change the state of the
+							% instance it is applied on:
+						  | 'const'.
+
+
+% The qualifiers applying to a method:
+-type method_qualifiers() :: [ method_qualifier() ].
 
 
 % Special case of construction parameters:
@@ -205,6 +220,7 @@
 -type method_internal_result() :: any().
 
 -type request_result( T ) :: T.
+-type request_result() :: request_result( any() ).
 
 -type request_return( T ) :: { state(), request_result( T ) }.
 -type oneway_return() :: state().
@@ -235,11 +251,9 @@
 %
 -type ack_atom() :: atom().
 
--type request_result() :: wooper:request_result().
-
 
 % Otherwise getClassname/1, get_superclasses/0, etc. are unused:
--include("wooper_classes_exports.hrl").
+%-include("wooper_classes_exports.hrl").
 
 % Otherwise wooper_execute_method_as/4 is unused:
 -include("wooper_execute_internal_exports.hrl").
@@ -256,8 +270,9 @@
 			   method_name/0, request_name/0, oneway_name/0, static_name/0,
 			   method_arity/0,
 			   method_id/0, request_id/0, oneway_id/0, static_id/0,
+			   access_qualifier/0,
 			   method_argument/0, method_arguments/0,
-			   method_qualifier/0,
+			   method_qualifier/0, method_qualifiers/0,
 			   construction_parameter/0, construction_parameters/0,
 			   requests_outcome/0, method_internal_result/0,
 			   request_result/1, request_result/0,
@@ -291,7 +306,7 @@
 -include("wooper_execute_internal_functions.hrl").
 
 % For get_superclasses/0:
--include("wooper_classes_functions.hrl").
+%-include("wooper_classes_functions.hrl").
 
 
 
@@ -359,7 +374,7 @@ execute_request( PassiveInstance, RequestName )
 %
 % (public helper, as a convenience wrapper or for passive instances)
 %
--spec execute_request( instance_pid(), request_name(), method_arguments()  ) ->
+-spec execute_request( instance_pid(), request_name(), method_arguments() ) ->
 							 request_result();
 
 					 ( passive_instance(), request_name(),
@@ -1107,9 +1122,9 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 							   passive_instance().
 construct_passive( Classname, ConstructionParameters ) ->
 
-	trace_utils:debug_fmt( "wooper:construct_passive for class ~s "
-						   "and parameters ~p.~n",
-						   [ Classname, ConstructionParameters ] ),
+	%trace_utils:debug_fmt( "wooper:construct_passive for class ~s "
+	%					   "and parameters ~p.~n",
+	%					   [ Classname, ConstructionParameters ] ),
 
 	cond_utils:if_defined( wooper_debug,
 		   check_classname_and_arity( Classname, ConstructionParameters ) ),
@@ -1147,45 +1162,50 @@ construct_passive( Classname, ConstructionParameters ) ->
 % (same name, same arity, different purposes).
 
 
-% Execution of a oneway on a passive instance.
+% Executes specified oneway on specified passive instance.
 %
 -spec execute_oneway( passive_instance(), oneway_name() ) ->
 							passive_instance().
-execute_oneway( PassiveInstance, OnewayAtom )
+execute_oneway( PassiveInstance, OnewayName )
    when is_record( PassiveInstance, ?passive_record )
-	   andalso is_atom( OnewayAtom ) ->
+		andalso is_atom( OnewayName ) ->
 
 	{ NewPassiveInstance, { wooper_method_returns_void, R } } =
-		wooper_execute_oneway( OnewayAtom, _OnewayParameters=[],
+		wooper_execute_method( OnewayName, _OnewayArgs=[],
 							   PassiveInstance ),
 
 	{ NewPassiveInstance, R }.
 
 
-wooper_execute_oneway(_,_,_) ->
-	ok.
 
-
-% Execution of a oneway on a passive instance.
+% Executes specified oneway on specified passive instance.
 %
--spec execute_oneway( passive_instance(), oneway_name(), method_argument() ) ->
+-spec execute_oneway( passive_instance(), oneway_name(), method_arguments() ) ->
 							passive_instance().
-execute_oneway( PassiveInstance, OnewayAtom, OnewayParameters )
+execute_oneway( PassiveInstance, OnewayName, OnewayArgs )
    when is_record( PassiveInstance, ?passive_record )
-	   andalso is_atom( OnewayAtom ) andalso is_list( OnewayParameters ) ->
+		andalso is_atom( OnewayName ) andalso is_list( OnewayArgs ) ->
 
-	{ NewPassiveInstance, { wooper_method_returns_void, R } } =
-		wooper_execute_oneway( OnewayAtom, OnewayParameters, PassiveInstance ),
+	%trace_utils:trace_fmt( "Executing oneway ~s/~B on passive instance",
+	%					   [ OnewayName, length( OnewayArgs ) ] ),
 
-	{ NewPassiveInstance, R };
+	{ NewPassiveInstance, wooper_method_returns_void } =
+		wooper_execute_method( OnewayName, OnewayArgs, PassiveInstance ),
 
+	NewPassiveInstance;
 
-% Promote non-list to list:
-execute_oneway( PassiveInstance, OnewayAtom, OnewayParameter )
+% Promote non-list argument to list:
+execute_oneway( PassiveInstance, OnewayName, OnewayArg )
    when is_record( PassiveInstance, ?passive_record )
-	   andalso is_atom( OnewayAtom ) ->
-	execute_oneway( PassiveInstance, OnewayAtom, [ OnewayParameter ] ).
+		andalso is_atom( OnewayName ) ->
 
+	%trace_utils:trace_fmt( "Executing oneway ~s on passive instance",
+	%					   [ OnewayName ] ),
+
+	{ NewPassiveInstance, wooper_method_returns_void } =
+		wooper_execute_method( OnewayName, [ OnewayArg ], PassiveInstance ),
+
+	NewPassiveInstance.
 
 
 
@@ -1405,7 +1425,7 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
 % Methods for getting information about an instance.
 
 
-% Returns the actual classname of the current instance.
+% Returns the actual classname of the specified instance.
 %
 % Can be trusted.
 %
@@ -1413,11 +1433,6 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
 %
 -spec get_classname( wooper:state() ) -> classname().
 get_classname( State ) ->
-
-	% Note: a mere ?MODULE would not work (ex: in the case of an inherited
-	% method, it would already be compiled with the module name of the parent
-	% class).
-
 	State#state_holder.actual_class.
 
 
@@ -1990,14 +2005,22 @@ delete_synchronously_any_instance_referenced_in( Attribute, PreTestLiveliness,
 
 				% Only case where no actual deletion is needed:
 				true ->
+					%trace_utils:debug_fmt(
+					%  "(PID ~w was already dead, nothing done)", [ Pid ] ),
 					ok;
 
 				false ->
+
+					%trace_utils:debug_fmt( "Sending sync delete to ~w.",
+					%					   [ Pid ] ),
+
 					Pid ! { synchronous_delete, self() },
 
 					receive
 
 						{ deleted, Pid } ->
+							%trace_utils:debug_fmt( "Deletion of ~w confirmed.",
+							%					   [ Pid ] ),
 							ok
 
 					end
@@ -2189,20 +2212,30 @@ safe_delete_synchronously_instances( InstanceList ) ->
 	delete_synchronously_instances( FilteredInstanceList ).
 
 
-% These functions shall never be called, as the WOOPER parse transform is
-% supposed to have replaced them at compilation-time.
+
+% Deletes specified passive instance.
+%
+-spec delete_passive( passive_instance() ) -> void().
+delete_passive( _PassiveInstance ) ->
+	%trace_utils:trace( "Passive instance deleted." ),
+	ok.
+
+
+
+% These functions are stubs, they shall never be called, as the WOOPER parse
+% transform is supposed to have replaced them at compilation-time.
 
 
 -spec return_state_result( any(), any() ) -> no_return().
 return_state_result( _State, _Result ) ->
-	throw( untransformed_method_terminator ).
+	throw( { untransformed_method_terminator, return_state_result } ).
 
 
 -spec return_state_only( any() ) -> no_return().
 return_state_only( _State ) ->
-	throw( untransformed_method_terminator ).
+	throw( { untransformed_method_terminator, return_state_result } ).
 
 
 -spec return_static( any() ) -> no_return().
 return_static( _Value ) ->
-	throw( untransformed_method_terminator ).
+	throw( { untransformed_method_terminator, return_static } ).

@@ -1,4 +1,4 @@
-% Copyright (C) 2014-2018 Olivier Boudeville
+% Copyright (C) 2014-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -165,9 +165,6 @@
 -type function_table() :: ast_info:function_table().
 
 -type class_info() :: wooper_info:class_info().
--type request_table() :: wooper_info:request_info().
--type oneway_table() :: wooper_info:oneway_info().
--type static_table() :: wooper_info:static_info().
 
 
 % For debugging:
@@ -1009,8 +1006,9 @@ generate_module_info_from( #class_info{
 	WithMthdExpTable = FunctionExportTable,
 	AllExportTable = WithMthdExpTable,
 
-	WithMthdFunTable = merge_methods_as_fun( RequestTable, OnewayTable,
-											 StaticTable, WithDestrFunTable ),
+	WithMthdFunTable = wooper_method_management:methods_to_functions(
+				RequestTable, OnewayTable, StaticTable, WithDestrFunTable,
+				MarkerTable ),
 
 	AllFunctionTable = WithMthdFunTable,
 
@@ -1096,15 +1094,3 @@ register_functions( [ { FunId, FunInfo } | T ], FunctionTable ) ->
 			throw( { multiple_declarations_for, FunId } )
 
 	end.
-
-
-
-% Merges back all kinds of methods as mere functions, in specified function
-% table.
-%
--spec merge_methods_as_fun( request_table(), oneway_table(), static_table(),
-							function_table() ) -> function_table().
-merge_methods_as_fun( RequestTable, OnewayTable, StaticTable,
-					  InitFunctionTable ) ->
-	table:merge_unique( [ RequestTable, OnewayTable, StaticTable,
-						  InitFunctionTable ] ).

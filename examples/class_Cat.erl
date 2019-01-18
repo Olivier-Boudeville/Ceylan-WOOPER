@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER examples.
 %
@@ -7,7 +7,7 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
 
-% Cat-based example.
+% Cat-based example. Those are the ones that work best.
 %
 % Guaranteed to be implemented by a cat.
 %
@@ -15,7 +15,10 @@
 
 
 % Determines what are the mother classes of this class (if any):
--superclasses([ class_Mammal, class_ViviparousBeing ]).
+-define( superclasses, [ class_Mammal, class_ViviparousBeing ] ).
+
+-define( class_attributes, [
+   { whisker_color, whisker_color(), none, "50 shades of whiskers" } ] ).
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -24,10 +27,6 @@
 
 % Import common types without module prefix:
 -include("ecosystem_types.hrl").
-
-
--attributes([ { whisker_color, 'whisker_color()', none,
-				"50 shades of whiskers" } ]).
 
 
 
@@ -97,9 +96,7 @@ getWhiskerColor( State )->
 %
 -spec terminate( wooper:state(), 'crash' ) -> no_return().
 terminate( State, crash ) ->
-
 	basic_utils:crash(),
-
 	wooper:return_state_only( State ).
 
 

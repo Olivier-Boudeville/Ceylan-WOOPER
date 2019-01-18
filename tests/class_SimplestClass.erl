@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER examples.
 %
@@ -10,12 +10,12 @@
 
 
 % Determines what are the mother classes of this class (if any):
--superclasses( [] ).
+-define( superclasses, [] ).
 
+-define( class_attributes, [ age, gender ] ).
 
 % Non-method exported functions:
 -export([ example_fun/0, toString/1 ]).
-
 
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
@@ -25,7 +25,6 @@
 -include("ecosystem_types.hrl").
 
 
--attributes([ age, gender ]).
 
 % Constructs a new Creature.
 -spec construct( wooper:state(), age(), gender() ) -> wooper:state().

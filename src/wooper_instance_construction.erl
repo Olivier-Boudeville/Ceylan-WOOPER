@@ -1,4 +1,4 @@
-% Copyright (C) 2014-2018 Olivier Boudeville
+% Copyright (C) 2014-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -257,7 +257,7 @@ add_v1_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 	% { cons, 0, {var,0,'Myriad_Param_2'}, {nil,0} } } ].
 	%
 	CallParams = [ {atom,Line,Classname},
-				   ast_generation:list_variables( NewArity ) ],
+				   ast_generation:enumerated_variables_to_form( NewArity ) ],
 
 	NewClause = { clause, Line, HeaderParams, [],
 				  [{ call, Line, {atom,Line,spawn},
@@ -391,7 +391,7 @@ add_v2_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 	SyncRunCall = get_sync_run_call( Line ),
 
 	CallParams = [ {atom,Line,Classname},
-				   ast_generation:list_variables( SyncNewArity ),
+				   ast_generation:enumerated_variables_to_form( SyncNewArity ),
 				   {var,Line,'CreatorPid'} ],
 
 	S2 = { match, Line, {var,Line,'SpawnedPid'},
@@ -525,7 +525,7 @@ add_v3_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 	SyncRunCall = get_sync_run_call( Line ),
 
 	CallParams = [ {atom,Line,Classname},
-				   ast_generation:list_variables( OpArity ),
+				   ast_generation:enumerated_variables_to_form( OpArity ),
 				   {var,Line,'CreatorPid'} ],
 
 	S2 = { match, Line, {var,Line,'SpawnedPid'},
@@ -640,7 +640,7 @@ add_v4_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 	RunCall = get_run_call( Line ),
 
 	CallParams = [ {atom,Line,Classname},
-				   ast_generation:list_variables( ArgArity ) ],
+				   ast_generation:enumerated_variables_to_form( ArgArity ) ],
 
 	OpNewClause = { clause, Line, HeaderParams, [],
 					[{ call, Line, {atom,Line,spawn},
@@ -770,7 +770,7 @@ add_v5_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 	SyncRunCall = get_sync_run_call( Line ),
 
 	CallParams = [ {atom,Line,Classname},
-				   ast_generation:list_variables( ArgArity ),
+				   ast_generation:enumerated_variables_to_form( ArgArity ),
 				   {var,Line,'CreatorPid'} ],
 
 	S2 = { match, Line, {var,Line,'SpawnedPid'},
@@ -907,7 +907,7 @@ add_v6_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 	SyncRunCall = get_sync_run_call( Line ),
 
 	CallParams = [ {atom,Line,Classname},
-				   ast_generation:list_variables( ArgArity ),
+				   ast_generation:enumerated_variables_to_form( ArgArity ),
 				   {var,Line,'CreatorPid'} ],
 
 	S2 = { call, Line, {atom,Line,spawn},
@@ -1044,7 +1044,7 @@ add_v7_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 	SyncRunCall = get_sync_run_call( Line ),
 
 	CallParams = [ {atom,Line,Classname},
-				   ast_generation:list_variables( ArgArity ),
+				   ast_generation:enumerated_variables_to_form( ArgArity ),
 				   {var,Line,'CreatorPid'} ],
 
 	S2 = { match, Line, {var,Line,'SpawnedPid'},
@@ -1165,8 +1165,9 @@ add_v8_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 	PassiveRunCall = { remote, Line, {atom,Line,wooper},
 					   {atom,Line,construct_passive} },
 
-	CallParams = [ {atom,Line,Classname},
-				   ast_generation:list_variables( PassiveNewArity ) ],
+	VarForm = ast_generation:enumerated_variables_to_form( PassiveNewArity ),
+
+	CallParams = [ {atom,Line,Classname}, VarForm ],
 
 	S1 = { call, Line, PassiveRunCall, CallParams },
 

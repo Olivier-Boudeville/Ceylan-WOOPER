@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER examples.
 %
@@ -10,8 +10,12 @@
 
 
 % Determines what are the mother classes of this class (if any):
--superclasses([]).
+-define( superclasses, [] ).
 
+
+-define( class_attributes, [ { age, "Age of this creature" },
+							 { gender, union( foo:bar( float() ), 'baz' ),
+							   "Incorrectly-typed gender" } ] ).
 
 % Non-method exported functions:
 -export([ example_fun/0, toString/1 ]).
@@ -25,24 +29,12 @@
 -include("ecosystem_types.hrl").
 
 
--attributes([ age, gender ]).
-
 
 % Constructs a new Creature.
 -spec construct( wooper:state(), age(), gender() ) -> wooper:state().
 construct( State, Age, Gender ) ->
 	% No mother class.
 	setAttributes( State, [ { age, Age }, { gender, Gender } ] ).
-
-
-
-% This useless destructor overriding was made to silence Dialyzer (which is not
-% able to determine that this function will never be called, as WOOPER performs
-% the appropriate test is made beforehand):
-%
--spec destruct( wooper:state() ) -> wooper:state().
-destruct( State ) ->
-	State.
 
 
 
@@ -99,7 +91,7 @@ getArbitraryNumber( State ) ->
 -spec testDirectMethodExecution( wooper:state(), age() ) -> oneway_return().
 testDirectMethodExecution( State, NewAge ) ->
 
-	io:format( "Testing executeOneway.~n" ),
+	trace_utils:trace( "Testing executeOneway." ),
 
 	% Note: the version of setAge called in the context of a Creature sets in on
 	% purpose to a fixed value (36), regardless of the specified age, whereas
@@ -113,7 +105,7 @@ testDirectMethodExecution( State, NewAge ) ->
 	% NewAge is expected to be 347:
 	NewAge = getAttribute( NewState, age ),
 
-	io:format( "Testing executeRequest.~n" ),
+	trace_utils:trace( "Testing executeRequest." ),
 	% 15 from Mammal child classes, not 10 from here:
 
 	{ OtherState, 15 } = executeRequest( NewState, getArbitraryNumber ,[] ),
@@ -123,7 +115,7 @@ testDirectMethodExecution( State, NewAge ) ->
 
 	%{ OtherState, 15 } = executeRequest( NewState, 43, [] ),
 
-	io:format( "Direct self-invocation success.~n" ),
+	trace_utils:trace( "Direct self-invocation success." ),
 
 	wooper:return_state_only( OtherState ).
 
@@ -148,7 +140,8 @@ testSingleExecution( State ) ->
 
 -spec side_effect_function( wooper:state() ) -> wooper:state().
 side_effect_function( State ) ->
-	io:format( "~n### This message must not be displayed more than once.~n" ),
+	trace_utils:warning(
+	  "### This message must not be displayed more than once." ),
 	State.
 
 

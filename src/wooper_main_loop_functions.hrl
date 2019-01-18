@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -216,15 +216,13 @@ wooper_main_loop( State ) ->
 					% )', where ExitType is typically a stack trace:
 
 					{ NewState, _ } = wooper_execute_method(
-							onWOOPERExitReceived, State,
-							[ PidOrPort, ExitType ] ),
+						onWOOPERExitReceived, [ PidOrPort, ExitType ], State ),
 
 					%?wooper_log( "Main loop (case G) ended.~n" ),
 					wooper_main_loop( NewState );
 
 				% Hashtable key not found:
 				_ ->
-
 					% EXIT handler not overridden, using default one:
 					%?wooper_log( "Main loop (case G) ended.~n" ),
 					NewState = wooper:default_exit_handler( State, PidOrPort,

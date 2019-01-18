@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -104,7 +104,7 @@ serialise( State, _EntryTransformer=undefined, UserData ) ->
 	% cleaner):
 	%
 	Entries = lists:sort( [ RandomAttribute |
-					   ?wooper_table_type:enumerate( AttributeTable )  ] ),
+							?wooper_table_type:enumerate( AttributeTable )  ] ),
 
 	% By default returns { Classname, Entries }:
 	FullContent = post_serialise_hook( Classname, Entries, PreState ),
@@ -133,7 +133,7 @@ serialise( State, EntryTransformer, UserData ) ->
 					actual_class=Classname } = pre_serialise_hook( State ),
 
 	io:format( " - serialising, with transformer, instance ~p of class ~s~n",
-			  [ self(), Classname ] ),
+			   [ self(), Classname ] ),
 
 	% There are, for all Erlang processes, some extra information that are
 	% contextual, implicit, like: whether they are linked (and with whom), their

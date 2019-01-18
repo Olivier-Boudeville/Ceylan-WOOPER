@@ -151,16 +151,16 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
  -module(class_Cat).
 
  % Determines what are the mother classes of this class (if any):
- -superclasses([class_Mammal,class_ViviparousBeing]).
+ -define(superclasses,[class_Mammal,class_ViviparousBeing]).
 
- % No need to export constructors, destructor or methods.
+ % Declaration of class-specific attributes:
+ % (optional, yet recommended for clarity)
+ -define(class_attributes,[{whisker_color,"The color of this cat's whiskers"}]).
 
  % Allows to define WOOPER base variables and methods for that class:
  -include("wooper.hrl").
 
- % Declaration of class-specific attributes:
- % (optional, yet recommended for clarity)
- -attributes([ {whisker_color,"The color of this cat's whiskers"} ]).
+ % No need to export constructors, destructor or methods.
 
  % Constructs a new Cat.
  construct(State,Age,Gender,FurColor,WhiskerColor) ->
@@ -1150,17 +1150,17 @@ Specifying them is nevertheless recommended, at the first place for the develope
 
 The most general form of an attribute declaration includes the following four information::
 
- {Name,TypeAsAtom,QualifierInfo,Description}
+ {Name,Type,QualifierInfo,Description}
 
 where:
 
  - ``Name`` is the name of that attribute, as an atom (ex: ``fur_color``)
- - ``TypeAsAtom`` is an atom [#]_ containing the `type specification <http://erlang.org/doc/reference_manual/typespec.html>`_ of that attribute (ex: ``'[ atom() ]'``, ``'foo:color_index()'``)
+ - ``Type`` corresponds to the `type specification <http://erlang.org/doc/reference_manual/typespec.html>`_ of that attribute (ex: ``[atom()]``, ``foo:color_index()``); note that the Erlang parser will not support the ``|`` (i.e. union) operator, like in ``'foo'|integer()``; we recommend to use the ``union`` pseudo-function (with any arity greater or equal to 2) instead, like in: ``union('foo',integer())``
  - ``QualifierInfo`` is detailed below
  - ``Description`` is a plain string describing the purpose of this attribute; this is a comment aimed only at humans (ex: ``"describes the color of the fur of this animal (not including whiskers)"``)
 
 
-.. [#] :: We would have preferred that, instead of ``'integer()'``, one could have specified directly ``integer()``, yet this does not seem possible with parse-transforms, as in the latter case it would trigger a parse error earlier in the transformation process.
+.. comment  We would have preferred that, instead of ``'integer()'``, one could have specified directly ``integer()``, yet this does not seem possible with parse-transforms, as in the latter case it would trigger a parse error earlier in the transformation process.
 
 		  This error could be intercepted in the AST (ex: ``{error,{24,erl_parse,"bad attribute"}},``), however the content of the original ``-attributes(...)`` parse attribute, short of being successfully parsed, would not be available in the AST, and thus would be lost for good (the WOOPER parse transform would not have access to any information thereof). So, at least currently, attribute types have to be specified as atoms.
 
@@ -1179,7 +1179,7 @@ A qualifier can be:
 
 - a *mutability* qualifier: ``{const,24}`` would denote that the corresponding attribute is ``const`` and that its (fixed) value is ``24`` (thus ``const`` implies here ``initial``, which should not specified in that case); ``const`` can also be specified just by itself (with no initial value), so that it can be initialised later, and, of course, just once (this is useful for non-immediate yet const values)
 
-- the *none* qualifier: ``none`` implies that no specific qualifier is specified, and as a result the defaults apply
+- the *none* qualifier: ``none`` implies that no specific qualifier is specified, and as a result the defaults apply; this qualifier can only be used by itself (not in a list), as an alternative to specifying an empty qualifier list
 
 
 The defaults are:
@@ -1192,7 +1192,7 @@ The defaults are:
 
 So an example of attribute declaration could be::
 
- { age, 'integer()', {initial,18}, "stores the current age of this creature" }
+ { age, integer(), {initial,18}, "stores the current age of this creature" }
 
 
 .. Note:: Currently, these information are only of use for the developer (i.e. for documentation purpose). No check is made about whether they are used, whether no other attributes are used, whether the type is meaningful and indeed enforced, the default initial value is not set, etc. Some of these information might be handled by future WOOPER versions.
@@ -1200,15 +1200,11 @@ So an example of attribute declaration could be::
 
 Shorter attribute declarations can also used, then with less than the 4 five aforementioned pieces of information mentioned:
 
-- 3 of them: ``{Name,TypeAsAtom,Description}`` (implying: qualifier is ``none``)
+- 3 of them: ``{Name,Type,Description}`` (implying: qualifier is ``none``)
 - 2 of them: ``{Name,Description}`` (implying: type is ``any()``, qualifier is ``none``)
 - 1 of them: ``Name`` (implying: type is ``any()``, qualifier is ``none``, no description)
 
 (and, of course, any number of attributes may not be specified at all)
-
-
-
-
 
 More generally an attribute can be declared with:
 
@@ -1237,7 +1233,7 @@ For example an attribute declaration can be::
 
   % Determines what are the class-specific attributes of this class (if any):
   get_attributes() ->
-.. comment	[ {fur_color,protected}, whisker_color, {mew_volume,[private,{const,35}]} ].
+.. comment  [ {fur_color,protected}, whisker_color, {mew_volume,[private,{const,35}]} ].
 
 
 Once the instance will be created by WOOPER, the initial state will notably be made of a record, whose fields are exactly the attributes supported by this class, whether they are class-specific or inherited (directly or not).
@@ -2076,6 +2072,10 @@ All WOOPER classes must include `wooper.hrl <https://github.com/Olivier-Boudevil
 
  -include("wooper.hrl").
 
+
+.. Note:: This include should come, in the source file of a class, *after* all WOOPER-related defines (such as ``superclasses``, ``class_attributes``, etc.).
+
+
 To help declaring the right defines in the right order, using the WOOPER `template <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_WOOPERTemplate.erl.sample>`_ is recommended.
 
 One may also have a look at the full `test examples <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples>`_, as a source of inspiration.
@@ -2419,7 +2419,7 @@ Many improvements, notably:
 - no more ``wooper_construct_parameters``, longer ``wooper_construct_export`` or ``wooper_construct_export`` defines
 - automatic detection and export of constructors, any destructor and methods
 - WOOPER method terminators introduced (ex: ``wooper:return_state_result/2``, instead of the ``wooper_return_state_result`` macro)
-- the ``-attributes([...])`` optional define introduced
+- the ``class_attributes`` optional parse attribute define introduced (``-define(class_attributes,[...]).``
 - ``execute*With`` renamed as ``execute*As`` (clearer)
 - convenience method wrappers such as ``wooper:execute_request/3`` have their parameters reordered (target - either a PID or a passive instance - comes first now)
 - passive instances supported (still a bit experimental, not used a lot)

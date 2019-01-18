@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER examples.
 %
@@ -10,7 +10,9 @@
 
 
 % Determines what are the mother classes of this class (if any):
--superclasses( [ class_Creature ] ).
+-define( superclasses, [ class_Creature ] ).
+
+-define( class_attributes, [ fur_color ] ).
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -21,8 +23,6 @@
 -include("ecosystem_types.hrl").
 
 
--attributes([ fur_color ]).
-
 
 % Constructs a new Mammal.
 -spec construct( wooper:state(), age(), gender(), fur_color() ) ->
@@ -31,8 +31,8 @@ construct( State, Age, Gender, FurColor ) ->
 
 	CreatureState = class_Creature:construct( State, Age, Gender ),
 
-	{ RequestedState, ActualClass } = executeRequest( CreatureState,
-													  getClassname ),
+	{ RequestedState, ActualClass } =
+		executeRequest( CreatureState, getClassname ),
 
 	% Even when constructing a cat, we should see the right class (class_Cat)
 	% and not the current class (class_Mammal):
@@ -49,8 +49,8 @@ construct( State, Age, Gender, FurColor ) ->
 -spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
 
-	{ RequestedState, ActualClass } = executeRequest( State,
-													  getClassname ),
+	{ RequestedState, ActualClass } =
+		executeRequest( State, getClassname ),
 
 	% Even when constructing a cat, we should see the right class (class_Cat)
 	% and not the current class (class_Mammal):
