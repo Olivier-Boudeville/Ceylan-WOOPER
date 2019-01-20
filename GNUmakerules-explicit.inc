@@ -18,7 +18,7 @@ default-wooper-rule: all
 clean-ast-debug: clean-ast-debug-wooper
 
 clean-ast-debug-wooper:
-	@find . -name 'WOOPER-*put-AST*.txt' -exec srm '{}' ';'
+	@find . -name 'WOOPER-*put-AST*.txt' -exec /bin/rm '{}' ';'
 
 
 # Bootstrap section.
