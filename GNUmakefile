@@ -101,7 +101,6 @@ prepare-release: clean clean-release
 	@echo "     Preparing release archive for WOOPER $(WOOPER_VERSION)"
 	@cd .. && mkdir -p $(WOOPER_RELEASE_BASE) && /bin/cp -L -r myriad wooper $(WOOPER_RELEASE_BASE)
 	@cd ../$(WOOPER_RELEASE_BASE) && mv wooper/top-GNUmakefile-for-releases GNUmakefile
-	-@cd .. && find $(WOOPER_RELEASE_BASE) -type d -a -name '.svn' -exec /bin/rm -rf '{}' ';' 2>/dev/null
 	-@cd .. && find $(WOOPER_RELEASE_BASE) -type d -a -name '.git' -exec /bin/rm -rf '{}' ';' 2>/dev/null
 	-@cd .. && find $(WOOPER_RELEASE_BASE) -type f -a -name '*.beam' -exec /bin/rm -f '{}' ';' 2>/dev/null
 
