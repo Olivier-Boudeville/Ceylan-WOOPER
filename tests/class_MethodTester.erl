@@ -76,7 +76,7 @@ setName( State, Name ) ->
 
 % Returns a value established in a static context.
 %
--spec get_static_info( integer(), integer() ) -> integer().
+-spec get_static_info( integer(), integer() ) -> static_return( integer() ).
 get_static_info( A, B ) ->
 
 	trace_utils:trace( "get_static_info/2 called" ),

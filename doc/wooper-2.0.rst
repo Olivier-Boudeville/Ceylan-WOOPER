@@ -941,7 +941,7 @@ The two ``wooper_return_state_*`` macros have been introduced so that the unwary
 Type Specifications
 ___________________
 
-Although doing so is optional, WOOPER strongly recommends declaring type specifications as well (and provides suitable constructs for that), like in:
+Although doing so is optional, WOOPER strongly recommends declaring type specifications as well (and provides suitable constructs for that), as for the following request:
 
 .. code:: erlang
 
@@ -962,7 +962,28 @@ Similarly, the aforementioned ``declareBirthday/1`` oneway could be defined as:
   -spec declareBirthday(wooper:state()) -> oneway_return().
   declareBirthday(State) ->
 	 AgedState = setAttribute(State, age, ?getAttr(age)+1),
-	 ?wooper_return_state_ony(AgedState).
+	 wooper:return_state_only(AgedState).
+
+As for oneway, we could have:
+
+ .. code:: erlang
+
+  % Declares the birthday of this creature: increments its age.
+  % (oneway)
+  -spec declareBirthday(wooper:state()) -> oneway_return().
+  declareBirthday(State) ->
+	 AgedState = setAttribute(State, age, ?getAttr(age)+1),
+	 wooper:return_state_only(AgedState).
+
+
+.. Note:: As mentioned, these specifications, albeit recommended, are fully optional.
+		  Yet, should they be specified, they must be correct, notably with regard to their return type.
+		  So, regarding the type of the result, the spec of:
+
+			 - a request *must* rely on either the ``request_return/1`` type or the ``request_const_return/1`` one
+			 - a oneway *must* rely on either the ``oneway_return/0`` type or the ``oneway_const_return/0``
+			 - a static method *must* rely on the ``static_return/1`` type
+
 
 
 
@@ -1169,7 +1190,7 @@ A qualifier information is either a single qualifier, or a list of qualifiers.
 
 A qualifier can be:
 
-- a *scope* qualifier: ``public``, ``protected`` or ``private``; in future versions, a public attribute will result in accessor methods being automatically generated; for example, should the ``fur_color`` attribute be public, then:
+- a *scope* qualifier: ``public``, ``protected`` or ``private``; in future versions, a public attribute will correspond to the union of ``settable`` and ``gettable`` and will result in accessor methods being automatically generated; for example, should the ``fur_color`` attribute be public, then:
 
   - the ``getFurColor/1`` const request would be added (with its spec): ``getFurColor(State) -> wooper:return_state_result(State,?getAttr(fur_color)).``
 

@@ -219,11 +219,27 @@
 % To be specified more closely maybe:
 -type method_internal_result() :: any().
 
+% To describe all kinds of results:
+
 -type request_result( T ) :: T.
 -type request_result() :: request_result( any() ).
 
+-type static_result( T ) :: T.
+-type static_result() :: static_result( any() ).
+
+
+
+
+% For method specs:
+
 -type request_return( T ) :: { state(), request_result( T ) }.
+-type request_const_return( T ) :: request_result( T ).
+
 -type oneway_return() :: state().
+-type oneway_const_return() :: void().
+
+-type static_return( T ) :: static_result( T ).
+% Constness irrelevant for static methods.
 
 
 -type attribute_name() :: atom().
@@ -252,9 +268,6 @@
 -type ack_atom() :: atom().
 
 
-% Otherwise getClassname/1, get_superclasses/0, etc. are unused:
-%-include("wooper_classes_exports.hrl").
-
 % Otherwise wooper_execute_method_as/4 is unused:
 -include("wooper_execute_internal_exports.hrl").
 
@@ -275,8 +288,14 @@
 			   method_qualifier/0, method_qualifiers/0,
 			   construction_parameter/0, construction_parameters/0,
 			   requests_outcome/0, method_internal_result/0,
+
 			   request_result/1, request_result/0,
-			   request_return/1, oneway_return/0,
+			   static_result/1, static_result/0,
+
+			   request_return/1, request_const_return/1,
+			   oneway_return/0, oneway_const_return/0,
+			   static_return/1,
+
 			   attribute_name/0, attribute_value/0, attribute_entry/0,
 			   attribute_qualifier/0,
 			   instance_pid/0, state/0 ]).

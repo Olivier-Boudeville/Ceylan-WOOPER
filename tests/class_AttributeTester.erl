@@ -21,9 +21,6 @@
 -define( class_attributes, [ test_attribute ] ).
 
 
-% Static method declarations.
--export([ crashing_examples/1 ]).
-
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
 
@@ -35,6 +32,7 @@ construct( State ) ->
 
 	% Class-specific attributes:
 	setAttribute( State, test_attribute, true ).
+
 
 
 % Request test.
@@ -55,7 +53,7 @@ test( State ) ->
 	NewSetState = setAttribute( UnsetState, test_attribute, true ),
 	true        = getAttribute( NewSetState, test_attribute ),
 
-	MultiState  = setAttributes( NewSetState,[
+	MultiState  = setAttributes( NewSetState, [
 		{ test_attribute, false }, { another_attribute, 42 } ] ),
 	false       = getAttribute( MultiState, test_attribute ),
 	42          = getAttribute( MultiState, another_attribute ),

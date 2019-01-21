@@ -77,7 +77,12 @@
 
 
 -type request_return( T ) :: wooper:request_result( T ).
--type oneway_return() :: wooper:state().
+-type request_const_return( T ) :: wooper:request_const_return( T ).
+
+-type oneway_return() :: wooper:oneway_return().
+-type oneway_const_return() :: wooper:oneway_const_return().
+
+-type static_return( T ) :: static_return( T ).
 
 
 -type attribute_name() :: wooper:attribute_name().

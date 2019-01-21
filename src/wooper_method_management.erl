@@ -146,15 +146,15 @@ sort_out_functions( _FunEntries=[], FunctionTable, RequestTable, OnewayTable,
 	{ FunctionTable, RequestTable, OnewayTable, StaticTable };
 
 %sort_out_functions( _FunEntries=[ { FunId={ FunName, Arity }, FunInfo } | T ],
-sort_out_functions( _FunEntries=[ { FunId, FunInfo } | T ],
+sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
+											clauses=OriginalClauses,
+											spec=Spec } } | T ],
 					FunctionTable, RequestTable, OnewayTable, StaticTable ) ->
 
 	%trace_utils:debug_fmt( "sorting ~p", [ FunId ] ),
 
 	%trace_utils:debug_fmt( "Examining Erlang function ~s/~B",
 	%                       [ FunName, Arity ] ),
-
-	OriginalClauses = FunInfo#function_info.clauses,
 
 	% We used to infer the function nature based on its first clause, and then
 	% to make a custom full traversal to transform method terminators.
@@ -177,6 +177,7 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo } | T ],
 								OnewayTable, StaticTable );
 
 		request ->
+			check_request_spec( Spec ),
 			RequestInfo = function_to_request_info( NewFunInfo ),
 			NewRequestTable = table:addNewEntry( FunId, RequestInfo,
 												 RequestTable ),
@@ -209,6 +210,37 @@ sort_out_functions( _Functions=[ #function_info{ name=FunName,
 
 	% Error raised directly, could be appended to the class_info.errors:
 	wooper_internals:raise_error( { clauseless_function, { FunName, Arity } } ).
+
+
+
+% Checks that the request spec (if any) corresponds indeed to a request,
+% i.e. rely on either the request_return/1 type or the request_const_return/1
+% one.
+%
+% (helper)
+%
+check_request_spec( _LocSpec=undefined ) ->
+	ok;
+
+check_request_spec( _LocSpec={ _Loc, { attribute, _, spec,
+									   { FunId, ClauseSpecs } } } ) ->
+	[ check_request_clause_spec( C, FunId ) || C <- ClauseSpecs ].
+
+
+% Checks that request clause spec.
+%
+% (helper)
+%
+check_request_clause_spec( { type, _,'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, request_return, [ _RType ] } ] }, _FunId ) ->
+	ok;
+
+check_request_clause_spec( { type, _,'fun',
+							 _Seqs=[ _TypeProductForArgs,
+									 _ResultType ] }, FunId ) ->
+	wooper_internals:raise_error( { incorrect_request_return_type, FunId } ).
+	%wooper_internals:raise_error( { incorrect_request_return_type, FunId,
+	%								ResultType } ).
 
 
 
@@ -519,6 +551,30 @@ function_to_request_info( #function_info{ name=Name,
 				   clauses=Clauses,
 				   spec=Spec };
 
+
+function_to_request_info( #function_info{ name=Name,
+										  arity=Arity,
+										  location=Loc,
+										  line=Line,
+										  clauses=Clauses,
+										  spec=Spec,
+										  callback=false
+										  %exported
+										} ) ->
+
+	wooper_internals:notify_warning( [ text_utils:format(
+		"~s/~B should not be explicitly exported, since requests "
+		"are automatically exported.", [ Name, Arity ] ) ] ),
+
+	#request_info{ name=Name,
+				   arity=Arity,
+				   %qualifiers=[]
+				   location=Loc,
+				   line=Line,
+				   clauses=Clauses,
+				   spec=Spec };
+
+
 function_to_request_info( Other ) ->
 	throw( { unexpected_function_info, Other, request } ).
 
@@ -555,20 +611,44 @@ request_to_function_info( Other, _Location ) ->
 %
 -spec function_to_oneway_info( function_info() ) -> oneway_info().
 function_to_oneway_info( #function_info{ name=Name,
-										  arity=Arity,
-										  location=Loc,
-										  line=Line,
-										  clauses=Clauses,
-										  spec=Spec,
-										  callback=false,
-										  exported=[] } ) ->
+										 arity=Arity,
+										 location=Loc,
+										 line=Line,
+										 clauses=Clauses,
+										 spec=Spec,
+										 callback=false,
+										 exported=[] } ) ->
 	#oneway_info{ name=Name,
-				   arity=Arity,
-				   %qualifiers=[]
-				   location=Loc,
-				   line=Line,
-				   clauses=Clauses,
-				   spec=Spec };
+				  arity=Arity,
+				  %qualifiers=[]
+				  location=Loc,
+				  line=Line,
+				  clauses=Clauses,
+				  spec=Spec };
+
+
+function_to_oneway_info( #function_info{ name=Name,
+										 arity=Arity,
+										 location=Loc,
+										 line=Line,
+										 clauses=Clauses,
+										 spec=Spec,
+										 callback=false
+										 %exported
+									   } ) ->
+
+	wooper_internals:notify_warning( [ text_utils:format(
+		"~s/~B should not be explicitly exported, since oneways "
+		"are automatically exported.", [ Name, Arity ] ) ] ),
+
+	#oneway_info{ name=Name,
+				  arity=Arity,
+				  %qualifiers=[]
+				  location=Loc,
+				  line=Line,
+				  clauses=Clauses,
+				  spec=Spec };
+
 
 function_to_oneway_info( Other ) ->
 	throw( { unexpected_function_info, Other, oneway } ).
@@ -580,12 +660,12 @@ function_to_oneway_info( Other ) ->
 %
 -spec oneway_to_function_info( oneway_info(), location() ) -> function_info().
 oneway_to_function_info( #oneway_info{ name=Name,
-										 arity=Arity,
-										 % Unused: qualifiers
-										 location=Loc,
-										 line=Line,
-										 clauses=Clauses,
-										 spec=Spec },
+									   arity=Arity,
+									   % Unused: qualifiers
+									   location=Loc,
+									   line=Line,
+									   clauses=Clauses,
+									   spec=Spec },
 						 Location ) ->
 	#function_info{ name=Name,
 					arity=Arity,
@@ -614,12 +694,36 @@ function_to_static_info( #function_info{ name=Name,
 										 callback=false,
 										 exported=[] } ) ->
 	#static_info{ name=Name,
-				   arity=Arity,
-				   %qualifiers=[]
-				   location=Loc,
-				   line=Line,
-				   clauses=Clauses,
-				   spec=Spec };
+				  arity=Arity,
+				  %qualifiers=[]
+				  location=Loc,
+				  line=Line,
+				  clauses=Clauses,
+				  spec=Spec };
+
+
+function_to_static_info( #function_info{ name=Name,
+										 arity=Arity,
+										 location=Loc,
+										 line=Line,
+										 clauses=Clauses,
+										 spec=Spec,
+										 callback=false
+										 %exported
+									   } ) ->
+
+	wooper_internals:notify_warning( [ text_utils:format(
+		"~s/~B should not be explicitly exported, since requests "
+		"are automatically exported.", [ Name, Arity ] ) ] ),
+
+	#static_info{ name=Name,
+				  arity=Arity,
+				  %qualifiers=[]
+				  location=Loc,
+				  line=Line,
+				  clauses=Clauses,
+				  spec=Spec };
+
 
 function_to_static_info( Other ) ->
 	throw( { unexpected_function_info, Other, static } ).
