@@ -64,6 +64,8 @@
 -type request_table() :: wooper_info:request_info().
 -type oneway_table() :: wooper_info:oneway_info().
 -type static_table() :: wooper_info:static_info().
+-type method_qualifiers() :: wooper:method_qualifiers().
+
 
 
 % Implementation notes:
@@ -105,7 +107,8 @@
 %
 -spec manage_methods( compose_pair() ) -> compose_pair().
 manage_methods( { CompleteFunctionTable,
-				  ClassInfo=#class_info{ requests=RequestTable,
+				  ClassInfo=#class_info{ class={ Classname, _ClassForm},
+										 requests=RequestTable,
 										 oneways=OnewayTable,
 										 statics=StaticTable,
 										 markers=MarkerTable } } ) ->
@@ -121,7 +124,7 @@ manage_methods( { CompleteFunctionTable,
 
 	{ NewFunctionTable, NewRequestTable, NewOnewayTable, NewStaticTable } =
 		sort_out_functions( AllFunEntries, _FunctionTable=table:new(),
-							RequestTable, OnewayTable, StaticTable ),
+							RequestTable, OnewayTable, StaticTable, Classname ),
 
 	ExportLoc = ast_info:get_default_export_function_location( MarkerTable ),
 
@@ -142,14 +145,15 @@ manage_methods( { CompleteFunctionTable,
 % real nature (ex: a given Erlang function may actually be a WOOPER oneway).
 %
 sort_out_functions( _FunEntries=[], FunctionTable, RequestTable, OnewayTable,
-					StaticTable ) ->
+					StaticTable, _Classname ) ->
 	{ FunctionTable, RequestTable, OnewayTable, StaticTable };
 
 %sort_out_functions( _FunEntries=[ { FunId={ FunName, Arity }, FunInfo } | T ],
 sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 											clauses=OriginalClauses,
 											spec=Spec } } | T ],
-					FunctionTable, RequestTable, OnewayTable, StaticTable ) ->
+					FunctionTable, RequestTable, OnewayTable, StaticTable,
+					Classname ) ->
 
 	%trace_utils:debug_fmt( "sorting ~p", [ FunId ] ),
 
@@ -162,7 +166,7 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 	% Now we reuse the Myriad ast_transforms instead, and perform everything
 	% (guessing/checking/transforming) in one pass:
 	%
-	{ NewClauses, FunNature } =
+	{ NewClauses, FunNature, Qualifiers } =
 		manage_method_terminators( OriginalClauses, FunId ),
 
 	NewFunInfo = FunInfo#function_info{ clauses=NewClauses },
@@ -171,45 +175,49 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 	case FunNature of
 
 		function ->
+			check_spec( Spec, function, Qualifiers, Classname ),
 			NewFunctionTable = table:addNewEntry( FunId, NewFunInfo,
 												  FunctionTable ),
 			sort_out_functions( T, NewFunctionTable, RequestTable,
-								OnewayTable, StaticTable );
+								OnewayTable, StaticTable, Classname );
 
 		request ->
-			check_request_spec( Spec ),
+			check_spec( Spec, request, Qualifiers, Classname ),
 			RequestInfo = function_to_request_info( NewFunInfo ),
 			NewRequestTable = table:addNewEntry( FunId, RequestInfo,
 												 RequestTable ),
 			sort_out_functions( T, FunctionTable, NewRequestTable,
-								OnewayTable, StaticTable );
+								OnewayTable, StaticTable, Classname );
 
 		oneway ->
+			check_spec( Spec, oneway, Qualifiers, Classname ),
 			OnewayInfo = function_to_oneway_info( NewFunInfo ),
 			NewOnewayTable = table:addNewEntry( FunId, OnewayInfo,
 												OnewayTable ),
 			sort_out_functions( T, FunctionTable, RequestTable,
-								NewOnewayTable, StaticTable );
+								NewOnewayTable, StaticTable, Classname );
 
 		static ->
+			check_spec( Spec, static, Qualifiers, Classname ),
 			StaticInfo = function_to_static_info( NewFunInfo ),
 			NewStaticTable = table:addNewEntry( FunId, StaticInfo,
 												StaticTable ),
 			sort_out_functions( T, FunctionTable, RequestTable,
-								OnewayTable, NewStaticTable )
+								OnewayTable, NewStaticTable, Classname )
 
 	end;
 
 sort_out_functions( _Functions=[ #function_info{ name=FunName,
 												 arity=Arity } | _T ],
 					_FunctionTable, _RequestTable, _OnewayTable,
-					_StaticTable ) ->
+					_StaticTable, Classname ) ->
 
-	trace_utils:error_fmt( "No clause found for ~s/~B; function exported "
-						   "yet not defined?", [ FunName, Arity ] ),
+	trace_utils:error_fmt( "No clause found in ~s for ~s/~B; function exported "
+						   "yet not defined?", [ Classname, FunName, Arity ] ),
 
 	% Error raised directly, could be appended to the class_info.errors:
-	wooper_internals:raise_error( { clauseless_function, { FunName, Arity } } ).
+	wooper_internals:raise_error( { clauseless_function, { FunName, Arity },
+									Classname } ).
 
 
 
@@ -219,43 +227,296 @@ sort_out_functions( _Functions=[ #function_info{ name=FunName,
 %
 % (helper)
 %
-check_request_spec( _LocSpec=undefined ) ->
+-spec check_spec( maybe( ast_info:located_form() ), function_nature(),
+				  method_qualifiers(), wooper:classname() ) -> void().
+% Function specs are optional:
+check_spec( _LocSpec=undefined, _FunNature, _Qualifiers, _Classname ) ->
 	ok;
 
-check_request_spec( _LocSpec={ _Loc, { attribute, _, spec,
-									   { FunId, ClauseSpecs } } } ) ->
-	[ check_request_clause_spec( C, FunId ) || C <- ClauseSpecs ].
+check_spec( _LocSpec={ _Loc,
+					   { attribute, _, spec, { FunId, ClauseSpecs } } },
+			FunNature, Qualifiers, Classname ) ->
+	[ check_clause_spec( C, FunNature, Qualifiers, FunId, Classname )
+	  || C <- ClauseSpecs ].
+
+
 
 
 % Checks that request clause spec.
 %
 % (helper)
-%
-check_request_clause_spec( { type, _,'fun', _Seqs=[ _TypeProductForArgs,
-	 _ResultType={ user_type, _, request_return, [ _RType ] } ] }, _FunId ) ->
+
+
+%% For oneways:
+
+% Spec implies non-const request:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, request_return, [ _RType ] } ] },
+	 _FunNature=request, Qualifiers, FunId, Classname ) ->
+	case lists:member( const, Qualifiers ) of
+
+		true ->
+			wooper_internals:raise_error( { constness_request_mistmatch, FunId,
+				{ is, const }, { uses_spec, {request_return,1} },
+				{ instead_of, {request_const_return,1} }, Classname } );
+
+		false ->
+			ok
+
+	end;
+
+
+% Spec implies const request:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, request_const_return, [ _RType ] } ] },
+	 _FunNature=request, Qualifiers, FunId, Classname ) ->
+	case lists:member( const, Qualifiers ) of
+
+		true ->
+			ok;
+
+		false ->
+			wooper_internals:raise_error( { constness_request_mistmatch, FunId,
+				{ is, non_const }, { uses_spec, {request_const_return,1} },
+				{ instead_of, {request_return,1} }, Classname } )
+
+	end;
+
+
+% Spec implies request whereas is not:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, request_return, [ _RType ] } ] },
+	 NonReqFunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_error( { incorrect_return_type, FunId,
+		{ is, NonReqFunNature }, { uses, request_return }, Classname } );
+
+
+% Wrong arity for request_return/1:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, request_return, Types } ] },
+	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_error( { wrong_request_return_arity,
+			{ expected, 1 }, { got, length( Types ) }, FunId, Classname } );
+
+
+% Wrong arity for request_const_return/1:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, request_const_return, Types } ] },
+	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_error( { wrong_request_const_return_arity,
+			{ expected, 1 }, { got, length( Types ) }, FunId, Classname } );
+
+
+% Spec implies non-const request:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, request_return, [ _RType ] } ] },
+	 _FunNature=request, Qualifiers, FunId, Classname ) ->
+	case lists:member( const, Qualifiers ) of
+
+		true ->
+			wooper_internals:raise_error( { constness_request_mistmatch, FunId,
+				{ is, const }, { uses_spec, {request_return,1} },
+				{ instead_of, {request_const_return,1} }, Classname } );
+
+		false ->
+			ok
+
+	end;
+
+
+% Spec implies const request:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, request_const_return, [ _RType ] } ] },
+	 _FunNature=request, Qualifiers, FunId, Classname ) ->
+	case lists:member( const, Qualifiers ) of
+
+		true ->
+			ok;
+
+		false ->
+			wooper_internals:raise_error( { constness_request_mistmatch, FunId,
+				{ is, non_const }, { uses_spec, {request_const_return,1} },
+				{ instead_of, {request_return,1} }, Classname } )
+
+	end;
+
+
+
+%% For oneways:
+
+% Spec implies non-const oneway:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, oneway_return, [] } ] },
+	 _FunNature=oneway, Qualifiers, FunId, Classname ) ->
+	case lists:member( const, Qualifiers ) of
+
+		true ->
+			wooper_internals:raise_error( { constness_oneway_mistmatch, FunId,
+				{ is, const }, { uses_spec, {oneway_return,0} },
+				{ instead_of, {oneway_const_return,0} }, Classname } );
+
+		false ->
+			ok
+
+	end;
+
+
+% Spec implies const oneway:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, oneway_const_return, [] } ] },
+	 _FunNature=oneway, Qualifiers, FunId, Classname ) ->
+	case lists:member( const, Qualifiers ) of
+
+		true ->
+			ok;
+
+		false ->
+			wooper_internals:raise_error( { constness_oneway_mistmatch, FunId,
+				{ is, non_const }, { uses_spec, {oneway_const_return,0} },
+				{ instead_of, {oneway_return,0} }, Classname } )
+
+	end;
+
+
+% Spec implies oneway whereas is not:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, oneway_return, [] } ] },
+	 NonReqFunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_error( { incorrect_return_type, FunId,
+		{ is, NonReqFunNature }, { uses, oneway_return }, Classname } );
+
+
+% Wrong arity for oneway_return/1:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, oneway_return, Types } ] },
+	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_error( { wrong_oneway_return_arity,
+			{ expected, 0 }, { got, length( Types ) }, FunId, Classname } );
+
+
+% Wrong arity for oneway_const_return/1:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, oneway_const_return, Types } ] },
+	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_error( { wrong_oneway_const_return_arity,
+			{ expected, 0 }, { got, length( Types ) }, FunId, Classname } );
+
+
+% Spec implies non-const oneway:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, oneway_return, [ _RType ] } ] },
+	 _FunNature=oneway, Qualifiers, FunId, Classname ) ->
+	case lists:member( const, Qualifiers ) of
+
+		true ->
+			wooper_internals:raise_error( { constness_oneway_mistmatch, FunId,
+				{ is, const }, { uses_spec, {oneway_return,1} },
+				{ instead_of, {oneway_const_return,1} }, Classname } );
+
+		false ->
+			ok
+
+	end;
+
+
+% Spec implies const oneway:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, oneway_const_return, [ _RType ] } ] },
+	 _FunNature=oneway, Qualifiers, FunId, Classname ) ->
+	case lists:member( const, Qualifiers ) of
+
+		true ->
+			ok;
+
+		false ->
+			wooper_internals:raise_error( { constness_oneway_mistmatch, FunId,
+				{ is, non_const }, { uses_spec, {oneway_const_return,1} },
+				{ instead_of, {oneway_return,1} }, Classname } )
+
+	end;
+
+
+
+%% For static methods:
+
+
+% Spec implies static method:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, static_return, [ _RType ] } ] },
+	 _FunNature=static, _Qualifiers, _FunId, _Classname ) ->
 	ok;
 
-check_request_clause_spec( { type, _,'fun',
-							 _Seqs=[ _TypeProductForArgs,
-									 _ResultType ] }, FunId ) ->
-	wooper_internals:raise_error( { incorrect_request_return_type, FunId } ).
-	%wooper_internals:raise_error( { incorrect_request_return_type, FunId,
-	%								ResultType } ).
+
+% Spec implies static method whereas is not:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, static_return, [ _RType ] } ] },
+	 NonReqFunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_error( { incorrect_return_type, FunId,
+		{ is, NonReqFunNature }, { uses, static_return } }, Classname );
+
+
+% Wrong arity for static_return/1:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, static_return, Types } ] },
+	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_error( { wrong_static_return_arity,
+			{ expected, 1 }, { got, length( Types ) }, FunId }, Classname );
+
+
+%% For functions:
+
+check_clause_spec( { type, _, 'fun',
+					 _Seqs=[ _TypeProductForArgs, _ResultType ] },
+				   _FunNature=function, _Qualifiers, _FunId, _Classname ) ->
+	ok;
+
+
+%% For unmatched spec returns:
+
+% Presumably a rogue request (not using the right return type):
+check_clause_spec( { type, _, 'fun',
+					 _Seqs=[ _TypeProductForArgs, _ResultType ] },
+				   _FunNature=request, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_error( { incorrect_return_type, FunId,
+		{ is, request }, { not_using, {request_return,1} }, Classname } );
+
+% Rogue oneway:
+check_clause_spec( { type, _, 'fun',
+					 _Seqs=[ _TypeProductForArgs, _ResultType ] },
+				   _FunNature=oneway, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_error( { incorrect_return_type, FunId,
+		{ is, oneway }, { not_using, {oneway_return,0} }, Classname } );
+		%{ is, oneway }, { not_using, {oneway_return,0} } , Classname,
+		%  ResultType } );
+
+% Rogue static method:
+check_clause_spec( { type, _, 'fun',
+					 _Seqs=[ _TypeProductForArgs, _ResultType ] },
+				   _FunNature=static, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_error( { incorrect_return_type, FunId,
+		{ is, static }, { not_using, {static_return,0} }, Classname } );
+
+check_clause_spec( _UnexpectedTypeForm, FunNature, _Qualifiers, FunId, 
+				   Classname ) ->
+	wooper_internals:raise_error( { unexpected_return_type, FunId,
+								  { is, FunNature }, Classname } ).
 
 
 
-% Infers the nature of the corresponding function, ensures all method
-% terminators correspond, and transform them appropriately, in one pass.
+% Infers the nature of the corresponding function and any relevant method
+% qualifier(s), ensures that all method terminators correspond, and transforms
+% them appropriately, in one pass.
 %
-% We consider that all actual clauses of a method must explicitly terminate with
-% a WOOPER method terminator (of course the same for all clauses), rather than
-% calling an helper function that would use such a terminator (otherwise the
-% nature of methods could not be auto-detected, as there would be no way to
-% determine whether said helper should be considered as a method or not).
+% We consider that no method is to be explicitly exported and that all actual
+% clauses of a method must explicitly terminate with a WOOPER method terminator
+% (of course the same for all clauses), rather than calling an helper function
+% that would use such a terminator (otherwise the nature of methods could not be
+% auto-detected, as there would be no way to determine whether said helper
+% should be considered as a method or not).
 %
 -spec manage_method_terminators( meta_utils:clause_def(),
 								 meta_utils:function_id() ) ->
-							{ meta_utils:clause_def(), function_nature() }.
+		{ meta_utils:clause_def(), function_nature(), method_qualifiers() }.
 manage_method_terminators( _Clauses=[], FunId ) ->
 	wooper_internals:raise_error(
 			  { function_exported_yet_not_defined, FunId } );
@@ -273,10 +534,12 @@ manage_method_terminators( Clauses, FunId ) ->
 	%                                            Params, Transforms )
 	%
 	% Transforms is an ast_transforms record that contains a
-	% transformation_state field, which is of type maybe( function_nature() ):
-	% it starts as 'undefined', then the first terminal call branch of the first
-	% clause allows to detect and set the function nature, and afterwards all
-	% other branches are checked against it, and transformed.
+	% transformation_state field, which contains a value of type:
+	%       maybe( { function_nature(), method_qualifiers() }
+	%
+	% Indeed it starts as 'undefined', then the first terminal call branch of
+	% the first clause allows to detect and set the function nature, and
+	% afterwards all other branches are checked against it, and transformed.
 
 	% As empty bodies may happen (ex: 'receive' without an 'after'):
 	BodyTransformFun = fun
@@ -289,6 +552,11 @@ manage_method_terminators( Clauses, FunId ) ->
 		%( _BodyExprs=[ LastExpr ], Transforms ) ->
 		%    ast_expression:transform_expressions( LastExpr, Transforms );
 
+		% Registers specifically each last expression of a body to be
+		% transformed, as it is the place where we can guess the nature of a
+		% function and possibly, if it is a method, at least some of its
+		% qualifiers.
+		%
 		% At least an element exists:
 		( BodyExprs, Transforms ) -> % superfluous: when is_list( BodyExprs ) ->
 
@@ -314,7 +582,7 @@ manage_method_terminators( Clauses, FunId ) ->
 
 	end,
 
-	% In charge of managing the method terminators:
+	% In charge of detectiing the method terminators and qualifiers:
 	%
 	% (anonymous mute variables correspond to line numbers)
 	%
@@ -322,27 +590,52 @@ manage_method_terminators( Clauses, FunId ) ->
 
 		% First, requests:
 
-		% First (correct) request detection:
+		% First (correct, a priori non-const) request detection:
 		( LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper},
 						 {atom,_,return_state_result} },
 		  Params=[ _StateExpr, _ResExpr ],
-		  Transforms=#ast_transforms{
-			transformation_state=S } )
-							 when S =:= undefined orelse S =:= request ->
+		  Transforms=#ast_transforms{ transformation_state=undefined } ) ->
 
-			%trace_utils:debug_fmt( "~s/~B detected as a request.",
+			%trace_utils:debug_fmt( "~s/~B detected as a non-const request.",
 			%					   pair:to_list( FunId ) ),
 
 			% So that wooper:return_state_result( S, R ) becomes simply:
 			% { S, R }:
 			NewExpr = { tuple, LineCall, Params },
 			NewTransforms = Transforms#ast_transforms{
-							  transformation_state=request },
+							  transformation_state={ request, [] } },
 			{ [ NewExpr ], NewTransforms };
 
 
-		% Faulty request arity:
+		% Request was already detected, expected to be non-const, checking
+		% qualifiers:
+		%
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_state_result} },
+		  Params=[ _StateExpr, _ResExpr ],
+		  Transforms=#ast_transforms{
+			transformation_state={ request, Qualifiers } } ) ->
+
+			case lists:member( const, Qualifiers ) of
+
+				% Mistmatch:
+				true ->
+					wooper_internals:raise_error( { request_constness_mismatch,
+							{ line, LineCall }, {detected_as,const},
+							{ uses, {return_state_result,2} },
+							{ instead_of, {return_result_from_const,1} } } );
+
+				% Confirmed:
+				false ->
+					NewExpr = { tuple, LineCall, Params },
+					{ [ NewExpr ], Transforms }
+
+			end;
+
+
+		% Faulty return_state_result/2 arity:
 		( LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper},
 						 {atom,_,return_state_result} },
@@ -359,7 +652,79 @@ manage_method_terminators( Clauses, FunId ) ->
 						 {atom,_,return_state_result} },
 		  _Params,
 		  _Transforms=#ast_transforms{
-			transformation_state=OtherNature } ) ->
+			transformation_state={ OtherNature, _Qualifiers } } ) ->
+			wooper_internals:raise_error( { method_terminator_mismatch,
+				{ was, OtherNature }, { detected, request },
+				FunId, { line, LineCall } } );
+
+
+
+
+		% First (correct, a priori const) request detection:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_result_from_const} },
+		  Params=[ _ResExpr ],
+		  Transforms=#ast_transforms{ transformation_state=undefined } ) ->
+
+			%trace_utils:debug_fmt( "~s/~B detected as a const request.",
+			%					   pair:to_list( FunId ) ),
+
+			% So that wooper:return_result_from_const( R ) becomes simply:
+			% { S, R }:
+			NewExpr = { tuple, LineCall,
+						[ { var, LineCall, 'State' } | Params ] },
+			NewTransforms = Transforms#ast_transforms{
+							  transformation_state={ request, [ const ] } },
+			{ [ NewExpr ], NewTransforms };
+
+
+		% Request was already detected, expected to be const, checking
+		% qualifiers:
+		%
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_result_from_const} },
+		  Params=[ _ResExpr ],
+		  Transforms=#ast_transforms{
+			transformation_state={ request, Qualifiers } } ) ->
+
+			case lists:member( const, Qualifiers ) of
+
+				% Confirmed:
+				true ->
+					NewExpr = { tuple, LineCall,
+								[ { var, LineCall, 'State' } | Params ] },
+					{ [ NewExpr ], Transforms };
+
+				% Mistmatch:
+				false ->
+					wooper_internals:raise_error( { request_constness_mismatch,
+							{ line, LineCall }, {detected_as,non_const},
+							{ uses, {return_result_from_const,1} },
+							{ instead_of, {return_state_result,2} } } )
+
+			end;
+
+
+		% Faulty return_result_from_const/1 arity:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_result_from_const} },
+		  Params,
+		  _Transforms ) when length( Params ) =/= 1 ->
+			wooper_internals:raise_error( { wrong_arity, { line, LineCall },
+			  { wooper, return_result_from_const, { got, length( Params ) },
+				{ expected, 1 } }, FunId } );
+
+
+		% Nature mismatch:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_result_from_const} },
+		  _Params,
+		  _Transforms=#ast_transforms{
+			transformation_state={ OtherNature, _Qualifiers } } ) ->
 			wooper_internals:raise_error( { method_terminator_mismatch,
 				{ was, OtherNature }, { detected, request },
 				FunId, { line, LineCall } } );
@@ -469,19 +834,21 @@ manage_method_terminators( Clauses, FunId ) ->
 		ast_clause:transform_function_clauses( Clauses, Transforms ),
 
 	% Unless found different, a function is a (plain) function:
-	FunNature = case NewTransforms#ast_transforms.transformation_state of
+	{ FunNature, Qualifiers } =
+			  case NewTransforms#ast_transforms.transformation_state of
 
 		undefined ->
 			%trace_utils:debug_fmt( "~s/~B detected as a plain function.",
 			%					   pair:to_list( FunId ) ),
-			function;
+			{ function, _Qualifiers=[] };
 
+		% Ex: { request, [ const ] }
 		Other ->
 			Other
 
 	end,
 
-	{ NewClauses, FunNature }.
+	{ NewClauses, FunNature, Qualifiers }.
 
 
 

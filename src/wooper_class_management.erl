@@ -222,7 +222,7 @@ manage_superclasses( ParseAttrTable,
 	%
 	% Generally not to be called by the user, see getSuperclasses/1 instead.
 	%
-	%-spec get_superclasses() -> [ wooper:classname() ].
+	%-spec get_superclasses() -> static_return( [ wooper:classname() ] ).
 	%get_superclasses() ->
 	%	?superclasses.
 
@@ -244,11 +244,11 @@ manage_superclasses( ParseAttrTable,
 
 	GetSupSpecForm = { attribute, Line, spec, { GeSupFunId,
 				[ { type, Line, 'fun',
-					[ { type, Line, product, [] },
-					  { type, Line, list,
-						[ { remote_type, Line,
+					[ _SpecParams={ type, Line, product, [] },
+					  _SpecRes={ user_type, Line, static_return,
+								 [ { type, Line, list, [ { remote_type, Line,
 							[ {atom,Line,wooper},
-							  {atom,Line,classname}, [] ] } ] } ] } ] } },
+							  {atom,Line,classname}, [] ] } ] } ] } ] } ] } },
 
 	% Already checked to be a list of atoms:
 	ClassesForm = ast_generation:atoms_to_form( Superclasses ),

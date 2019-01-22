@@ -94,7 +94,7 @@ getWhiskerColor( State )->
 %
 % (oneway)
 %
--spec terminate( wooper:state(), 'crash' ) -> no_return().
+-spec terminate( wooper:state(), 'crash' ) -> oneway_return().
 terminate( State, crash ) ->
 	basic_utils:crash(),
 	wooper:return_state_only( State ).
@@ -121,6 +121,6 @@ toString( State ) ->
 %
 % (static)
 %
--spec get_mean_life_expectancy() -> age().
+-spec get_mean_life_expectancy() -> static_return( age() ).
 get_mean_life_expectancy() ->
 	wooper:return_static( 18 ).

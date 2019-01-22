@@ -890,6 +890,21 @@ The ``getSender`` macro should only be used for requests, as of course the sende
 If that macro is called nevertheless from a oneway, then it returns the atom ``undefined``.
 
 
+Finally, requests may be ``const``, i.e. just returning a result and leaving the state unchanged; for example:
+
+.. code:: erlang
+
+  getColor(State) ->
+	wooper:return_state_result(State,red).
+
+In this case, ``wooper:return_result_from_const/0`` shall be preferred to ``wooper:return_state_result/2``:
+
+.. code:: erlang
+
+ getColor(State) ->
+	wooper:return_result_from_const(red).
+
+
 
 For Oneways
 ___________
@@ -919,6 +934,14 @@ Oneways may also be ``const``, i.e. leave the state unchanged, only being called
   displayAge(State) ->
 	io:format("My age is ~B~n.",[ ?getAttr(age) ]),
 	wooper:return_state_only(State).
+
+In this case, ``wooper:return_from_const/0`` shall be preferred to ``wooper:return_state_only/1``:
+
+.. code:: erlang
+
+  displayAge(State) ->
+	io:format("My age is ~B~n.",[ ?getAttr(age) ]),
+	wooper:return_from_const().
 
 
 
@@ -982,7 +1005,7 @@ As for oneway, we could have:
 
 			 - a request *must* rely on either the ``request_return/1`` type or the ``request_const_return/1`` one
 			 - a oneway *must* rely on either the ``oneway_return/0`` type or the ``oneway_const_return/0``
-			 - a static method *must* rely on the ``static_return/1`` type
+			 - a static method *must* rely on the ``static_return/1`` type (no constness applicable in this case of course)
 
 
 
