@@ -76,21 +76,21 @@ getTeatCount( State ) ->
 % (request)
 %
 % Platypuses are supposed carnivorous though:
--spec canEat( wooper:state(), food() ) -> request_return( boolean() ).
+-spec canEat( wooper:state(), food() ) -> request_const_return( boolean() ).
 canEat( State, leaf ) ->
-	wooper:return_state_result( State, true );
+	wooper:return_result_from_const( true );
 
 canEat( State,chocolate ) ->
-	wooper:return_state_result( State, true );
+	wooper:return_result_from_const( true );
 
 canEat( State,weed ) ->
-	wooper:return_state_result( State, true );
+	wooper:return_result_from_const( true );
 
 canEat( State,fish ) ->
-	wooper:return_state_result( State, true );
+	wooper:return_result_from_const( true );
 
 canEat( State, _OtherFood ) ->
-	wooper:return_state_result( State, false ).
+	wooper:return_result_from_const( false ).
 
 
 
@@ -171,7 +171,7 @@ testCreationDeletion( State ) ->
 % (oneway)
 %
 -spec onWOOPERExitReceived( wooper:state(), pid(),
-							basic_utils:exit_reason() ) -> oneway_return().
+					basic_utils:exit_reason() ) -> oneway_const_return().
 onWOOPERExitReceived( State, Pid, ExitType ) ->
 
 	% Typically: "Received exit message '{{nocatch,
@@ -184,4 +184,4 @@ onWOOPERExitReceived( State, Pid, ExitType ) ->
 	trace_utils:debug_fmt( "Received exit message '~p' from ~w.",
 						   [ ExitType, Pid ] ),
 
-	wooper:return_state_only( State ).
+	wooper:return_from_const().
