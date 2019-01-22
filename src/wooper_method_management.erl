@@ -107,7 +107,7 @@
 %
 -spec manage_methods( compose_pair() ) -> compose_pair().
 manage_methods( { CompleteFunctionTable,
-				  ClassInfo=#class_info{ class={ Classname, _ClassForm},
+				  ClassInfo=#class_info{ class={ Classname, _ClassForm },
 										 requests=RequestTable,
 										 oneways=OnewayTable,
 										 statics=StaticTable,
@@ -257,7 +257,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 
 		true ->
 			wooper_internals:raise_error( { constness_request_mistmatch, FunId,
-				{ is, const }, { uses_spec, {request_return,1} },
+				{ clauses_tell, const }, { spec_uses, {request_return,1} },
 				{ instead_of, {request_const_return,1} }, Classname } );
 
 		false ->
@@ -277,7 +277,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 
 		false ->
 			wooper_internals:raise_error( { constness_request_mistmatch, FunId,
-				{ is, non_const }, { uses_spec, {request_const_return,1} },
+				{ clauses_tell, non_const }, { uses_spec, {request_const_return,1} },
 				{ instead_of, {request_return,1} }, Classname } )
 
 	end;
@@ -288,7 +288,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _ResultType={ user_type, _, request_return, [ _RType ] } ] },
 	 NonReqFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_error( { incorrect_return_type, FunId,
-		{ is, NonReqFunNature }, { uses, request_return }, Classname } );
+		{ clauses_tell, NonReqFunNature }, { uses, request_return }, Classname } );
 
 
 % Wrong arity for request_return/1:
@@ -315,7 +315,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 
 		true ->
 			wooper_internals:raise_error( { constness_request_mistmatch, FunId,
-				{ is, const }, { uses_spec, {request_return,1} },
+				{ clauses_tell, const }, { uses_spec, {request_return,1} },
 				{ instead_of, {request_const_return,1} }, Classname } );
 
 		false ->
@@ -335,7 +335,8 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 
 		false ->
 			wooper_internals:raise_error( { constness_request_mistmatch, FunId,
-				{ is, non_const }, { uses_spec, {request_const_return,1} },
+				{ clauses_tell, non_const }, 
+				{ uses_spec, {request_const_return,1} },
 				{ instead_of, {request_return,1} }, Classname } )
 
 	end;
@@ -352,7 +353,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 
 		true ->
 			wooper_internals:raise_error( { constness_oneway_mistmatch, FunId,
-				{ is, const }, { uses_spec, {oneway_return,0} },
+				{ clauses_tell, const }, { uses_spec, {oneway_return,0} },
 				{ instead_of, {oneway_const_return,0} }, Classname } );
 
 		false ->
@@ -372,7 +373,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 
 		false ->
 			wooper_internals:raise_error( { constness_oneway_mistmatch, FunId,
-				{ is, non_const }, { uses_spec, {oneway_const_return,0} },
+				{ clauses_tell, non_const }, { uses_spec, {oneway_const_return,0} },
 				{ instead_of, {oneway_return,0} }, Classname } )
 
 	end;
@@ -383,7 +384,8 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _ResultType={ user_type, _, oneway_return, [] } ] },
 	 NonReqFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_error( { incorrect_return_type, FunId,
-		{ is, NonReqFunNature }, { uses, oneway_return }, Classname } );
+		{ clauses_tell, NonReqFunNature }, { uses, oneway_return }, 
+									Classname } );
 
 
 % Wrong arity for oneway_return/1:
@@ -410,7 +412,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 
 		true ->
 			wooper_internals:raise_error( { constness_oneway_mistmatch, FunId,
-				{ is, const }, { uses_spec, {oneway_return,1} },
+				{ clauses_tell, const }, { uses_spec, {oneway_return,1} },
 				{ instead_of, {oneway_const_return,1} }, Classname } );
 
 		false ->
@@ -430,7 +432,8 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 
 		false ->
 			wooper_internals:raise_error( { constness_oneway_mistmatch, FunId,
-				{ is, non_const }, { uses_spec, {oneway_const_return,1} },
+				{ clauses_tell, non_const }, 
+				{ uses_spec, {oneway_const_return,1} },
 				{ instead_of, {oneway_return,1} }, Classname } )
 
 	end;
@@ -452,7 +455,8 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _ResultType={ user_type, _, static_return, [ _RType ] } ] },
 	 NonReqFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_error( { incorrect_return_type, FunId,
-		{ is, NonReqFunNature }, { uses, static_return } }, Classname );
+		{ clauses_tell, NonReqFunNature }, { uses, static_return } }, 
+								  Classname );
 
 
 % Wrong arity for static_return/1:
@@ -478,14 +482,16 @@ check_clause_spec( { type, _, 'fun',
 					 _Seqs=[ _TypeProductForArgs, _ResultType ] },
 				   _FunNature=request, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_error( { incorrect_return_type, FunId,
-		{ is, request }, { not_using, {request_return,1} }, Classname } );
+		{ clauses_tell, request }, { not_using, {request_return,1} }, 
+									Classname } );
 
 % Rogue oneway:
 check_clause_spec( { type, _, 'fun',
 					 _Seqs=[ _TypeProductForArgs, _ResultType ] },
 				   _FunNature=oneway, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_error( { incorrect_return_type, FunId,
-		{ is, oneway }, { not_using, {oneway_return,0} }, Classname } );
+		{ clauses_tell, oneway }, { not_using, {oneway_return,0} }, 
+									Classname } );
 		%{ is, oneway }, { not_using, {oneway_return,0} } , Classname,
 		%  ResultType } );
 
@@ -494,12 +500,13 @@ check_clause_spec( { type, _, 'fun',
 					 _Seqs=[ _TypeProductForArgs, _ResultType ] },
 				   _FunNature=static, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_error( { incorrect_return_type, FunId,
-		{ is, static }, { not_using, {static_return,0} }, Classname } );
+		{ clauses_tell, static }, { not_using, {static_return,0} }, 
+									Classname } );
 
-check_clause_spec( _UnexpectedTypeForm, FunNature, _Qualifiers, FunId, 
+check_clause_spec( _UnexpectedTypeForm, FunNature, _Qualifiers, FunId,
 				   Classname ) ->
 	wooper_internals:raise_error( { unexpected_return_type, FunId,
-								  { is, FunNature }, Classname } ).
+								  { clauses_tell, FunNature }, Classname } ).
 
 
 
@@ -582,7 +589,7 @@ manage_method_terminators( Clauses, FunId ) ->
 
 	end,
 
-	% In charge of detectiing the method terminators and qualifiers:
+	% In charge of detecting the method terminators and qualifiers:
 	%
 	% (anonymous mute variables correspond to line numbers)
 	%
@@ -608,8 +615,8 @@ manage_method_terminators( Clauses, FunId ) ->
 			{ [ NewExpr ], NewTransforms };
 
 
-		% Request was already detected, expected to be non-const, checking
-		% qualifiers:
+		% Already detected as a request that is expected to be non-const,
+		% checking qualifiers:
 		%
 		( LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper},
@@ -679,7 +686,7 @@ manage_method_terminators( Clauses, FunId ) ->
 			{ [ NewExpr ], NewTransforms };
 
 
-		% Request was already detected, expected to be const, checking
+		% Already detected as a request that is expected to be const, checking
 		% qualifiers:
 		%
 		( LineCall,
@@ -731,31 +738,58 @@ manage_method_terminators( Clauses, FunId ) ->
 
 
 
-		% First (correct) oneway detection:
+		% Second, oneways:
+
+		% First (correct, a priori non-const) oneway detection:
 		( _LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper},
 						 {atom,_,return_state_only} },
 		  _Params=[ StateExpr ],
-		  Transforms=#ast_transforms{
-			transformation_state=S } )
-							 when S =:= undefined orelse S =:= oneway ->
+		  Transforms=#ast_transforms{ transformation_state=undefined } ) ->
 
-			%trace_utils:debug_fmt( "~s/~B detected as a oneway.",
+			%trace_utils:debug_fmt( "~s/~B detected as a non-const oneway.",
 			%					   pair:to_list( FunId ) ),
 
 			% So that wooper:return_state_only( R ) becomes simply R:
 			NewExpr = StateExpr,
 			NewTransforms = Transforms#ast_transforms{
-							  transformation_state=oneway },
+							  transformation_state={ oneway, [] } },
 			{ [ NewExpr ], NewTransforms };
 
 
-		% Faulty oneway arity:
+		% Already detected as a oneway that is expected to be non-const,
+		% checking qualifiers:
+		%
 		( LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper},
 						 {atom,_,return_state_only} },
-		  Params=[ _State ],
-		  _Transforms ) ->
+		  _Params=[ StateExpr ],
+		  Transforms=#ast_transforms{
+						transformation_state={ oneway, Qualifiers } } ) ->
+
+			case lists:member( const, Qualifiers ) of
+
+				% Mistmatch:
+				true ->
+					wooper_internals:raise_error( { oneway_constness_mismatch,
+							{ line, LineCall }, {detected_as,const},
+							{ uses, {return_state_only,1} },
+							{ instead_of, {return_from_const,0} } } );
+
+				% Confirmed:
+				false ->
+					NewExpr = StateExpr,
+					{ [ NewExpr ], Transforms }
+
+			end;
+
+
+		% Faulty return_state_only/1 arity:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_state_only} },
+		  Params,
+		  _Transforms ) when length( Params ) =/= 1 ->
 			wooper_internals:raise_error( { wrong_arity, { line, LineCall },
 			  { wooper, return_state_only, { got, length( Params ) },
 				{ expected, 1 } }, FunId } );
@@ -765,23 +799,89 @@ manage_method_terminators( Clauses, FunId ) ->
 		( LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper},
 						 {atom,_,return_state_only} },
-		  Params,
+		  _Params,
 		  _Transforms=#ast_transforms{
-			transformation_state=OtherNature } ) when length( Params ) =/= 2 ->
+			transformation_state={ OtherNature, _Qualifiers } } ) ->
 			wooper_internals:raise_error( { method_terminator_mismatch,
 				{ was, OtherNature }, { detected, oneway },
 				FunId, { line, LineCall } } );
 
 
+		% First (correct, a priori const) oneway detection:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_from_const} },
+		  _Params=[],
+		  Transforms=#ast_transforms{ transformation_state=undefined } ) ->
+
+			%trace_utils:debug_fmt( "~s/~B detected as a const oneway.",
+			%					   pair:to_list( FunId ) ),
+
+			% So that wooper:return_from_const() becomes simply S:
+			NewExpr = { var, LineCall, 'State' },
+			NewTransforms = Transforms#ast_transforms{
+							  transformation_state={ oneway, [ const ] } },
+			{ [ NewExpr ], NewTransforms };
+
+
+		% Already detected as a oneway that is expected to be const, checking
+		% qualifiers:
+		%
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_from_const} },
+		  _Params=[],
+		  Transforms=#ast_transforms{
+						transformation_state={ oneway, Qualifiers } } ) ->
+
+			case lists:member( const, Qualifiers ) of
+
+				% Confirmed:
+				true ->
+					NewExpr = { var, LineCall, 'State' },
+					{ [ NewExpr ], Transforms };
+
+				% Mistmatch:
+				false ->
+					wooper_internals:raise_error( { oneway_constness_mismatch,
+							{ line, LineCall }, {detected_as,non_const},
+							{ uses, {return_from_const,0} },
+							{ instead_of, {return_state_only,1} } } )
+
+			end;
+
+
+		% Faulty return_from_const/0 arity:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_state_only} },
+		  Params,
+		  _Transforms ) when Params =/= [] ->
+			wooper_internals:raise_error( { wrong_arity, { line, LineCall },
+			  { wooper, return_state_only, { got, length( Params ) },
+				{ expected, 0 } }, FunId } );
+
+
+		% Nature mismatch:
+		( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_from_const} },
+		  _Params,
+		  _Transforms=#ast_transforms{
+			transformation_state={ OtherNature, _Qualifiers } } ) ->
+			wooper_internals:raise_error( { method_terminator_mismatch,
+				{ was, OtherNature }, { detected, oneway },
+				FunId, { line, LineCall } } );
+
+
+		% Third, static methods:
 
 		% First (correct) static method detection:
 		( _LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper},
 						 {atom,_,return_static} },
 		  _Params=[ ResultExpr ],
-		  Transforms=#ast_transforms{
-			transformation_state=S } )
-							 when S =:= undefined orelse S =:= static ->
+		  Transforms=#ast_transforms{ transformation_state=undefined } ) ->
 
 			%trace_utils:debug_fmt( "~s/~B detected as a static method.",
 			%					   pair:to_list( FunId ) ),
@@ -789,7 +889,28 @@ manage_method_terminators( Clauses, FunId ) ->
 			% So that wooper:return_static( R ) becomes simply R:
 			NewExpr = ResultExpr,
 			NewTransforms = Transforms#ast_transforms{
-							  transformation_state=static },
+							  transformation_state={ static, [] } },
+			{ [ NewExpr ], NewTransforms };
+
+
+		% Already detected as a static:
+	   %
+		% (currently exactly the same clause as above, as qualifiers do not
+		% matter for static:
+		%
+		( _LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_static} },
+		  _Params=[ ResultExpr ],
+		  Transforms=#ast_transforms{
+						transformation_state={ static, _Qualifiers } } ) ->
+
+			%trace_utils:debug_fmt( "~s/~B confirmed as a static method.",
+			%					   pair:to_list( FunId ) ),
+
+			% So that wooper:return_static( R ) becomes simply R:
+			NewExpr = ResultExpr,
+			NewTransforms = Transforms,
 			{ [ NewExpr ], NewTransforms };
 
 
@@ -810,7 +931,7 @@ manage_method_terminators( Clauses, FunId ) ->
 						 {atom,_,return_static} },
 		  _Params,
 		  _Transforms=#ast_transforms{
-			transformation_state=OtherNature } ) ->
+			transformation_state={ OtherNature, _Qualifiers } } ) ->
 			wooper_internals:raise_error( { method_terminator_mismatch,
 				{ was, OtherNature }, { detected, static },
 				FunId, { line, LineCall } } );
