@@ -91,7 +91,7 @@ run( IsDebug ) ->
 
 	end,
 
-	MyC ! { setAge, 5 },
+	MyC ! { setAge, 5, self() },
 
 	MyC ! { getAge, [], self() },
 	receive

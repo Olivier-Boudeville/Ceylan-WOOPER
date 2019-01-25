@@ -40,11 +40,9 @@
 %
 % Always accurate, in all constructors, methods and destructors.
 %
-% (const request)
-%
--spec getClassname( wooper:state() ) -> request_return( classname() ).
+-spec getClassname( wooper:state() ) -> request_const_return( classname() ).
 getClassname( State ) ->
-	wooper:return_state_result( State, State#state_holder.actual_class ).
+	wooper:return_result_from_const( State#state_holder.actual_class ).
 
 
 
@@ -52,13 +50,12 @@ getClassname( State ) ->
 %
 % Always accurate, in all constructors, methods and destructors.
 %
-% (const request)
-%
--spec getSuperclasses( wooper:state() ) -> request_return( [ classname() ] ).
+-spec getSuperclasses( wooper:state() ) ->
+							 request_const_return( [ classname() ] ).
 getSuperclasses( State ) ->
 	ActualModule = State#state_holder.actual_class,
 	SuperClasses = ActualModule:get_superclasses(),
-	wooper:return_state_result( State, SuperClasses ).
+	wooper:return_result_from_const( SuperClasses ).
 
 
 
@@ -70,10 +67,10 @@ getSuperclasses( State ) ->
 %
 % This is a method for debug purpose, only activated if wooper_debug is defined.
 %
-% (const request)
-%
+-spec wooper_get_instance_description( wooper:state() ) ->
+							 request_const_return( text_utils:ustring() ).
 wooper_get_instance_description( State ) ->
-	wooper:return_state_result( State, wooper:instance_to_string( State ) ).
+	wooper:return_result_from_const( wooper:instance_to_string( State ) ).
 
 
 -endif. % wooper_debug

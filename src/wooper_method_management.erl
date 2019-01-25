@@ -183,6 +183,7 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 
 		request ->
 			check_spec( Spec, request, Qualifiers, Classname ),
+			check_state_argument( NewClauses, FunId ),
 			RequestInfo = function_to_request_info( NewFunInfo ),
 			NewRequestTable = table:addNewEntry( FunId, RequestInfo,
 												 RequestTable ),
@@ -191,6 +192,7 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 
 		oneway ->
 			check_spec( Spec, oneway, Qualifiers, Classname ),
+			check_state_argument( NewClauses, FunId ),
 			OnewayInfo = function_to_oneway_info( NewFunInfo ),
 			NewOnewayTable = table:addNewEntry( FunId, OnewayInfo,
 												OnewayTable ),
@@ -277,7 +279,8 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 
 		false ->
 			wooper_internals:raise_error( { constness_request_mistmatch, FunId,
-				{ clauses_tell, non_const }, { uses_spec, {request_const_return,1} },
+				{ clauses_tell, non_const },
+				{ uses_spec, {request_const_return,1} },
 				{ instead_of, {request_return,1} }, Classname } )
 
 	end;
@@ -288,7 +291,8 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _ResultType={ user_type, _, request_return, [ _RType ] } ] },
 	 NonReqFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_error( { incorrect_return_type, FunId,
-		{ clauses_tell, NonReqFunNature }, { uses, request_return }, Classname } );
+		{ clauses_tell, NonReqFunNature }, { uses, request_return },
+									Classname } );
 
 
 % Wrong arity for request_return/1:
@@ -335,7 +339,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 
 		false ->
 			wooper_internals:raise_error( { constness_request_mistmatch, FunId,
-				{ clauses_tell, non_const }, 
+				{ clauses_tell, non_const },
 				{ uses_spec, {request_const_return,1} },
 				{ instead_of, {request_return,1} }, Classname } )
 
@@ -373,7 +377,8 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 
 		false ->
 			wooper_internals:raise_error( { constness_oneway_mistmatch, FunId,
-				{ clauses_tell, non_const }, { uses_spec, {oneway_const_return,0} },
+				{ clauses_tell, non_const },
+				{ uses_spec, {oneway_const_return,0} },
 				{ instead_of, {oneway_return,0} }, Classname } )
 
 	end;
@@ -384,7 +389,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _ResultType={ user_type, _, oneway_return, [] } ] },
 	 NonReqFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_error( { incorrect_return_type, FunId,
-		{ clauses_tell, NonReqFunNature }, { uses, oneway_return }, 
+		{ clauses_tell, NonReqFunNature }, { uses, oneway_return },
 									Classname } );
 
 
@@ -432,7 +437,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 
 		false ->
 			wooper_internals:raise_error( { constness_oneway_mistmatch, FunId,
-				{ clauses_tell, non_const }, 
+				{ clauses_tell, non_const },
 				{ uses_spec, {oneway_const_return,1} },
 				{ instead_of, {oneway_return,1} }, Classname } )
 
@@ -455,7 +460,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _ResultType={ user_type, _, static_return, [ _RType ] } ] },
 	 NonReqFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_error( { incorrect_return_type, FunId,
-		{ clauses_tell, NonReqFunNature }, { uses, static_return } }, 
+		{ clauses_tell, NonReqFunNature }, { uses, static_return } },
 								  Classname );
 
 
@@ -482,7 +487,7 @@ check_clause_spec( { type, _, 'fun',
 					 _Seqs=[ _TypeProductForArgs, _ResultType ] },
 				   _FunNature=request, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_error( { incorrect_return_type, FunId,
-		{ clauses_tell, request }, { not_using, {request_return,1} }, 
+		{ clauses_tell, request }, { not_using, {request_return,1} },
 									Classname } );
 
 % Rogue oneway:
@@ -490,7 +495,7 @@ check_clause_spec( { type, _, 'fun',
 					 _Seqs=[ _TypeProductForArgs, _ResultType ] },
 				   _FunNature=oneway, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_error( { incorrect_return_type, FunId,
-		{ clauses_tell, oneway }, { not_using, {oneway_return,0} }, 
+		{ clauses_tell, oneway }, { not_using, {oneway_return,0} },
 									Classname } );
 		%{ is, oneway }, { not_using, {oneway_return,0} } , Classname,
 		%  ResultType } );
@@ -500,13 +505,51 @@ check_clause_spec( { type, _, 'fun',
 					 _Seqs=[ _TypeProductForArgs, _ResultType ] },
 				   _FunNature=static, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_error( { incorrect_return_type, FunId,
-		{ clauses_tell, static }, { not_using, {static_return,0} }, 
+		{ clauses_tell, static }, { not_using, {static_return,0} },
 									Classname } );
 
 check_clause_spec( _UnexpectedTypeForm, FunNature, _Qualifiers, FunId,
 				   Classname ) ->
 	wooper_internals:raise_error( { unexpected_return_type, FunId,
 								  { clauses_tell, FunNature }, Classname } ).
+
+
+
+
+% Checks that, in the specified clauses of specified function (corresponding to
+% a request or a oneway), the first parameter is 'State' indeed.
+%
+% Note: enforces a very welcome convention, but also complies with the
+% expression that the support for example of return_result_from_const/1
+% introduces (ex: { var, LineCall, 'State'} added in the AST, hence the variable
+% name.).
+%
+-spec check_state_argument( [ meta_utils:clause_def() ],
+							ast_info:function_id() ) -> void().
+check_state_argument( Clauses, FunId ) ->
+	[ check_clause_for_state( C, FunId ) || C <- Clauses ].
+
+
+
+% (helper)
+%
+check_clause_for_state(
+  _Clause={ clause, _, _Params=[ {var,_,'State'} | _ ], [], _Body }, _FunId ) ->
+	ok;
+
+check_clause_for_state(
+  _Clause={ clause, _, _Params=[ {var,Line,NonState} | _ ], [], _Body },
+  FunId ) ->
+	wooper_internals:raise_error( { non_state_initial_parameter, NonState,
+									FunId, { line, Line } } );
+
+% Should a non-var form be found, we were considering not halting the
+% transformation (as the compiler would raise an error afterwards), however it
+% would then report "variable 'State' is unbound", which is less clear than:
+%
+check_clause_for_state( _Clause, FunId ) ->
+	wooper_internals:raise_error( { invalid_state_initial_parameter,
+									FunId } ).
 
 
 
@@ -559,10 +602,10 @@ manage_method_terminators( Clauses, FunId ) ->
 		%( _BodyExprs=[ LastExpr ], Transforms ) ->
 		%    ast_expression:transform_expressions( LastExpr, Transforms );
 
-		% Registers specifically each last expression of a body to be
-		% transformed, as it is the place where we can guess the nature of a
-		% function and possibly, if it is a method, at least some of its
-		% qualifiers.
+		% Processes specifically each last expression of a body to be
+		% transformed (and only them), as it is the place where we can guess the
+		% nature of a function and possibly, if it is a method, at least some of
+		% its qualifiers.
 		%
 		% At least an element exists:
 		( BodyExprs, Transforms ) -> % superfluous: when is_list( BodyExprs ) ->
@@ -596,6 +639,20 @@ manage_method_terminators( Clauses, FunId ) ->
 	CallTransformFun = fun
 
 		% First, requests:
+
+		% Better use the most precise return pseudo-function if this clause is
+		% const (since returning the initial State):
+		%
+		( _LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_state_result} },
+		  _Params=[ _StateExpr={ var, Line, 'State'}, _ResExpr ],
+		  _Transforms ) ->
+			wooper_internals:raise_error( { const_request_clause, FunId,
+							{ shall_use, {return_result_from_const,1} },
+							{ instead_of, {return_state_result,2} },
+							{ line, Line } } );
+
 
 		% First (correct, a priori non-const) request detection:
 		( LineCall,
@@ -739,6 +796,19 @@ manage_method_terminators( Clauses, FunId ) ->
 
 
 		% Second, oneways:
+
+		% Better use the most precise return pseudo-function if this clause is
+		% const (since returning the initial State):
+		%
+		( _LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper},
+						 {atom,_,return_state_only} },
+		  _Params=[ _StateExpr={ var, Line, 'State'} ],
+		  _Transforms ) ->
+			wooper_internals:raise_error( { const_oneway_clause, FunId,
+							{ shall_use, {return_result_from_const,0} },
+							{ instead_of, {return_state_only,1} },
+							{ line, Line } } );
 
 		% First (correct, a priori non-const) oneway detection:
 		( _LineCall,
@@ -894,7 +964,7 @@ manage_method_terminators( Clauses, FunId ) ->
 
 
 		% Already detected as a static:
-	   %
+		%
 		% (currently exactly the same clause as above, as qualifiers do not
 		% matter for static:
 		%

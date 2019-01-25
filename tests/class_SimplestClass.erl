@@ -14,8 +14,10 @@
 
 -define( class_attributes, [ age, gender ] ).
 
+
 % Non-method exported functions:
 -export([ example_fun/0, toString/1 ]).
+
 
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
@@ -49,13 +51,19 @@ destruct( State ) ->
 
 
 % Returns the age of this creature.
--spec getAge( wooper:state() ) -> request_return( age() ).
+%
+% (const request)
+%
+-spec getAge( wooper:state() ) -> request_const_return( age() ).
 getAge( State ) ->
-	wooper:return_state_result( State, ?getAttr(age) ).
+	wooper:return_result_from_const( ?getAttr(age) ).
 
 
 
 % Sets the age of this creature.
+%
+% (oneway)
+%
 -spec setAge( wooper:state(), age() ) -> oneway_return().
 setAge( State, _NewAge ) ->
 	% Mother implementation chosen faulty to check override:
@@ -64,6 +72,9 @@ setAge( State, _NewAge ) ->
 
 
 % Increments the age of this creature.
+%
+% (oneway)
+%
 -spec declareBirthday( wooper:state() ) -> oneway_return().
 declareBirthday( State ) ->
 	wooper:return_state_only(
@@ -72,9 +83,12 @@ declareBirthday( State ) ->
 
 
 % Returns the gender of this creature.
--spec getGender( wooper:state() ) -> request_return( gender() ).
+%
+% (const request)
+%
+-spec getGender( wooper:state() ) -> request_const_return( gender() ).
 getGender( State ) ->
-	wooper:return_state_result( State, ?getAttr(gender) ).
+	wooper:return_result_from_const( ?getAttr(gender) ).
 
 
 

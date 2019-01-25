@@ -37,10 +37,10 @@
 ---------------------------------------------------
 
 
-:Organisation: Copyright (C) 2008-2018 Olivier Boudeville
+:Organisation: Copyright (C) 2008-2019 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation Date: Wednesday, November 14, 2018
-:Lastly Updated: Sunday, December 23, 2018
+:Lastly Updated: Thursday, January 24, 2019
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -85,7 +85,7 @@ WOOPER, which stands for *Wrapper for Object-Oriented Programming in Erlang*, is
 
 This documentation applies to the WOOPER 2.0 version.
 
-WOOPER is a rather autonomous part of the `Ceylan <https://github.com/Olivier-Boudeville/Ceylan>`_ project.
+WOOPER is a rather autonomous part of the `Ceylan <https://github.com/Olivier-Boudeville/Ceylan>`_ project (yet it uses `Myriad <https://github.com/Olivier-Boudeville/Ceylan-Myriad>`_ and is used by `Traces <https://github.com/Olivier-Boudeville/Ceylan-Traces>`_).
 
 At least a basic knowledge of Erlang is expected in order to use WOOPER.
 
@@ -105,7 +105,7 @@ Motivations & Purpose
 
 Some problems may almost only be tackled efficiently thanks to an object-oriented modelling.
 
-The set of code and conventions proposed here allows to benefit from all the main OOP features (including polymorphism, life cycle management, state management and multiple inheritance) directly from Erlang (which natively does not rely on the OOP paradigm), so that - in the cases where it makes sense - an object-oriented approach at the implementation level can be easily achieved.
+The set of code and conventions proposed here allows to benefit from all the main OOP features (including polymorphism, life cycle management, state management, passive or active instances, and multiple inheritance) directly from Erlang (which natively does not rely on the OOP paradigm), so that - in the cases where it makes sense - an object-oriented approach at the implementation level can be easily achieved.
 
 
 
@@ -161,14 +161,15 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
  -include("wooper.hrl").
 
  % No need to export constructors, destructor or methods.
+ % Type specifications remain optional.
 
  % Constructs a new Cat.
  construct(State,Age,Gender,FurColor,WhiskerColor) ->
 	% First the direct mother classes:
-	MammalState = class_Mammal:construct( State, Age, Gender, FurColor ),
+	MammalState = class_Mammal:construct(State,Age,Gender,FurColor),
 	ViviparousMammalState = class_ViviparousBeing:construct(MammalState),
 	% Then the class-specific attributes; returns an updated state:
-	setAttribute( ViviparousMammalState, whisker_color, WhiskerColor ).
+	setAttribute(ViviparousMammalState,whisker_color,WhiskerColor).
 
  destruct(State) ->
 	io:format( "Deleting cat ~w! (overridden destructor)~n", [self()] ),
@@ -176,38 +177,39 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
 
  % Member methods.
 
- % A cat-specific const request:
+ % A cat-specific request, supposing the developer missed the fact
+ % that it is a const one (no problem):
  getWhiskerColor(State)->
-	wooper:return_state_result( State, ?getAttr(whisker_color) ).
+	wooper:return_state_result(State,?getAttr(whisker_color)).
 
  % A (non-const) oneway, with a spec:
  -spec setWhiskerColor(wooper:state(),foo:color()) -> oneway_return().
  setWhiskerColor(State,NewColor)->
 	NewState = setAttribute( State, whisker_color, NewColor ),
-	wooper:return_state_only( NewState ).
+	wooper:return_state_only(NewState).
 
  % Overrides any request method defined in the Mammal class:
  % (const request)
  canEat(State,soup) ->
-	wooper:return_state_result( State, true );
+	wooper:return_result_from_const(true);
 
  canEat(State,croquette) ->
-	wooper:return_state_result( State, true );
+	wooper:return_result_from_const(true);
 
  canEat(State,meat) ->
-	wooper:return_state_result( State, true );
+	wooper:return_result_from_const(true);
 
  canEat(State,_OtherFood) ->
-	wooper:return_state_result( State, false ).
+	wooper:return_result_from_const(false).
 
  % Static method:
  get_default_whisker_color() ->
-	white.
+	wooper:return_static(white).
 
 
 Straightforward, isn't it? We will discuss it in-depth, though.
 
-To test this class (provided that ``GNU make`` and ``Erlang 21.0`` or more recent are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on `Ceylan-Myriad <http://myriad.esperide.org>`_, hence to be installed first [#]_:
+To test this class (provided that ``GNU make`` and ``Erlang 21.0`` or more recent [#]_ are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on `Ceylan-Myriad <http://myriad.esperide.org>`_, hence is to be installed first:
 
 .. code:: bash
 
@@ -221,7 +223,7 @@ To test this class (provided that ``GNU make`` and ``Erlang 21.0`` or more recen
  $ cd Ceylan-WOOPER && make all
 
 
-.. [#] Note that, in the Ceylan-Myriad repository, we have a script to streamline the installation of Erlang, see `install-erlang.sh <https://github.com/Olivier-Boudeville/Ceylan-Myriad/blob/master/conf/install-erlang.sh>`_.
+.. [#] Note that, in the Ceylan-Myriad repository, we have a script to streamline the installation of Erlang, see `install-erlang.sh <https://github.com/Olivier-Boudeville/Ceylan-Myriad/blob/master/conf/install-erlang.sh>`_; use ``install-erlang.sh --help`` for guidance.
 
 
 Running the cat-related example just boils down to:
@@ -261,14 +263,14 @@ Although applying blindly an OOP approach while using languages based on other p
 
 Examples of this kind of systems are multi-agent simulations. If they often need massive concurrency, robustness, distribution, etc. (Erlang is particularly suitable for that), the various types of agents have also often to rely on similar kinds of states and behaviours, while still being able to be further specialised on a per-type basis.
 
-The example_ mentioned in this document is an illustration [#]_ of the interacting lives of numerous animals of various species. Obviously, they have to share behaviours (ex: all ovoviviparous beings may lay eggs, all creatures can live and die, all have an age, etc.), which cannot be mapped easily (read: automatically) to Erlang concepts without adding some generic constructs.
+The example_ mentioned through the current guide is an illustration [#]_ of the interacting lives of numerous animals of various species. Obviously, they have to share behaviours (ex: all ovoviviparous beings may lay eggs, all creatures can live and die, all have an age, etc.), which cannot be mapped easily (read: automatically) to Erlang concepts without adding some generic constructs.
 
-.. [#] This example is not a *simulation*, it is just a multi-agent system. For real, massive, discrete-time simulations of complex systems in Erlang (using WOOPER), one may refer to `Sim-Diasca <http://www.sim-diasca.com>`_ instead.
+.. [#] This example is not a *simulation*, it is just a multi-agent system. For real, massive, discrete-time simulations of complex systems in Erlang (using WOOPER), one may refer to `Sim-Diasca <http://www.sim-diasca.com>`_ instead (a free software simulation engine).
 
 
 WOOPER, which stands for *Wrapper for OOP in Erlang*, is a lightweight yet effective (performance-wise, but also regarding the user-side  developing efforts) means of making these constructs available, notably in terms of state management and multiple inheritance.
 
-The same programs could certainly be implemented without such OOP constructs, but at the expense of way too much manually-crafted, specific (per-class) code. This process would be tedious, error-prone, and most often the result could hardly be maintained.
+The same programs could certainly be implemented *without* such OOP constructs, but at the expense of way too much manually-crafted, specific (per-class) code. This process would be tedious, error-prone, and most often the result could hardly be maintained.
 
 
 :raw-latex:`\pagebreak`
@@ -292,7 +294,7 @@ Classes
 Classes & Names
 ...............
 
-A class is a blueprint to create objects, a common scheme describing the state and behaviour of its instances, i.e. the attributes and methods that the created objects for that class all have.
+A class is a blueprint to create objects, a common scheme describing the state and behaviour of its instances, i.e. the attributes and methods that all objects created from that class shall support.
 
 With WOOPER, each class has a unique name, such as ``class_Cat``.
 
@@ -306,18 +308,18 @@ Similarly, a pink flamingo class could be declared as ``class_PinkFlamingo``, in
 Inheritance & Superclasses
 ..........................
 
-A WOOPER class can inherit from other classes, in which case the state and behaviour defined in the mother classes are readily available to this child class.
+A WOOPER class can inherit from other classes, in which case the state and behaviour defined in the mother classes will be readily available to this child class.
 
-Being in a **multiple inheritance** context, a given class can have any number (``[0..n]``) of direct mother classes, which themselves may have their mother classes, and so on. This leads to a class hierarchy that forms a direct, acyclic graph.
+Being in a **multiple inheritance** context, a given class can have any number (``[0..n]``) of direct mother classes, which themselves may have their mother classes, and so on. This is to lead to a class hierarchy that forms a direct, acyclic graph.
 
-This is declared in WOOPER thanks to the ``superclasses`` attribute. For example, a class with no mother class should specify, once having declared its module:
+Mother classes are to be declared in WOOPER thanks to the ``superclasses`` attribute. For example, a class with no mother class should specify, once having declared its module:
 
 .. code:: erlang
 
  -superclasses([]).
 
 
-In this particular case, with no mother class to be declared, this ``superclasses`` attribute could be omitted as a whole (yet this would be less clear for the reader).
+In this particular case, with no mother class to be declared, this ``superclasses`` attribute could be omitted as a whole (yet this would be probably less obvious to the reader).
 
 .. comment This is declared in WOOPER thanks to the ``get_superclasses/0`` function. For example, a class with no mother class should specify, once having declared its module, ``get_superclasses() -> [].`` [#]_.
 
@@ -330,7 +332,7 @@ As for our cat, this superb animal could be modelled both as a mammal (itself a 
  -superclasses([class_Mammal,class_ViviparousBeing]).
 
 
-.. [#] Neither of them is a subset of the other, these are mostly unrelated concepts, at least in the context of that example! (ex: a platypus is a mammal, but not a viviparous being).
+.. [#] Neither of them is a subset of the other, these are mostly unrelated concepts, at least in the context of that example! (ex: a platypus is a mammal, but not a viviparous being, right?).
 
 
 The superclasses (direct mother classes) of a given class can be known thanks to its ``get_superclasses/0`` static method [#]_ (automatically defined by WOOPER):
@@ -340,7 +342,7 @@ The superclasses (direct mother classes) of a given class can be known thanks to
  > class_Cat:get_superclasses().
  [class_Mammal,class_ViviparousBeing]
 
-.. [#] Note that, to anticipate a bit, a static method (i.e. a class method that does not apply to any specific instance) of a class X is nothing more than an Erlang function, exported from the corresponding ``class_X`` module, which would return its result ``R`` as: ``wooper:return_static(R)``.
+.. [#] Note that, to anticipate a bit, a static method (i.e. a class method that does not apply to any specific instance of it) of a class ``X`` is nothing more than an Erlang function, exported by WOOPER from the corresponding ``class_X`` module and which would return its result ``R`` as: ``wooper:return_static(R)``. The corresponding type specification would be ``-spec get_superclasses() -> static_return([wooper:classname()]).`` here.
 
 
 
@@ -352,13 +354,18 @@ Instances
 Instance Mapping
 ................
 
-With WOOPER, which focuses on multi-agent systems, all **instances** of a class are mapped to Erlang processes (one WOOPER instance is exactly one Erlang process).
+With WOOPER, which focuses on multi-agent systems, all **active instances** of a class are mapped to Erlang processes (one WOOPER instance is exactly one Erlang process).
+
 
 They are therefore, in UML parlance, *active objects* (each has its own thread of execution, they may apparently "live" simultaneously [#]_).
 
-.. [#] For some uses, such a concurrent feature (with *active* instances) may not be needed, in which case one may deal also with purely *passive* instances (as Erlang terms, not Erlang processes).
+.. [#] For some uses, such a concurrent feature (with *active* instances) may not be needed, in which case one may prefer dealing with purely *passive* instances (implemented as mere Erlang *terms* instead of Erlang *processes*).
 
 	   To anticipate a bit, instead of using ``new/N`` (returning the PID of a new process instance looping over its state), one may rely on ``new_passive/N``, returning to the caller process an opaque term corresponding to the initial state of a new passive instance, a term that can be then stored and interacted upon at will.
+
+
+Such an instance process simply loops over its state forever, waiting for incoming method calls and processing them one after the other.
+
 
 
 Instance State
@@ -379,28 +386,29 @@ Methods
 
 They can be either:
 
-- **member methods**: to be applied to a specific *instance* (of a given class), like in: ``MyCat ! declareBirthday``
+- **member methods**: they applies to a specific *instance* (of a given class), like in: ``MyCat ! declareBirthday``
 
-- or **static methods**: general to a *class*, not targeting specifically an instance, like: ``class_Cat:get_default_mew_duration()``
+- or **static methods**: they are general to a *class*, not targeting specifically an instance of it, like in: ``class_Cat:get_default_mew_duration()``
 
 
 Unless specified otherwise, just mentioning *method* by itself refers to a *member method*. Static methods are discussed into their specific subsection.
 
-**Member methods** can be publicly called by any process (be it WOOPER-based or not - provided of course it knows the PID of that instance), whether locally or remotely (i.e. on other networked computers, like with RMI or with CORBA, or directly from the same Erlang node), distribution (and parallelism) being seamlessly managed thanks to Erlang.
+**Member methods** can be publicly called by any process (be it WOOPER-based or not) - provided of course it knows the PID of that instance - whether locally or remotely (i.e. on other networked computers, like with RMI or with CORBA, or directly from the same Erlang node), distribution (and parallelism) being seamlessly managed thanks to Erlang.
 
-Member methods (either inherited or defined directly in the class) are mapped to specific Erlang functions, triggered by Erlang messages.
+Member methods (either inherited or defined directly in the class) are mapped to specific Erlang functions that are triggered by Erlang messages.
 
 For example, our cat class may define, among others, following member methods (actual arities to be discussed later):
 
 - ``canEat``, taking one parameter specifying the type of food, and returning whether the corresponding cat can eat that kind of food; here the implementation should be cat-specific (i.e. specific to cats and also, possibly, specific to this very single cat), whereas the method signature shall be shared by all beings
 
-- ``getWhiskersColor``, taking no parameter, returning the color of its whiskers; this is indeed a purely cat-specific method, and different cats may be different whisker colors; as this method, like the previous one, returns a result to the caller, it is a *request* method
+- ``getWhiskersColor``, taking no parameter, returning the color of its whiskers; this is indeed a purely cat-specific method, and different cats may have different whisker colors; as this method, like the previous one, returns a result to the caller, it is a *request* method
 
 - ``declareBirthday``, incrementing the age of our cat, not taking any parameter nor returning anything; it will be therefore be implemented as a *oneway* method (i.e. not returning any result to the caller, hence not even needing to know it), whose call is only interesting for its effect on the cat state: here, making it one year older
 
 - ``setWhiskerColor``, assigning the specified color to the whiskers of that cat instance, not returning anything (another oneway method, then)
 
-Declaring a birthday is not cat-specific, nor mammal-specific: we can consider it being creature-specific. Cat instances should then inherit this method, preferably indirectly from the ``class_Creature`` class, in all cases without having to specify anything, since the ``wooper_superclasses`` define already implies it (implying one time for all that cats *are* creatures). Of course this inherited method may be overridden at will anywhere in the class hierarchy.
+
+Declaring a birthday is not cat-specific, nor mammal-specific: we can consider it being creature-specific. Cat instances should then inherit this method, preferably indirectly from the ``class_Creature`` class, in all cases without having to specify anything, since the ``superclasses`` attribute already implies it (implying one time for all that cats *are* creatures and thus, unless specified otherwise, are and behave as such). Of course this inherited method may be overridden at will anywhere in the class hierarchy.
 
 We will discuss the *definition* of these methods later, but for the moment let's determine their signatures and declarations, and how we are expected to *call* them.
 
@@ -408,27 +416,18 @@ We will discuss the *definition* of these methods later, but for the moment let'
 Method Declaration
 ..................
 
-The cat-specific member (i.e. non-static) methods are to be declared:
+All cat-specific methods (member or static ones) are to be defined in the context of ``class_Cat`` (defined, as mentioned, in ``class_Cat.erl``). Defining a method automatically declares it, so no method should be explicitly exported (knowing WOOPER is to take care of it).
 
-- in the ``class_Cat`` (defined as mentioned in ``class_Cat.erl``)
-- thanks to the ``wooper_method_export`` define (which, as expected, automatically exports these member methods)
 
-Their arity should be equal to the number of parameters they should be called with, plus one that is automatically managed by WOOPER and corresponds to the (private) state of that instance.
+The arity of member methods should be equal to the number of parameters they should be called with, plus one that is automatically managed by WOOPER and that corresponds to the (strictly private, never exported) state of that instance.
 
 This ``State`` variable defined by WOOPER can be somehow compared to the ``self`` parameter of Python, or to the ``this`` hidden pointer of C++. That state is automatically kept by WOOPER instances in their main loop, and automatically prepended, as first element, to the parameters of incoming method calls.
 
-In our example, the declarations could therefore result in:
 
-.. code:: erlang
-
- -define(wooper_method_export, canEat/2, getWhiskerColor/1,
-		 setWhiskerColor/2).
+.. note:: To respect the principle of least astonishment, WOOPER demands that this first parameter is named exactly ``State`` (doing otherwise will result in a compile-time WOOPER error being issued).
 
 
-.. Note:: In our example, ``declareBirthday/1`` will be inherited but not overridden (its base implementation being fine for cats as well), so it should not be listed among the ``class_Cat`` methods.
-
-
-Some method names are reserved for WOOPER; notably no user method should have its name prefixed with ``wooper``.
+Some names are reserved for WOOPER; notably no user method should have its name prefixed with ``wooper``.
 
 .. comment In our example, the declarations could therefore result in:
   get_member_methods() ->
@@ -470,18 +469,17 @@ Some method names are reserved for WOOPER; notably no user method should have it
   On the other hand, method calls, triggered by messages instead, could not have their access controlled (without even mentioning the runtime overhead). For example, protected oneways cannot be checked for accessibility, as the message sender is not known in the context of this kind of method call.
 
 
-  The complete list of reserved function names that do not start with the ``wooper_`` prefix is:
+The list of reserved function names (that shall thus not be defined by a class developer) includes:
 
- - ``get_classname``
- - ``get_superclasses``
- - ``executeRequest``
- - ``executeOneway``
- - ``delete_any_instance_referenced_in``
- - ``is_wooper_debug``
+- ``get_classname`` and ``get_superclasses``
+- ``executeRequest`` and ``executeRequestAs``
+- ``executeOneway`` and ``executeOnewayAs``
+- ``new`` and other related construction operators (``new_link``, ``synchronous_new``, etc.; see below)
+- ``delete_any_instance_referenced_in``, ``delete_synchronously_any_instance_referenced_in``, ``delete_synchronously_instances``
 
- They are reserved for all arities.
+They are reserved for all arities.
 
- Note that functions that must be defined by the class developer are unconditionally exported by the WOOPER header, so that a compile-time error is issued whenever at least one of them is not defined.
+.. comment  Note that functions that must be defined by the class developer are unconditionally exported by the WOOPER header, so that a compile-time error is issued whenever at least one of them is not defined.
 
 
 
@@ -489,13 +487,13 @@ Some method names are reserved for WOOPER; notably no user method should have it
 Method Invocation
 .................
 
-Let's suppose that the ``MyCat`` variable designates an instance of ``class_Cat``. Then this ``MyCat`` reference is actually just the PID of the Erlang process hosting this instance.
+Let's suppose that the ``MyCat`` variable designates an instance of ``class_Cat``. Then this ``MyCat`` reference is actually just the PID of the Erlang process hosting this instance; so it may be named ``MyCatPid`` instead for additional clarity.
 
-All member methods (regardless of whether they are defined directly by the actual class or inherited) are to be called from outside this class thanks to a proper Erlang message, sent to the PID of the targeted instance.
+All member methods (regardless of whether they are defined directly by the actual class or inherited) are to be called from outside this class thanks to a proper Erlang message, sent to the targeted instance via its PID.
 
-When the method is expected to return a result (i.e. when it is a request method), the caller must specify in the corresponding message its own PID, so that the instance knows to whom the result should be sent.
+When the method is expected to return a result (i.e. when it is a request), the caller must specify in the corresponding message its own PID, so that the instance knows to whom the result should be sent. As for oneways, they are to be triggered with no caller information (should the caller PID be of use for a oneway, this information shall be listed among its expected parameters).
 
-Therefore the ``self()`` parameter in the call tuples below corresponds to the PID *of the caller*, while ``MyCat`` is bound to the PID *of the target instance*.
+Therefore the ``self()`` parameter in the call tuples for requests below corresponds to the PID *of the caller*, while ``MyCat`` is bound to the PID *of the target instance*.
 
 The three methods previously discussed would indeed be called that way:
 
@@ -529,17 +527,17 @@ The three methods previously discussed would indeed be called that way:
 Method Name
 ...........
 
-Methods are designated by their name (as an atom), as specified in the ``wooper_method_export`` define of the class in the inheritance tree that defines them.
+Methods are designated by their name (as an atom), i.e. the one specified when defining them (ex: ``canEat``).
 
-The method name is always the first information given in the method call tuple.
+The method name is always the first information given when calling it (typically in the method call tuple).
 
 
 Method Parameters
 .................
 
-All methods are free to change the state of their instance and possibly trigger any side-effect (ex: sending a message, writing a file, etc.).
+All methods are free to change the state of their instance and possibly trigger any side-effect (ex: sending a message, writing a file, killing Santa Claus, etc.).
 
-As detailed below, there are two kinds of methods:
+As detailed below, there are two kinds of member methods:
 
 - *requests* methods: they shall return a result to the caller (obviously they need to know it, i.e. the caller has to specify its PID)
 
@@ -547,9 +545,9 @@ As detailed below, there are two kinds of methods:
 
 Both can take any number of parameters, including none. As always, the **marshalling** of these parameters and, if relevant, of any returned value is performed automatically by Erlang.
 
-Parameters are to be specified in a (possibly empty) list, as second element of the call tuple.
+Parameters are to be specified in a (possibly empty) list, as second element of the call tuple, like in: ``{getWhiskersColor,[],self()}``.
 
-If only a single, non-list, parameter is needed, the list can be omitted, and the parameter can be directly specified: ``Alfred ! {setAge,31}.`` works just as well as ``Alfred ! {setAge,[31]}.``.
+If only a single, non-list, parameter is needed, the list can be omitted, and the parameter can be directly specified. So ``Alfred ! {setAge,31}.`` works just as well as ``Alfred ! {setAge,[31]}.``.
 
 
 .. _`single method parameter is a list`:
@@ -557,20 +555,22 @@ If only a single, non-list, parameter is needed, the list can be omitted, and th
 .. Note::
   This cannot apply if the unique parameter is a list, as this would be ambiguous.
 
-  For example: ``Foods = [meat,soup,croquette], MyCat ! {setFavoriteFoods,Foods}`` would result in a call to ``setFavoriteFoods/4``, i.e. a call to ``setFavoriteFoods(State,meat,soup,croquette)``, whereas the intent of the programmer is probably to call a ``setFavoriteFoods/2`` method like ``setFavoriteFoods(State,Foods) when is_list(Foods) -> [..]``.
+  For example: ``Foods=[meat,soup,croquette], MyCat ! {setFavoriteFoods,Foods}`` would result in a call to ``setFavoriteFoods/4``, i.e. a call to ``setFavoriteFoods(State,meat,soup,croquette)``, whereas the intent of the programmer is probably to call a ``setFavoriteFoods/2`` method like ``setFavoriteFoods(State,Foods) when is_list(Foods) -> [..]`` instead.
 
   The proper call would then be ``MyCat ! {setFavoriteFoods,[Foods]}``, i.e. the parameter list should be used, and it would then contain only one element, the food list, whose content would therefore be doubly enclosed.
 
+  Note also that, of course, strings *are* lists. So ``Joe ! {setName,"Armstrong"}.`` is likely not the call you are looking for. Most probably you should prefer: ``Joe ! {setName,["Armstrong"]}.``.
 
 
-Two Kinds of Methods
-....................
+
+Two Kinds of Member Methods
+...........................
 
 
 Request Methods
 _______________
 
-A **request** is a method that returns a result to the caller.
+A **request** is a member method that returns a result to the caller.
 
 For an instance to be able to send an answer to a request triggered by a caller, of course that instance needs to know the caller PID.
 
@@ -618,7 +618,7 @@ The actual result ``R``, as determined by the method, is sent back as an Erlang 
 Oneway Methods
 ______________
 
-A **oneway** is a method that does not return a result to the caller.
+A **oneway** is a member method that does not return a result to the caller.
 
 When calling oneway methods, the caller does not have to specify its PID, as no result is expected to be returned back to it.
 
@@ -779,7 +779,7 @@ Here we reverse the point of view: instead of **calling** a method, we are in th
 
 A method signature has always for first parameter the state of the instance, for example: ``getAge(State) -> [..]``, or ``getCoordinate(State,Index) -> [..]``.
 
-For the sake of clarity, this variable should preferably always be named ``State``.
+For the sake of clarity, this variable should always be named ``State`` exactly (implying it shall not be named for example ``MyState`` or muted as ``_State``). This convention is now enforced at compile-time
 
 
 A method must always return at least the newer instance state, even if the state did not change.
@@ -903,6 +903,8 @@ In this case, ``wooper:return_result_from_const/0`` shall be preferred to ``woop
 
  getColor(State) ->
 	wooper:return_result_from_const(red).
+
+Note that ``State`` shall be used as always, and that here it is not reported as unused (so one should not attempt to mute it, for example as ``_State``).
 
 
 

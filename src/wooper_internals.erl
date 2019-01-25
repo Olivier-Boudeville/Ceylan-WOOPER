@@ -48,11 +48,11 @@ raise_error( ErrorTerm ) ->
 
 
 
-% Raises a (compile-time, rather ad hoc) error, with specified context, when
-% applying this parse transform, to stop the build on failure and report the
-% actual error.
+% Raises a (compile-time, rather ad hoc) error, with specified source context,
+% when applying this parse transform, to stop the build on failure and report
+% the actual error.
 %
--spec raise_error( term(), ast_base:form_context() ) -> no_return().
+-spec raise_error( term(), ast_base:source_context() ) -> no_return().
 raise_error( ErrorTerm, Context ) ->
 	ast_utils:raise_error( ErrorTerm, Context, ?origin_layer ).
 

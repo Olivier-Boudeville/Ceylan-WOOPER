@@ -70,7 +70,7 @@
 % (const request)
 %
 -spec serialise( wooper:state(), wooper_serialisation:entry_transformer(),
-				 basic_utils:user_data() ) -> request_return(
+				 basic_utils:user_data() ) -> request_const_return(
 	   { wooper_serialisation:bin_serialisation(), basic_utils:user_data() } ).
 serialise( State, _EntryTransformer=undefined, UserData ) ->
 
@@ -114,11 +114,11 @@ serialise( State, _EntryTransformer=undefined, UserData ) ->
 
 	Res = { SerialisedContent, UserData },
 
-	% Yes, it is 'State', as we do not want to continue with any state forged
-	% for the serialisation (ex: with transformed local processes), we want to
-	% continue as we were!
+	% Yes, the returned state is 'State', as we do not want to continue with any
+	% state forged for the serialisation (ex: with transformed local processes),
+	% we want to continue as we were!
 	%
-	wooper:return_state_result( State, Res );
+	wooper:return_result_from_const( Res );
 
 
 
@@ -175,11 +175,11 @@ serialise( State, EntryTransformer, UserData ) ->
 
 	Res = { SerialisedContent, FinalUserData },
 
-	% Yes, it is 'State', as we do not want to continue with any state forged
-	% for the serialisation (ex: with transformed local processes), we want to
-	% continue as we were before the serialisat
+	% Yes, returning the initial 'State', as we do not want to continue with any
+	% state forged for the serialisation (ex: with transformed local processes),
+	% we want to continue as we were before the serialisat
 	%
-	wooper:return_state_result( State, Res ).
+	wooper:return_result_from_const( Res ).
 
 
 

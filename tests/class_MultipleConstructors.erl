@@ -56,7 +56,7 @@ construct( State ) ->
 	setAttributes( State, [ { name, "Terry" }, { gender, unknown } ] ).
 
 
-
+% Overriding the default destructor:
 -spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
 	io:format( "  I am ~s, and I am just destructed.~n", [ ?getAttr(name) ] ),
@@ -69,13 +69,18 @@ destruct( State ) ->
 
 % Returns the name of this instance.
 %
--spec getName( wooper:state() ) -> request_return( name() ).
+% (const request)
+%
+
+-spec getName( wooper:state() ) -> request_const_return( name() ).
 getName( State ) ->
-	wooper:return_state_result( State, ?getAttr(name) ).
+	wooper:return_result_from_const( ?getAttr(name) ).
 
 
 % Returns the gender of this instance.
 %
--spec getGender( wooper:state() ) -> request_return( gender() ).
+% (const request; hence wooper:return_result_from_const/1 should have been used)
+%
+-spec getGender( wooper:state() ) -> request_const_return( gender() ).
 getGender( State ) ->
-	wooper:return_state_result( State, ?getAttr(gender) ).
+	wooper:return_result_from_const( ?getAttr(gender) ).
