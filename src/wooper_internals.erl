@@ -32,7 +32,13 @@
 -module(wooper_internals).
 
 
--export([ raise_error/1, raise_error/2, notify_warning/1, notify_warning/2 ]).
+-export([ raise_error/1, raise_error/2, raise_error/3, raise_error/4,
+		  notify_warning/1, notify_warning/2 ]).
+
+
+% For the ast_transforms record:
+-include("ast_transform.hrl").
+
 
 
 % To better report errors:
@@ -55,6 +61,43 @@ raise_error( ErrorTerm ) ->
 -spec raise_error( term(), ast_base:source_context() ) -> no_return().
 raise_error( ErrorTerm, Context ) ->
 	ast_utils:raise_error( ErrorTerm, Context, ?origin_layer ).
+
+
+
+% Raises a (compile-time, rather ad hoc) error, with specified source context,
+% when applying this parse transform, to stop the build on failure and report
+% the actual error.
+%
+-spec raise_error( text_utils:ustring(), ast_transform:ast_transforms(),
+				   ast_base:source_context(), ast_base:line() ) -> no_return().
+raise_error( ErrorString, #ast_transforms{ transformed_module_name=ModName },
+			 Line ) ->
+
+	ExpectedModFile = text_utils:format( "~s.erl", [ ModName ] ),
+
+	% Finally not used, as we do not need here to specify the layer or to print
+	% a stacktrace:
+	%
+	%ast_utils:raise_error( ErrorString, _Context={ ExpectedModFile, Line },
+	%					   ?origin_layer ).
+	io:format( "~s:~B: ~s~n",
+			   [ ExpectedModFile, Line, ErrorString ] ),
+
+	% Almost the only way to stop the processing of the AST:
+	halt( 6 ).
+
+
+
+% Raises a (compile-time, rather ad hoc) error, with specified source context,
+% when applying this parse transform, to stop the build on failure and report
+% the actual error.
+%
+-spec raise_error( text_utils:format_string(), text_utils:format_values(),
+				   ast_transforms(),
+				   ast_base:source_context(), ast_base:line() ) -> no_return().
+raise_error( ErrorFormatString, ErrorValues, Transforms, Line ) ->
+	ErrorString = text_utils:format( ErrorFormatString, ErrorValues ),
+	raise_error( ErrorString, Transforms, Line ).
 
 
 
