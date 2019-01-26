@@ -31,8 +31,8 @@
 
 
 % Constructs a new Cat.
--spec construct( wooper:state(), age(), gender(), fur_color(), whisker_color() )
-			   -> wooper:state().
+-spec construct( wooper:state(), age(), gender(), fur_color(),
+				 whisker_color() ) -> wooper:state().
 construct( State, Age, Gender, FurColor, WhiskerColor ) ->
 
 	% First the direct mother classes:
