@@ -37,7 +37,8 @@
 
 % Very generic:
 %
--export([ get_classname/1, get_attribute_pairs/1, state_to_string/1 ]).
+-export([ get_classname/1, get_attribute_pairs/1, state_to_string/1,
+		  get_class_filename/1 ]).
 
 
 % Settings helpers:
@@ -92,9 +93,10 @@
 -export([ get_all_attributes/1 ]).
 
 
-% Traps to detect any method terminator left untransformed:
+% Traps to detect any method terminator that would be left untransformed:
 %
--export([ return_state_result/2, return_state_only/1, return_static/1 ]).
+-export([ return_state_result/2, return_state_only/1, return_static/1,
+		  const_return_result/1, const_return/0 ]).
 
 
 
@@ -233,10 +235,10 @@
 % For method specs:
 
 -type request_return( T ) :: { state(), request_result( T ) }.
--type request_const_return( T ) :: request_result( T ).
+-type const_request_return( T ) :: request_result( T ).
 
 -type oneway_return() :: state().
--type oneway_const_return() :: void().
+-type const_oneway_return() :: void().
 
 -type static_return( T ) :: static_result( T ).
 % Constness irrelevant for static methods.
@@ -292,8 +294,8 @@
 			   request_result/1, request_result/0,
 			   static_result/1, static_result/0,
 
-			   request_return/1, request_const_return/1,
-			   oneway_return/0, oneway_const_return/0,
+			   request_return/1, const_request_return/1,
+			   oneway_return/0, const_oneway_return/0,
 			   static_return/1,
 
 			   attribute_name/0, attribute_value/0, attribute_entry/0,
@@ -1534,6 +1536,15 @@ state_to_string( State ) ->
 
 
 
+% Returns the source filename associated to specified class.
+%
+% Ex: get_class_filename( 'class_Foo' ) returns simply "class_Foo.erl".
+%
+-spec get_class_filename( classname() ) -> file_utils:filename().
+get_class_filename( Classname ) ->
+	text_utils:format( "~s.erl", [ Classname ] ).
+
+
 
 % Returns the time-out to be used for synchronous operations, depending on the
 % debug mode.
@@ -1697,7 +1708,7 @@ log_error( Message ) ->
 log_error( FormatString, ValueList ) ->
 
 	error_logger:error_msg( FormatString
-							++ "=END OF WOOPER ERROR REPORT FOR ~w ===~n~n~n",
+							++ "~n=END OF WOOPER ERROR REPORT FOR ~w ===~n~n~n",
 							ValueList ++ [ self() ] ),
 
 	% Wait a bit, as error_msg seems asynchronous:
@@ -2258,3 +2269,13 @@ return_state_only( _State ) ->
 -spec return_static( any() ) -> no_return().
 return_static( _Value ) ->
 	throw( { untransformed_method_terminator, return_static } ).
+
+
+-spec const_return_result( any() ) -> no_return().
+const_return_result( _Value ) ->
+	throw( { untransformed_method_terminator, const_return_result } ).
+
+
+-spec const_return() -> no_return().
+const_return() ->
+	throw( { untransformed_method_terminator, const_return } ).
