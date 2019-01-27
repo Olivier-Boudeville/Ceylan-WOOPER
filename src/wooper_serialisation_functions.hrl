@@ -70,7 +70,7 @@
 % (const request)
 %
 -spec serialise( wooper:state(), wooper_serialisation:entry_transformer(),
-				 basic_utils:user_data() ) -> request_const_return(
+				 basic_utils:user_data() ) -> const_request_return(
 	   { wooper_serialisation:bin_serialisation(), basic_utils:user_data() } ).
 serialise( State, _EntryTransformer=undefined, UserData ) ->
 
@@ -118,7 +118,7 @@ serialise( State, _EntryTransformer=undefined, UserData ) ->
 	% state forged for the serialisation (ex: with transformed local processes),
 	% we want to continue as we were!
 	%
-	wooper:return_result_from_const( Res );
+	wooper:const_return_result( Res );
 
 
 
@@ -179,7 +179,7 @@ serialise( State, EntryTransformer, UserData ) ->
 	% state forged for the serialisation (ex: with transformed local processes),
 	% we want to continue as we were before the serialisat
 	%
-	wooper:return_result_from_const( Res ).
+	wooper:const_return_result( Res ).
 
 
 
