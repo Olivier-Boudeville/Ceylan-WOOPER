@@ -91,7 +91,8 @@ run( IsDebug ) ->
 
 	end,
 
-	MyC ! { setAge, 5, self() },
+	% If wanting to test request/oneway mismatches: MyC ! { setAge, 5, self() },
+	MyC ! { setAge, 5 },
 
 	MyC ! { getAge, [], self() },
 	receive
@@ -229,7 +230,11 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedOtherFoodPreference } ->
 			test_facilities:fail( "wrong food preference: ~p",
-								  [ UnexpectedOtherFoodPreference ] )
+								  [ UnexpectedOtherFoodPreference ] );
+
+		UnexpectedReturn ->
+			test_facilities:fail( "unexpected method return: ~p",
+								  [ UnexpectedReturn ] )
 
 	end,
 
@@ -244,9 +249,9 @@ run( IsDebug ) ->
 			test_facilities:fail( "wrong whisker color: ~p",
 								  [ UnexpectedWhiskerColor ] );
 
-		UnexpectedReturn ->
+		AUnexpectedReturn ->
 			test_facilities:fail( "unexpected method return: ~p",
-								  [ UnexpectedReturn ] )
+								  [ AUnexpectedReturn ] )
 
 	end,
 

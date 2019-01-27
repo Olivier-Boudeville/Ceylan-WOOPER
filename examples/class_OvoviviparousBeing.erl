@@ -50,15 +50,15 @@ destruct( State ) ->
 
 % Let's say an average means something here:
 % (this ought to be a static method, as it does not depend on a state)
--spec getMeanEggsCount( wooper:state() ) -> request_return( egg_count() ).
+-spec getMeanEggsCount( wooper:state() ) -> const_request_return( egg_count() ).
 getMeanEggsCount( State ) ->
-	wooper:return_state_result( State, 1000 ).
+	wooper:const_return_result( 1000 ).
 
 
 % Returns the number of eggs this ovoviviparous laid:
--spec getEggsLaidCount( wooper:state() ) -> request_return( egg_count() ).
+-spec getEggsLaidCount( wooper:state() ) -> const_request_return( egg_count() ).
 getEggsLaidCount( State ) ->
-	wooper:return_state_result( State, ?getAttr(eggs_count) ).
+	wooper:const_return_result( ?getAttr(eggs_count) ).
 
 
 % Increases the number of eggs that this ovoviviparous being laid:

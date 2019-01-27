@@ -51,10 +51,10 @@ destruct( State ) ->
 
 % Returns the name of this instance.
 %
--spec getName( wooper:state() ) -> request_const_return( name() ).
+-spec getName( wooper:state() ) -> const_request_return( name() ).
 getName( State ) ->
 	trace_utils:trace( "getName/1" ),
-	wooper:return_result_from_const( ?getAttr(name) ).
+	wooper:const_return_result( ?getAttr(name) ).
 
 
 % Sets the name of this instance.

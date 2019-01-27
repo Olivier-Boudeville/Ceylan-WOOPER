@@ -54,9 +54,9 @@ destruct( State ) ->
 %
 % (const request)
 %
--spec getAge( wooper:state() ) -> request_const_return( age() ).
+-spec getAge( wooper:state() ) -> const_request_return( age() ).
 getAge( State ) ->
-	wooper:return_result_from_const( ?getAttr(age) ).
+	wooper:const_return_result( ?getAttr(age) ).
 
 
 
@@ -86,18 +86,18 @@ declareBirthday( State ) ->
 %
 % (const request)
 %
--spec getGender( wooper:state() ) -> request_const_return( gender() ).
+-spec getGender( wooper:state() ) -> const_request_return( gender() ).
 getGender( State ) ->
-	wooper:return_result_from_const( ?getAttr(gender) ).
+	wooper:const_return_result( ?getAttr(gender) ).
 
 
 
 % Returns a class-specific arbitrary number.
 %
 % (request)
--spec getArbitraryNumber( wooper:state() ) -> request_return( number() ).
+-spec getArbitraryNumber( wooper:state() ) -> const_request_return( number() ).
 getArbitraryNumber( State ) ->
-	wooper:return_state_result( State, 10 ).
+	wooper:const_return_result( 10 ).
 
 
 

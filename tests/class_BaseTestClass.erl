@@ -76,10 +76,10 @@ construct( State, Name, Gender ) ->
 % Returns the name of this creature.
 %
 %
--spec getName( wooper:state() ) -> request_const_return( name() ).
+-spec getName( wooper:state() ) -> const_request_return( name() ).
 getName( State ) ->
 	Name = ?getAttr(name),
-	wooper:return_result_from_const( Name ).
+	wooper:const_return_result( Name ).
 
 
 % Sets the name of this creature.
@@ -96,9 +96,9 @@ setName( State, Name ) ->
 % (request)
 %
 -spec aRequest( wooper:state(), integer() ) ->
-					  request_const_return( integer() ).
+					  const_request_return( integer() ).
 aRequest( State, Arg ) ->
-	wooper:return_result_from_const( Arg + 5 ).
+	wooper:const_return_result( Arg + 5 ).
 
 
 % A request meant to be overridden.
@@ -106,9 +106,9 @@ aRequest( State, Arg ) ->
 % (request)
 %
 -spec someRequest( wooper:state(), integer() ) ->
-						 request_const_return( integer() ).
+						 const_request_return( integer() ).
 someRequest( State, Arg ) ->
-	wooper:return_result_from_const( Arg + 7 ).
+	wooper:const_return_result( Arg + 7 ).
 
 
 % Returns some mean count.

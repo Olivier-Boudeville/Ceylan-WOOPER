@@ -51,9 +51,9 @@ destruct( State ) ->
 % here)
 %
 -spec getMeanChildrenCount( wooper:state() ) ->
-								request_return( children_count() ).
+								const_request_return( children_count() ).
 getMeanChildrenCount( State ) ->
-	wooper:return_state_result( State, 4 ).
+	wooper:const_return_result( 4 ).
 
 
 
@@ -62,10 +62,9 @@ getMeanChildrenCount( State ) ->
 % (const request)
 %
 -spec getBirthGivenCount( wooper:state() ) ->
-								request_return( children_count() ).
+								const_request_return( children_count() ).
 getBirthGivenCount( State ) ->
-	wooper:return_state_result( State,
-		getAttribute( State, birth_given_count ) ).
+	wooper:const_return_result( getAttribute( State, birth_given_count ) ).
 
 
 

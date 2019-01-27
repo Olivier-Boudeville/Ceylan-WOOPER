@@ -57,36 +57,36 @@ destruct( State ) ->
 
 
 % No guarantee on biological fidelity:
--spec getTeatCount( wooper:state() ) -> request_return( teat_count() ).
+-spec getTeatCount( wooper:state() ) -> const_request_return( teat_count() ).
 getTeatCount( State ) ->
-	wooper:return_state_result( State, 6 ).
+	wooper:const_return_result( 6 ).
 
 
 % Cats are supposed carnivorous though:
--spec canEat( wooper:state(), food() ) -> request_return( boolean() ).
+-spec canEat( wooper:state(), food() ) -> const_request_return( boolean() ).
 canEat( State, soup ) ->
-	wooper:return_state_result( State, true );
+	wooper:const_return_result( true );
 
 canEat( State, chocolate ) ->
-	wooper:return_state_result( State, true );
+	wooper:const_return_result( true );
 
 canEat( State, croquette ) ->
-	wooper:return_state_result( State, true );
+	wooper:const_return_result( true );
 
 canEat( State, meat ) ->
-	wooper:return_state_result( State, true );
+	wooper:const_return_result( true );
 
 canEat( State, _OtherFood ) ->
-	wooper:return_state_result( State, false ).
+	wooper:const_return_result( false ).
 
 
 % Const request:
--spec getWhiskerColor( wooper:state() ) -> request_return( color() ).
+-spec getWhiskerColor( wooper:state() ) -> const_request_return( color() ).
 getWhiskerColor( State )->
 
 	io:format( "getWhiskerColor/1 request called by ~w.~n", [ ?getSender() ] ),
 
-	wooper:return_state_result( State, ?getAttr(whisker_color) ).
+	wooper:const_return_result( ?getAttr(whisker_color) ).
 
 
 
@@ -94,14 +94,14 @@ getWhiskerColor( State )->
 %
 % (oneway)
 %
--spec terminate( wooper:state(), 'crash' ) -> oneway_return().
+-spec terminate( wooper:state(), 'crash' ) -> const_oneway_return().
 terminate( State, crash ) ->
 	basic_utils:crash(),
-	wooper:return_state_only( State ).
+	wooper:const_return().
 
 
 
--spec toString( wooper:state() ) -> request_return( string() ).
+-spec toString( wooper:state() ) -> const_request_return( string() ).
 toString( State ) ->
 
 	% Would be available only on debug mode:
@@ -110,7 +110,7 @@ toString( State ) ->
 	Description = text_utils:format( "cat instance with whiskers of color ~p.",
 									 [ ?getAttr(whisker_color) ] ),
 
-	wooper:return_state_result( State, Description ).
+	wooper:const_return_result( Description ).
 
 
 

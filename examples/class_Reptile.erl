@@ -114,17 +114,17 @@ setAge( State, NewAge ) ->
 %
 % (const request)
 %
--spec isHotBlooded( wooper:state() ) -> request_return( boolean() ).
+-spec isHotBlooded( wooper:state() ) -> const_request_return( boolean() ).
 isHotBlooded( State ) ->
 	%throw( exception_throw_test_from_request ),
 	%exit( exception_exit_test_from_request ),
-	wooper:return_state_result( State, false ).
+	wooper:const_return_result( false ).
 
 
 % All reptiles can moult:
 %
 % (const request)
 %
--spec canMoult( wooper:state() ) -> request_return( boolean() ).
+-spec canMoult( wooper:state() ) -> const_request_return( boolean() ).
 canMoult( State ) ->
-	wooper:return_state_result( State, true ).
+	wooper:const_return_result( true ).

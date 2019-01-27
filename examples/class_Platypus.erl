@@ -41,7 +41,7 @@ construct( State, Age, Gender, FurColor, NozzleColor ) ->
 	process_flag( trap_exit, true ),
 
 	OvoviviparousMammalState =
-		class_OvoviviparousBeing:construct(	MammalState ),
+		class_OvoviviparousBeing:construct( MammalState ),
 
 	io:format( "Synchronous time-out is ~p.~n", [ ?synchronous_time_out ] ),
 
@@ -53,9 +53,9 @@ construct( State, Age, Gender, FurColor, NozzleColor ) ->
 
 
 
--spec getMeanEggsCount( wooper:state() ) -> request_return( egg_count() ).
+-spec getMeanEggsCount( wooper:state() ) -> const_request_return( egg_count() ).
 getMeanEggsCount( State ) ->
-	wooper:return_state_result( State, 2 ).
+	wooper:const_return_result( 2 ).
 
 
 
@@ -65,9 +65,9 @@ getMeanEggsCount( State ) ->
 %
 % It is a mammal, though!
 %
--spec getTeatCount( wooper:state() ) -> request_return( teat_count() ).
+-spec getTeatCount( wooper:state() ) -> const_request_return( teat_count() ).
 getTeatCount( State ) ->
-	wooper:return_state_result( State, 0 ).
+	wooper:const_return_result( 0 ).
 
 
 
@@ -76,21 +76,21 @@ getTeatCount( State ) ->
 % (request)
 %
 % Platypuses are supposed carnivorous though:
--spec canEat( wooper:state(), food() ) -> request_const_return( boolean() ).
+-spec canEat( wooper:state(), food() ) -> const_request_return( boolean() ).
 canEat( State, leaf ) ->
-	wooper:return_result_from_const( true );
+	wooper:const_return_result( true );
 
 canEat( State,chocolate ) ->
-	wooper:return_result_from_const( true );
+	wooper:const_return_result( true );
 
 canEat( State,weed ) ->
-	wooper:return_result_from_const( true );
+	wooper:const_return_result( true );
 
 canEat( State,fish ) ->
-	wooper:return_result_from_const( true );
+	wooper:const_return_result( true );
 
 canEat( State, _OtherFood ) ->
-	wooper:return_result_from_const( false ).
+	wooper:const_return_result( false ).
 
 
 
@@ -98,7 +98,7 @@ canEat( State, _OtherFood ) ->
 %
 % (request)
 %
--spec getNozzleColor( wooper:state() ) -> request_return( nozzle_color() ).
+-spec getNozzleColor( wooper:state() ) -> const_request_return( nozzle_color() ).
 getNozzleColor( State )->
 
 	% If needing to test the crash of a request:
@@ -106,7 +106,7 @@ getNozzleColor( State )->
 	%B=2,
 	%A=B,
 
-	wooper:return_state_result( State, getAttribute( State, nozzle_color ) ).
+	wooper:const_return_result( getAttribute( State, nozzle_color ) ).
 
 
 
@@ -114,9 +114,9 @@ getNozzleColor( State )->
 %
 % (request)
 %
--spec getAlternateNames( wooper:state() ) -> request_return( [atom()] ).
+-spec getAlternateNames( wooper:state() ) -> const_request_return( [atom()] ).
 getAlternateNames( State ) ->
-	wooper:return_state_result( State, ?getAttr(alternate_names) ).
+	wooper:const_return_result( ?getAttr(alternate_names) ).
 
 
 
@@ -171,7 +171,7 @@ testCreationDeletion( State ) ->
 % (oneway)
 %
 -spec onWOOPERExitReceived( wooper:state(), pid(),
-					basic_utils:exit_reason() ) -> oneway_const_return().
+					basic_utils:exit_reason() ) -> const_oneway_return().
 onWOOPERExitReceived( State, Pid, ExitType ) ->
 
 	% Typically: "Received exit message '{{nocatch,
@@ -184,4 +184,4 @@ onWOOPERExitReceived( State, Pid, ExitType ) ->
 	trace_utils:debug_fmt( "Received exit message '~p' from ~w.",
 						   [ ExitType, Pid ] ),
 
-	wooper:return_from_const().
+	wooper:const_return().

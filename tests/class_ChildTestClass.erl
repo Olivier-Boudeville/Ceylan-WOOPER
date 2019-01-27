@@ -53,9 +53,9 @@ construct( State, Age, Gender ) ->
 
 
 % Returns the name of this creature.
--spec getName( wooper:state() ) -> request_return( name() ).
+-spec getName( wooper:state() ) -> const_request_return( name() ).
 getName( State ) ->
-	wooper:return_state_result( State, ?getAttr(name) ).
+	wooper:const_return_result( ?getAttr(name) ).
 
 
 % Sets the name of this creature.
@@ -67,9 +67,9 @@ setName( State, NewName ) ->
 
 
 % Returns the age of this creature.
--spec getAge( wooper:state() ) -> request_return( age() ).
+-spec getAge( wooper:state() ) -> const_request_return( age() ).
 getAge( State ) ->
-	wooper:return_state_result( State, ?getAttr(age) ).
+	wooper:const_return_result( ?getAttr(age) ).
 
 
 
@@ -90,18 +90,18 @@ declareBirthday( State ) ->
 
 
 % Returns the gender of this creature.
--spec getGender( wooper:state() ) -> request_return( gender() ).
+-spec getGender( wooper:state() ) -> const_request_return( gender() ).
 getGender( State ) ->
-	wooper:return_state_result( State, ?getAttr(gender) ).
+	wooper:const_return_result( ?getAttr(gender) ).
 
 
 
 % Returns a class-specific arbitrary number.
 %
 % (request)
--spec getArbitraryNumber( wooper:state() ) -> request_return( number() ).
+-spec getArbitraryNumber( wooper:state() ) -> const_request_return( number() ).
 getArbitraryNumber( State ) ->
-	wooper:return_state_result( State, 10 ).
+	wooper:const_return_result( 10 ).
 
 
 
@@ -174,9 +174,10 @@ side_effect_function( State ) ->
 %
 % (request)
 %
--spec someRequest( wooper:state(), integer() ) -> request_return( integer() ).
+-spec someRequest( wooper:state(), integer() ) -> 
+						 const_request_return( integer() ).
 someRequest( State, _Arg ) ->
-		wooper:return_state_result( State, 50 ).
+		wooper:const_return_result( 50 ).
 
 
 

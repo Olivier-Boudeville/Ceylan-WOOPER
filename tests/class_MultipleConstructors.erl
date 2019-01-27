@@ -72,15 +72,15 @@ destruct( State ) ->
 % (const request)
 %
 
--spec getName( wooper:state() ) -> request_const_return( name() ).
+-spec getName( wooper:state() ) -> const_request_return( name() ).
 getName( State ) ->
-	wooper:return_result_from_const( ?getAttr(name) ).
+	wooper:const_return_result( ?getAttr(name) ).
 
 
 % Returns the gender of this instance.
 %
-% (const request; hence wooper:return_result_from_const/1 should have been used)
+% (const request; hence wooper:const_return_result/1 should have been used)
 %
--spec getGender( wooper:state() ) -> request_const_return( gender() ).
+-spec getGender( wooper:state() ) -> const_request_return( gender() ).
 getGender( State ) ->
-	wooper:return_result_from_const( ?getAttr(gender) ).
+	wooper:const_return_result( ?getAttr(gender) ).

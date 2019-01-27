@@ -75,6 +75,8 @@ destruct( State ) ->
 -spec setAge( wooper:state(), age() ) -> oneway_return().
 setAge( State, NewAge ) ->
 
+	%trace_utils:debug( "class_Mammal:setAge/2 called." ),
+
 	% If needing to test the crash of a oneway:
 	%A=1,
 	%B=2,
@@ -88,9 +90,9 @@ setAge( State, NewAge ) ->
 %
 % (request)
 %
--spec isHotBlooded( wooper:state() ) -> request_return( boolean() ).
+-spec isHotBlooded( wooper:state() ) -> const_request_return( boolean() ).
 isHotBlooded( State ) ->
-	wooper:return_state_result( State, true ).
+	wooper:const_return_result( true ).
 
 
 
@@ -99,9 +101,9 @@ isHotBlooded( State ) ->
 %
 % (request)
 %
--spec getFurColor( wooper:state() ) -> request_return( fur_color() ).
+-spec getFurColor( wooper:state() ) -> const_request_return( fur_color() ).
 getFurColor( State ) ->
-	wooper:return_state_result( State, ?getAttr(fur_color) ).
+	wooper:const_return_result( ?getAttr(fur_color) ).
 
 
 

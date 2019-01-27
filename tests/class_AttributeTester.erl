@@ -108,7 +108,7 @@ not_crashing_examples( State ) ->
 
 
 % Usually operations are commented-out as we do not want to fail on purpose:
--spec crashing_examples( wooper:state() ) -> request_return( test_ok ).
+-spec crashing_examples( wooper:state() ) -> const_request_return( test_ok ).
 crashing_examples( State ) ->
 
 	%toggleAttribute( State, non_existing ),
@@ -129,7 +129,7 @@ crashing_examples( State ) ->
 	crashing_test_undefined( State ),
 
 	%?getAttr(non_existing),
-	wooper:return_state_result( State, test_ok ).
+	wooper:const_return_result( test_ok ).
 
 
 
