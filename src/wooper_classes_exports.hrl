@@ -34,13 +34,11 @@
 %
 %-export([ getClassname/1, getSuperclasses/1 ]).
 
-
-
--ifdef(wooper_debug).
-
--export([ wooper_get_instance_description/1 ]).
-
--endif. % wooper_debug
+%-ifdef(wooper_debug).
+%
+%-export([ wooper_get_instance_description/1 ]).
+%
+%-endif. % wooper_debug
 
 
 
