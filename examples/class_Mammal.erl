@@ -82,7 +82,7 @@ setAge( State, NewAge ) ->
 	%B=2,
 	%A=B,
 
-	wooper:return_state_only( setAttribute( State, age, NewAge ) ).
+	wooper:return_state( setAttribute( State, age, NewAge ) ).
 
 
 
@@ -147,4 +147,4 @@ testExplicitClassSelection( State ) ->
 
 	36 = getAttribute( NewState, age ),
 
-	wooper:return_state_only( NewState ).
+	wooper:return_state( NewState ).

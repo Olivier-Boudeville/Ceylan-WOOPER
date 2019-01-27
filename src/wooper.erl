@@ -95,7 +95,7 @@
 
 % Traps to detect any method terminator that would be left untransformed:
 %
--export([ return_state_result/2, return_state_only/1, return_static/1,
+-export([ return_state_result/2, return_state/1, return_static/1,
 		  const_return_result/1, const_return/0 ]).
 
 
@@ -2261,8 +2261,8 @@ return_state_result( _State, _Result ) ->
 	throw( { untransformed_method_terminator, return_state_result } ).
 
 
--spec return_state_only( any() ) -> no_return().
-return_state_only( _State ) ->
+-spec return_state( any() ) -> no_return().
+return_state( _State ) ->
 	throw( { untransformed_method_terminator, return_state_result } ).
 
 

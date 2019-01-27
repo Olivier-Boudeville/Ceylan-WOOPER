@@ -161,7 +161,7 @@ testCreationDeletion( State ) ->
 
 	undefined = getAttribute( DeleteState, cat_pid ),
 
-	wooper:return_state_only( DeleteState ).
+	wooper:return_state( DeleteState ).
 
 
 

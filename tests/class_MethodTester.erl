@@ -65,7 +65,8 @@ setName( State, Name ) ->
 	trace_utils:trace( "setName/2" ),
 
 	NewState = setAttribute( State, name, Name ),
-	wooper:return_state_only( NewState ).
+
+	wooper:return_state( NewState ).
 
 
 % Returns a value established in a static context.

@@ -88,7 +88,7 @@ getName( State ) ->
 %
 setName( State, Name ) ->
 	NewState = setAttribute( State, name, Name ),
-	wooper:return_state_only( NewState ).
+	wooper:return_state( NewState ).
 
 
 % A request not meant to be overridden.

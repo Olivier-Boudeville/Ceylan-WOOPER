@@ -79,4 +79,4 @@ giveBirth( State, NumberOfNewChildren ) ->
 
 	BirthState = setAttribute( State, birth_given_count, NewChildrenCount ),
 
-	wooper:return_state_only( BirthState ).
+	wooper:return_state( BirthState ).

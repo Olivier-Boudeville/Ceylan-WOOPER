@@ -67,7 +67,7 @@ getAge( State ) ->
 -spec setAge( wooper:state(), age() ) -> oneway_return().
 setAge( State, _NewAge ) ->
 	% Mother implementation chosen faulty to check override:
-	wooper:return_state_only( setAttribute( State, age, 36 ) ).
+	wooper:return_state( setAttribute( State, age, 36 ) ).
 
 
 
@@ -77,7 +77,7 @@ setAge( State, _NewAge ) ->
 %
 -spec declareBirthday( wooper:state() ) -> oneway_return().
 declareBirthday( State ) ->
-	wooper:return_state_only(
+	wooper:return_state(
 		setAttribute( State, age, ?getAttr(age)+1 ) ).
 
 
@@ -138,7 +138,7 @@ testDirectMethodExecution( State, NewAge ) ->
 
 	io:format( "Direct self-invocation success.~n" ),
 
-	wooper:return_state_only( OtherState ).
+	wooper:return_state( OtherState ).
 
 
 
@@ -154,8 +154,8 @@ testDirectMethodExecution( State, NewAge ) ->
 % (oneway)
 -spec testSingleExecution( wooper:state() ) -> oneway_return().
 testSingleExecution( State ) ->
-	wooper:return_state_only( setAttribute( side_effect_function( State ),
-		age, 10 ) ).
+	wooper:return_state( setAttribute( side_effect_function( State ),
+									   age, 10 ) ).
 
 
 

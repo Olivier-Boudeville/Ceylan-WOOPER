@@ -364,7 +364,7 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 	case apply( SelectedModule, MethodAtom, [ State | Parameters ] ) of
 
 		% Void method (no result returned, only a state - thus a oneway):
-		% ?wooper_return_state_only:
+		% ?wooper_return_state:
 		NewState when is_record( NewState, state_holder ) ->
 			{ NewState, wooper_method_returns_void };
 
@@ -434,7 +434,7 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 			{ NewState, { wooper_result, Result } };
 
 		% Void method (no result returned, only a state) - thus a oneway:
-		% ?wooper_return_state_only:
+		% ?wooper_return_state:
 		NewState ->
 			{ NewState, wooper_method_returns_void }
 

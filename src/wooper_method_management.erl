@@ -169,6 +169,10 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 	{ NewClauses, FunNature, Qualifiers } =
 		manage_method_terminators( OriginalClauses, FunId, Classname ),
 
+	%trace_utils:debug_fmt( "~p is a ~s whose qualifiers are ~p.",
+	%					   [ FunId, function_nature_to_string( FunNature ),
+	%						 Qualifiers ] ),
+
 	NewFunInfo = FunInfo#function_info{ clauses=NewClauses },
 
 	% Stores the result in the right category and recurses:
@@ -777,26 +781,26 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 		%
 		( _LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_state_only} },
+						 {atom,_,return_state} },
 		  _Params=[ _StateExpr={ var, Line, 'State'} ],
 		  Transforms ) ->
 			wooper_internals:raise_usage_error( "this const clause of oneway "
 				"~s/~B shall use const_return_result/0 (instead "
-				"of return_state_only/1).", pair:to_list( FunId ),
+				"of return_state/1).", pair:to_list( FunId ),
 				Transforms, Line );
 
 
 		% First (correct, non-const) oneway detection:
 		( _LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_state_only} },
+						 {atom,_,return_state} },
 		  _Params=[ StateExpr ],
 		  Transforms=#ast_transforms{ transformation_state=undefined } ) ->
 
 			%trace_utils:debug_fmt( "~s/~B detected as a non-const oneway.",
 			%					   pair:to_list( FunId ) ),
 
-			% So that wooper:return_state_only( R ) becomes simply R:
+			% So that wooper:return_state( R ) becomes simply R:
 			NewExpr = StateExpr,
 			NewTransforms = Transforms#ast_transforms{
 							  transformation_state={ oneway, [] } },
@@ -807,7 +811,7 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 		%
 		( _LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_state_only} },
+						 {atom,_,return_state} },
 		  _Params=[ StateExpr ],
 		  Transforms=#ast_transforms{
 						transformation_state={ oneway, Qualifiers } } ) ->
@@ -823,14 +827,14 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 			{ [ NewExpr ], NewTransforms };
 
 
-		% Faulty return_state_only/1 arity:
+		% Faulty return_state/1 arity:
 		( LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_state_only} },
+						 {atom,_,return_state} },
 		  Params,
 		  Transforms ) when length( Params ) =/= 1 ->
 			wooper_internals:raise_usage_error( "wrong arity (~B) specified "
-				"for wooper:return_state_only/1, for oneway ~s/~B.",
+				"for wooper:return_state/1, for oneway ~s/~B.",
 				[ length( Params ) | pair:to_list( FunId ) ],
 				Transforms, LineCall );
 
@@ -838,12 +842,12 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 		% Nature mismatch:
 		( LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_state_only} },
+						 {atom,_,return_state} },
 		  _Params,
 		  Transforms=#ast_transforms{
 			transformation_state={ OtherNature, _Qualifiers } } ) ->
 			wooper_internals:raise_usage_error( "method terminator mismatch "
-				"for method ~s/~B: wooper:return_state_only/1 implies "
+				"for method ~s/~B: wooper:return_state/1 implies "
 				"oneway, whereas was detected as a ~s.",
 				pair:to_list( FunId ) ++ [ OtherNature ],
 				Transforms, LineCall );

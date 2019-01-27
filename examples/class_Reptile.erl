@@ -104,7 +104,7 @@ destruct( State ) ->
 setAge( State, NewAge ) ->
 	%throw( exception_throw_test_from_oneway ),
 	%exit( exception_exit_test_from_oneway ),
-	wooper:return_state_only( setAttribute( State, age, NewAge ) ).
+	wooper:return_state( setAttribute( State, age, NewAge ) ).
 
 
 

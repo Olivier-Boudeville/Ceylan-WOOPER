@@ -62,7 +62,7 @@ getName( State ) ->
 -spec setName( wooper:state(), name() ) -> oneway_return().
 setName( State, NewName ) ->
 	% Mother implementation chosen faulty to check override:
-	wooper:return_state_only( setAttribute( State, name, NewName ) ).
+	wooper:return_state( setAttribute( State, name, NewName ) ).
 
 
 
@@ -77,14 +77,14 @@ getAge( State ) ->
 -spec setAge( wooper:state(), age() ) -> oneway_return().
 setAge( State, _NewAge ) ->
 	% Mother implementation chosen faulty to check override:
-	wooper:return_state_only( setAttribute( State, age, 36 ) ).
+	wooper:return_state( setAttribute( State, age, 36 ) ).
 
 
 
 % Increments the age of this creature.
 -spec declareBirthday( wooper:state() ) -> oneway_return().
 declareBirthday( State ) ->
-	wooper:return_state_only(
+	wooper:return_state(
 		setAttribute( State, age, ?getAttr(age)+1 ) ).
 
 
@@ -142,7 +142,7 @@ testDirectMethodExecution( State, NewAge ) ->
 
 	io:format( "Direct self-invocation success.~n" ),
 
-	wooper:return_state_only( OtherState ).
+	wooper:return_state( OtherState ).
 
 
 
@@ -158,7 +158,7 @@ testDirectMethodExecution( State, NewAge ) ->
 % (oneway)
 -spec testSingleExecution( wooper:state() ) -> oneway_return().
 testSingleExecution( State ) ->
-	wooper:return_state_only( setAttribute( side_effect_function( State ),
+	wooper:return_state( setAttribute( side_effect_function( State ),
 		age, 10 ) ).
 
 
@@ -169,12 +169,60 @@ side_effect_function( State ) ->
 	State.
 
 
+-spec test_multi_clause_const_request( wooper:state(), integer(), integer() ) ->
+											 const_request_return( integer() ).
+test_multi_clause_const_request( State, _X=1, _Y ) ->
+	wooper:const_return_result( 1 );
+
+test_multi_clause_const_request( State, _X, _Y ) ->
+	wooper:const_return_result( 2 ).
+
+
+
+-spec test_multi_clause_non_const_request( wooper:state(), integer(),
+								   integer() ) -> request_return( integer() ).
+test_multi_clause_non_const_request( State, _X=1, _Y ) ->
+	wooper:const_return_result( 1 );
+
+test_multi_clause_non_const_request( State, X=2, _Y ) ->
+	NewState = setAttribute( State, age, 1 ),
+	wooper:return_state_result( NewState, X );
+
+test_multi_clause_non_const_request( State, _X, _Y ) ->
+	wooper:const_return_result( 3 ).
+
+
+
+-spec test_multi_clause_const_oneway( wooper:state(), integer(),
+								   integer() ) -> const_oneway_return().
+test_multi_clause_const_oneway( State, _X=1, _Y ) ->
+	% Do some side-effect.
+	wooper:const_return();
+
+test_multi_clause_const_oneway( State, _X, _Y ) ->
+	wooper:const_return().
+
+
+
+-spec test_multi_clause_non_const_oneway( wooper:state(), integer(),
+								   integer() ) -> oneway_return().
+test_multi_clause_non_const_oneway( State, _X=1, _Y ) ->
+	wooper:const_return();
+
+test_multi_clause_non_const_oneway( State, X=2, _Y ) ->
+	NewState = setAttribute( State, age, X ),
+	wooper:return_state( NewState );
+
+test_multi_clause_non_const_oneway( State, _X, _Y ) ->
+	wooper:const_return().
+
+
 
 % Overridden request.
 %
 % (request)
 %
--spec someRequest( wooper:state(), integer() ) -> 
+-spec someRequest( wooper:state(), integer() ) ->
 						 const_request_return( integer() ).
 someRequest( State, _Arg ) ->
 		wooper:const_return_result( 50 ).

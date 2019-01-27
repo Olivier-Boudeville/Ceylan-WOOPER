@@ -67,5 +67,4 @@ layEggs( State, NumberOfNewEggs ) ->
 
 	NewEggCount = ?getAttr(eggs_count) + NumberOfNewEggs,
 
-	wooper:return_state_only(
-	   setAttribute( State, eggs_count, NewEggCount ) ).
+	wooper:return_state( setAttribute( State, eggs_count, NewEggCount ) ).

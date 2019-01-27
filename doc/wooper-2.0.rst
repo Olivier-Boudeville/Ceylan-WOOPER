@@ -186,7 +186,7 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
  -spec setWhiskerColor(wooper:state(),foo:color()) -> oneway_return().
  setWhiskerColor(State,NewColor)->
 	NewState = setAttribute( State, whisker_color, NewColor ),
-	wooper:return_state_only(NewState).
+	wooper:return_state(NewState).
 
  % Overrides any request method defined in the Mammal class:
  % (const request)
@@ -718,7 +718,7 @@ For example, ``{wooper_method_faulty_return, <0.30.0>, class_Cat, myFaultyMethod
 
 This error occurs only when being in debug mode.
 
-The main reason for this to happen is when debug mode is set and when a method implementation did not respect the expected method return convention (neither the ``wooper_return_state_result`` macro nor the ``wooper_return_state_only`` one was used in this method clause).
+The main reason for this to happen is when debug mode is set and when a method implementation did not respect the expected method return convention (neither the ``wooper_return_state_result`` macro nor the ``wooper_return_state`` one was used in this method clause).
 
 It means the method is not implemented correctly (it has a bug), or that it was not (re)compiled with the proper debug mode, i.e. the one the caller was compiled with.
 
@@ -808,7 +808,7 @@ One should therefore see each WOOPER instance as primarily a process executing a
 
 Thus the caller will only receive the **result** of a method, if it is a request. Otherwise, i.e. with oneways, nothing is sent back (nothing can be, anyway).
 
-More precisely, depending on its returning a specific result, the method signature will correspond either to the one of a request or of a oneway, and will use in its body, respectively, either the ``wooper_return_state_result`` or the ``wooper_return_state_only`` macro to ensure that a state *and* a result are returned, or just a state.
+More precisely, depending on its returning a specific result, the method signature will correspond either to the one of a request or of a oneway, and will use in its body, respectively, either the ``wooper_return_state_result`` or the ``wooper_return_state`` macro to ensure that a state *and* a result are returned, or just a state.
 
 A good practise is to add a comment to each method definition, and to specify whether it is a request or a oneway, if it is a ``const`` method, etc. For example, the previous method could be best written as:
 
@@ -911,14 +911,14 @@ Note that ``State`` shall be used as always, and that here it is not reported as
 For Oneways
 ___________
 
-Oneway will rely on the ``wooper:return_state_only(NewState)`` macro: the instance state will be updated, but no result will be returned to the caller, which is not even known.
+Oneway will rely on the ``wooper:return_state(NewState)`` macro: the instance state will be updated, but no result will be returned to the caller, which is not even known.
 
 For example:
 
 .. code:: erlang
 
   setAge(State,NewAge) ->
-	wooper:return_state_only( setAttribute(State,age,NewAge) ).
+	wooper:return_state( setAttribute(State,age,NewAge) ).
 
 
 This oneway can be called that way:
@@ -935,9 +935,9 @@ Oneways may also be ``const``, i.e. leave the state unchanged, only being called
 
   displayAge(State) ->
 	io:format("My age is ~B~n.",[ ?getAttr(age) ]),
-	wooper:return_state_only(State).
+	wooper:return_state(State).
 
-In this case, ``wooper:const_return/0`` shall be preferred to ``wooper:return_state_only/1``:
+In this case, ``wooper:const_return/0`` shall be preferred to ``wooper:return_state/1``:
 
 .. code:: erlang
 
@@ -950,11 +950,11 @@ In this case, ``wooper:const_return/0`` shall be preferred to ``wooper:return_st
 Usefulness Of These Two Return Macros
 _____________________________________
 
-The definition of the ``wooper_return_state_result`` and ``wooper_return_state_only`` macros is actually quite simple; they are just here to structure the method implementations (helping the method developer not mixing updated states and results), and to help ensuring, in debug mode, that methods return well-formed information: an atom is then prepended to the returned tuple and WOOPER matches it during post-invocation, before handling the return, for an increased safety.
+The definition of the ``wooper_return_state_result`` and ``wooper_return_state`` macros is actually quite simple; they are just here to structure the method implementations (helping the method developer not mixing updated states and results), and to help ensuring, in debug mode, that methods return well-formed information: an atom is then prepended to the returned tuple and WOOPER matches it during post-invocation, before handling the return, for an increased safety.
 
 For example, in debug mode, ``wooper:return_state_result(AState,AResult)`` will simply translate into ``{wooper_result,AState,AResult}``, and when the execution of the method is over, the WOOPER main loop of this instance will attempt to match the method returned value with that triplet.
 
-Similarly, ``wooper:return_state_only(AState)`` will translate into ``{wooper_result,AState}``.
+Similarly, ``wooper:return_state(AState)`` will translate into ``{wooper_result,AState}``.
 
 If not in debug mode, then the ``wooper_result`` atom will not even be added in the returned tuples; for example ``wooper:return_state_result(AState,AResult)`` will just be ``{AState,AResult}``.
 
@@ -987,7 +987,7 @@ Similarly, the aforementioned ``declareBirthday/1`` oneway could be defined as:
   -spec declareBirthday(wooper:state()) -> oneway_return().
   declareBirthday(State) ->
 	 AgedState = setAttribute(State, age, ?getAttr(age)+1),
-	 wooper:return_state_only(AgedState).
+	 wooper:return_state(AgedState).
 
 As for oneway, we could have:
 
@@ -998,7 +998,7 @@ As for oneway, we could have:
   -spec declareBirthday(wooper:state()) -> oneway_return().
   declareBirthday(State) ->
 	 AgedState = setAttribute(State, age, ?getAttr(age)+1),
-	 wooper:return_state_only(AgedState).
+	 wooper:return_state(AgedState).
 
 
 .. Note:: As mentioned, these specifications, albeit recommended, are fully optional.
@@ -1219,7 +1219,7 @@ A qualifier can be:
 
   - the ``getFurColor/1`` const request would be added (with its spec): ``getFurColor(State) -> wooper:return_state_result(State,?getAttr(fur_color)).``
 
-  - the ``setFurColor/2`` oneway would be added (with its spec): ``setFurColor(State,FurColor) -> wooper:return_state_only(setAttribute(State,fur_color,FurColor)).``
+  - the ``setFurColor/2`` oneway would be added (with its spec): ``setFurColor(State,FurColor) -> wooper:return_state(setAttribute(State,fur_color,FurColor)).``
 
 - an *initialisation* qualifier: ``{initial,18}`` would denote that the initial value of the corresponding attribute is ``18`` (this value is then set even before entering any constructor)
 
@@ -2068,7 +2068,7 @@ For example:
   onWOOPERExitReceived(State,Pid,ExitType) ->
 	io:format("MyClass EXIT handler ignored signal '~p'"
 			  " from ~w.~n", [ExitType,Pid]),
-	wooper:return_state_only(State).
+	wooper:return_state(State).
 
 may result in an output like::
 
