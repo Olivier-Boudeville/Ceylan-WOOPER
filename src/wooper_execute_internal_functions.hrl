@@ -476,6 +476,8 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 										CallerPid ) ->
 
+	%trace_utils:debug( "case A" ),
+
 	SenderAwareState = case State#state_holder.request_sender of
 
 		% Normal case:
@@ -499,7 +501,7 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 			CallerPid ! Outcome,
 			ExecState;
 
-		{ ExecState, wooper_method_returns_void } ->
+		{ _ExecState, wooper_method_returns_void } ->
 			wooper:log_error(
 			  ": method ~s:~s/~B, which was called (by ~w) with "
 			  "parameters ~p, did not return a result whereas, according to "
@@ -515,8 +517,11 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 
 			CallerPid ! { wooper_error, ErrorReason },
 
-			% Mismatch ignored:
-			ExecState
+			% Mismatch used to be ignored, but now throwing an exception is
+			% believed more reasonable as safer:
+			%
+			%ExecState
+			throw( { wooper_error, ErrorReason } )
 
 	catch
 
@@ -537,6 +542,8 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 % Not in debug mode, hence minimum checking:
 wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 										CallerPid ) ->
+
+	%trace_utils:debug( "case B" ),
 
 	SenderAwareState = State#state_holder{ request_sender=CallerPid },
 
