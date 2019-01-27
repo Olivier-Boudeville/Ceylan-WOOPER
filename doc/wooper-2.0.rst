@@ -191,16 +191,16 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
  % Overrides any request method defined in the Mammal class:
  % (const request)
  canEat(State,soup) ->
-	wooper:return_result_from_const(true);
+	wooper:const_return_result(true);
 
  canEat(State,croquette) ->
-	wooper:return_result_from_const(true);
+	wooper:const_return_result(true);
 
  canEat(State,meat) ->
-	wooper:return_result_from_const(true);
+	wooper:const_return_result(true);
 
  canEat(State,_OtherFood) ->
-	wooper:return_result_from_const(false).
+	wooper:const_return_result(false).
 
  % Static method:
  get_default_whisker_color() ->
@@ -897,12 +897,12 @@ Finally, requests may be ``const``, i.e. just returning a result and leaving the
   getColor(State) ->
 	wooper:return_state_result(State,red).
 
-In this case, ``wooper:return_result_from_const/0`` shall be preferred to ``wooper:return_state_result/2``:
+In this case, ``wooper:const_return_result/0`` shall be preferred to ``wooper:return_state_result/2``:
 
 .. code:: erlang
 
  getColor(State) ->
-	wooper:return_result_from_const(red).
+	wooper:const_return_result(red).
 
 Note that ``State`` shall be used as always, and that here it is not reported as unused (so one should not attempt to mute it, for example as ``_State``).
 
@@ -937,13 +937,13 @@ Oneways may also be ``const``, i.e. leave the state unchanged, only being called
 	io:format("My age is ~B~n.",[ ?getAttr(age) ]),
 	wooper:return_state_only(State).
 
-In this case, ``wooper:return_from_const/0`` shall be preferred to ``wooper:return_state_only/1``:
+In this case, ``wooper:const_return/0`` shall be preferred to ``wooper:return_state_only/1``:
 
 .. code:: erlang
 
   displayAge(State) ->
 	io:format("My age is ~B~n.",[ ?getAttr(age) ]),
-	wooper:return_from_const().
+	wooper:const_return().
 
 
 
@@ -1005,8 +1005,8 @@ As for oneway, we could have:
 		  Yet, should they be specified, they must be correct, notably with regard to their return type.
 		  So, regarding the type of the result, the spec of:
 
-			 - a request *must* rely on either the ``request_return/1`` type or the ``request_const_return/1`` one
-			 - a oneway *must* rely on either the ``oneway_return/0`` type or the ``oneway_const_return/0``
+			 - a request *must* rely on either the ``request_return/1`` type or the ``const_request_return/1`` one
+			 - a oneway *must* rely on either the ``oneway_return/0`` type or the ``const_oneway_return/0``
 			 - a static method *must* rely on the ``static_return/1`` type (no constness applicable in this case of course)
 
 
@@ -2268,6 +2268,15 @@ Troubleshooting
 ===============
 
 
+Debug Mode
+----------
+
+We recommend that, as a WOOPER user, you enable its debug mode when developing (ensure in ``GNUmakevars.inc`` that ``ENABLE_DEBUG`` has been set to true - which is the case by default), as it may catch various user errors more easily (not only WOOPER-internal errors, but also, and most importantly, any mistake you may make).
+
+Then only, once your code is mature enough, this debug mode may be disabled in order to meet best performances.
+
+
+
 General Case
 ------------
 
@@ -2288,7 +2297,7 @@ Runtime Errors
 
 Most errors while using WOOPER should result in relatively clear messages (ex: ``wooper_method_failed`` or ``wooper_method_faulty_return``), associated with all relevant run-time information that was available to WOOPER.
 
-Another way of overcoming WOOPER issues is to activate the debug mode for all WOOPER-enabled compiled modules (ex: uncomment ``-define(wooper_debug,).`` in ``wooper.hrl``), and recompile your classes.
+Another way of overcoming WOOPER issues is to activate the debug mode for all WOOPER-enabled compiled modules (ex: uncomment ``-define(wooper_debug,).`` in ``wooper.hrl`` or, preferably, ensure in ``GNUmakevars.inc`` that ``ENABLE_DEBUG`` has been set to true), and recompile your classes.
 
 The debug mode tries to perform extensive checking on all WOOPER entry points, from incoming messages to the user class itself, catching mistakes from the class developer as well as from the class user.
 
