@@ -32,7 +32,8 @@
 -module(wooper_internals).
 
 
--export([ raise_error/1, raise_error/2, raise_error/3, raise_error/4,
+-export([ raise_error/1, raise_error/2,
+		  raise_usage_error/3, raise_usage_error/4,
 		  notify_warning/1, notify_warning/2 ]).
 
 
@@ -40,13 +41,30 @@
 -include("ast_transform.hrl").
 
 
+% Shorthand:
+-type ast_transforms() :: ast_transform:ast_transforms().
+
+
 
 % To better report errors:
 -define( origin_layer, "WOOPER" ).
 
 
-% Raises a (compile-time, rather ad hoc) error when applying this parse
-% transform, to stop the build on failure and report the actual error.
+% We try to distinguish two kinds of errors:
+%
+% - rather WOOPER-internal ones, maybe not involving a mistake from the user,
+% rather uncommon and where a stacktrace might help (raise_error/N); results in
+% an exception being thrown
+%
+% - usage-related ones, where a precise message with hints may help and where
+% the WOOPER-based stacktrace is a useless technical detail
+% (raise_usage_error/N); results in the compilation aborting
+
+
+
+% Raises a (compile-time, rather ad hoc) technical, internal error when applying
+% this parse transform, to stop the build on failure and report the actual
+% error.
 %
 -spec raise_error( term() ) -> no_return().
 raise_error( ErrorTerm ) ->
@@ -54,9 +72,9 @@ raise_error( ErrorTerm ) ->
 
 
 
-% Raises a (compile-time, rather ad hoc) error, with specified source context,
-% when applying this parse transform, to stop the build on failure and report
-% the actual error.
+% Raises a (compile-time, rather ad hoc) technical, internal error, with
+% specified source context, when applying this parse transform, to stop the
+% build on failure and report the actual error.
 %
 -spec raise_error( term(), ast_base:source_context() ) -> no_return().
 raise_error( ErrorTerm, Context ) ->
@@ -64,16 +82,21 @@ raise_error( ErrorTerm, Context ) ->
 
 
 
-% Raises a (compile-time, rather ad hoc) error, with specified source context,
-% when applying this parse transform, to stop the build on failure and report
-% the actual error.
+% Raises a (compile-time, rather ad hoc) user-related error, with specified
+% source context, when applying this parse transform, to stop the build on
+% failure and report adequately the actual error to the user.
 %
--spec raise_error( text_utils:ustring(), ast_transform:ast_transforms(),
-				   ast_base:source_context(), ast_base:line() ) -> no_return().
-raise_error( ErrorString, #ast_transforms{ transformed_module_name=ModName },
-			 Line ) ->
+-spec raise_usage_error( text_utils:ustring(), ast_transforms(),
+						 ast_base:line() ) -> no_return();
+					   ( text_utils:ustring(), wooper:classname(),
+						 ast_base:line() ) -> no_return();
+					   ( text_utils:format_string(), text_utils:format_values(),
+						 wooper:classname() ) -> no_return().
+raise_usage_error( ErrorString,
+				   #ast_transforms{ transformed_module_name=Classname },
+				   Line ) ->
 
-	ExpectedModFile = text_utils:format( "~s.erl", [ ModName ] ),
+	ExpectedSrcFile = wooper:get_class_filename( Classname ),
 
 	% Finally not used, as we do not need here to specify the layer or to print
 	% a stacktrace:
@@ -81,23 +104,43 @@ raise_error( ErrorString, #ast_transforms{ transformed_module_name=ModName },
 	%ast_utils:raise_error( ErrorString, _Context={ ExpectedModFile, Line },
 	%					   ?origin_layer ).
 	io:format( "~s:~B: ~s~n",
-			   [ ExpectedModFile, Line, ErrorString ] ),
+			   [ ExpectedSrcFile, Line, ErrorString ] ),
 
 	% Almost the only way to stop the processing of the AST:
-	halt( 6 ).
+	halt( 6 );
+
+
+raise_usage_error( ErrorString, Classname, Line ) when is_atom( Classname ) ->
+
+	ExpectedSrcFile = wooper:get_class_filename( Classname ),
+
+	io:format( "~s:~B: ~s~n", [ ExpectedSrcFile, Line, ErrorString ] );
+
+
+raise_usage_error( ErrorFormatString, ErrorFormatValues, Classname ) ->
+
+	ExpectedSrcFile = wooper:get_class_filename( Classname ),
+
+	% Cannot target better:
+	Line = 0,
+
+	io:format( "~s:~B: " ++ ErrorFormatString ++ "~n",
+			   [ ExpectedSrcFile, Line | ErrorFormatValues ] ).
 
 
 
-% Raises a (compile-time, rather ad hoc) error, with specified source context,
-% when applying this parse transform, to stop the build on failure and report
-% the actual error.
+
+% Raises a (compile-time, rather ad hoc) user-related error, with specified
+% source context, when applying this parse transform, to stop the build on
+% failure and report the actual error.
 %
--spec raise_error( text_utils:format_string(), text_utils:format_values(),
-				   ast_transforms(),
-				   ast_base:source_context(), ast_base:line() ) -> no_return().
-raise_error( ErrorFormatString, ErrorValues, Transforms, Line ) ->
+-spec raise_usage_error( text_utils:format_string(), text_utils:format_values(),
+			ast_transforms() | wooper:classname(), ast_base:line() ) ->
+							   no_return().
+raise_usage_error( ErrorFormatString, ErrorValues, TransformsOrClass, Line ) ->
 	ErrorString = text_utils:format( ErrorFormatString, ErrorValues ),
-	raise_error( ErrorString, Transforms, Line ).
+	raise_usage_error( ErrorString, TransformsOrClass, Line ).
+
 
 
 
