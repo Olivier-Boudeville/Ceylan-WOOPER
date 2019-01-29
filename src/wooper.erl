@@ -2120,7 +2120,8 @@ delete_pid_from( [ Attr | T ], DeleteMessage, PreTestLiveliness, State,
 -spec delete_synchronously_instance( instance_pid() ) -> void().
 delete_synchronously_instance( InstancePid ) ->
 
-	%io:format( "delete_synchronously_instance for ~p.~n", [ InstancePid ] ),
+	%trace_utils:debug_fmt( "delete_synchronously_instance for ~w.",
+	%                       [ InstancePid ] ),
 
 	InstancePid ! { synchronous_delete, self() },
 

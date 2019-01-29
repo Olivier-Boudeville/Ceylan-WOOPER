@@ -61,8 +61,6 @@ getMeanEggsCount( State ) ->
 
 % Returns the number of teats a platypus has.
 %
-% (request)
-%
 % It is a mammal, though!
 %
 -spec getTeatCount( wooper:state() ) -> const_request_return( teat_count() ).
@@ -72,8 +70,6 @@ getTeatCount( State ) ->
 
 
 % Tells whether this platypus can eat specified food.
-%
-% (request)
 %
 % Platypuses are supposed carnivorous though:
 -spec canEat( wooper:state(), food() ) -> const_request_return( boolean() ).
@@ -95,9 +91,6 @@ canEat( State, _OtherFood ) ->
 
 
 % Returns the color of the nozzle of this platypus.
-%
-% (request)
-%
 -spec getNozzleColor( wooper:state() ) -> const_request_return( nozzle_color() ).
 getNozzleColor( State )->
 
@@ -111,9 +104,6 @@ getNozzleColor( State )->
 
 
 % Returns the list of alternate names for this platypus.
-%
-% (request)
-%
 -spec getAlternateNames( wooper:state() ) -> const_request_return( [atom()] ).
 getAlternateNames( State ) ->
 	wooper:const_return_result( ?getAttr(alternate_names) ).
@@ -121,9 +111,6 @@ getAlternateNames( State ) ->
 
 
 % Returns the first alternate name for this platypus and forget it.
-%
-% (request)
-%
 -spec popFirstAlternateName( wooper:state() ) -> request_return( atom() ).
 popFirstAlternateName( State ) ->
 	{ NewState, Name } = popFromAttribute( State, alternate_names ),
@@ -132,9 +119,6 @@ popFirstAlternateName( State ) ->
 
 
 % Allows to test the creation and deletion of other WOOPER instances.
-%
-% (oneway)
-%
 -spec testCreationDeletion( wooper:state() ) -> oneway_return().
 testCreationDeletion( State ) ->
 
@@ -167,8 +151,6 @@ testCreationDeletion( State ) ->
 
 % Callback triggered, as we trap exits, whenever a linked process stops (here,
 % the created cat instance).
-%
-% (oneway)
 %
 -spec onWOOPERExitReceived( wooper:state(), pid(),
 					basic_utils:exit_reason() ) -> const_oneway_return().

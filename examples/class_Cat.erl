@@ -80,7 +80,8 @@ canEat( State, _OtherFood ) ->
 	wooper:const_return_result( false ).
 
 
-% Const request:
+% Returns the whisker color of this cat.
+%
 -spec getWhiskerColor( wooper:state() ) -> const_request_return( color() ).
 getWhiskerColor( State )->
 
@@ -91,8 +92,6 @@ getWhiskerColor( State )->
 
 
 % Requests this cat to terminate, based on specified halting procedure.
-%
-% (oneway)
 %
 -spec terminate( wooper:state(), 'crash' ) -> const_oneway_return().
 terminate( State, crash ) ->
@@ -118,8 +117,6 @@ toString( State ) ->
 
 
 % Returns the mean life expectancy of a cat, in years.
-%
-% (static)
 %
 -spec get_mean_life_expectancy() -> static_return( age() ).
 get_mean_life_expectancy() ->

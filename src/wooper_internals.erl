@@ -114,7 +114,10 @@ raise_usage_error( ErrorString, Classname, Line ) when is_atom( Classname ) ->
 
 	ExpectedSrcFile = wooper:get_class_filename( Classname ),
 
-	io:format( "~s:~B: ~s~n", [ ExpectedSrcFile, Line, ErrorString ] );
+	io:format( "~s:~B: ~s~n", [ ExpectedSrcFile, Line, ErrorString ] ),
+
+	% Almost the only way to stop the processing of the AST:
+	halt( 6 );
 
 
 raise_usage_error( ErrorFormatString, ErrorFormatValues, Classname ) ->
@@ -125,8 +128,10 @@ raise_usage_error( ErrorFormatString, ErrorFormatValues, Classname ) ->
 	Line = 0,
 
 	io:format( "~s:~B: " ++ ErrorFormatString ++ "~n",
-			   [ ExpectedSrcFile, Line | ErrorFormatValues ] ).
+			   [ ExpectedSrcFile, Line | ErrorFormatValues ] ),
 
+	% Almost the only way to stop the processing of the AST:
+	halt( 6 ).
 
 
 

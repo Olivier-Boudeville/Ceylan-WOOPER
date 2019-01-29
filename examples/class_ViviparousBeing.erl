@@ -32,23 +32,13 @@ construct( State ) ->
 
 
 
-% This useless destructor overriding was made to silence Dialyzer (which is not
-% able to determine that this function will never be called, as WOOPER performs
-% the appropriate test is made beforehand):
-%
--spec destruct( wooper:state() ) -> wooper:state().
-destruct( State ) ->
-	State.
-
-
-
 % Method implementations.
 
 
 % Let's say an average means something here:
 %
-% (request; this ought to be a static method, as it does not depend on a state
-% here)
+% (request; actually this ought to be a static method, as it does not depend on
+% a state here)
 %
 -spec getMeanChildrenCount( wooper:state() ) ->
 								const_request_return( children_count() ).
@@ -58,9 +48,6 @@ getMeanChildrenCount( State ) ->
 
 
 % Returns the number of times this viviparous being gave birth:
-%
-% (const request)
-%
 -spec getBirthGivenCount( wooper:state() ) ->
 								const_request_return( children_count() ).
 getBirthGivenCount( State ) ->
@@ -69,9 +56,6 @@ getBirthGivenCount( State ) ->
 
 
 % Increases the number of times this viviparous being gave birth.
-%
-% (oneway)
-%
 -spec giveBirth( wooper:state(), children_count() ) -> oneway_return().
 giveBirth( State, NumberOfNewChildren ) ->
 

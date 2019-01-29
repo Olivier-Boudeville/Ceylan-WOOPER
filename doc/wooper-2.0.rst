@@ -129,7 +129,7 @@ method invocation          sending of an appropriate inter-process message
 method look-up             class-specific virtual table taking into account inheritance transparently
 instance state             instance-specific datastructure storing its attributes, and kept by the instance-specific WOOPER tail-recursive infinite loop
 instance attributes        key/value pairs stored in the instance state
-class (static) method      exported module function
+class (static) method      module function that respects some conventions
 =========================  =================================================================
 
 In practice, developing a class with WOOPER mostly involves including the `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl>`_ header file and respecting the WOOPER conventions detailed below.
@@ -1118,7 +1118,7 @@ Static Methods
 
 Static methods, as opposed to member methods, do not target specifically an instance, they are defined at the class level.
 
-They thus do not operate on PID, they are just to be called thanks to their module name, exactly as any exported standard function.
+They thus do not operate on a specified process or PID, they are just to be called thanks to their module name, exactly as any exported standard function.
 
 .. comment Static methods are to be listed by the class developer thanks to the ``get_static_methods/0`` function, which must return a list whose elements are pairs, whose first part is the name (atom) of the static method, the second part being the arity of the static method.
 
@@ -1146,6 +1146,8 @@ The static methods are automatically exported by WOOPER, so that they can be rea
 
 
 .. comment Hence static methods can be called from anywhere, no qualifier like public, protected or private apply to them.
+
+Finally, having static methods leaves little interest to defining and exporting one's standard, plain functions; when doing so, one should wonder whether a static method could not be a solution at least as good.
 
 
 :raw-latex:`\pagebreak`
@@ -1203,7 +1205,7 @@ where:
  - ``Name`` is the name of that attribute, as an atom (ex: ``fur_color``)
  - ``Type`` corresponds to the `type specification <http://erlang.org/doc/reference_manual/typespec.html>`_ of that attribute (ex: ``[atom()]``, ``foo:color_index()``); note that the Erlang parser will not support the ``|`` (i.e. union) operator, like in ``'foo'|integer()``; we recommend to use the ``union`` pseudo-function (with any arity greater or equal to 2) instead, like in: ``union('foo',integer())``
  - ``QualifierInfo`` is detailed below
- - ``Description`` is a plain string describing the purpose of this attribute; this is a comment aimed only at humans (ex: ``"describes the color of the fur of this animal (not including whiskers)"``)
+ - ``Description`` is a plain string describing the purpose of this attribute; this is a comment aimed only at humans, which preferably does not start with a capital letter and does not end with a dot (ex: ``"describes the color of the fur of this animal (not including whiskers)"``)
 
 
 .. comment  We would have preferred that, instead of ``'integer()'``, one could have specified directly ``integer()``, yet this does not seem possible with parse-transforms, as in the latter case it would trigger a parse error earlier in the transformation process.
@@ -1230,7 +1232,7 @@ A qualifier can be:
 
 The defaults are:
 
-- ``private``
+- ``protected``
 - mutable (i.e. non-``const``)
 - no specific initial value enforced (not even ``undefined``)
 
@@ -2129,6 +2131,46 @@ One may also have a look at the full `test examples <https://github.com/Olivier-
 For examples of re-use of WOOPER by upper layers, one may refer to `Ceylan-Traces <http://traces.esperide.org>`_ or the `Sim-Diasca <http://sim-diasca.com>`_ simulation engine.
 
 .. comment Note:: To be updated, notably with respect to parse transforms.
+
+
+
+Class Developer Cheat Sheet
+---------------------------
+
+When specifying a **class**: ``-module(class_Foobar).``
+
+When specifying its **superclasses**: ``-define(superclasses,[A,B]).``
+
+When specifying its **class attributes**: ``-define(class_attributes,[ATTR1,ATTR2,...])``
+
+A given ``ATTRn`` may be one of:
+
+- ``{Name,Type,QualifierInfo,Description}``
+- ``{Name,Type,Description}``
+- ``{Name,Description}``
+- ``Name``
+
+``QualifierInfo`` can be, for example, ``public``, or ``[private,const]``.
+
+
+When defining a **request**:
+
+- its **spec** should rely, for its return type, either on ``request_return(T())`` or on ``const_request_return(T())``
+- each of its clause should terminate with either ``wooper:return_state_result(S,R)`` or ``wooper:const_return_result(R)``
+
+
+When defining a **oneway**:
+
+- its **spec** should rely, for its return type, either on ``oneway_return()`` or on ``const_oneway_return()``
+- each of its clause should terminate with either ``wooper:return_state(S)`` or ``wooper:const_return()``
+
+
+When defining a **static method**:
+
+- its **spec** should rely, for its return type, on ``static_return(T())``
+- each of its clause should terminate with ``wooper:return_static(R)``
+
+
 
 
 Source Editors

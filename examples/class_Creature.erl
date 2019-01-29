@@ -72,9 +72,6 @@ getGender( State ) ->
 
 
 % Returns a class-specific arbitrary number.
-%
-% (request)
--spec getArbitraryNumber( wooper:state() ) -> const_request_return( number() ).
 getArbitraryNumber( State ) ->
 	wooper:const_return_result( 10 ).
 
@@ -87,7 +84,6 @@ getArbitraryNumber( State ) ->
 %
 % Must not be called from the Creature test, otherwise will fail.
 %
-% (oneway).
 -spec testDirectMethodExecution( wooper:state(), age() ) -> oneway_return().
 testDirectMethodExecution( State, NewAge ) ->
 
@@ -130,7 +126,6 @@ testDirectMethodExecution( State, NewAge ) ->
 % The returned value of the setAttribute call was correct, but any side-effect
 % triggered by f (sending a message, writing a trace, etc.) happened twice.
 %
-% (oneway)
 -spec testSingleExecution( wooper:state() ) -> oneway_return().
 testSingleExecution( State ) ->
 	wooper:return_state( setAttribute( side_effect_function( State ),
@@ -159,7 +154,6 @@ example_fun() ->
 
 % This looks like a method, but it is not (returning only a string):
 %
-% (function)
 -spec toString( wooper:state() ) -> string().
 toString( State ) ->
 	table:toString( State#state_holder.attribute_table ).

@@ -98,8 +98,6 @@ destruct( State ) ->
 % Overridden from Creature, useful to show the use of executeOneway.
 % Note: used to test WOOPER management of error conditions.
 %
-% (oneway)
-%
 -spec setAge( wooper:state(), age() ) -> oneway_return().
 setAge( State, NewAge ) ->
 	%throw( exception_throw_test_from_oneway ),
@@ -112,8 +110,6 @@ setAge( State, NewAge ) ->
 %
 % Note: used to test WOOPER management of error conditions.
 %
-% (const request)
-%
 -spec isHotBlooded( wooper:state() ) -> const_request_return( boolean() ).
 isHotBlooded( State ) ->
 	%throw( exception_throw_test_from_request ),
@@ -122,9 +118,6 @@ isHotBlooded( State ) ->
 
 
 % All reptiles can moult:
-%
-% (const request)
-%
 -spec canMoult( wooper:state() ) -> const_request_return( boolean() ).
 canMoult( State ) ->
 	wooper:const_return_result( true ).

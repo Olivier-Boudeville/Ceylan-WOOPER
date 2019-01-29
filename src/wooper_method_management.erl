@@ -553,9 +553,10 @@ check_clause_for_state( _Clause, FunId ) ->
 -spec manage_method_terminators( meta_utils:clause_def(),
 				   meta_utils:function_id(), wooper:classname() ) ->
 		{ meta_utils:clause_def(), function_nature(), method_qualifiers() }.
-manage_method_terminators( _Clauses=[], FunId, _Classname ) ->
-	wooper_internals:raise_error(
-			  { function_exported_yet_not_defined, FunId } );
+manage_method_terminators( _Clauses=[], FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "the function ~s/~B is exported yet "
+										"not defined.", pair:to_list( FunId ),
+										Classname );
 
 manage_method_terminators( Clauses, FunId, Classname ) ->
 
@@ -916,8 +917,7 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 
 		% First (correct) static method detection:
 		( _LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_static} },
+		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
 		  _Params=[ ResultExpr ],
 		  Transforms=#ast_transforms{ transformation_state=undefined } ) ->
 
@@ -937,8 +937,7 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 		% static):
 		%
 		( _LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_static} },
+		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
 		  _Params=[ ResultExpr ],
 		  Transforms=#ast_transforms{
 						transformation_state={ static, _Qualifiers } } ) ->
@@ -954,8 +953,7 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 
 		% Faulty static arity:
 		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_static} },
+		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
 		  Params,
 		  Transforms ) when length( Params ) =/= 2 ->
 			wooper_internals:raise_usage_error( "wrong arity (~B) specified "
@@ -966,8 +964,7 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 
 		% Nature mismatch:
 		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_static} },
+		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
 		  _Params,
 		  Transforms=#ast_transforms{
 			transformation_state={ OtherNature, _Qualifiers } } ) ->

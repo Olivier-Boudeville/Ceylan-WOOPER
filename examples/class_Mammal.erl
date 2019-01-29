@@ -70,8 +70,6 @@ destruct( State ) ->
 %
 % Overridden from Creature, useful to show the use of executeOneway.
 %
-% (oneway)
-%
 -spec setAge( wooper:state(), age() ) -> oneway_return().
 setAge( State, NewAge ) ->
 
@@ -87,9 +85,6 @@ setAge( State, NewAge ) ->
 
 
 % All mammals are hot-blooded:
-%
-% (request)
-%
 -spec isHotBlooded( wooper:state() ) -> const_request_return( boolean() ).
 isHotBlooded( State ) ->
 	wooper:const_return_result( true ).
@@ -99,8 +94,6 @@ isHotBlooded( State ) ->
 % Attribute names could be defined in '-define().' header (.hrl) clauses, to
 % ensure consistency.
 %
-% (request)
-%
 -spec getFurColor( wooper:state() ) -> const_request_return( fur_color() ).
 getFurColor( State ) ->
 	wooper:const_return_result( ?getAttr(fur_color) ).
@@ -109,8 +102,6 @@ getFurColor( State ) ->
 
 % Returns a class-specific arbitrary number.
 % Overridden from Creature, useful to show the use of executeRequest.
-%
-% (request)
 %
 -spec getArbitraryNumber( wooper:state() ) -> request_return( number() ).
 getArbitraryNumber( State ) ->
@@ -133,8 +124,6 @@ getArbitraryNumber( State ) ->
 
 % Allows to test that we can indeed call any version of the implementation of a
 % method, not only the latest overridden one.
-%
-% (oneway)
 %
 -spec testExplicitClassSelection( wooper:state() ) -> oneway_return().
 testExplicitClassSelection( State ) ->
