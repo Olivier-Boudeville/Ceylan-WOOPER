@@ -1299,45 +1299,53 @@ get_class_manager() ->
 % Section for default handlers.
 
 
-
-% WOOPER default EXIT handler.
+% WOOPER default EXIT message handler; called if trapping EXIT signals.
 %
 % Returns an updated state.
 %
 % Can be overridden by defining or inheriting the onWOOPERExitReceived/3 oneway.
 %
--spec default_exit_handler( wooper:state(), pid(), any() ) -> wooper:state().
-default_exit_handler( State, Pid, ExitType ) ->
+% (helper)
+%
+-spec default_exit_handler( basic_utils:pid_or_port(),
+		 basic_utils:exit_reason(), wooper:state() ) -> wooper:state().
+default_exit_handler( PidOrPort, ExitReason, State ) ->
 
-	wooper:log_warning( "WOOPER default EXIT handler of the ~w "
-						"instance ~w ignored the following EXIT message "
-						"from ~w:~n'~p'.~n",
-						[ State#state_holder.actual_class, self(), Pid,
-						  ExitType ] ),
+	log_warning( "WOOPER default EXIT handler of the ~w "
+				 "instance ~w ignored the following EXIT message "
+				 "from ~w:~n'~p'.~n",
+				 [ State#state_holder.actual_class, self(), PidOrPort,
+				   ExitReason ] ),
 
 	State.
 
 
 
-% WOOPER default DOWN handler.
+% WOOPER default DOWN handler, for process monitors.
 %
 % Returns an updated state.
 %
 % Can be overridden by defining or inheriting the onWOOPERDownNotified/5 oneway.
 %
--spec default_down_handler( wooper:state(), monitor_utils:monitor_reference(),
+% Note: not to be mixed up with the default_node_down_handler/3 /
+% onWOOPERNodeDisconnection/3 pair (which is node-related).
+%
+% (helper)
+%
+-spec default_down_handler( monitor_utils:monitor_reference(),
 							monitor_utils:monitored_element_type(),
 							monitor_utils:monitored_element(),
-							basic_utils:exit_reason() ) ->  wooper:state().
-default_down_handler( State, _MonitorReference, _MonitoredType,
-					  _MonitoredElement, _ExitReason=normal ) ->
+							basic_utils:exit_reason(), wooper:state() ) ->
+								  wooper:state().
+default_down_handler( _MonitorReference, _MonitoredType,
+					  _MonitoredElement, _ExitReason=normal, State ) ->
 	% Normal exits not notified:
 	State;
 
-default_down_handler( State, MonitorReference, MonitoredType, MonitoredElement,
-					  ExitReason ) ->
+default_down_handler( MonitorReference, MonitoredType, MonitoredElement,
+					  ExitReason, State ) ->
 
-	wooper:log_warning( "WOOPER default DOWN handler of the ~w "
+	log_warning( "WOOPER default DOWN handler of the ~w "
 						"instance ~w ignored the following down notification "
 						"'~s' for monitored element ~p of type '~p' "
 						"(monitor reference: ~w).~n",
@@ -1356,15 +1364,17 @@ default_down_handler( State, MonitorReference, MonitoredType, MonitoredElement,
 % Can be overridden by defining or inheriting the onWOOPERNodeConnection/3
 % oneway.
 %
--spec default_node_up_handler( wooper:state(), net_utils:atom_node_name(),
-					   monitor_utils:monitor_node_info() ) -> wooper:state().
-default_node_up_handler( State, Node, MonitorNodeInfo ) ->
+% (helper)
+%
+-spec default_node_up_handler( net_utils:atom_node_name(),
+		   monitor_utils:monitor_node_info(), wooper:state() ) -> wooper:state().
+default_node_up_handler( Node, MonitorNodeInfo, State ) ->
 
-	wooper:log_warning( "WOOPER default node up handler of the ~w "
-						"instance ~w ignored the connection notification "
-						"for node '~s' (information: ~p).~n",
-						[ State#state_holder.actual_class, self(), Node,
-						  MonitorNodeInfo ] ),
+	log_warning( "WOOPER default node up handler of the ~w "
+				 "instance ~w ignored the connection notification "
+				 "for node '~s' (information: ~p).~n",
+				 [ State#state_holder.actual_class, self(), Node,
+				   MonitorNodeInfo ] ),
 
 	State.
 
@@ -1377,11 +1387,14 @@ default_node_up_handler( State, Node, MonitorNodeInfo ) ->
 % Can be overridden by defining or inheriting the onWOOPERNodeDisconnection/3
 % oneway.
 %
--spec default_node_down_handler( wooper:state(), net_utils:atom_node_name(),
-						 monitor_utils:monitor_node_info() ) -> wooper:state().
-default_node_down_handler( State, Node, MonitorNodeInfo ) ->
+% Note: not to be mixed up with the default_down_handler/5 /
+% onWOOPERDownNotified/5 pair (which is process-related).
+%
+-spec default_node_down_handler( net_utils:atom_node_name(),
+			 monitor_utils:monitor_node_info(), wooper:state() ) -> wooper:state().
+default_node_down_handler( Node, MonitorNodeInfo, State ) ->
 
-	wooper:log_warning( "WOOPER default node down handler of the ~w "
+	log_warning( "WOOPER default node down handler of the ~w "
 						"instance ~w ignored the disconnection notification "
 						"for node '~s' (information: ~p).~n",
 						[ State#state_holder.actual_class, self(), Node,
@@ -1668,6 +1681,7 @@ log_info( FormatString, ValueList ) ->
 %
 -spec log_warning( string() ) -> void().
 log_warning( String ) ->
+
 	error_logger:warning_msg( String ++ "\n" ),
 
 	% Wait a bit, as error_msg seems asynchronous:

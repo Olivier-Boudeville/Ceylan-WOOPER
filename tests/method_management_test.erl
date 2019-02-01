@@ -89,6 +89,14 @@ run() ->
 	B = 5,
 	Expected = A + B + 10,
 
+
+	test_facilities:display( "Testing indirectly executeConstRequestAs/4." ),
+
+	ChildTestPid = class_ChildTestClass:new_link( 14, female ),
+
+	ChildTestPid ! test_of_const_req_as,
+
+
 	test_facilities:display( "Calling static method." ),
 
 	Expected = class_MethodTester:get_static_info( A, B ),

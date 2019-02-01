@@ -5,7 +5,7 @@ WOOPER_TOP = .
 		all register-version-in-header register-wooper list-beam-dirs \
 		add-prerequisite-plts link-plt                                \
 		send-release release release-zip release-bz2 release-xz       \
-		prepare-release clean-release clean-archive                   \
+		prepare-release clean-release clean-archive stats             \
 		info-paths info-compile info-parse-transform
 
 
@@ -115,6 +115,10 @@ clean-release:
 
 clean-archive:
 	-@cd .. && /bin/rm -f $(WOOPER_RELEASES)
+
+
+stats:
+	@$(MAKE_CODE_STATS) $(WOOPER_TOP)
 
 
 info-paths:

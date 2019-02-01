@@ -212,8 +212,9 @@ wooper_main_loop( State ) ->
 					% Reusing safe execution facilities rather than directly
 					% 'apply( LocatedModule, onWOOPERExitReceived, ...)':
 
-					% Will thus call 'onWOOPERExitReceived( State, Pid, ExitType
-					% )', where ExitType is typically a stack trace:
+					% Will thus call the 'onWOOPERExitReceived( State, Pid,
+					% ExitType )' oneway, where ExitType is typically a stack
+					% trace:
 
 					{ NewState, _ } = wooper_execute_method(
 						onWOOPERExitReceived, [ PidOrPort, ExitType ], State ),
@@ -221,12 +222,12 @@ wooper_main_loop( State ) ->
 					%?wooper_log( "Main loop (case G) ended.~n" ),
 					wooper_main_loop( NewState );
 
-				% Hashtable key not found:
+				% Key not found:
 				_ ->
 					% EXIT handler not overridden, using default one:
 					%?wooper_log( "Main loop (case G) ended.~n" ),
-					NewState = wooper:default_exit_handler( State, PidOrPort,
-															ExitType ),
+					NewState = wooper:default_exit_handler( PidOrPort, ExitType,
+															State ),
 					wooper_main_loop( NewState )
 
 			end;
@@ -260,13 +261,13 @@ wooper_main_loop( State ) ->
 					wooper_main_loop( NewState );
 
 
-				% Hashtable key not found:
+				% Key not found:
 				_ ->
 
 					% DOWN handler not overridden, using default one:
 					%?wooper_log( "Main loop (case H) ended.~n" ),
-					NewState = wooper:default_down_handler( State, MonitorRef,
-						MonitoredType, MonitoredElement, ExitReason ),
+					NewState = wooper:default_down_handler( MonitorRef,
+						MonitoredType, MonitoredElement, ExitReason, State ),
 					wooper_main_loop( NewState )
 
 			end;
@@ -298,13 +299,13 @@ wooper_main_loop( State ) ->
 					wooper_main_loop( NewState );
 
 
-				% Hashtable key not found:
+				% Key not found:
 				_ ->
 
 					% nodeup handler not overridden, using default one:
 					%?wooper_log( "Main loop (case I) ended.~n" ),
-					NewState = wooper:default_node_up_handler( State, Node,
-														   MonitorNodeInfo ),
+					NewState = wooper:default_node_up_handler( Node,
+										   MonitorNodeInfo, State ),
 					wooper_main_loop( NewState )
 
 			end;
@@ -336,13 +337,13 @@ wooper_main_loop( State ) ->
 					wooper_main_loop( NewState );
 
 
-				% Hashtable key not found:
+				% Key not found:
 				_ ->
 
-					% nodeup handler not overridden, using default one:
-					%?wooper_log( "Main loop (case J) ended.~n" ),
-					NewState = wooper:default_node_down_handler( State, Node,
-														 MonitorNodeInfo ),
+					% nodedown handler not overridden, using default one:
+					% ?wooper_log( "Main loop (case J) ended.~n" ),
+					NewState = wooper:default_node_down_handler( Node,
+												 MonitorNodeInfo, State ),
 					wooper_main_loop( NewState )
 
 			end;

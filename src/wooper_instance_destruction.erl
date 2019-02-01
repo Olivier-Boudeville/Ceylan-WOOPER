@@ -123,21 +123,36 @@ scan_for_destructors( FunIdInfos ) ->
 	scan_for_destructors( FunIdInfos, _Acc={ undefined, [] } ).
 
 
+
+% (helper)
 scan_for_destructors( _FunIdInfos=[], _Acc={ undefined, _AllFunIdInfos } ) ->
 	% No need to return a list of pairs already known of the caller:
 	undefined;
+
 
 % Here Acc is { DestFunInfo, RemainingFunIdInfos }:
 scan_for_destructors( _FunIdInfos=[], Acc ) ->
 	Acc;
 
+
+scan_for_destructors( _FunIdInfos=[ { { destruct, 1 },
+									  #function_info{ clauses=[],
+													  spec=S } } | _T ],
+					  _Acc ) when S =/= undefined ->
+	wooper_internals:raise_usage_error( "destructor (destruct/1) has a spec, "
+										"yet it has never been defined." );
+
+
 scan_for_destructors( _FunIdInfos=[ { { destruct, 1 }, DestFunInfo } | T ],
 					  _Acc={ undefined, AccFunIdInfos } ) ->
 	scan_for_destructors( T, { DestFunInfo, AccFunIdInfos } );
 
+
 scan_for_destructors( _FunIdInfos=[ { { destruct, N }, _DestFunInfo } | _T ],
 					  _Acc ) ->
-	throw( { disallowed_destructor_arity, N } );
+	wooper_internals:raise_usage_error(
+	  "wrong arity for destructor (destruct/1): expected 1, got ~B.", [ N ] );
+
 
 scan_for_destructors( _FunIdInfos=[ Other | T ],
 					  _Acc={ DestElem, OtherFunIdInfos } ) ->

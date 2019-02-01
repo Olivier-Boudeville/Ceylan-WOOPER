@@ -53,6 +53,7 @@
 
 
 
+
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
 
@@ -74,7 +75,6 @@ construct( State, Name, Gender ) ->
 
 
 % Returns the name of this creature.
-%
 %
 -spec getName( wooper:state() ) -> const_request_return( name() ).
 getName( State ) ->
@@ -103,12 +103,12 @@ aRequest( State, Arg ) ->
 
 % A request meant to be overridden.
 %
-% (request)
-%
 -spec someRequest( wooper:state(), integer() ) ->
 						 const_request_return( integer() ).
 someRequest( State, Arg ) ->
 	wooper:const_return_result( Arg + 7 ).
+
+
 
 
 % Returns some mean count.

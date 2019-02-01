@@ -140,13 +140,6 @@
 		  generate_class_info_from/1, generate_module_info_from/1 ]).
 
 
-% The specific type of an Erlang function, from the WOOPER point of view:
-%
--type function_type() :: 'constructor' | 'destructor'
-					   | 'request' | 'oneway' | 'static' | 'function'.
-
-
-
 % For function_info:
 -include("ast_info.hrl").
 
@@ -159,10 +152,13 @@
 % Local shorthands:
 
 -type ast() :: ast_base:ast().
--type located_form() :: ast_info:located_form().
 -type module_info() :: ast_info:module_info().
 -type function_info() :: ast_info:function_info().
 -type function_table() :: ast_info:function_table().
+
+-type request_table() :: wooper_method_management:request_table().
+-type oneway_table() :: wooper_method_management:oneway_table().
+-type static_table() :: wooper_method_management:static_table().
 
 -type class_info() :: wooper_info:class_info().
 
@@ -171,10 +167,9 @@
 -export([ check_class_info/1 ]).
 
 
-% tmp:
--export([ add_function/4, add_request/4, add_oneway/4, add_static/4,
-		  identify_function/3, infer_function_type/1, infer_fun_type/2,
-		  get_new_variation_names/0, get_attribute_forms/1 ]).
+% Currently not used:
+-export([ add_function/4, add_request/4, add_oneway/4, add_static_method/4,
+		  get_new_variation_names/0 ]).
 
 
 
@@ -554,6 +549,8 @@ create_class_info_from(
 
 % Adds specified function into the corresponding table.
 %
+-spec add_function( meta_utils:function_name(), arity(), ast_base:form(),
+					function_table() ) -> function_table().
 add_function( Name, Arity, Form, FunctionTable ) ->
 
 	FunId = { Name, Arity },
@@ -581,7 +578,8 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 
 		% Here a definition was already set:
 		_ ->
-			wooper_internals:raise_error( { multiple_definition_for, FunId } )
+			wooper_internals:raise_usage_error( "multiple definition for ~s/~B.",
+												pair:to_list( FunId ) )
 
 	end,
 
@@ -591,6 +589,8 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 
 % Adds specified request into the corresponding table.
 %
+-spec add_request( wooper:request_name(), arity(), ast_base:form(),
+				   request_table() ) -> request_table().
 add_request( Name, Arity, Form, RequestTable ) ->
 
 	RequestId = { Name, Arity },
@@ -601,21 +601,24 @@ add_request( Name, Arity, Form, RequestTable ) ->
 
 		key_not_found ->
 			% New entry then:
-			#function_info{ name=Name,
-							arity=Arity,
-							clauses=Form
+			#request_info{ name=Name,
+						   arity=Arity,
+						   qualifiers=[],
+						   location=undefined,
+						   line=undefined,
+						   clauses=Form
 							% Implicit:
 							%spec=undefined
-						   };
+						 };
 
-		{ value, F=#function_info{ clauses=undefined } } ->
+		{ value, F=#request_info{ clauses=undefined } } ->
 			% Just add the form then:
-			F#function_info{ clauses=Form };
+			F#request_info{ clauses=Form };
 
 		% Here a definition was already set:
 		_ ->
-			wooper_internals:raise_error(
-			  { multiple_definitions_for_request, RequestId } )
+			wooper_internals:raise_usage_error( "multiple definitions for "
+				"request ~s/~B.", pair:to_list( RequestId ) )
 
 	end,
 
@@ -625,6 +628,8 @@ add_request( Name, Arity, Form, RequestTable ) ->
 
 % Adds specified oneway into the corresponding table.
 %
+-spec add_oneway( wooper:oneway_name(), arity(), ast_base:form(),
+				  oneway_table() ) -> oneway_table().
 add_oneway( Name, Arity, Form, OnewayTable ) ->
 
 	OnewayId = { Name, Arity },
@@ -635,21 +640,24 @@ add_oneway( Name, Arity, Form, OnewayTable ) ->
 
 		key_not_found ->
 			% New entry then:
-			#function_info{ name=Name,
-							arity=Arity,
-							clauses=Form
-							% Implicit:
-							%spec=undefined
-						  };
+			#oneway_info{ name=Name,
+						  arity=Arity,
+						  qualifiers=[],
+						  location=undefined,
+						  line=undefined,
+						  clauses=Form
+						  % Implicit:
+						  %spec=undefined
+						};
 
-		{ value, F=#function_info{ clauses=undefined } } ->
+		{ value, F=#oneway_info{ clauses=undefined } } ->
 			% Just add the form then:
-			F#function_info{ clauses=Form };
+			F#oneway_info{ clauses=Form };
 
 		% Here a definition was already set:
 		_ ->
-			wooper_internals:raise_error(
-			  { multiple_definitions_for_oneway, OnewayId } )
+			wooper_internals:raise_usage_error( "multiple definitions for "
+				"oneway ~s/~B.", pair:to_list( OnewayId ) )
 
 	end,
 
@@ -659,7 +667,9 @@ add_oneway( Name, Arity, Form, OnewayTable ) ->
 
 % Adds specified static method into the corresponding table.
 %
-add_static( Name, Arity, Form, StaticTable ) ->
+-spec add_static_method( wooper:static_name(), arity(), ast_base:form(),
+						 static_table() ) -> static_table().
+add_static_method( Name, Arity, Form, StaticTable ) ->
 
 	StaticId = { Name, Arity },
 
@@ -669,182 +679,25 @@ add_static( Name, Arity, Form, StaticTable ) ->
 
 		key_not_found ->
 			% New entry then:
-			#function_info{ name=Name,
-							arity=Arity,
-							clauses=Form
-							% Implicit:
-							%spec=undefined
-						  };
+			#static_info{ name=Name,
+						  arity=Arity,
+						  clauses=Form
+						  % Implicit:
+						  %spec=undefined
+						};
 
-		{ value, F=#function_info{ clauses=undefined } } ->
+		{ value, F=#static_info{ clauses=undefined } } ->
 			% Just add the form then:
-			F#function_info{ clauses=Form };
+			F#static_info{ clauses=Form };
 
 		% Here a definition was already set:
 		_ ->
-			wooper_internals:raise_error(
-			  { multiple_definitions_for_static, StaticId } )
+			wooper_internals:raise_usage_error( "multiple definitions for "
+				"static method ~s/~B.", pair:to_list( StaticId ) )
 
 	end,
 
 	table:addEntry( _K=StaticId, _V=StaticInfo, StaticTable ).
-
-
-
-% Returns the (located) forms that correspond to known (class-level) attributes.
-%
--spec get_attribute_forms( wooper_info:attribute_table() ) ->
-								 [ located_form() ].
-get_attribute_forms( _AttributeTable ) ->
-
-	% Currently not managed (no consequence of class-level attribute declaration
-	% onto the resulting AST:
-	[].
-
-	% The key (attribute name) is duplicated in the attribute_info value:
-	% ... = table:values( AttributeTable ),
-
-
-
-
-% Tells whether specified clause belongs to a request, a oneway, a constuctor,
-% etc.
-%
--spec identify_function( basic_utils:function_name(), arity(),
-						 basic_utils:fixme() ) -> function_type().
-identify_function( _Name=construct, _Arity, _Clause ) ->
-	constructor;
-
-identify_function( _Name=destruct, _Arity=1, _Clause ) ->
-	destructor;
-
-identify_function( _Name=destruct, Arity, _Clause ) ->
-	wooper_internals:raise_error( { destructor_arity_must_be_one, Arity } );
-
-identify_function( Name, _Arity,
-				   _Clause={ clause, _Line, _Vars, _, AST } ) ->
-
-	case lists:member( Name, get_new_variation_names() ) of
-
-		true ->
-			%wooper_internals:raise_error(
-			%    { new_variations_are_reserved, Name } );
-			fixme;
-
-		false ->
-			ok
-
-	end,
-
-	StringName = text_utils:atom_to_string( Name ),
-
-	case StringName of
-
-		"wooper" ++ _ ->
-			%wooper_internals:raise_error(
-			%    { wooper_prefix_is_reserved, Name } );
-			fixme;
-
-		_ ->
-			ok
-
-	end,
-
-	%trace_utils:debug_fmt( "Inferring ~p/~B.", [ Name, Arity ] ),
-
-	% We have here either a function, a request, a oneway or a static method. To
-	% discriminate, we simply rely on how values are returned:
-	infer_function_type( AST ).
-
-
-
-% Infers the type of a function based on the code of one of its clauses.
-%
-% Note that a method *must* return:
-%
-% 1. with an appropriate WOOPER construct (ex: wooper:oneway_result/1)
-%
-% 2. directly from its body (not from an helper function being called)
-%
-infer_function_type( AST ) ->
-
-	%trace_utils:debug_fmt( "Inferring from code: ~p", [ AST ] ),
-
-	% If no wooper return pseudo-call is detected, by default it will be a
-	% function:
-	%
-	{ _SameAST, FunType } = ast_transform:traverse_term( _TargetTerm=AST,
-									 _TypeDescription=tuple,
-									 _TermTransformer=fun infer_fun_type/2,
-									 _UserData=function ),
-
-	FunType.
-
-
-
-% A meta_utils:term_transformer():
-%
-% We simply look-up elements like:
-%
-% { call, L1,
-%         { remote, L2,
-%                  { atom, L3, wooper },
-%                  { atom, L4, oneway_return }
-%         },
-%         [ { var, L5, 'AState' } ]
-% }
-% and determine the type from, here, oneway_return.
-%
--spec infer_fun_type( term(), basic_utils:user_data() ) ->
-								   { term(), basic_utils:user_data() }.
-infer_fun_type( Term={ call, CallLine, { remote, _L2,
-										 { atom, _L3, wooper },
-										 { atom, _L4, Return } },
-					   ArgList }, CurrentType )->
-
-	Len = length( ArgList ),
-
-	DetectedType = case Return of
-
-		request_return when Len =:= 2 ->
-			request;
-
-		oneway_return when Len =:= 1 ->
-			oneway;
-
-		static_return ->
-			static;
-
-		_OtherFunction ->
-			CurrentType
-
-	end,
-
-	% As we do not have a way to stop the transformation, we take advantage of
-	% that to check consistency:
-	%
-	NewType = case CurrentType of
-
-		% Possibly overriding defaults:
-		function ->
-			DetectedType;
-
-		% Matches, confirms detection:
-		DetectedType ->
-			DetectedType;
-
-		OtherType ->
-			wooper_internals:raise_error( { inconsistent_function_type,
-											CurrentType, OtherType, CallLine } )
-
-	end,
-
-	{ Term, NewType };
-
-
-infer_fun_type( Term, CurrentType ) ->
-	{ Term, CurrentType }.
-
 
 
 
@@ -853,12 +706,14 @@ infer_fun_type( Term, CurrentType ) ->
 % that will be checked by the compiler.
 %
 -spec check_class_info( class_info() ) -> void().
-check_class_info( #class_info{ constructors=Constructors } ) ->
+check_class_info( #class_info{ class={ Classname, _LocForm },
+							   constructors=Constructors } ) ->
 
 	case table:isEmpty( Constructors ) of
 
 		true ->
-			wooper_internals:raise_error( no_constructor_defined );
+			wooper_internals:raise_usage_error( "no constructor defined "
+				"(expecting at least one construct/N).", [], Classname );
 
 		false ->
 			ok

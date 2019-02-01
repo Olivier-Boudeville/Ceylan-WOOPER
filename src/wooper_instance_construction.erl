@@ -75,8 +75,12 @@ manage_constructors( { FunctionTable, ClassInfo } ) ->
 			{ FunctionTable, ClassInfo#class_info{ errors=NewErrors } };
 
 		_ ->
-			%trace_utils:debug_fmt( "~B constructor(s) found.",
-			%					   [ length( ConstructPairs ) ] ),
+			%trace_utils:debug_fmt( "~B constructor(s) found: ~s",
+			%					   [ length( ConstructPairs ),
+			%						 text_utils:strings_to_string(
+			%						   [ ast_info:function_info_to_string( FI )
+			%							 || { _Arity, FI } <- ConstructPairs ] )
+			%					   ] ),
 
 			% Returns { NewFunctionTable, NewClassInfo }:
 			manage_new_operators( ConstructPairs, ShrunkFunctionTable,
@@ -105,6 +109,16 @@ extract_constructors_from( FunctionTable ) ->
 filter_constructors( _FunIdInfos=[], AccPairs, AccFunInfos ) ->
 	{ AccPairs, table:new( AccFunInfos ) };
 
+
+% Should a constructor have a spec yet not actually being defined:
+filter_constructors( _FunIdInfos=[ { { construct, Arity },
+									 #function_info{ clauses=[],
+													 spec=S } } | _T ],
+					 _AccPairs, _AccFunInfos ) when S =/= undefined ->
+	wooper_internals:raise_usage_error( "constructor construct/~B has a spec, "
+			"yet it has never been defined.", [ Arity ] );
+
+% Legit constructor:
 filter_constructors( _FunIdInfos=[ { { construct, Arity }, FunInfo } | T ],
 					 AccPairs, AccFunInfos ) ->
 	filter_constructors( T, [ { Arity, FunInfo } | AccPairs ], AccFunInfos );

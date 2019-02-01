@@ -25,11 +25,18 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
 
-% Modular WOOPER header gathering all execute{Request,Oneway}* primitives
-% provided to write methods (exports here).
+% Modular WOOPER header gathering all execute{Const,}{Request,Oneway}*
+% primitives provided to implement methods (exports here).
 
 
 -export([ executeRequest/2, executeRequest/3,
+		  executeConstRequest/2, executeConstRequest/3,
+
 		  executeOneway/2, executeOneway/3,
+		  executeConstOneway/2, executeConstOneway/3,
+
 		  executeRequestAs/3, executeRequestAs/4,
-		  executeOnewayAs/3, executeOnewayAs/4 ]).
+		  executeConstRequestAs/3, executeConstRequestAs/4,
+
+		  executeOnewayAs/3, executeOnewayAs/4,
+		  executeConstOnewayAs/3, executeConstOnewayAs/4 ]).

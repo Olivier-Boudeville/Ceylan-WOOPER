@@ -48,11 +48,11 @@
 
 % The (WOOPER-level) nature of a given Erlang function.
 %
--type function_nature() :: 'function' | 'request' | 'oneway' | 'static'.
+-type function_nature() :: 'constructor' | 'destructor'
+						 | 'request' | 'oneway' | 'static' | 'function'.
 
 
 % Shorthands:
-
 
 -type function_info() :: ast_info:function_info().
 -type marker_table() :: ast_info:section_marker_table().
@@ -148,7 +148,16 @@ sort_out_functions( _FunEntries=[], FunctionTable, RequestTable, OnewayTable,
 					StaticTable, _Classname ) ->
 	{ FunctionTable, RequestTable, OnewayTable, StaticTable };
 
-%sort_out_functions( _FunEntries=[ { FunId={ FunName, Arity }, FunInfo } | T ],
+% Checks that all sorted functions have an actual implementation:
+sort_out_functions( _FunEntries=[ { FunId, #function_info{
+											  clauses=[],
+											  spec=Spec } } | _T ],
+					_FunctionTable, _RequestTable, _OnewayTable, _StaticTable,
+					Classname ) when Spec =/= undefined ->
+	wooper_internals:raise_usage_error( "function ~s/~B has a spec, yet "
+										"has never been defined.",
+										pair:to_list( FunId ), Classname );
+
 sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 											clauses=OriginalClauses,
 											spec=Spec } } | T ],
@@ -187,7 +196,7 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 
 		request ->
 			check_spec( Spec, request, Qualifiers, Classname ),
-			check_state_argument( NewClauses, FunId ),
+			check_state_argument( NewClauses, FunId, Classname ),
 			RequestInfo = function_to_request_info( NewFunInfo ),
 			NewRequestTable = table:addNewEntry( FunId, RequestInfo,
 												 RequestTable ),
@@ -196,7 +205,7 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 
 		oneway ->
 			check_spec( Spec, oneway, Qualifiers, Classname ),
-			check_state_argument( NewClauses, FunId ),
+			check_state_argument( NewClauses, FunId, Classname ),
 			OnewayInfo = function_to_oneway_info( NewFunInfo ),
 			NewOnewayTable = table:addNewEntry( FunId, OnewayInfo,
 												OnewayTable ),
@@ -511,31 +520,34 @@ function_nature_to_string( function ) ->
 % variable name).
 %
 -spec check_state_argument( [ meta_utils:clause_def() ],
-							ast_info:function_id() ) -> void().
-check_state_argument( Clauses, FunId ) ->
-	[ check_clause_for_state( C, FunId ) || C <- Clauses ].
+					ast_info:function_id(), wooper:classname() ) -> void().
+check_state_argument( Clauses, FunId, Classname ) ->
+	[ check_clause_for_state( C, FunId, Classname ) || C <- Clauses ].
 
 
 
 % (helper)
 %
 check_clause_for_state(
-  _Clause={ clause, _, _Params=[ {var,_,'State'} | _ ], [], _Body }, _FunId ) ->
+  _Clause={ clause, _, _Params=[ {var,_,'State'} | _ ], [], _Body }, _FunId,
+  _Classname ) ->
 	ok;
 
 check_clause_for_state(
   _Clause={ clause, _, _Params=[ {var,Line,NonState} | _ ], [], _Body },
-  FunId ) ->
-	wooper_internals:raise_error( { non_state_initial_parameter, NonState,
-									FunId, { line, Line } } );
+  FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "the first parameter of this clause of "
+		"method ~s/~B shall be named 'State', not '~s'.",
+		pair:to_list( FunId ) ++ [ NonState ], Classname, Line );
 
 % Should a non-var form be found, we were considering not halting the
 % transformation (as the compiler would raise an error afterwards), however it
 % would then report "variable 'State' is unbound", which is less clear than:
 %
-check_clause_for_state( _Clause, FunId ) ->
-	wooper_internals:raise_error( { invalid_state_initial_parameter,
-									FunId } ).
+check_clause_for_state( _Clause, FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "the first parameter of this clause of "
+		"method ~s/~B shall be named 'State'.",	pair:to_list( FunId ),
+		Classname ).
 
 
 

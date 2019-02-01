@@ -33,7 +33,8 @@
 
 
 -export([ raise_error/1, raise_error/2,
-		  raise_usage_error/3, raise_usage_error/4,
+		  raise_usage_error/1, raise_usage_error/2, raise_usage_error/3,
+		  raise_usage_error/4,
 		  notify_warning/1, notify_warning/2 ]).
 
 
@@ -80,6 +81,29 @@ raise_error( ErrorTerm ) ->
 raise_error( ErrorTerm, Context ) ->
 	ast_utils:raise_error( ErrorTerm, Context, ?origin_layer ).
 
+
+
+% Raises a (compile-time, rather ad hoc) user-related error (when no specific
+% source context is available), when applying this parse transform, to stop the
+% build on failure and report adequately the actual error to the user.
+%
+-spec raise_usage_error( text_utils:ustring() ) -> no_return().
+raise_usage_error( ErrorString ) ->
+	raise_usage_error( ErrorString, _ErrorFormatValues=[] ).
+
+
+% Raises a (compile-time, rather ad hoc) user-related error (when no specific
+% source context is available), when applying this parse transform, to stop the
+% build on failure and report adequately the actual error to the user.
+%
+-spec raise_usage_error( text_utils:format_string(),
+						 text_utils:format_values() ) -> no_return().
+raise_usage_error( ErrorFormatString, ErrorFormatValues ) ->
+
+	io:format( "error: " ++ ErrorFormatString ++ "~n", ErrorFormatValues ),
+
+	% Almost the only way to stop the processing of the AST:
+	halt( 6 ).
 
 
 % Raises a (compile-time, rather ad hoc) user-related error, with specified

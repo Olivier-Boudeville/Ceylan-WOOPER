@@ -357,7 +357,7 @@ wooper_execute_method_as( Classname, MethodAtom, Parameters, State )
 wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 								   Parameters ) ->
 
-	%trace_utils:debug_fmt( "WOOPER: effective execution of ~p:~p.~n",
+	%trace_utils:debug_fmt( "WOOPER: effective execution of ~p:~p.",
 	%			[ SelectedModule, MethodAtom ] ),
 
 	% Of course the executed method may throw, we let exceptions propagate:

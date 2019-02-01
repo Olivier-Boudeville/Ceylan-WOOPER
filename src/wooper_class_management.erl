@@ -91,13 +91,14 @@ check_classname( Name ) when is_atom( Name ) ->
 			Name;
 
 		InvalidName ->
-			wooper_internals:raise_error( { invalid_classname,
-											no_class_prefix, InvalidName } )
+			wooper_internals:raise_usage_error( "invalid classname ('~s'): "
+				"no 'class_' prefix used.", [ InvalidName ] )
 
 	end;
 
 check_classname( Other ) ->
-	wooper_internals:raise_error( { invalid_classname, not_atom, Other } ).
+	wooper_internals:raise_usage_error(
+	  "specified classname ('~p') is not an atom.", [ Other ] ).
 
 
 
@@ -105,7 +106,7 @@ check_classname( Other ) ->
 %
 -spec manage_classname( module_entry(), class_info() ) -> class_info().
 manage_classname( _ModuleEntry=undefined, _ClassInfo ) ->
-	wooper_internals:raise_error( no_module_name_defined );
+	wooper_internals:raise_usage_error( "no module name was defined" );
 
 manage_classname( _ModuleEntry={ _ModuleName=Classname, ModuleDef },
 				  ClassInfo ) ->
@@ -120,7 +121,8 @@ manage_classname( _ModuleEntry={ _ModuleName=Classname, ModuleDef },
 -spec manage_superclasses( ast_info:attribute_table(), class_info() ) ->
 							  class_info().
 manage_superclasses( ParseAttrTable,
-					 ClassInfo=#class_info{ functions=FunctionTable,
+					 ClassInfo=#class_info{ class={ Classname, _ClassLocForm },
+											functions=FunctionTable,
 											markers=MarkerTable } ) ->
 
 	% Useful to check any '-define(superclasses,...).':
@@ -146,8 +148,11 @@ manage_superclasses( ParseAttrTable,
 					% We do not take the risk of interpreting the corresponding
 					% define:
 					%
-					wooper_internals:raise_error(
-					  superclasses_defined_both_as_attribute_and_define );
+					wooper_internals:raise_usage_error( "the superclasses have "
+						"been defined both as an attribute "
+						"(i.e. '-superclasses([...]).') and as a define "
+						"(i.e. '-define( superclasses, [] ).').",
+						[], Classname );
 
 				false ->
 					% Any prior value superseded, no merging here:
@@ -161,8 +166,14 @@ manage_superclasses( ParseAttrTable,
 
 		% Cannot be empty, hence more than one declaration here:
 		{ value, L } ->
-			wooper_internals:raise_error(
-			  { multiple_superclass_declarations, L } );
+
+			% Can probably never happen, as a parser
+			% error({epp_error,{redefine,superclasses}}) is bound to be raised
+			% first:
+			%
+			wooper_internals:raise_usage_error(
+			  "multiple '-superclasses([...]).' found: ~p.",
+			  L, Classname );
 
 		key_not_found ->
 
@@ -176,7 +187,7 @@ manage_superclasses( ParseAttrTable,
 
 				{ value,
 				  _SupFunInfo=#function_info{ clauses=[
-					   { clause, _Line, _Patterns=[], _Guards=[],
+					   { clause, _HelperLine, _Patterns=[], _Guards=[],
 						 _Body=[ AtomListForm ] } ] } } ->
 
 					SuperNames = try
@@ -185,10 +196,10 @@ manage_superclasses( ParseAttrTable,
 
 								 catch _:_ ->
 
-									wooper_internals:raise_error(
-									  [ invalid_superclass_declaration,
-										%AtomListForm ] )
-										list_of_atoms_expected ] )
+									wooper_internals:raise_usage_error(
+									  "invalid superclasses define: "
+									  "a list of atoms was expected.",
+									  Classname, _NoLine=0 )
 
 								 end,
 

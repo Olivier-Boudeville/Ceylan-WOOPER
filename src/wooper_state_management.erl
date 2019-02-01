@@ -85,7 +85,8 @@
 % Processes the class-specific attributes.
 %
 -spec manage_attributes( class_info() ) -> class_info().
-manage_attributes( ClassInfo=#class_info{ attributes=AttributeTable,
+manage_attributes( ClassInfo=#class_info{ class={ Classname, _LocForm },
+										  attributes=AttributeTable,
 										  functions=FunctionTable } ) ->
 
 	%trace_utils:trace( "Managing class attributes." ),
@@ -117,7 +118,8 @@ manage_attributes( ClassInfo=#class_info{ attributes=AttributeTable,
 			%					   [ AttrListForm ] ),
 
 			NewAttributeTable =
-				register_attributes_from_form( AttrListForm, AttributeTable ),
+				register_attributes_from_form( AttrListForm, AttributeTable,
+											   Classname ),
 
 			%trace_utils:debug_fmt( "As class-specific attributes, we have ~s",
 			%				   [ attributes_to_string( NewAttributeTable ) ] ),
@@ -137,7 +139,7 @@ manage_attributes( ClassInfo=#class_info{ attributes=AttributeTable,
 % Registers (and checks) specified attributes.
 % (helper)
 %
-register_attributes_from_form( AttrListForm, AttributeTable ) ->
+register_attributes_from_form( AttrListForm, AttributeTable, Classname ) ->
 
 	AttrFormList = try
 
@@ -145,22 +147,27 @@ register_attributes_from_form( AttrListForm, AttributeTable ) ->
 
 				   catch _:_ ->
 
-						wooper_internals:raise_error(
-						  [ invalid_class_attribute_declaration,
-							list_of_attributes_expected ] )
+						wooper_internals:raise_usage_error(
+						  "invalid 'class_attributes' define: expecting a list "
+						  "(of attribute declarations).", [], Classname )
 
 				   end,
 
 	%trace_utils:debug_fmt( "Attribute declaration forms:~n  ~p",
 	%					   [ AttrFormList ] ),
 
-	register_helper( AttrFormList, AttributeTable ).
+	register_helper( AttrFormList, AttributeTable, Classname ).
 
 
 
+% Note: there is no point in trying to obtain a line number from the forms
+% related to class_attributes; indeed, this is just a (preprocessor) define, so
+% it has no source location, and any line obtained from a related form would
+% point to the wooper_get_class_attributes/0 pseudo-function that we introduced
+% - not to the location of said attributes in the file.
 
 % (helper)
-register_helper( _AttrFormList=[], AttributeTable ) ->
+register_helper( _AttrFormList=[], AttributeTable, _Classname ) ->
 	AttributeTable;
 
 % All attributes are expected to be declared either as a single atom or a
@@ -168,61 +175,72 @@ register_helper( _AttrFormList=[], AttributeTable ) ->
 %
 % Single atom:
 register_helper( _AttrFormList=[ AttrForm={atom,_,_AttrName} | T ],
-				 AttributeTable ) ->
+				 AttributeTable, Classname ) ->
 
 	% Only the name is specified here:
 	NewAttributeTable = register_attribute( _AttrNameForm=AttrForm,
 		_TypeForm=undefined, _QualifiersForm=undefined,
-		_DescriptionForm=undefined, AttributeTable ),
+		_DescriptionForm=undefined, AttributeTable, Classname ),
 
-	register_helper( T, NewAttributeTable );
+	register_helper( T, NewAttributeTable, Classname );
 
 % 4 elements:
-register_helper( _AttrFormList=[ _AttrForm={ tuple, _, [ AttrNameForm,
-	  TypeForm, QualifiersForm, DescriptionForm ] } | T ], AttributeTable ) ->
+register_helper( _AttrFormList=[ _AttrForm={ tuple,_, [ AttrNameForm,
+	  TypeForm, QualifiersForm, DescriptionForm ] } | T ], AttributeTable,
+				 Classname ) ->
 
 	NewAttributeTable = register_attribute( AttrNameForm, TypeForm,
-			  QualifiersForm, DescriptionForm, AttributeTable ),
+			  QualifiersForm, DescriptionForm, AttributeTable, Classname ),
 
-	register_helper( T, NewAttributeTable );
+	register_helper( T, NewAttributeTable, Classname );
 
 % 3 elements:
-register_helper( _AttrFormList=[ _AttrForm={ tuple, _,
+register_helper( _AttrFormList=[ _AttrForm={ tuple,_,
 					[ AttrNameForm, TypeForm, DescriptionForm ] } | T ],
-				 AttributeTable ) ->
+				 AttributeTable, Classname ) ->
 
 	NewAttributeTable = register_attribute( AttrNameForm, TypeForm,
-			  _QualifiersForm=undefined, DescriptionForm, AttributeTable ),
+		_QualifiersForm=undefined, DescriptionForm, AttributeTable, Classname ),
 
-	register_helper( T, NewAttributeTable );
+	register_helper( T, NewAttributeTable, Classname );
 
 % 2 elements:
-register_helper( _AttrFormList=[ _AttrForm={ tuple, _,
-	  [ AttrNameForm, DescriptionForm ] } | T ], AttributeTable ) ->
+register_helper( _AttrFormList=[ _AttrForm={ tuple,_,
+	  [ AttrNameForm, DescriptionForm ] } | T ], AttributeTable, Classname ) ->
 
 	NewAttributeTable = register_attribute( AttrNameForm, _TypeForm=undefined,
-			  _QualifiersForm=undefined, DescriptionForm, AttributeTable ),
+		_QualifiersForm=undefined, DescriptionForm, AttributeTable, Classname ),
 
-	register_helper( T, NewAttributeTable );
+	register_helper( T, NewAttributeTable, Classname );
 
 % Errors:
-register_helper( _AttrForm={ tuple, Line, Forms}, _AttributeTable ) ->
-	wooper_internals:raise_error( { invalid_attribute_declaration_tuple,
-		{ size, length( Forms ) }, { line, Line } } );
+register_helper( _AttrForm=[ { tuple,_, Forms } | _T ], _AttributeTable,
+				 Classname ) ->
+	wooper_internals:raise_usage_error( "invalid attribute declaration tuple in "
+		"the 'class_attributes' define (expecting a size of 2, 3 or 4; "
+		"got ~B elements).",
+		[ length( Forms ) ], Classname );
 
-register_helper( OtherAttrForm, _AttributeTable ) ->
-	wooper_internals:raise_error( { invalid_attribute_declaration,
-									OtherAttrForm } ).
+register_helper( _OtherAttrForm, _AttributeTable, Classname ) ->
+	wooper_internals:raise_usage_error( "invalid attribute declaration in "
+		"the 'class_attributes' define (neither an atom nor a tuple).", [],
+		Classname ).
+
 
 
 % (helper)
 register_attribute( AttrNameForm, TypeForm, QualifiersForm, DescriptionForm,
-					AttributeTable ) ->
+					AttributeTable, Classname ) ->
 
-	AttrName = handle_attribute_name( AttrNameForm ),
-	Type = handle_attribute_type( TypeForm ),
-	Qualifiers = handle_attribute_qualifiers( QualifiersForm ),
-	Description = handle_attribute_description( DescriptionForm ),
+	AttrName = handle_attribute_name( AttrNameForm, Classname ),
+
+	Type = handle_attribute_type( TypeForm, Classname, AttrName ),
+
+	Qualifiers = handle_attribute_qualifiers( QualifiersForm, Classname,
+											  AttrName ),
+
+	Description = handle_attribute_description( DescriptionForm, Classname,
+												AttrName ),
 
 	AttrInfo = #attribute_info{ name=AttrName,
 								type=Type,
@@ -232,8 +250,8 @@ register_attribute( AttrNameForm, TypeForm, QualifiersForm, DescriptionForm,
 	case table:hasEntry( AttrName, AttributeTable ) of
 
 		true ->
-			wooper_internals:raise_error(
-			  { multiple_definitions_for_attribute, AttrName } );
+			wooper_internals:raise_usage_error( "multiple declarations for "
+				   "class attribute '~s'.", [ AttrName ], Classname );
 
 		false ->
 			table:addEntry( AttrName, AttrInfo, AttributeTable )
@@ -246,11 +264,12 @@ register_attribute( AttrNameForm, TypeForm, QualifiersForm, DescriptionForm,
 
 
 % Vetting specified attribute name:
-handle_attribute_name( _NameForm={atom,_,AtomName} ) ->
+handle_attribute_name( _NameForm={atom,_,AtomName}, _Classname ) ->
 	AtomName;
 
-handle_attribute_name( OtherForm ) ->
-	wooper_internals:raise_error( { invalid_attribute_name, OtherForm } ).
+handle_attribute_name( _OtherForm, Classname ) ->
+	wooper_internals:raise_usage_error( "invalid name for class attribute.", [],
+										Classname ).
 
 
 
@@ -260,85 +279,98 @@ handle_attribute_name( OtherForm ) ->
 % abstract form; for example, if having declared an attribute of type 'color()',
 % the corresponding '{call,_,{atom,_,color}}' form will be stored.
 %
-handle_attribute_type( _TypeForm=undefined ) ->
+handle_attribute_type( _TypeForm=undefined, _Classname, _AttrName ) ->
 	undefined;
 
-handle_attribute_type( TypeForm ) when is_tuple( TypeForm ) ->
+handle_attribute_type( TypeForm, _Classname, _AttrName ) when is_tuple( TypeForm ) ->
 
 	%trace_utils:warning_fmt( "Storing attribute type as its raw form:~n  ~p",
 	%						 [ TypeForm ] ),
 
 	TypeForm;
 
-handle_attribute_type( TypeForm ) ->
-	wooper_internals:raise_error( { invalid_attribute_type, TypeForm } ).
+% Probably never triggered:
+handle_attribute_type( _TypeForm, Classname, AttrName ) ->
+	wooper_internals:raise_usage_error( "invalid type for class attribute '~s'.",
+										[ AttrName ], Classname ).
 
 
 
 % Vetting specified attribute qualifier(s):
-handle_attribute_qualifiers( _Qualifiers=undefined ) ->
+handle_attribute_qualifiers( _Qualifiers=undefined, _Classname, _AttrName ) ->
 	[];
 
-handle_attribute_qualifiers( _Qualifiers={atom,_,none} ) ->
+handle_attribute_qualifiers( _Qualifiers={atom,_,none}, _Classname,
+							 _AttrName ) ->
 	[];
 
-handle_attribute_qualifiers( Qualifiers={cons,_,_H,_T} ) ->
+handle_attribute_qualifiers( Qualifiers={cons,_,_H,_T}, Classname, AttrName ) ->
 
 	% We have a list of qualifiers here (as a form):
 	QualifierList = ast_generation:form_to_list( Qualifiers ),
 
 	% It could be checked that no initial is specified if a const is.
-	[ handle_attribute_qualifier( Q ) || Q <- QualifierList ];
+	[ handle_attribute_qualifier( Q, Classname, AttrName ) || Q <- QualifierList ];
 
 % A single qualifier shall be promoted to a list:
-handle_attribute_qualifiers( Qualifier ) ->
-	[ handle_attribute_qualifier( Qualifier ) ].
+handle_attribute_qualifiers( Qualifier, Classname, AttrName ) ->
+	[ handle_attribute_qualifier( Qualifier, Classname, AttrName ) ].
 
 
 
 % Vetting specified attribute qualifier:
-handle_attribute_qualifier( {atom,_,public} ) ->
+handle_attribute_qualifier( {atom,_,public}, _Classname, _AttrName ) ->
 	public;
 
-handle_attribute_qualifier( {atom,_,protected} ) ->
+handle_attribute_qualifier( {atom,_,protected}, _Classname, _AttrName ) ->
 	protected;
 
-handle_attribute_qualifier( {atom,_,private} ) ->
+handle_attribute_qualifier( {atom,_,private}, _Classname, _AttrName ) ->
 	private;
 
-handle_attribute_qualifier( {tuple,_,[ {atom,_,initial}, ValueForm ]} ) ->
+handle_attribute_qualifier( {tuple,_,[ {atom,_,initial}, ValueForm ]},
+							_Classname, _AttrName ) ->
 
 	Value = ast_value:get_immediate_value( ValueForm ),
 
 	% It should be checked also that Value is of the declared type.
 	{ initial, Value };
 
-handle_attribute_qualifier( {tuple,_,[ {atom,_,const}, ValueForm ]} ) ->
+handle_attribute_qualifier( {tuple,_,[ {atom,_,const}, ValueForm ]},
+							_Classname, _AttrName ) ->
 
 	Value = ast_value:get_immediate_value( ValueForm ),
 
 	% It should be checked also that Value is of the declared type.
 	{ const, Value };
 
-handle_attribute_qualifier( {atom,_,const} ) ->
+handle_attribute_qualifier( {atom,_,const}, _Classname, _AttrName ) ->
 	const;
 
-handle_attribute_qualifier( UnexpectedForm ) ->
-	wooper_internals:raise_error(
-	  { unexpected_attribute_qualifier, UnexpectedForm } ).
+handle_attribute_qualifier( {atom,_,Other}, Classname, AttrName ) ->
+	wooper_internals:raise_usage_error(
+	  "invalid qualifier '~s' for class attribute '~s'.", [ Other, AttrName ],
+	  Classname );
+
+handle_attribute_qualifier( _UnexpectedForm, Classname, AttrName ) ->
+	wooper_internals:raise_usage_error(
+	  "invalid qualifier for class attribute '~s'.", [ AttrName ], Classname ).
 
 
 
 % Vetting specified attribute description:
-handle_attribute_description( _DescriptionForm=undefined ) ->
+handle_attribute_description( _DescriptionForm=undefined, _Classname,
+							  _AttrName ) ->
 	undefined;
 
-handle_attribute_description( _DescriptionForm={string,_,Description} ) ->
+handle_attribute_description( _DescriptionForm={string,_,Description},
+							  _Classname, _AttrName ) ->
 	Description;
 
-handle_attribute_description( Description ) ->
-	wooper_internals:raise_error(
-	  { invalid_attribute_description_type, Description } ).
+handle_attribute_description( _DescriptionForm, Classname, AttrName ) ->
+	wooper_internals:raise_usage_error(
+	  "invalid description (not a string) for class attribute '~s'.",
+	  [ AttrName ], Classname ).
 
 
 

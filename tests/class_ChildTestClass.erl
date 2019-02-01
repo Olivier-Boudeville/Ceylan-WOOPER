@@ -162,6 +162,14 @@ testSingleExecution( State ) ->
 		age, 10 ) ).
 
 
+test_of_const_req_as( State ) ->
+
+	% Not 50!
+	17 = executeConstRequestAs( State, class_BaseTestClass, someRequest, 10 ),
+
+	wooper:const_return().
+
+
 
 -spec side_effect_function( wooper:state() ) -> wooper:state().
 side_effect_function( State ) ->
