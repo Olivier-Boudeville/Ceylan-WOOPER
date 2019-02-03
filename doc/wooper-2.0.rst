@@ -699,9 +699,15 @@ A summary could be:
 ``wooper_method_not_found``
 ***************************
 
-The corresponding error message is ``{wooper_method_not_found,InstancePid,Classname,MethodName,MethodArity,ListOfActualParameters}``.
+The corresponding error message is::
 
-For example ``{wooper_method_not_found,<0.30.0>,class_Cat,layEggs,2,...}``.
+  {wooper_method_not_found,InstancePid,Classname,MethodName,
+   MethodArity,ListOfActualParameters}
+
+
+For example::
+
+ {wooper_method_not_found,<0.30.0>,class_Cat,layEggs,2,...}
 
 Note that ``MethodArity`` includes the implied state parameter (that will be discussed later), i.e. here ``layEggs/2`` might be defined as ``layEggs(State,NumberOfNewEggs) -> [..]``.
 
@@ -716,9 +722,15 @@ If no method could be found, the ``wooper_method_not_found`` atom is returned (i
 ``wooper_method_failed``
 ************************
 
-The corresponding error message is ``{wooper_method_failed,InstancePid,Classname,MethodName,MethodArity,ListOfActualParameters,ErrorTerm}``.
+The corresponding error message is::
 
-For example, ``{wooper_method_failed,<0.30.0>,class_Cat,myCrashingMethod,1,[],{{badmatch,create_bug},[..]]}``.
+ {wooper_method_failed,InstancePid,Classname,MethodName,
+  MethodArity, ListOfActualParameters,ErrorTerm}
+
+For example::
+
+ {wooper_method_failed,<0.30.0>,class_Cat,myCrashingMethod,1,[],
+  {{badmatch,create_bug},[..]]}
 
 If the exit message sent by the method specifies a PID, it is prepended to ``ErrorTerm``.
 
@@ -729,9 +741,15 @@ Such a method error means that there is a runtime failure, it is generally deeme
 ``wooper_method_faulty_return``
 *******************************
 
-The corresponding error message is ``{wooper_method_faulty_return,InstancePid,Classname,MethodName,MethodArity,ListOfActualParameters,ActualReturn}``.
+The corresponding error message is::
 
-For example, ``{wooper_method_faulty_return,<0.30.0>,class_Cat,myFaultyMethod,1,[],[{{state_holder,..]}``.
+ {wooper_method_faulty_return,InstancePid,Classname,MethodName,
+  MethodArity,ListOfActualParameters,ActualReturn}``.
+
+For example::
+
+ {wooper_method_faulty_return,<0.30.0>,class_Cat,
+  myFaultyMethod,1,[],[{{state_holder,..]}
 
 This error occurs only when being in debug mode.
 
@@ -758,12 +776,16 @@ Therefore one could make use of that information, as in:
 		[..];
 	{wooper_method_not_found,Pid,Class,Method,Arity,Params}->
 		[..];
-	{wooper_method_failed,Pid,Class,Method,Arity,Params,ErrorTerm}->
+	{wooper_method_failed,Pid,Class,Method,Arity,Params,
+	   ErrorTerm}->
 		[..];
-	%Errortermcanbeatuple{Pid,Error}aswell,dependingontheexit:
-	{wooper_method_failed,Pid,Class,Method,Arity,Params,{Pid,Error}}->
+	% Error term can be a {Pid,Error} tuple as well, depending
+	% on the exit:
+	{wooper_method_failed,Pid,Class,Method,Arity,Params,
+	   {Pid,Error}}->
 		[..];
-	{wooper_method_faulty_return,Pid,Class,Method,Arity,Params,UnexpectedTerm}->
+	{wooper_method_faulty_return,Pid,Class,Method,Arity,Params,
+		  UnexpectedTerm}->
 		[..];
 	wooper_method_returns_void->
 		[..];
@@ -1236,7 +1258,8 @@ in order to call the ``class_Creature`` version of the ``setAge/2`` oneway.
 
 Finally, as one could expect, these functions have their const counterparts, namely: ``executeConstRequestAs/{3,4}`` and ``executeConstOnewayAs/{3,4}``, whose usage offers no surprise, like in::
 
-   Color = executeConstRequestAs(MyState,class_Vehicle,getColorOf,[wheels])
+   Color = executeConstRequestAs(MyState,class_Vehicle,
+									getColorOf,[wheels])
 
 
 
@@ -1380,9 +1403,16 @@ A **qualifier** can be:
 
 - a *scope* qualifier: ``public``, ``protected`` or ``private``; in future versions, a public attribute will correspond to the union of ``settable`` and ``gettable`` and will result in accessor methods being automatically generated; for example, should the ``fur_color`` attribute be declared public, then:
 
-  - the ``getFurColor/1`` const request would be added (with its spec): ``getFurColor(State) -> wooper:const_return_result(?getAttr(fur_color)).``
+  - the ``getFurColor/1`` const request would be added (with its spec)::
 
-  - the ``setFurColor/2`` oneway would be added (with its spec): ``setFurColor(State,FurColor) -> wooper:return_state(setAttribute(State,fur_color,FurColor)).``
+	  getFurColor(State) ->
+		 wooper:const_return_result(?getAttr(fur_color)).
+
+  - the ``setFurColor/2`` oneway would be added (with its spec)::
+
+	  setFurColor(State,FurColor) ->
+		 wooper:return_state(setAttribute(State,fur_color,
+										  FurColor)).
 
 - an *initialisation* qualifier: ``{initial,18}`` would denote that the initial value of the corresponding attribute is ``18`` (this value would then be set even before entering any constructor)
 
@@ -1401,7 +1431,8 @@ The defaults are:
 
 So an example of attribute declaration could be::
 
- {age,integer(),{initial,18},"stores the current age of this creature"}
+ {age,integer(),{initial,18},
+	 "stores the current age of this creature"}
 
 
 .. Note:: Currently, these information are only of use for the developer (i.e. for documentation purpose). No check is made about whether they are used, whether no other attributes are used, whether the type is meaningful and indeed enforced, the default initial value is not set, etc. Some of these information might be handled by future WOOPER versions.
@@ -1421,7 +1452,8 @@ Finally, a full example of the declaration of class attributes can be:
 
   -define(class_attributes,[
 			name,
-			{age,integer(),{initial,18},"stores the current age of this creature"},
+			{age,integer(),{initial,18},
+				  "stores the current age of this creature"},
 			birth_date,
 			{weight,"total weight measured"}]).
 
@@ -1764,7 +1796,11 @@ Calling ``toggleAttribute/2`` on a non-existing attribute will trigger a runtime
 The ``appendToAttribute/3`` function
 ************************************
 
-The corresponding signature is ``NewState = appendToAttribute(State,AttributeName,Element)``: when having a list attribute, appends specified element to the attribute list, in first position.
+The corresponding signature is::
+
+  NewState = appendToAttribute(State,AttributeName,Element)
+
+When having a list attribute, appends specified element to the attribute list, in first position.
 
 For example, if ``a_list_attribute`` was already set to ``[see_you,goodbye]`` in ``State``, then after ``NewState = appendToAttribute(State,a_list_attribute,hello)``, the ``a_list_attribute`` attribute defined in ``NewState`` will be equal to ``[hello,see_you,goodbye]``.
 
@@ -1782,7 +1818,11 @@ Calling ``appendToAttribute/3`` on a non-existing attribute will trigger a a ``b
 The ``deleteFromAttribute/3`` function
 **************************************
 
-The corresponding signature is ``NewState = deleteFromAttribute(State,AttributeName,Element)``: when having a list attribute, deletes first match of specified element from the attribute list.
+The corresponding signature is::
+
+  NewState = deleteFromAttribute(State,AttributeName,Element)
+
+When having a list attribute, deletes first match of specified element from the attribute list.
 
 For example: ``NewState = deleteFromAttribute(State,a_list_attribute,hello)``, with the value corresponding to the ``a_list_attribute`` attribute in ``State`` variable being ``[goodbye,hello,cheers,hello,see_you]`` should return a state whose ``a_list_attribute`` attribute would be equal to ``[goodbye,cheers,hello,see_you]``, all other attributes being unchanged.
 
@@ -1920,7 +1960,9 @@ Whereas the purpose of the ``new`` / ``new_link`` operators is to *create* a wor
 
 Such an initialisation is of course part of the instance creation: all calls to any of the ``new`` operators result in an underlying call to the corresponding constructor (``construct`` operator).
 
-For example, both creations stemming from ``MyCat = class_Cat:new(A,B,C,D)`` and ``MyCat = class_Cat:new_link(A,B,C,D)`` will rely on ``class_Cat:construct/5`` to set up a proper initial state for the ``MyCat`` instance; the same ``class_Cat:construct(State,A,B,C,D)`` will be called for all creation cases (one may note that, because of its first parameter, which accounts for the WOOPER-provided initial ``State`` parameter, the arity of ``construct`` is equal to the one of ``new`` / ``new_link`` plus one).
+For example, both creations stemming from ``MyCat = class_Cat:new(A,B,C,D)`` and ``MyCat = class_Cat:new_link(A,B,C,D)`` will rely on ``class_Cat:construct/5`` to set up a proper initial state for the ``MyCat`` instance.
+
+The same ``class_Cat:construct(State,A,B,C,D)`` will be called for all creation cases (one may note that, because of its first parameter, which accounts for the WOOPER-provided initial ``State`` parameter, the arity of ``construct`` is equal to the one of ``new`` / ``new_link`` plus one).
 
 The ``new_link`` operator behaves exactly as the ``new`` operator, except that it creates an instance that is Erlang-linked with the process that called that operator, exactly like ``spawn_link`` behaves compared to ``spawn`` [#]_.
 
@@ -2044,16 +2086,18 @@ Knowing that a cat can be created here out of four parameters (``Age``, ``Gender
   % Local asynchronous creation:
   MyFirstCat = class_Cat:new(_Age=1,male,brown,white),
 
-  % The same, but a crash of this cat will crash the current process too:
+  % The same, but a crash of this cat will crash the current
+  % process too:
   MySecondCat = class_Cat:new_link(2,female,black,white),
 
-  % This cat will be created on OtherNode, and the call will return only
-  % once it is up and running or once the creation failed. As moreover the
-  % cat instance is linked to the instance process, it may crash this
-  % calling process (unless it traps EXIT signals):
-  MyThirdCat = class_Cat:remote_synchronous_timed_new_link(OtherNode,3,
-	male,grey,black),
-  [..]
+  % This cat will be created on OtherNode, and the call will
+  % return only once it is up and running or once the creation
+  % failed. As moreover the cat instance is linked to the
+  % instance process, it may crash this calling process
+  % (unless it traps EXIT signals):
+  MyThirdCat = class_Cat:remote_synchronous_timed_new_link(
+					 OtherNode,3,male,grey,black),
+  [...]
 
 
 
@@ -2086,10 +2130,13 @@ For example, let's suppose ``class_Cat`` inherits directly both from ``class_Mam
   % Constructs a new Cat.
   construct(State,Age,Gender,FurColor,WhiskerColor) ->
 	% First the (chained) direct mother classes:
-	MammalState = class_Mammal:construct(State,Age,Gender,FurColor),
-	ViviparousMammalState = class_ViviparousBeing:construct(MammalState),
+	MammalState = class_Mammal:construct(State,Age,Gender,
+										 FurColor),
+	ViviparousMammalState =
+		class_ViviparousBeing:construct(MammalState),
 	% Then the class-specific attributes:
-	setAttribute(ViviparousMammalState,whisker_color,WhiskerColor).
+	setAttribute(ViviparousMammalState,whisker_color,
+				 WhiskerColor).
 
 The fact that the ``Mammal`` class itself inherits from the ``Creature`` class does not have to appear here: it is to be managed directly by ``class_Mammal:construct/4`` (at any given inheritance level, only direct mother classes must be taken into account).
 
@@ -2610,7 +2657,10 @@ An absent-minded developer could have written instead:
 
 This would have called a ``request`` method ``startBarkingAt/2`` (which could have been for example ``startBarkingAt(State,TerminationOffset) -> ...``, the PID being interpreted by WOOPER as the request sender PID), a method that most probably does not even exist.
 
-This would result in a bit obscure error message like ``Error in process <0.43.0> on node 'XXXX' with exit value: {badarg,[{class_Dog,wooper_main_loop,1}]}``.
+This would result in a bit obscure error message like::
+
+  Error in process <0.43.0> on node 'XXXX' with exit value:
+	{badarg,[{class_Dog,wooper_main_loop,1}]}
 
 
 
@@ -2737,6 +2787,8 @@ Version History & Changes
 Version 2.0 [current stable]
 ----------------------------
 
+Released officially on Sunday, February 3, 2019.
+
 Many improvements, notably:
 
 - multiple different-arity constructors per class supported
@@ -2760,8 +2812,8 @@ Version 1.x
 Many minor improvements, API enriched in a backward compatible manner.
 
 
-Version 1.0 [current stable]
-----------------------------
+Version 1.0
+-----------
 
 Countless improvements have been integrated in the course of the use of WOOPER, which has been now been stable for years.
 
@@ -2879,7 +2931,7 @@ WOOPER is the second level of a software stack beginning with Erlang and then My
 
 If the initial versions of WOOPER were mostly based on macros and headers, newer ones rely on the Erlang way of doing metaprogramming, namely parse-transforms.
 
-More precisely, the sources of a user-defined class are transformed by the standard Erlang toolchain (``erlc`` compiler) into an AST (*Abstract Syntax Tree*), which is first transformed by WOOPER (ex: to generate the new operators, to export any destructor, etc.) and then Myriad (ex: to support newer types such as ``void/0``, ``maybe/1`` or ``table/2``).
+More precisely, the sources of a user-defined class are transformed by the standard Erlang toolchain (``erlc`` compiler) into an AST (*Abstract Syntax Tree*), which is first transformed by WOOPER (ex: to generate the new operators, to export any destructor, etc.) and then by Myriad (ex: to support newer types such as ``void/0``, ``maybe/1`` or ``table/2``), which also provides much of the AST transformation support.
 
 
 
@@ -3086,7 +3138,7 @@ The WOOPER name is also a tribute to the vastly underrated `Wargames <http://en.
 Support
 =======
 
-Bugs, questions, remarks, patches, requests for enhancements, etc. are to be sent to the `project interface <https://github.com/Olivier-Boudeville/Ceylan-WOOPER>`_, or directly at the mail address mentioned at the beginning of this longer document.
+Bugs, questions, remarks, patches, requests for enhancements, etc. are to be reported to the `project interface <https://github.com/Olivier-Boudeville/Ceylan-WOOPER>`_ (typically `issues <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/issues>`_) or directly at the email address mentioned at the beginning of this longer document.
 
 
 
@@ -3116,6 +3168,6 @@ Have fun with WOOPER!
 
 .. figure:: wooper-title.png
    :alt: WOOPER logo
-   :scale: 40
+   :scale: 35
 
 :raw-html:`<a name="wooper_bottom"></a>`
