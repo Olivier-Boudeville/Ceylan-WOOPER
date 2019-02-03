@@ -25,30 +25,32 @@ DOC_FILES := $(DOC_GENERATED_FILES) wooper-example.png
 
 PROJECT_CSS := pygments-default.css,wooper.css
 
+PROJECT_ICON := wooper-icon.png
 
-WEB_CONTENT = *.html *.css *.png *.pdf
+
+WEB_CONTENT = *.html *.css *.png tmp-rst/*.pdf
 
 # Read from the user's environment:
 GITHUB_PAGES_BASE := $(shell basename "(WOOPER_WEB_MIRROR_BRANCH)")
 
 
 
-
-.PHONY: all doc full-doc clone-mirror                    \
+.PHONY: all doc full-doc track clone-mirror              \
 		export-doc export-to-official export-to-mirror   \
 		info-web clean clean-doc
 
 
-
 # Default do-nothing target:
+doc:
+
+
 all:
 	@echo "  Run 'make full-doc' to generate the manual of the WOOPER-$(CURRENT_VERSION) layer."
 
 
-doc:
-
 
 full-doc: $(CURRENT_WOOPER_HTML)
+
 
 
 # Creates a separate repository for the GitHub pages branch:
@@ -77,11 +79,15 @@ clean-doc:
 	-@/bin/rm -f *.aux *.log *.maf *.mtc* *.stc* *.tex *.toc \
 	$(CURRENT_WOOPER_PDF) $(DOC_GENERATED_FILES)
 
+
+
 info: info-doc info-web
+
 
 info-doc:
 	@echo "OVERALL_DOCUMENT_SOURCE = $(OVERALL_DOCUMENT_SOURCE)"
 	@echo "DOC_FILES = $(DOC_FILES)"
+	@echo "DOC_TRACKER = $(DOC_TRACKER)"
 
 
 info-web:

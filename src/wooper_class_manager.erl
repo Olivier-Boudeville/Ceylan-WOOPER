@@ -1,6 +1,6 @@
-% Copyright (C) 2007-2018 Olivier Boudeville
+% Copyright (C) 2007-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER library.
+% This file is part of the Ceylan-WOOPER library.
 %
 % This library is free software: you can redistribute it and/or modify
 % it under the terms of the GNU Lesser General Public License or
@@ -331,8 +331,8 @@ select_function( wooper_get_virtual_table_description,_ )             -> false ;
 select_function( wooper_pop_from_attribute,_ )                        -> false ;
 select_function( executeOneway,_ )                                    -> false ;
 select_function( executeRequest,_ )                                   -> false ;
-select_function( executeOnewayWith,_ )                                -> false ;
-select_function( executeRequestWith,_ )                               -> false ;
+select_function( executeOnewayAs,_ )                                  -> false ;
+select_function( executeRequestAs,_ )                                 -> false ;
 select_function( module_info,1)                                       -> false ;
 % Includes 'wooper_get_instance_description/1', which could be useful to debug:
 select_function( _, _ )                                               -> true.

@@ -1,6 +1,6 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER examples.
+% This file is part of the Ceylan-WOOPER examples.
 %
 % It has been placed in the public domain.
 %
@@ -91,6 +91,7 @@ run( IsDebug ) ->
 
 	end,
 
+	% If wanting to test request/oneway mismatches: MyC ! { setAge, 5, self() },
 	MyC ! { setAge, 5 },
 
 	MyC ! { getAge, [], self() },
@@ -229,7 +230,11 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedOtherFoodPreference } ->
 			test_facilities:fail( "wrong food preference: ~p",
-								  [ UnexpectedOtherFoodPreference ] )
+								  [ UnexpectedOtherFoodPreference ] );
+
+		UnexpectedReturn ->
+			test_facilities:fail( "unexpected method return: ~p",
+								  [ UnexpectedReturn ] )
 
 	end,
 
@@ -244,11 +249,13 @@ run( IsDebug ) ->
 			test_facilities:fail( "wrong whisker color: ~p",
 								  [ UnexpectedWhiskerColor ] );
 
-		UnexpectedReturn ->
+		AUnexpectedReturn ->
 			test_facilities:fail( "unexpected method return: ~p",
-								  [ UnexpectedReturn ] )
+								  [ AUnexpectedReturn ] )
 
 	end,
+
+	18 = class_Cat:get_mean_life_expectancy(),
 
 	case IsDebug of
 

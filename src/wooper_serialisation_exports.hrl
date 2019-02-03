@@ -1,6 +1,6 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER library.
+% This file is part of the Ceylan-WOOPER library.
 %
 % This library is free software: you can redistribute it and/or modify
 % it under the terms of the GNU Lesser General Public License or
@@ -52,7 +52,8 @@
 %
 -export([
 
-		 serialise/3,
+		 % Not exported anymore, as no method shall be:
+		 %serialise/3,
 
 		 pre_serialise_hook/1, post_serialise_hook/3,
 		 pre_deserialise_hook/2, post_deserialise_hook/1

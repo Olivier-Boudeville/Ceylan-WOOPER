@@ -1,6 +1,6 @@
-% Copyright (C) 2012-2018 Olivier Boudeville
+% Copyright (C) 2012-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER examples.
+% This file is part of the Ceylan-WOOPER examples.
 %
 % It has been placed in the public domain.
 %
@@ -53,7 +53,7 @@ run() ->
 						   _Acc={ AccEntries, AccUserData } ) ->
 
 			test_facilities:display( " - attribute name '~s' is associated "
-									 "to value '~p'~n",
+									 "to value '~p'",
 									 [ AttributeName, AttributeValue ] ),
 
 			% New accumulator:

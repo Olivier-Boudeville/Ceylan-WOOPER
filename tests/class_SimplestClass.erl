@@ -1,41 +1,18 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER examples.
+% This file is part of the Ceylan-WOOPER examples.
 %
 % It has been placed in the public domain.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 %
 -module(class_SimplestClass).
-%-classname(class_SimplestClass).
 
 
 % Determines what are the mother classes of this class (if any):
--define( wooper_superclasses, [] ).
+-define( superclasses, [] ).
 
-
-% Parameters taken by the constructor ('construct'):
--define( wooper_construct_parameters, Age, Gender ).
-
-
-% Construction-related exported operators, declaring all variations of WOOPER
-% standard life-cycle operations:
-%
--define( wooper_construct_export, new/2, new_link/2,
-		 synchronous_new/2, synchronous_new_link/2,
-		 synchronous_timed_new/2, synchronous_timed_new_link/2,
-		 remote_new/3, remote_new_link/3, remote_synchronous_new/3,
-		 remote_synchronous_new_link/3, remote_synchronisable_new_link/3,
-		 remote_synchronous_timed_new/3, remote_synchronous_timed_new_link/3,
-		 construct/3, destruct/1 ).
-
-
-
-% Declarations of class-specific methods (besides inherited ones).
-% isHotBlooded/1 and canEat/2 are abstract here, hence not mentioned:
--define( wooper_method_export, getAge/1, setAge/2, declareBirthday/1,
-		 getGender/1, getArbitraryNumber/1, testDirectMethodExecution/2,
-		 testSingleExecution/1 ).
+-define( class_attributes, [ age, gender ] ).
 
 
 % Non-method exported functions:
@@ -50,11 +27,12 @@
 -include("ecosystem_types.hrl").
 
 
+
 % Constructs a new Creature.
 -spec construct( wooper:state(), age(), gender() ) -> wooper:state().
-construct( State, ?wooper_construct_parameters ) ->
+construct( State, Age, Gender ) ->
 	% No mother class.
-	setAttributes(State, [ { age, Age }, { gender, Gender } ] ).
+	setAttributes( State, [ { age, Age }, { gender, Gender } ] ).
 
 
 
@@ -62,7 +40,8 @@ construct( State, ?wooper_construct_parameters ) ->
 % able to determine that this function will never be called, as WOOPER performs
 % the appropriate test is made beforehand):
 %
--spec destruct( wooper:state() ) -> wooper:state().
+% Allows to test also the automatic destructor generation:
+%-spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
 	State.
 
@@ -72,41 +51,53 @@ destruct( State ) ->
 
 
 % Returns the age of this creature.
--spec getAge( wooper:state() ) -> request_return( age() ).
+%
+% (const request)
+%
+-spec getAge( wooper:state() ) -> const_request_return( age() ).
 getAge( State ) ->
-	?wooper_return_state_result( State, ?getAttr(age) ).
+	wooper:const_return_result( ?getAttr(age) ).
 
 
 
 % Sets the age of this creature.
+%
+% (oneway)
+%
 -spec setAge( wooper:state(), age() ) -> oneway_return().
 setAge( State, _NewAge ) ->
 	% Mother implementation chosen faulty to check override:
-	?wooper_return_state_only( setAttribute( State, age, 36 ) ).
+	wooper:return_state( setAttribute( State, age, 36 ) ).
 
 
 
 % Increments the age of this creature.
+%
+% (oneway)
+%
 -spec declareBirthday( wooper:state() ) -> oneway_return().
 declareBirthday( State ) ->
-	?wooper_return_state_only(
+	wooper:return_state(
 		setAttribute( State, age, ?getAttr(age)+1 ) ).
 
 
 
 % Returns the gender of this creature.
--spec getGender( wooper:state() ) -> request_return( gender() ).
+%
+% (const request)
+%
+-spec getGender( wooper:state() ) -> const_request_return( gender() ).
 getGender( State ) ->
-	?wooper_return_state_result( State, ?getAttr(gender) ).
+	wooper:const_return_result( ?getAttr(gender) ).
 
 
 
 % Returns a class-specific arbitrary number.
 %
 % (request)
--spec getArbitraryNumber( wooper:state() ) -> request_return( number() ).
+-spec getArbitraryNumber( wooper:state() ) -> const_request_return( number() ).
 getArbitraryNumber( State ) ->
-	?wooper_return_state_result( State, 10 ).
+	wooper:const_return_result( 10 ).
 
 
 
@@ -147,7 +138,7 @@ testDirectMethodExecution( State, NewAge ) ->
 
 	io:format( "Direct self-invocation success.~n" ),
 
-	?wooper_return_state_only( OtherState ).
+	wooper:return_state( OtherState ).
 
 
 
@@ -163,8 +154,8 @@ testDirectMethodExecution( State, NewAge ) ->
 % (oneway)
 -spec testSingleExecution( wooper:state() ) -> oneway_return().
 testSingleExecution( State ) ->
-	?wooper_return_state_only( setAttribute( side_effect_function( State ),
-		age, 10 ) ).
+	wooper:return_state( setAttribute( side_effect_function( State ),
+									   age, 10 ) ).
 
 
 

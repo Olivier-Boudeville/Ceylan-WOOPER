@@ -1,6 +1,6 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER library.
+% This file is part of the Ceylan-WOOPER library.
 %
 % This library is free software: you can redistribute it and/or modify
 % it under the terms of the GNU Lesser General Public License or
@@ -25,15 +25,18 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
 
-% Modular WOOPER header gathering all execute{Request,Oneway}* primitives
-% provided to write methods (exports here).
+% Modular WOOPER header gathering all execute{Const,}{Request,Oneway}*
+% primitives provided to implement methods (exports here).
 
 
--export([
+-export([ executeRequest/2, executeRequest/3,
+		  executeConstRequest/2, executeConstRequest/3,
 
-		 executeRequest/2, executeRequest/3,
-		 executeOneway/2, executeOneway/3,
-		 executeRequestWith/3, executeRequestWith/4,
-		 executeOnewayWith/3, executeOnewayWith/4
+		  executeOneway/2, executeOneway/3,
+		  executeConstOneway/2, executeConstOneway/3,
 
-		]).
+		  executeRequestAs/3, executeRequestAs/4,
+		  executeConstRequestAs/3, executeConstRequestAs/4,
+
+		  executeOnewayAs/3, executeOnewayAs/4,
+		  executeConstOnewayAs/3, executeConstOnewayAs/4 ]).

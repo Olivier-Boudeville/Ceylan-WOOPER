@@ -1,6 +1,6 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER library.
+% This file is part of the Ceylan-WOOPER library.
 %
 % This library is free software: you can redistribute it and/or modify
 % it under the terms of the GNU Lesser General Public License or
@@ -40,10 +40,6 @@
 
 
 
-% TODO: rename execute*With to execute*As.
-
-
-
 % Implementation section (debug mode managed in the called wooper_* helpers)
 
 
@@ -55,7 +51,7 @@
 % Parameter-less request, calling implicitly any overridden version of the
 % method.
 %
-% Returns an updated state.
+% Returns an updated state and a result.
 %
 -spec executeRequest( wooper:state(), request_name() ) ->
 							{ wooper:state(), method_internal_result() }.
@@ -63,7 +59,7 @@
 executeRequest( State, RequestAtom ) when is_record( State, state_holder )
 										  andalso is_atom( RequestAtom ) ->
 
-	%io:format( "executeRequest/2: executing ~s() from ~s.~n",
+	%trace_utils:debug_fmt( "executeRequest/2: executing ~s() from ~s.~n",
 	%	[ RequestAtom, State#state_holder.actual_class ] ),
 
 	wooper_handle_local_request_execution( RequestAtom, State,
@@ -97,6 +93,23 @@ executeRequest( StateError, RequestAtomError ) ->
 
 
 
+% Parameter-less const request, calling implicitly any overridden version of the
+% method.
+%
+% Returns only a result.
+%
+-spec executeConstRequest( wooper:state(), request_name() ) ->
+							method_internal_result().
+executeConstRequest( State, RequestAtom ) ->
+
+	% Checks made by the callee; actual constness not checked yet shall derive
+	% from the transformed, corresponding method terminator:
+	%
+	{ _State, Result } = executeRequest( State, RequestAtom ),
+	Result.
+
+
+
 
 % Allows to call synchronously from the code of a given class its actual
 % overridden methods (requests, here), including from child classes.
@@ -108,8 +121,6 @@ executeRequest( StateError, RequestAtomError ) ->
 % Car:startEngine when called from a Car instance, and of course EngineVehicle
 % should know nothing from its Car child class.
 %
-% If no failure occurs, returns {wooper_result,NewState,Result}.
-%
 % Note: Stripped-down version of wooper_main_loop.
 %
 -spec executeRequest( wooper:state(), request_name(), method_arguments() ) ->
@@ -118,7 +129,7 @@ executeRequest( State, RequestAtom, ArgumentList ) when
 	  is_record( State, state_holder ) andalso is_atom( RequestAtom )
 	  andalso is_list( ArgumentList ) ->
 
-	%io:format( "executeRequest/3 with list: executing ~s(~w) from ~s.~n",
+	%trace_utils:debug_fmt( "executeRequest/3 with list: executing ~s(~w) from ~s.~n",
 	%	[ RequestAtom, ArgumentList, State#state_holder.actual_class ] ),
 
 	wooper_handle_local_request_execution( RequestAtom, State, ArgumentList );
@@ -128,7 +139,7 @@ executeRequest( State, RequestAtom, ArgumentList ) when
 executeRequest( State, RequestAtom, StandaloneArgument ) when
 	  is_record( State, state_holder ) andalso is_atom( RequestAtom )->
 
-	%io:format( "executeRequest/3 with standalone argument: "
+	%trace_utils:debug_fmt( "executeRequest/3 with standalone argument: "
 	%	"executing ~s(~w) from ~s.~n",
 	%	[ RequestAtom, StandaloneArgument, State#state_holder.actual_class ] ),
 
@@ -166,24 +177,38 @@ executeRequest( StateError, RequestAtomError, _LastArg ) ->
 
 
 
+% Allows to call synchronously from the code of a given class its actual
+% overridden methods (const requests, here), including from child classes.
+%
+-spec executeConstRequest( wooper:state(), request_name(),
+						   method_arguments() ) -> method_internal_result().
+executeConstRequest( State, RequestAtom, ArgumentList ) ->
+
+	% Checks made by the callee; actual constness not checked yet shall derive
+	% from the transformed, corresponding method terminator:
+	%
+	{ _State, Result } = executeRequest( State, RequestAtom, ArgumentList ),
+	Result.
+
+
 
 % Parameter-less request, calling the version of the method as defined in the
 % specified class.
 %
--spec executeRequestWith( wooper:state(), classname(), request_name() ) ->
+-spec executeRequestAs( wooper:state(), classname(), request_name() ) ->
 								{ wooper:state(), method_internal_result() }.
-executeRequestWith( State, Classname, RequestAtom )
+executeRequestAs( State, Classname, RequestAtom )
   when is_record( State, state_holder ) andalso is_atom( Classname )
 	   andalso is_atom( RequestAtom ) ->
 
-	%io:format( "executeRequestWith/3: executing ~s() from ~s with ~s.~n",
+	%trace_utils:debug_fmt( "executeRequestAs/3: executing ~s() from ~s with ~s.~n",
 	%	[ RequestAtom, State#state_holder.actual_class, Classname ]),
 
-	wooper_handle_local_request_execution_with( RequestAtom, State,
+	wooper_handle_local_request_execution_as( RequestAtom, State,
 							_ArgumentList=[], Classname );
 
 
-executeRequestWith( StateError, Classname, RequestAtom )
+executeRequestAs( StateError, Classname, RequestAtom )
 		when is_atom( Classname ) andalso is_atom( RequestAtom ) ->
 
 	wooper:log_error( "when executing request ~p in the context of class ~s: "
@@ -193,7 +218,7 @@ executeRequestWith( StateError, Classname, RequestAtom )
 	throw( { wooper_invalid_request_call, RequestAtom } );
 
 
-executeRequestWith( _State, ClassnameError, RequestAtomError ) ->
+executeRequestAs( _State, ClassnameError, RequestAtomError ) ->
 
 	wooper:log_error( "when executing request in a class context: "
 					  "'~p' and '~p' should both be atoms.",
@@ -203,45 +228,56 @@ executeRequestWith( _State, ClassnameError, RequestAtomError ) ->
 
 
 
+% Parameter-less const request, calling the version of the method as defined in
+% the specified class.
+%
+-spec executeConstRequestAs( wooper:state(), classname(), request_name() ) ->
+								method_internal_result().
+executeConstRequestAs( State, Classname, RequestAtom ) ->
+
+	% Checks made by the callee; actual constness not checked yet shall derive
+	% from the transformed, corresponding method terminator:
+	%
+	{ _State, Result } = executeRequestAs( State, Classname, RequestAtom ),
+	Result.
+
+
 
 % Allows to call synchronously from the code of a given class overridden methods
 % (requests, here) as defined in specified classes.
 %
-% If no failure occurs, returns {wooper_result,NewState,Result}.
-%
 % Note: Stripped-down version of wooper_main_loop.
 %
--spec executeRequestWith( wooper:state(), classname(), request_name(),
-						  method_arguments() ) ->
-								{ wooper:state(), method_internal_result() }.
-executeRequestWith( State, Classname, RequestAtom, ArgumentList ) when
+-spec executeRequestAs( wooper:state(), classname(), request_name(),
+		method_arguments() ) -> { wooper:state(), method_internal_result() }.
+executeRequestAs( State, Classname, RequestAtom, ArgumentList ) when
 	  is_record( State, state_holder ) andalso is_atom( Classname )
 	  andalso is_atom( RequestAtom ) andalso is_list( ArgumentList ) ->
 
-	%io:format( "executeRequestWith/4 with list: executing ~s(~w) from ~s "
+	%trace_utils:debug_fmt( "executeRequestAs/4 with list: executing ~s(~w) from ~s "
 	%  "with ~s.~n", [ RequestAtom, ArgumentList,
 	% State#state_holder.actual_class, Classname ] ),
 
-	wooper_handle_local_request_execution_with( RequestAtom, State,
-												ArgumentList, Classname );
+	wooper_handle_local_request_execution_as( RequestAtom, State,
+											  ArgumentList, Classname );
 
 
 % Here the third parameter is not a list:
-executeRequestWith( State, Classname, RequestAtom, StandaloneArgument ) when
+executeRequestAs( State, Classname, RequestAtom, StandaloneArgument ) when
 	  is_record( State, state_holder ) andalso is_atom( Classname )
 	  andalso is_atom( RequestAtom ) ->
 
-	%io:format( "executeRequestWith/3 with standalone argument: "
+	%trace_utils:debug_fmt( "executeRequestAs/3 with standalone argument: "
 	%	"executing ~s(~w) from ~s with ~s.~n",
 	%	[ RequestAtom, StandaloneArgument, State#state_holder.actual_class,
 	% Classname ] ),
 
-	wooper_handle_local_request_execution_with( RequestAtom, State,
+	wooper_handle_local_request_execution_as( RequestAtom, State,
 					_ArgumentList=[ StandaloneArgument ], Classname );
 
 
 % Error cases below:
-executeRequestWith( StateError, Classname, RequestAtom, _LastArg )
+executeRequestAs( StateError, Classname, RequestAtom, _LastArg )
   when is_atom( Classname ) andalso is_atom( RequestAtom ) ->
 
 	wooper:log_error( "when executing request ~p: "
@@ -252,7 +288,7 @@ executeRequestWith( StateError, Classname, RequestAtom, _LastArg )
 
 
 % Catches all remaining errors:
-executeRequestWith( _State, ClassnameError, RequestAtomError, _LastArg ) ->
+executeRequestAs( _State, ClassnameError, RequestAtomError, _LastArg ) ->
 
 	wooper:log_error( "when executing request: both '~p' (classname) and "
 					  "'~p' (request name) should be atoms.",
@@ -262,11 +298,27 @@ executeRequestWith( _State, ClassnameError, RequestAtomError, _LastArg ) ->
 
 
 
+% Allows to call synchronously from the code of a given class overridden methods
+% (const requests, here) as defined in specified classes.
+%
+% Note: Stripped-down version of wooper_main_loop.
+%
+-spec executeConstRequestAs( wooper:state(), classname(), request_name(),
+		  method_arguments() ) -> method_internal_result().
+executeConstRequestAs( State, Classname, RequestAtom, ArgumentList ) ->
+
+	% Checks made by the callee; actual constness not checked yet shall derive
+	% from the transformed, corresponding method terminator:
+	%
+	{ _State, Result } = executeRequestAs( State, Classname, RequestAtom,
+										   ArgumentList ),
+	Result.
+
+
 
 
 
 % Section for oneways:
-
 
 
 
@@ -276,7 +328,7 @@ executeRequestWith( _State, ClassnameError, RequestAtomError, _LastArg ) ->
 executeOneway( State, OnewayAtom ) when is_record( State, state_holder )
 										andalso is_atom( OnewayAtom ) ->
 
-	%io:format( "executeOneway/2: executing ~s() from ~s.~n",
+	%trace_utils:debug_fmt( "executeOneway/2: executing ~s() from ~s.~n",
 	%   [ OnewayAtom, State#state_holder.actual_class ] ),
 
 	wooper_handle_local_oneway_execution( OnewayAtom, State, _ArgumentList=[] );
@@ -309,14 +361,27 @@ executeOneway( StateError, OnewayError ) ->
 
 
 
+% Parameter-less const oneway.
+%
+-spec executeConstOneway( wooper:state(), oneway_name() ) -> void().
+executeConstOneway( State, OnewayAtom ) ->
+
+	% Checks made by the callee; actual constness not checked yet shall derive
+	% from the transformed, corresponding method terminator:
+	%
+	_State = executeOneway( State, OnewayAtom ).
+
+
 
 % Most classical oneway.
 %
+-spec executeOneway( wooper:state(), oneway_name(), method_arguments() ) ->
+								wooper:state().
 executeOneway( State, OnewayAtom, ArgumentList ) when
 	  is_record( State, state_holder ) andalso is_atom( OnewayAtom )
 	  andalso is_list( ArgumentList ) ->
 
-	%io:format( "executeOneway/3 with list: executing ~s(~w) from ~s.~n",
+	%trace_utils:debug_fmt( "executeOneway/3 with list: executing ~s(~w) from ~s.~n",
 	%	[ OnewayAtom, ArgumentList, State#state_holder.actual_class ] ),
 
 	wooper_handle_local_oneway_execution( OnewayAtom, State, ArgumentList );
@@ -326,7 +391,7 @@ executeOneway( State, OnewayAtom, ArgumentList ) when
 executeOneway( State, OnewayAtom, StandaloneArgument ) when
 		is_record( State, state_holder ) andalso is_atom( OnewayAtom ) ->
 
-	%io:format( "executeOneway/3 with standalone argument: "
+	%trace_utils:debug_fmt( "executeOneway/3 with standalone argument: "
 	%	"executing ~s(~w) from ~s.~n",
 	%	[ OnewayAtom, StandaloneArgument, State#state_holder.actual_class ] ),
 
@@ -362,6 +427,20 @@ executeOneway( _State, OnewayAtomError, _LastArg ) ->
 
 
 
+% Most classical const oneway.
+%
+-spec executeConstOneway( wooper:state(), oneway_name(), method_arguments() ) ->
+								void().
+executeConstOneway( State, OnewayAtom, ArgumentList ) ->
+
+	% Checks made by the callee; actual constness not checked yet shall derive
+	% from the transformed, corresponding method terminator:
+	%
+	_State = executeOneway( State, OnewayAtom, ArgumentList ).
+
+
+
+
 % Allows to call synchronously from the code of a given class its actual
 % overridden methods (oneways, here), including from child classes.
 %
@@ -372,27 +451,21 @@ executeOneway( _State, OnewayAtomError, _LastArg ) ->
 % Car:startEngine when called from a Car instance, and of course EngineVehicle
 % should know nothing from its Car child class.
 %
-% If no failure occurs, returns {wooper_result,NewState}.
-%
--spec executeOneway( wooper:state(), oneway_name(), method_arguments() ) ->
-						   wooper:state().
-
-
--spec executeOnewayWith( wooper:state(), classname(), oneway_name() ) ->
+-spec executeOnewayAs( wooper:state(), classname(), oneway_name() ) ->
 							   wooper:state().
-executeOnewayWith( State, Classname, OnewayAtom )
+executeOnewayAs( State, Classname, OnewayAtom )
   when is_record( State, state_holder ) andalso is_atom( Classname )
 	   andalso is_atom( OnewayAtom ) ->
 
-	%io:format( "executeOnewayWith/3: executing ~s() from ~s.~n",
+	%trace_utils:debug_fmt( "executeOnewayAs/3: executing ~s() from ~s.~n",
 	%	[ OnewayAtom, State#state_holder.actual_class ] ),
 
-	wooper_handle_local_oneway_execution_with( OnewayAtom, State,
-											   _ArgumentList=[], Classname );
+	wooper_handle_local_oneway_execution_as( OnewayAtom, State,
+											 _ArgumentList=[], Classname );
 
 
 
-executeOnewayWith( State, Classname, OnewayAtom )
+executeOnewayAs( State, Classname, OnewayAtom )
   when is_record( State, state_holder ) ->
 
 	wooper:log_error( "when executing oneway: '~p' (oneway name) and "
@@ -402,7 +475,7 @@ executeOnewayWith( State, Classname, OnewayAtom )
 	throw( { wooper_invalid_oneway_call, OnewayAtom } );
 
 
-executeOnewayWith( StateError, Classname, OnewayAtom ) ->
+executeOnewayAs( StateError, Classname, OnewayAtom ) ->
 
 	wooper:log_error( "when executing oneway ~p with ~s: "
 					  "first parameter should be a state, not '~p'.",
@@ -412,45 +485,56 @@ executeOnewayWith( StateError, Classname, OnewayAtom ) ->
 
 
 
+% Allows to call synchronously from the code of a given class its actual
+% overridden methods (const oneways, here), including from child classes.
+%
+-spec executeConstOnewayAs( wooper:state(), classname(), oneway_name() ) ->
+							   void().
+executeConstOnewayAs( State, Classname, OnewayAtom ) ->
+
+	% Checks made by the callee; actual constness not checked yet shall derive
+	% from the transformed, corresponding method terminator:
+	%
+	_State = executeOnewayAs( State, Classname, OnewayAtom ).
+
+
 
 % Allows to call synchronously from the code of a given class the oneway defined
 % in specified class, instead of determining it from the instance virtual table.
 %
-% If no failure occurs, returns {wooper_result,NewState}.
-%
 % Note: Stripped-down version of wooper_main_loop.
 %
--spec executeOnewayWith( wooper:state(), classname(), oneway_name(),
-						 method_arguments() ) -> wooper:state().
-executeOnewayWith( State, Classname, OnewayAtom, ArgumentList ) when
+-spec executeOnewayAs( wooper:state(), classname(), oneway_name(),
+					   method_arguments() ) -> wooper:state().
+executeOnewayAs( State, Classname, OnewayAtom, ArgumentList ) when
 	  is_record( State, state_holder ) andalso is_atom( Classname )
 	  andalso is_atom( OnewayAtom ) andalso is_list( ArgumentList ) ->
 
-	%io:format( "executeOneway/4 with list: executing ~s(~w) from ~s "
+	%trace_utils:debug_fmt( "executeOneway/4 with list: executing ~s(~w) from ~s "
 	%           "with ~s.~n",
 	%			 [ OnewayAtom, ArgumentList, State#state_holder.actual_class,
 	%               Classname ] ),
 
-	wooper_handle_local_oneway_execution_with( OnewayAtom, State,
+	wooper_handle_local_oneway_execution_as( OnewayAtom, State,
 											   ArgumentList, Classname );
 
 
 
 % Here third parameter is not a list:
-executeOnewayWith( State, Classname, OnewayAtom, StandaloneArgument ) when
+executeOnewayAs( State, Classname, OnewayAtom, StandaloneArgument ) when
 	  is_record( State, state_holder ) andalso is_atom( Classname )
 	  andalso is_atom( OnewayAtom ) ->
 
-	%io:format( "executeOneway/4 with standalone argument: "
+	%trace_utils:debug_fmt( "executeOnewayAs/4 with standalone argument: "
 	%	"executing ~s(~w) from ~s with ~s.~n",
 	%	[ OnewayAtom, StandaloneArgument, State#state_holder.actual_class,
 	% Classname ] ),
 
-	wooper_handle_local_oneway_execution_with( OnewayAtom, State,
+	wooper_handle_local_oneway_execution_as( OnewayAtom, State,
 			_ArgumentList=[ StandaloneArgument ], Classname );
 
 
-executeOnewayWith( StateError, Classname, OnewayAtom, _LastArg )
+executeOnewayAs( StateError, Classname, OnewayAtom, _LastArg )
   when is_atom( Classname ) andalso is_atom( OnewayAtom ) ->
 
 	wooper:log_error( "when executing oneway ~p with ~s: "
@@ -461,10 +545,27 @@ executeOnewayWith( StateError, Classname, OnewayAtom, _LastArg )
 
 
 % Catches all remaining errors:
-executeOnewayWith( _State, Classname, OnewayAtomError, _LastArg ) ->
+executeOnewayAs( _State, Classname, OnewayAtomError, _LastArg ) ->
 
 	wooper:log_error( "when executing oneway with ~s: both '~p' "
 					  "and '~p' should be atoms.",
 					  [ Classname, OnewayAtomError ], ?MODULE ),
 
 	throw( { wooper_invalid_oneway_call, OnewayAtomError } ).
+
+
+
+% Allows to call synchronously from the code of a given class the const oneway
+% defined in specified class, instead of determining it from the instance
+% virtual table.
+%
+% Note: Stripped-down version of wooper_main_loop.
+%
+-spec executeConstOnewayAs( wooper:state(), classname(), oneway_name(),
+							method_arguments() ) -> void().
+executeConstOnewayAs( State, Classname, OnewayAtom, ArgumentList ) ->
+
+	% Checks made by the callee; actual constness not checked yet shall derive
+	% from the transformed, corresponding method terminator:
+	%
+	_State = executeOnewayAs( State, Classname, OnewayAtom, ArgumentList ).

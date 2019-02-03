@@ -1,6 +1,6 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER examples.
+% This file is part of the Ceylan-WOOPER examples.
 %
 % It has been placed in the public domain.
 %
@@ -31,8 +31,8 @@ run( IsDebug ) ->
 
 	test_facilities:start( ?MODULE ),
 
-	test_facilities:display("Debug mode: ~s.",
-		[ class_Platypus:is_wooper_debug() ] ),
+	test_facilities:display( "Debug mode: ~s.",
+							 [ class_Platypus:is_wooper_debug() ] ),
 
 
 	% General tests.
@@ -53,6 +53,7 @@ run( IsDebug ) ->
 
 	end,
 
+
 	MyP ! { getSuperclasses, [], self() },
 	receive
 
@@ -63,7 +64,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedSuperclasses } ->
 			test_facilities:fail( "wrong superclasses: ~p",
-				[ UnexpectedSuperclasses ] )
+								  [ UnexpectedSuperclasses ] )
 
 	end,
 
@@ -82,6 +83,7 @@ run( IsDebug ) ->
 
 	end,
 
+
 	MyP ! { getGender, [], self() },
 	receive
 
@@ -94,7 +96,9 @@ run( IsDebug ) ->
 
 	end,
 
+
 	MyP ! { setAge, 5 },
+
 
 	MyP ! { getAge, [], self() },
 	receive
@@ -108,7 +112,9 @@ run( IsDebug ) ->
 
 	end,
 
+
 	MyP ! declareBirthday,
+
 
 	MyP ! { getAge, [], self() },
 	receive
@@ -122,7 +128,9 @@ run( IsDebug ) ->
 
 	end,
 
+
 	MyP ! declareBirthday,
+
 
 	MyP ! { isHotBlooded, [], self() },
 	receive
@@ -136,6 +144,7 @@ run( IsDebug ) ->
 
 	end,
 
+
 	MyP ! { getFurColor, [], self() },
 	receive
 
@@ -145,9 +154,10 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedFurColor } ->
 			test_facilities:fail( "wrong fur color: ~p",
-								 [ UnexpectedFurColor ] )
+								  [ UnexpectedFurColor ] )
 
 	end,
+
 
 
 	% Tests related to OvoviviparousBeings.
@@ -161,10 +171,11 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedMeanCount } ->
 			test_facilities:fail( "wrong mean egg count: ~p",
-				[ UnexpectedMeanCount ] )
+								  [ UnexpectedMeanCount ] )
 
 
 	end,
+
 
 	MyP ! { getEggsLaidCount, [], self() },
 	receive
@@ -176,11 +187,13 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedFirstCount } ->
 			test_facilities:fail( "wrong first egg count: ~p",
-				[ UnexpectedFirstCount ] )
+								  [ UnexpectedFirstCount ] )
 
 	end,
 
+
 	MyP ! { layEggs, 1 },
+
 
 	MyP ! { getEggsLaidCount, [], self() },
 	receive
@@ -192,7 +205,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedSecondCount } ->
 			test_facilities:fail( "wrong second egg count: ~p",
-				[ UnexpectedSecondCount ] )
+								  [ UnexpectedSecondCount ] )
 
 	end,
 
@@ -207,9 +220,10 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedTeatCount } ->
 			test_facilities:fail( "wrong teat count: ~p",
-				[ UnexpectedTeatCount ] )
+								  [ UnexpectedTeatCount ] )
 
 	end,
+
 
 	MyP ! { canEat, weed, self() },
 	receive
@@ -220,9 +234,10 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedFoodPreference } ->
 			test_facilities:fail( "wrong food preference: ~p",
-				[ UnexpectedFoodPreference ] )
+								  [ UnexpectedFoodPreference ] )
 
 	end,
+
 
 	MyP ! { canEat, mammoth, self() },
 	receive
@@ -233,9 +248,10 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedOtherFoodPreference } ->
 			test_facilities:fail( "wrong food preference: ~p",
-				[ UnexpectedOtherFoodPreference ] )
+								  [ UnexpectedOtherFoodPreference ] )
 
 	end,
+
 
 	MyP ! { getNozzleColor, [], self() },
 	receive
@@ -246,9 +262,10 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedNozzleColor } ->
 			test_facilities:fail( "wrong nozzle color: ~p",
-				[ UnexpectedNozzleColor ] )
+								  [ UnexpectedNozzleColor ] )
 
 	end,
+
 
 	ExpectedNames = [ hector, edgar, roger, sean ],
 
@@ -262,15 +279,35 @@ run( IsDebug ) ->
 
 	end,
 
+
 	MyP ! { popFirstAlternateName, [], self() },
 	receive
 
 		 { wooper_result, FirstName } ->
 			test_facilities:display(
-				"This Platypus forgot its first alternate name: ~w.",
+			  "This Platypus forgot its first alternate name: ~w.",
 			  [ FirstName ] )
 
 	end,
+
+
+	case IsDebug of
+
+		true ->
+
+			MyP ! { wooper_get_instance_description, [], self() },
+			receive
+
+				{ wooper_result, InspectString } ->
+					test_facilities:display( "Instance description: ~s",
+											 [ InspectString ] )
+			end;
+
+		false ->
+			ok
+
+	end,
+
 
 	MyP ! { getAlternateNames, [], self() },
 
@@ -303,23 +340,6 @@ run( IsDebug ) ->
 		{ wooper_result, UnexpectedSyncNozzleColor } ->
 			test_facilities:fail( "wrong nozzle color: ~p",
 								  [ UnexpectedSyncNozzleColor ] )
-
-	end,
-
-	case IsDebug of
-
-		true ->
-
-			MyP ! { wooper_get_instance_description, [], self() },
-			receive
-
-				{ wooper_result, InspectString } ->
-					test_facilities:display( "Instance description: ~s",
-											 [ InspectString ] )
-			end;
-
-		false ->
-			ok
 
 	end,
 

@@ -1,6 +1,6 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER library.
+% This file is part of the Ceylan-WOOPER library.
 %
 % This library is free software: you can redistribute it and/or modify
 % it under the terms of the GNU Lesser General Public License or
@@ -77,7 +77,12 @@
 
 
 -type request_return( T ) :: wooper:request_result( T ).
--type oneway_return() :: wooper:state().
+-type const_request_return( T ) :: wooper:const_request_return( T ).
+
+-type oneway_return() :: wooper:oneway_return().
+-type const_oneway_return() :: wooper:const_oneway_return().
+
+-type static_return( T ) :: static_return( T ).
 
 
 -type attribute_name() :: wooper:attribute_name().

@@ -1,6 +1,6 @@
-% Copyright (C) 2012-2018 Olivier Boudeville
+% Copyright (C) 2012-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER library.
+% This file is part of the Ceylan-WOOPER library.
 %
 % This library is free software: you can redistribute it and/or modify
 % it under the terms of the GNU Lesser General Public License or
@@ -37,10 +37,17 @@
 
 % Very generic:
 %
--export([ get_classname/1, get_attribute_pairs/1, state_to_string/1 ]).
+-export([ get_classname/1, get_attribute_pairs/1, state_to_string/1,
+		  get_class_filename/1 ]).
 
 
-% Communication helpers:
+% Settings helpers:
+%
+-export([ get_synchronous_time_out/1 ]).
+
+
+
+% Communication helpers for active instances:
 %
 -export([ execute_request/3, execute_request/4, send_requests/3,
 
@@ -59,7 +66,8 @@
 % Creation helpers:
 %
 -export([ create_hosting_process/2,
-		  construct_and_run/2, construct_and_run_synchronous/3 ]).
+		  construct_and_run/2, construct_and_run_synchronous/3,
+		  construct_passive/2 ]).
 
 
 
@@ -69,13 +77,27 @@
 		  delete_synchronously_any_instance_referenced_in/2,
 		  safe_delete_synchronously_any_instance_referenced_in/2,
 		  delete_synchronously_instance/1, delete_synchronously_instances/1,
-		  safe_delete_synchronously_instances/1
-		]).
+		  safe_delete_synchronously_instances/1,
+		  delete_passive/1 ]).
+
+
+
+% Method execution for passive instances:
+%
+-export([ execute_request/2, % already exported: execute_request/3,
+		  execute_oneway/2, execute_oneway/3 ]).
 
 
 % Infrequently-called functions for state management:
 %
 -export([ get_all_attributes/1 ]).
+
+
+% Traps to detect any method terminator that would be left untransformed:
+%
+-export([ return_state_result/2, return_state/1, return_static/1,
+		  const_return_result/1, const_return/0 ]).
+
 
 
 
@@ -84,20 +106,17 @@
 -export([ log_info/1, log_info/2,
 		  log_warning/1, log_warning/2,
 		  log_error/1, log_error/2, log_error/3,
-		  on_failed_request/7, on_failed_oneway/6
-		]).
+		  on_failed_request/7, on_failed_oneway/6 ]).
 
 
 -ifdef(wooper_debug).
 
 % State-related helpers (only available in debug mode):
--export([
-		 virtual_table_to_string/1,
-		 instance_to_string/1,
-		 display_state/1,
-		 display_virtual_table/1,
-		 display_instance/1
-		]).
+-export([ virtual_table_to_string/1,
+		  instance_to_string/1,
+		  display_state/1,
+		  display_virtual_table/1,
+		  display_instance/1 ]).
 
 -endif. % wooper_debug
 
@@ -108,10 +127,14 @@
 		  default_node_up_handler/3, default_node_down_handler/3 ]).
 
 
+% The record defining the state of a passive instance:
+-define( passive_record, state_holder ).
+
+
 % Defined here because embodied instances rely on the main loop which needs that
 % information to destruct the corresponding instance:
 %
--define( wooper_superclasses, [] ).
+%-superclasses([]).
 
 
 % For the name of the registered process that keeps the per-class method
@@ -135,8 +158,34 @@
 %
 -type method_name() :: meta_utils:function_name().
 
+
+% Name of a request method:
 -type request_name() :: method_name().
+
+% Name of a oneway method:
 -type oneway_name()  :: method_name().
+
+% Name of a static method:
+-type static_name()  :: method_name().
+
+
+% Arity of a method:
+-type method_arity() :: meta_utils:function_arity().
+
+-type request_arity() :: method_arity().
+-type oneway_arity() ::  method_arity().
+-type static_arity() ::  method_arity().
+
+
+-type method_id() :: { method_name(), method_arity() }.
+
+-type request_id() :: { request_name(), request_arity() }.
+-type oneway_id() ::  { oneway_name(),  oneway_arity() }.
+-type static_id() ::  { static_name(),  static_arity() }.
+
+
+% Access qualifier, applying either to a method or to an attribute:
+-type access_qualifier() :: 'public' | 'protected' | 'private'.
 
 
 % A method argument can be any type:
@@ -146,12 +195,25 @@
 -type method_arguments() :: method_argument() | [ method_argument() ].
 
 
-% Method qualifiers not implemented yet:
--type method_qualifier() :: any().
+% Qualifiers applying to methods:
+-type method_qualifier() :: access_qualifier()
+
+							% This method cannot be overridden:
+						  | 'final'
+
+							% This method does not change the state of the
+							% instance it is applied on:
+						  | 'const'.
+
+
+% The qualifiers applying to a method:
+-type method_qualifiers() :: [ method_qualifier() ].
 
 
 % Special case of construction parameters:
--type construction_parameters() :: [ method_argument() ].
+-type construction_parameter() :: method_argument().
+
+-type construction_parameters() :: [ construction_parameter() ].
 
 
 -type requests_outcome() :: 'success' | { 'failure', [ pid() ] }.
@@ -159,10 +221,27 @@
 % To be specified more closely maybe:
 -type method_internal_result() :: any().
 
+% To describe all kinds of results:
+
 -type request_result( T ) :: T.
+-type request_result() :: request_result( any() ).
+
+-type static_result( T ) :: T.
+-type static_result() :: static_result( any() ).
+
+
+
+
+% For method specs:
 
 -type request_return( T ) :: { state(), request_result( T ) }.
+-type const_request_return( T ) :: request_result( T ).
+
 -type oneway_return() :: state().
+-type const_oneway_return() :: void().
+
+-type static_return( T ) :: static_result( T ).
+% Constness irrelevant for static methods.
 
 
 -type attribute_name() :: atom().
@@ -181,18 +260,17 @@
 -type instance_pid() :: pid().
 
 
+% Passive instance:
+-type passive_instance() :: state().
+
+
 % Atom used to denote an acknowlegment (i.e. a conventional symbol to ensure
 % that a request was synchronously executed):
 %
 -type ack_atom() :: atom().
 
--type request_result() :: wooper:request_result().
 
-
-% Otherwise getClassname/1, get_superclasses/0, etc. are unused:
--include("wooper_classes_exports.hrl").
-
-% Otherwise wooper_execute_method_with/4 is unused:
+% Otherwise wooper_execute_method_as/4 is unused:
 -include("wooper_execute_internal_exports.hrl").
 
 
@@ -204,12 +282,22 @@
 
 % We prefer having it prefixed by wooper:
 -export_type([ classname/0,
-			   method_name/0, request_name/0, oneway_name/0,
-			   method_argument/0, method_arguments/0, method_qualifier/0,
-			   construction_parameters/0,
+			   method_name/0, request_name/0, oneway_name/0, static_name/0,
+			   method_arity/0,
+			   method_id/0, request_id/0, oneway_id/0, static_id/0,
+			   access_qualifier/0,
+			   method_argument/0, method_arguments/0,
+			   method_qualifier/0, method_qualifiers/0,
+			   construction_parameter/0, construction_parameters/0,
 			   requests_outcome/0, method_internal_result/0,
+
 			   request_result/1, request_result/0,
-			   request_return/1, oneway_return/0,
+			   static_result/1, static_result/0,
+
+			   request_return/1, const_request_return/1,
+			   oneway_return/0, const_oneway_return/0,
+			   static_return/1,
+
 			   attribute_name/0, attribute_value/0, attribute_entry/0,
 			   attribute_qualifier/0,
 			   instance_pid/0, state/0 ]).
@@ -239,7 +327,7 @@
 -include("wooper_execute_internal_functions.hrl").
 
 % For get_superclasses/0:
--include("wooper_classes_functions.hrl").
+%-include("wooper_classes_functions.hrl").
 
 
 
@@ -272,19 +360,64 @@
 % indefinitively.
 
 
-% Sends specified request to specified instance, waits indefinitively for its
-% returned value (supposing none is already waiting among the received
-% messages), and returns it.
+
+% Sends specified request to specified (active or passive) instance, if active
+% waits indefinitively for its returned value (supposing none is already waiting
+% among the received messages), and returns it.
 %
-% (helper)
+% (public helper, as a convenience wrapper or for passive instances)
 %
--spec execute_request( request_name(), method_arguments(), instance_pid() ) ->
-							 request_result().
-execute_request( RequestName, RequestArgs, TargetInstancePID ) ->
+-spec execute_request( instance_pid(), request_name() ) -> request_result();
+					 ( passive_instance(), request_name() ) ->
+							{ passive_instance(), method_internal_result() }.
+execute_request( TargetInstancePID, RequestName )
+  when is_pid( TargetInstancePID ) andalso is_atom( RequestName ) ->
+
+	RequestArgs = [],
 
 	TargetInstancePID ! { RequestName, RequestArgs, self() },
 
-	execute_request_waiter( TargetInstancePID, RequestName, RequestArgs ).
+	execute_request_waiter( TargetInstancePID, RequestName, RequestArgs );
+
+execute_request( PassiveInstance, RequestName )
+  when is_record( PassiveInstance, ?passive_record )
+	   andalso is_atom( RequestName ) ->
+
+	{ NewPassiveInstance, { wooper_result, R } } =
+		wooper_execute_method( RequestName, _RequestArgs=[], PassiveInstance ),
+
+	{ NewPassiveInstance, R }.
+
+
+% Sends specified request to specified (active or passive) instance, if active
+% waits indefinitively for its returned value (supposing none is already waiting
+% among the received messages), and returns it.
+%
+% (public helper, as a convenience wrapper or for passive instances)
+%
+-spec execute_request( instance_pid(), request_name(), method_arguments() ) ->
+							 request_result();
+
+					 ( passive_instance(), request_name(),
+					   method_arguments() ) ->
+							 { passive_instance(), method_internal_result() }.
+
+execute_request( TargetInstancePID, RequestName, RequestArgs )
+  when is_pid( TargetInstancePID ) andalso is_atom( RequestName ) ->
+
+	TargetInstancePID ! { RequestName, RequestArgs, self() },
+
+	execute_request_waiter( TargetInstancePID, RequestName, RequestArgs );
+
+execute_request( PassiveInstance, RequestName, RequestArgs )
+  when is_record( PassiveInstance, ?passive_record )
+	   andalso is_atom( RequestName ) ->
+
+	{ NewPassiveInstance, { wooper_result, R } } =
+		wooper_execute_method( RequestName, RequestArgs, PassiveInstance ),
+
+	{ NewPassiveInstance, R }.
+
 
 
 
@@ -697,15 +830,9 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 
 
 
-% Deactivated, as that check would happen after a corresponding error cause
-% (type class_X:new/N reported as 'undef').
-
--ifdef(wooper_deactivated).
-
--ifdef(wooper_debug).
-
-
-% Used only in debug mode:
+% Checks, for the specified classname and construction parameters, that a
+% corresponding module exists and that it has the relevant arity.
+%
 -spec check_classname_and_arity( classname(), construction_parameters() ) ->
 									   void().
 check_classname_and_arity( Classname, ConstructionParameters ) ->
@@ -723,7 +850,6 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 	% Includes the state:
 	ArgCount = length( ConstructionParameters ) + 1,
-
 
 	case meta_utils:is_function_exported( _Module=Classname,
 						_Function=construct, _Arity=ArgCount ) of
@@ -775,7 +901,8 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 				ConstructArities ->
 
 					trace_utils:error( "Error, no ~s:construct/~B found, "
-						"whereas exported for following arities: ~w.",
+						"whereas this function is exported for following "
+						"arities: ~w.",
 						[ Classname, ArgCount, ConstructArities ] ),
 
 					throw( { invalid_construction_parameters_specified,
@@ -784,11 +911,6 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 			end
 
 	end.
-
-
--endif. % wooper_debug
-
--endif. % wooper_deactivated
 
 
 
@@ -822,26 +944,30 @@ construct_and_run( Classname, ConstructionParameters ) ->
 			% as by convention no attribute should be introduced outside of the
 			% constructor:
 			%
-			TunedTable = ?wooper_table_type:optimise(
-							ConstructState#state_holder.attribute_table ),
+			% (now useless with more advanced tables)
+			%
+			%TunedTable = ?wooper_table_type:optimise(
+			%AttrTable = ConstructState#state_holder.attribute_table,
 
-			ReadyState = ConstructState#state_holder{
-						   attribute_table=TunedTable },
+			%ReadyState = ConstructState#state_holder{
+			%			   attribute_table=AttrTable },
 
 			% Otherwise, in wooper_destruct/1 and all, ?MODULE will be 'wooper'
 			% instead of the right class:
 			%
-			Classname:wooper_main_loop( ReadyState );
+			Classname:wooper_main_loop( ConstructState );
 
 
 		Other ->
 
 			log_error( "~nWOOPER error for PID ~w of class ~s: "
-				"constructor did not return a state, but returned '~p' instead."
-				" Construction parameters were:~n~p.",
-				[ self(), Classname, Other, ConstructionParameters ] ),
+					   "constructor did not return a state, but returned '~p' "
+					   "instead. Construction parameters were:~n~p.",
+					   [ self(), Classname, Other, ConstructionParameters ] ),
 
-			throw( { invalid_constructor, Classname } )
+			Arity = length( ConstructionParameters ) + 1,
+
+			throw( { invalid_constructor, Classname, { construct, Arity } } )
 
 	catch
 
@@ -875,16 +1001,16 @@ construct_and_run( Classname, ConstructionParameters ) ->
 	% Enforces a closer-to-ideal load factor of the hashtable if needed, as by
 	% convention no attribute should be introduced outside of the constructor:
 	%
-	TunedTable = ?wooper_table_type:optimise(
-							ConstructState#state_holder.attribute_table ),
+	%TunedTable = ?wooper_table_type:optimise(
+	%						ConstructState#state_holder.attribute_table ),
 
 
-	ReadyState = ConstructState#state_holder{ attribute_table=TunedTable },
+	%ReadyState = ConstructState#state_holder{ attribute_table=TunedTable },
 
 	% Otherwise, in wooper_destruct/1 and all, ?MODULE will be 'wooper' instead
 	% of the right class:
 	%
-	Classname:wooper_main_loop( ReadyState ).
+	Classname:wooper_main_loop( ConstructState ).
 
 
 -endif. % wooper_debug
@@ -924,11 +1050,13 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 			% as by convention no attribute should be introduced outside of the
 			% constructor:
 			%
-			TunedTable = ?wooper_table_type:optimise(
-							ConstructState#state_holder.attribute_table ),
+			% (now useless with more advanced tables)
+			%
+			% TunedTable = ?wooper_table_type:optimise(
+			AttrTable = ConstructState#state_holder.attribute_table,
 
 			ReadyState = ConstructState#state_holder{
-						   attribute_table=TunedTable },
+						   attribute_table=AttrTable },
 
 			% Otherwise, in wooper_destruct/1 and all, ?MODULE will be 'wooper'
 			% instead of the right class:
@@ -946,7 +1074,9 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 					   "instead. Construction parameters were:~n~p.~n",
 					   [ self(), Classname, Other, ConstructionParameters ] ),
 
-			throw( { invalid_constructor, Classname } )
+			Arity = length( ConstructionParameters ) + 1,
+
+			throw( { invalid_constructor, Classname, { construct, Arity } } )
 
 	catch
 
@@ -986,10 +1116,11 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 	% Enforces a closer-to-ideal load factor of the hashtable if needed, as by
 	% convention no attribute should be introduced outside of the constructor:
 	%
-	TunedTable = ?wooper_table_type:optimise(
-							ConstructState#state_holder.attribute_table ),
+	% (now useless with more advanced tables)
+	%TunedTable = ?wooper_table_type:optimise(
+	AttrTable = ConstructState#state_holder.attribute_table,
 
-	ReadyState = ConstructState#state_holder{ attribute_table=TunedTable },
+	ReadyState = ConstructState#state_holder{ attribute_table=AttrTable },
 
 	% Otherwise, in wooper_destruct/1 and all, ?MODULE will be 'wooper' instead
 	% of the right class:
@@ -1000,6 +1131,102 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 
 
 -endif. % not wooper_debug.
+
+
+
+% Section for passive instances.
+
+
+% Constructs a passive instance: returns the initial state thereof.
+%
+-spec construct_passive( classname(), construction_parameters() ) ->
+							   passive_instance().
+construct_passive( Classname, ConstructionParameters ) ->
+
+	%trace_utils:debug_fmt( "wooper:construct_passive for class ~s "
+	%					   "and parameters ~p.~n",
+	%					   [ Classname, ConstructionParameters ] ),
+
+	cond_utils:if_defined( wooper_debug,
+		   check_classname_and_arity( Classname, ConstructionParameters ) ),
+
+	BlankState = get_blank_state( Classname ),
+
+	try apply( Classname, construct,
+			   [ BlankState | ConstructionParameters ] ) of
+
+		ConstructState when is_record( ConstructState, state_holder ) ->
+			ConstructState;
+
+		Other ->
+			log_error( "WOOPER error when creating a passive instance "
+					   "of class ~s: constructor did not return a state, "
+					   "but returned '~p' instead. "
+					   "Construction parameters were:~n~p",
+					   [ Classname, Other, ConstructionParameters ] ),
+
+			Arity = length( ConstructionParameters ) + 1,
+
+			throw( { invalid_constructor, Classname, { construct, Arity } } )
+
+	catch
+
+		Reason:ErrorTerm:Stacktrace ->
+			trigger_error( Reason, ErrorTerm, Classname,
+						   ConstructionParameters, Stacktrace )
+
+	end.
+
+
+
+% execute_request/3 defined together with its convenience helper counterpart
+% (same name, same arity, different purposes).
+
+
+% Executes specified oneway on specified passive instance.
+%
+-spec execute_oneway( passive_instance(), oneway_name() ) ->
+							passive_instance().
+execute_oneway( PassiveInstance, OnewayName )
+   when is_record( PassiveInstance, ?passive_record )
+		andalso is_atom( OnewayName ) ->
+
+	{ NewPassiveInstance, { wooper_method_returns_void, R } } =
+		wooper_execute_method( OnewayName, _OnewayArgs=[],
+							   PassiveInstance ),
+
+	{ NewPassiveInstance, R }.
+
+
+
+% Executes specified oneway on specified passive instance.
+%
+-spec execute_oneway( passive_instance(), oneway_name(), method_arguments() ) ->
+							passive_instance().
+execute_oneway( PassiveInstance, OnewayName, OnewayArgs )
+   when is_record( PassiveInstance, ?passive_record )
+		andalso is_atom( OnewayName ) andalso is_list( OnewayArgs ) ->
+
+	%trace_utils:trace_fmt( "Executing oneway ~s/~B on passive instance",
+	%					   [ OnewayName, length( OnewayArgs ) ] ),
+
+	{ NewPassiveInstance, wooper_method_returns_void } =
+		wooper_execute_method( OnewayName, OnewayArgs, PassiveInstance ),
+
+	NewPassiveInstance;
+
+% Promote non-list argument to list:
+execute_oneway( PassiveInstance, OnewayName, OnewayArg )
+   when is_record( PassiveInstance, ?passive_record )
+		andalso is_atom( OnewayName ) ->
+
+	%trace_utils:trace_fmt( "Executing oneway ~s on passive instance",
+	%					   [ OnewayName ] ),
+
+	{ NewPassiveInstance, wooper_method_returns_void } =
+		wooper_execute_method( OnewayName, [ OnewayArg ], PassiveInstance ),
+
+	NewPassiveInstance.
 
 
 
@@ -1072,45 +1299,53 @@ get_class_manager() ->
 % Section for default handlers.
 
 
-
-% WOOPER default EXIT handler.
+% WOOPER default EXIT message handler; called if trapping EXIT signals.
 %
 % Returns an updated state.
 %
 % Can be overridden by defining or inheriting the onWOOPERExitReceived/3 oneway.
 %
--spec default_exit_handler( wooper:state(), pid(), any() ) -> wooper:state().
-default_exit_handler( State, Pid, ExitType ) ->
+% (helper)
+%
+-spec default_exit_handler( basic_utils:pid_or_port(),
+		 basic_utils:exit_reason(), wooper:state() ) -> wooper:state().
+default_exit_handler( PidOrPort, ExitReason, State ) ->
 
-	wooper:log_warning( "WOOPER default EXIT handler of the ~w "
-						"instance ~w ignored the following EXIT message "
-						"from ~w:~n'~p'.~n",
-						[ State#state_holder.actual_class, self(), Pid,
-						  ExitType ] ),
+	log_warning( "WOOPER default EXIT handler of the ~w "
+				 "instance ~w ignored the following EXIT message "
+				 "from ~w:~n'~p'.~n",
+				 [ State#state_holder.actual_class, self(), PidOrPort,
+				   ExitReason ] ),
 
 	State.
 
 
 
-% WOOPER default DOWN handler.
+% WOOPER default DOWN handler, for process monitors.
 %
 % Returns an updated state.
 %
 % Can be overridden by defining or inheriting the onWOOPERDownNotified/5 oneway.
 %
--spec default_down_handler( wooper:state(), monitor_utils:monitor_reference(),
+% Note: not to be mixed up with the default_node_down_handler/3 /
+% onWOOPERNodeDisconnection/3 pair (which is node-related).
+%
+% (helper)
+%
+-spec default_down_handler( monitor_utils:monitor_reference(),
 							monitor_utils:monitored_element_type(),
 							monitor_utils:monitored_element(),
-							basic_utils:exit_reason() ) ->  wooper:state().
-default_down_handler( State, _MonitorReference, _MonitoredType,
-					  _MonitoredElement, _ExitReason=normal ) ->
+							basic_utils:exit_reason(), wooper:state() ) ->
+								  wooper:state().
+default_down_handler( _MonitorReference, _MonitoredType,
+					  _MonitoredElement, _ExitReason=normal, State ) ->
 	% Normal exits not notified:
 	State;
 
-default_down_handler( State, MonitorReference, MonitoredType, MonitoredElement,
-					  ExitReason ) ->
+default_down_handler( MonitorReference, MonitoredType, MonitoredElement,
+					  ExitReason, State ) ->
 
-	wooper:log_warning( "WOOPER default DOWN handler of the ~w "
+	log_warning( "WOOPER default DOWN handler of the ~w "
 						"instance ~w ignored the following down notification "
 						"'~s' for monitored element ~p of type '~p' "
 						"(monitor reference: ~w).~n",
@@ -1129,15 +1364,17 @@ default_down_handler( State, MonitorReference, MonitoredType, MonitoredElement,
 % Can be overridden by defining or inheriting the onWOOPERNodeConnection/3
 % oneway.
 %
--spec default_node_up_handler( wooper:state(), net_utils:atom_node_name(),
-					   monitor_utils:monitor_node_info() ) -> wooper:state().
-default_node_up_handler( State, Node, MonitorNodeInfo ) ->
+% (helper)
+%
+-spec default_node_up_handler( net_utils:atom_node_name(),
+		   monitor_utils:monitor_node_info(), wooper:state() ) -> wooper:state().
+default_node_up_handler( Node, MonitorNodeInfo, State ) ->
 
-	wooper:log_warning( "WOOPER default node up handler of the ~w "
-						"instance ~w ignored the connection notification "
-						"for node '~s' (information: ~p).~n",
-						[ State#state_holder.actual_class, self(), Node,
-						  MonitorNodeInfo ] ),
+	log_warning( "WOOPER default node up handler of the ~w "
+				 "instance ~w ignored the connection notification "
+				 "for node '~s' (information: ~p).~n",
+				 [ State#state_holder.actual_class, self(), Node,
+				   MonitorNodeInfo ] ),
 
 	State.
 
@@ -1150,11 +1387,14 @@ default_node_up_handler( State, Node, MonitorNodeInfo ) ->
 % Can be overridden by defining or inheriting the onWOOPERNodeDisconnection/3
 % oneway.
 %
--spec default_node_down_handler( wooper:state(), net_utils:atom_node_name(),
-						 monitor_utils:monitor_node_info() ) -> wooper:state().
-default_node_down_handler( State, Node, MonitorNodeInfo ) ->
+% Note: not to be mixed up with the default_down_handler/5 /
+% onWOOPERDownNotified/5 pair (which is process-related).
+%
+-spec default_node_down_handler( net_utils:atom_node_name(),
+			 monitor_utils:monitor_node_info(), wooper:state() ) -> wooper:state().
+default_node_down_handler( Node, MonitorNodeInfo, State ) ->
 
-	wooper:log_warning( "WOOPER default node down handler of the ~w "
+	log_warning( "WOOPER default node down handler of the ~w "
 						"instance ~w ignored the disconnection notification "
 						"for node '~s' (information: ~p).~n",
 						[ State#state_holder.actual_class, self(), Node,
@@ -1219,7 +1459,7 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
 % Methods for getting information about an instance.
 
 
-% Returns the actual classname of the current instance.
+% Returns the actual classname of the specified instance.
 %
 % Can be trusted.
 %
@@ -1227,10 +1467,6 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
 %
 -spec get_classname( wooper:state() ) -> classname().
 get_classname( State ) ->
-
-	% Note: a mere ?MODULE would not work (ex: case of an inherited method,
-	% compiled with the module name of the parent class).
-
 	State#state_holder.actual_class.
 
 
@@ -1310,6 +1546,33 @@ state_to_string( State ) ->
 			[ self(), get_classname( State ), length( Attributes ) ] ),
 
 		SortedAttributes ).
+
+
+
+% Returns the source filename associated to specified class.
+%
+% Ex: get_class_filename( 'class_Foo' ) returns simply "class_Foo.erl".
+%
+-spec get_class_filename( classname() ) -> file_utils:filename().
+get_class_filename( Classname ) ->
+	text_utils:format( "~s.erl", [ Classname ] ).
+
+
+
+% Returns the time-out to be used for synchronous operations, depending on the
+% debug mode.
+%
+-spec get_synchronous_time_out( boolean() ) -> time_utils:time_out().
+get_synchronous_time_out( _IsDebugMode=true ) ->
+	% Suitable for most applications (5 seconds, to benefit from earlier
+	% reports):
+	5000;
+
+get_synchronous_time_out( _IsDebugMode=false ) ->
+	% Better for applications in production (30 minutes):
+	30*60*1000.
+
+
 
 
 
@@ -1418,6 +1681,7 @@ log_info( FormatString, ValueList ) ->
 %
 -spec log_warning( string() ) -> void().
 log_warning( String ) ->
+
 	error_logger:warning_msg( String ++ "\n" ),
 
 	% Wait a bit, as error_msg seems asynchronous:
@@ -1458,7 +1722,7 @@ log_error( Message ) ->
 log_error( FormatString, ValueList ) ->
 
 	error_logger:error_msg( FormatString
-							++ "=END OF WOOPER ERROR REPORT FOR ~w ===~n~n~n",
+							++ "~n=END OF WOOPER ERROR REPORT FOR ~w ===~n~n~n",
 							ValueList ++ [ self() ] ),
 
 	% Wait a bit, as error_msg seems asynchronous:
@@ -1506,19 +1770,19 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 -spec on_failed_request( request_name(), method_arguments(), pid(),
 						 basic_utils:error_type(), code_utils:stack_trace(),
 						 wooper:state() ) -> no_return().
-on_failed_request( RequestAtom, ArgumentList, CallerPid, Reason, ErrorTerm,
+on_failed_request( RequestName, ArgumentList, CallerPid, Reason, ErrorTerm,
 				   Stacktrace, State ) ->
 
 	Arity = length( ArgumentList ) + 1,
 
-	ModulePrefix = lookup_method_prefix( RequestAtom, Arity, State ),
+	ModulePrefix = lookup_method_prefix( RequestName, Arity, State ),
 
 	log_error( ": request ~s~s/~B failed (cause: ~s):~n~n"
 			   " - with error term:~n  ~p~n~n"
 			   " - stack trace was (latest calls first):~n~s~n"
 			   " - caller being process ~w"
 			   " - for request parameters:~n  ~p~n",
-			   [ ModulePrefix, RequestAtom, Arity, Reason, ErrorTerm,
+			   [ ModulePrefix, RequestName, Arity, Reason, ErrorTerm,
 				 code_utils:interpret_stacktrace( Stacktrace ), CallerPid,
 				 ArgumentList ],
 			   State ),
@@ -1526,7 +1790,7 @@ on_failed_request( RequestAtom, ArgumentList, CallerPid, Reason, ErrorTerm,
 	% ArgumentList and actual method module not propagated back to the caller:
 	%
 	ErrorReason = { request_failed, State#state_holder.actual_class,
-					self(), RequestAtom, { Reason, ErrorTerm } },
+					self(), RequestName, { Reason, ErrorTerm } },
 
 	CallerPid ! { wooper_error, ErrorReason },
 
@@ -1785,14 +2049,22 @@ delete_synchronously_any_instance_referenced_in( Attribute, PreTestLiveliness,
 
 				% Only case where no actual deletion is needed:
 				true ->
+					%trace_utils:debug_fmt(
+					%  "(PID ~w was already dead, nothing done)", [ Pid ] ),
 					ok;
 
 				false ->
+
+					%trace_utils:debug_fmt( "Sending sync delete to ~w.",
+					%					   [ Pid ] ),
+
 					Pid ! { synchronous_delete, self() },
 
 					receive
 
 						{ deleted, Pid } ->
+							%trace_utils:debug_fmt( "Deletion of ~w confirmed.",
+							%					   [ Pid ] ),
 							ok
 
 					end
@@ -1862,7 +2134,8 @@ delete_pid_from( [ Attr | T ], DeleteMessage, PreTestLiveliness, State,
 -spec delete_synchronously_instance( instance_pid() ) -> void().
 delete_synchronously_instance( InstancePid ) ->
 
-	%io:format( "delete_synchronously_instance for ~p.~n", [ InstancePid ] ),
+	%trace_utils:debug_fmt( "delete_synchronously_instance for ~w.",
+	%                       [ InstancePid ] ),
 
 	InstancePid ! { synchronous_delete, self() },
 
@@ -1982,3 +2255,42 @@ safe_delete_synchronously_instances( InstanceList ) ->
 			basic_utils:is_alive( InstancePid ) ],
 
 	delete_synchronously_instances( FilteredInstanceList ).
+
+
+
+% Deletes specified passive instance.
+%
+-spec delete_passive( passive_instance() ) -> void().
+delete_passive( _PassiveInstance ) ->
+	%trace_utils:trace( "Passive instance deleted." ),
+	ok.
+
+
+
+% These functions are stubs, they shall never be called, as the WOOPER parse
+% transform is supposed to have replaced them at compilation-time.
+
+
+-spec return_state_result( any(), any() ) -> no_return().
+return_state_result( _State, _Result ) ->
+	throw( { untransformed_method_terminator, return_state_result } ).
+
+
+-spec return_state( any() ) -> no_return().
+return_state( _State ) ->
+	throw( { untransformed_method_terminator, return_state_result } ).
+
+
+-spec return_static( any() ) -> no_return().
+return_static( _Value ) ->
+	throw( { untransformed_method_terminator, return_static } ).
+
+
+-spec const_return_result( any() ) -> no_return().
+const_return_result( _Value ) ->
+	throw( { untransformed_method_terminator, const_return_result } ).
+
+
+-spec const_return() -> no_return().
+const_return() ->
+	throw( { untransformed_method_terminator, const_return } ).

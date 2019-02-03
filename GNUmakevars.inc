@@ -133,10 +133,37 @@ else
 endif
 
 
+# Compiler section.
+
+
+# Modules needed for the bootstrapping for others (hence to be built first, and
+# not parse-transformed; typically *used* by parse-transforms, or being a
+# parse-transform themselves)
+#
+# (see the 'Bootstrap section' in GNUmakerules-explicit.inc for their
+# special-cased build)
+#
+ifndef BOOTSTRAP_MODULES
+
+	# We want to bootstrap all relevant WOOPER modules (Myriad expected to be
+	# already fully built)
+
+
+	# We list here all the WOOPER-level prerequisites of the WOOPER
+	# parse-transform:
+	#
+	# - wooper_info: to manage class-level information
+
+	BOOTSTRAP_MODULES = $(WOOPER_TOP)/src/wooper_info.beam
+
+endif
+
+
 ifndef COMPILER_OPT_FOR_WOOPER_CLASSES
 
 	   COMPILER_OPT_FOR_WOOPER_CLASSES =                      \
 			$(ERLANG_COMPILER_OPT_BASE)                       \
+			$(ENABLE_WOOPER_DEBUG_OPT)                        \
 			$(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER)
 
 endif
@@ -183,8 +210,8 @@ endif
 # So that the (compilation of the) WOOPER parse transform can benefit from the
 # Myriad parse transform:
 #
-ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_OPT_BASE) \
-							 $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD)
+ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD) \
+							 $(ENABLE_WOOPER_DEBUG_OPT)
 
 
 # Variable defined to be re-usable by upper layers, so that compiling their own

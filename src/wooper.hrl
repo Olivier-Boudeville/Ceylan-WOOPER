@@ -1,6 +1,6 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER library.
+% This file is part of the Ceylan-WOOPER library.
 %
 % This library is free software: you can redistribute it and/or modify
 % it under the terms of the GNU Lesser General Public License or
@@ -172,6 +172,7 @@
 -include("wooper_state_exports.hrl").
 -include("wooper_types_exports.hrl").
 -include("wooper_main_loop_exports.hrl").
+-include("wooper_for_classes.hrl").
 
 
 % Then function definitions:
@@ -184,3 +185,5 @@
 -include("wooper_main_loop_functions.hrl").
 -include("wooper_serialisation_functions.hrl").
 -include("wooper_state_functions.hrl").
+
+% Nothing needed for static methods.

@@ -1,6 +1,6 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER examples.
+% This file is part of the Ceylan-WOOPER examples.
 %
 % It has been placed in the public domain.
 %
@@ -31,7 +31,7 @@ run( IsDebug ) ->
 	test_facilities:start( ?MODULE ),
 
 	test_facilities:display( "Debug mode: ~s.",
-		[ class_Reptile:is_wooper_debug() ] ),
+							 [ class_Reptile:is_wooper_debug() ] ),
 
 
 	MyR = class_Reptile:new_link( 1, male ),
@@ -59,7 +59,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedSuperclasses } ->
 			test_facilities:fail( "wrong superclasses: ~p",
-				[ UnexpectedSuperclasses ] )
+								  [ UnexpectedSuperclasses ] )
 
 	end,
 
@@ -138,7 +138,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, UnexpectedMoultType } ->
 			test_facilities:fail( "wrong moult type: ~p",
-				[ UnexpectedMoultType ] )
+								  [ UnexpectedMoultType ] )
 
 	end,
 

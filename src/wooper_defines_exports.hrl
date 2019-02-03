@@ -1,6 +1,6 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER library.
+% This file is part of the Ceylan-WOOPER library.
 %
 % This library is free software: you can redistribute it and/or modify
 % it under the terms of the GNU Lesser General Public License or
@@ -125,8 +125,18 @@
 %
 % (no wooper_result atom added any more in debug mode)
 %
--define( wooper_return_state_result( State, Result ), { State, Result } ).
--define( wooper_return_state_only( State ), State ).
+%-define( wooper_return_state_result( State, Result ), { State, Result } ).
+%-define( wooper_return_state( State ), State ).
+%
+% Finally, using retrocompatibility macros, resulting in the same code:
+%
+% (retrocompatibility now shall have been solved, hence these macros are
+% disabled)
+%
+%-define( wooper_return_state_result( S, R ),
+%		 wooper:return_state_result( (S), (R) ) ).
+
+%-define( wooper_return_state( S ), wooper:return_state( (S) ) ).
 
 
 

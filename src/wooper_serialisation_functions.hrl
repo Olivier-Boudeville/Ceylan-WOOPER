@@ -1,6 +1,6 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER library.
+% This file is part of the Ceylan-WOOPER library.
 %
 % This library is free software: you can redistribute it and/or modify
 % it under the terms of the GNU Lesser General Public License or
@@ -70,7 +70,7 @@
 % (const request)
 %
 -spec serialise( wooper:state(), wooper_serialisation:entry_transformer(),
-				 basic_utils:user_data() ) -> request_return(
+				 basic_utils:user_data() ) -> const_request_return(
 	   { wooper_serialisation:bin_serialisation(), basic_utils:user_data() } ).
 serialise( State, _EntryTransformer=undefined, UserData ) ->
 
@@ -104,7 +104,7 @@ serialise( State, _EntryTransformer=undefined, UserData ) ->
 	% cleaner):
 	%
 	Entries = lists:sort( [ RandomAttribute |
-					   ?wooper_table_type:enumerate( AttributeTable )  ] ),
+							?wooper_table_type:enumerate( AttributeTable )  ] ),
 
 	% By default returns { Classname, Entries }:
 	FullContent = post_serialise_hook( Classname, Entries, PreState ),
@@ -114,11 +114,11 @@ serialise( State, _EntryTransformer=undefined, UserData ) ->
 
 	Res = { SerialisedContent, UserData },
 
-	% Yes, it is 'State', as we do not want to continue with any state forged
-	% for the serialisation (ex: with transformed local processes), we want to
-	% continue as we were!
+	% Yes, the returned state is 'State', as we do not want to continue with any
+	% state forged for the serialisation (ex: with transformed local processes),
+	% we want to continue as we were!
 	%
-	?wooper_return_state_result( State, Res );
+	wooper:const_return_result( Res );
 
 
 
@@ -133,7 +133,7 @@ serialise( State, EntryTransformer, UserData ) ->
 					actual_class=Classname } = pre_serialise_hook( State ),
 
 	io:format( " - serialising, with transformer, instance ~p of class ~s~n",
-			  [ self(), Classname ] ),
+			   [ self(), Classname ] ),
 
 	% There are, for all Erlang processes, some extra information that are
 	% contextual, implicit, like: whether they are linked (and with whom), their
@@ -175,11 +175,11 @@ serialise( State, EntryTransformer, UserData ) ->
 
 	Res = { SerialisedContent, FinalUserData },
 
-	% Yes, it is 'State', as we do not want to continue with any state forged
-	% for the serialisation (ex: with transformed local processes), we want to
-	% continue as we were before the serialisat
+	% Yes, returning the initial 'State', as we do not want to continue with any
+	% state forged for the serialisation (ex: with transformed local processes),
+	% we want to continue as we were before the serialisat
 	%
-	?wooper_return_state_result( State, Res ).
+	wooper:const_return_result( Res ).
 
 
 

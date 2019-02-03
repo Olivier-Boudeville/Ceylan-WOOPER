@@ -1,6 +1,6 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER examples.
+% This file is part of the Ceylan-WOOPER examples.
 %
 % It has been placed in the public domain.
 %
@@ -11,56 +11,41 @@
 
 
 % Determines what are the mother classes of this class (if any):
--define( wooper_superclasses, [ class_Creature ] ).
+-define( superclasses, [ class_Creature ] ).
 
 
-% Parameters taken by the constructor ('construct').
-% They are here the ones of the mother class (creature):
--define( wooper_construct_parameters, Age, Gender ).
-
-
-% Declaring all variations of WOOPER standard life-cycle operations:
-% (template pasted, two replacements performed to update arities)
--define( wooper_construct_export, new/2, new_link/2,
-		 synchronous_new/2, synchronous_new_link/2,
-		 synchronous_timed_new/2, synchronous_timed_new_link/2,
-		 remote_new/3, remote_new_link/3, remote_synchronous_new/3,
-		 remote_synchronous_new_link/3, remote_synchronisable_new_link/3,
-		 remote_synchronous_timed_new/3, remote_synchronous_timed_new_link/3,
-		 construct/3, destruct/1 ).
-
-
-% Declarations of class-specific methods (besides inherited ones).
--define( wooper_method_export, setAge/2, isHotBlooded/1, canMoult/1 ).
-
+-define( class_attributes, [] ).
 
 % With this class, we will test serialisation hooks:
--define( wooper_serialisation_hooks,).
+-define( wooper_serialisation_hooks, ).
 
 
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
 
 
+% Import common types without module prefix:
+-include("ecosystem_types.hrl").
+
 
 % Triggered just before serialisation.
 %
 -spec pre_serialise_hook( wooper:state() ) -> wooper:state().
 pre_serialise_hook( State ) ->
-	io:format( "Pre-serialising a reptile!~n" ),
+	trace_utils:trace( "Pre-serialising a reptile!" ),
 	State.
 
 
 
 % Triggered just after serialisation.
 %
-% (using WOOPER default hook implementation augmented of an io:format)
+% (using WOOPER default hook implementation augmented of an trace_utils:trace)
 %
 -spec post_serialise_hook( classname(),
 						   wooper_serialisation:term_serialisation(),
 						   wooper:state() ) -> term().
 post_serialise_hook( Classname, Entries, _State ) ->
-	io:format( "Post-serialising a reptile!~n" ),
+	trace_utils:trace( "Post-serialising a reptile!" ),
 	{ Classname, Entries }.
 
 
@@ -70,7 +55,7 @@ post_serialise_hook( Classname, Entries, _State ) ->
 -spec pre_deserialise_hook( term(), basic_utils:user_data() ) ->
 							wooper_serialisation:term_serialisation().
 pre_deserialise_hook( _SerialisedEntries={ _Classname, Entries }, _UserData ) ->
-	io:format( "Pre-deserialising a reptile!~n" ),
+	trace_utils:trace( "Pre-deserialising a reptile!" ),
 	Entries.
 
 
@@ -79,19 +64,16 @@ pre_deserialise_hook( _SerialisedEntries={ _Classname, Entries }, _UserData ) ->
 %
 -spec post_deserialise_hook( wooper:state() ) -> wooper:state().
 post_deserialise_hook( State ) ->
-	io:format( "Post-deserialising a reptile!~n" ),
+	trace_utils:trace( "Post-deserialising a reptile!" ),
 	State.
 
 
 
 
-% Import common types without module prefix:
--include("ecosystem_types.hrl").
-
 
 % Constructs a new Reptile.
 -spec construct( wooper:state(), age(), gender() ) -> wooper:state().
-construct( State, ?wooper_construct_parameters ) ->
+construct( State, Age, Gender ) ->
 	class_Creature:construct( State, Age, Gender ).
 	% To test constructor checking:
 	%an_unexpected_initial_state.
@@ -100,7 +82,7 @@ construct( State, ?wooper_construct_parameters ) ->
 % Overridden destructor
 -spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
-	io:format( "Deleting a Reptile." ),
+	trace_utils:trace( "Deleting a Reptile." ),
 	State.
 	% To test destructor checking use instead:
 	%an_unexpected_final_state.
@@ -116,13 +98,11 @@ destruct( State ) ->
 % Overridden from Creature, useful to show the use of executeOneway.
 % Note: used to test WOOPER management of error conditions.
 %
-% (oneway)
-%
 -spec setAge( wooper:state(), age() ) -> oneway_return().
 setAge( State, NewAge ) ->
 	%throw( exception_throw_test_from_oneway ),
 	%exit( exception_exit_test_from_oneway ),
-	?wooper_return_state_only( setAttribute( State, age, NewAge ) ).
+	wooper:return_state( setAttribute( State, age, NewAge ) ).
 
 
 
@@ -130,19 +110,14 @@ setAge( State, NewAge ) ->
 %
 % Note: used to test WOOPER management of error conditions.
 %
-% (const request)
-%
--spec isHotBlooded( wooper:state() ) -> request_return( boolean() ).
+-spec isHotBlooded( wooper:state() ) -> const_request_return( boolean() ).
 isHotBlooded( State ) ->
 	%throw( exception_throw_test_from_request ),
 	%exit( exception_exit_test_from_request ),
-	?wooper_return_state_result( State, false ).
+	wooper:const_return_result( false ).
 
 
 % All reptiles can moult:
-%
-% (const request)
-%
--spec canMoult( wooper:state() ) -> request_return( boolean() ).
+-spec canMoult( wooper:state() ) -> const_request_return( boolean() ).
 canMoult( State ) ->
-	?wooper_return_state_result( State, true ).
+	wooper:const_return_result( true ).

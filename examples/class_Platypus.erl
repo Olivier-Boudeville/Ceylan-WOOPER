@@ -1,6 +1,6 @@
-% Copyright (C) 2003-2018 Olivier Boudeville
+% Copyright (C) 2003-2019 Olivier Boudeville
 %
-% This file is part of the WOOPER examples.
+% This file is part of the Ceylan-WOOPER examples.
 %
 % It has been placed in the public domain.
 %
@@ -10,33 +10,12 @@
 
 
 % Determines what are the mother classes of this class (if any):
--define( wooper_superclasses, [ class_Mammal, class_OvoviviparousBeing ] ).
+-define( superclasses, [ class_Mammal, class_OvoviviparousBeing ] ).
 
 
-% Parameters taken by the constructor ('construct').
-%
-% They are here the ones of the Mammal mother class (the ovoviviparous being
-% constructor does not need any parameter) plus nozzle color.
-%
-% These are class-specific data needing to be set in the constructor:
--define( wooper_construct_parameters, Age, Gender, FurColor, NozzleColor ).
-
-
-% Declaring all variations of WOOPER standard life-cycle operations:
-% (template pasted, two replacements performed to update arities)
--define( wooper_construct_export, new/4, new_link/4,
-		 synchronous_new/4, synchronous_new_link/4,
-		 synchronous_timed_new/4, synchronous_timed_new_link/4,
-		 remote_new/5, remote_new_link/5, remote_synchronous_new/5,
-		 remote_synchronous_new_link/5, remote_synchronisable_new_link/5,
-		 remote_synchronous_timed_new/5, remote_synchronous_timed_new_link/5,
-		 construct/5, destruct/1 ).
-
-
-% Method declarations.
--define( wooper_method_export, getMeanEggsCount/1, getTeatCount/1, canEat/2,
-		 getNozzleColor/1, getAlternateNames/1, popFirstAlternateName/1,
-		 testCreationDeletion/1, onWOOPERExitReceived/3 ).
+-define( class_attributes, [ { nozzle_color, "Color of the nozzle" },
+							 alternate_names,
+							 { cat_pid, pid(), "PID of a cat" } ] ).
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -53,7 +32,7 @@
 %
 -spec construct( wooper:state(), age(), gender(), fur_color(), nozzle_color() )
 			   -> wooper:state().
-construct( State, ?wooper_construct_parameters ) ->
+construct( State, Age, Gender, FurColor, NozzleColor ) ->
 
 	% First the direct mother classes:
 	MammalState = class_Mammal:construct( State, Age, Gender, FurColor ),
@@ -61,77 +40,58 @@ construct( State, ?wooper_construct_parameters ) ->
 	% To test onWOOPERExitReceived/3 (comment to check that the test fails):
 	process_flag( trap_exit, true ),
 
-	OvoviviparousMammalState = class_OvoviviparousBeing:construct(
-		MammalState ),
+	OvoviviparousMammalState =
+		class_OvoviviparousBeing:construct( MammalState ),
 
-	io:format( "Synchronous time-out is ~p.~n", [ ?synchronous_time_out] ),
+	io:format( "Synchronous time-out is ~p.~n", [ ?synchronous_time_out ] ),
 
 	% Then the class-specific attributes:
 	setAttributes( OvoviviparousMammalState, [
 		  { nozzle_color, NozzleColor },
 		  { alternate_names, [ hector, edgar, roger, sean ] },
-		  { cat_pid, undefined }
-
-		 ] ).
+		  { cat_pid, undefined } ] ).
 
 
 
-% This useless destructor overriding was made to silence Dialyzer (which is not
-% able to determine that this function will never be called, as WOOPER performs
-% the appropriate test is made beforehand):
-%
--spec destruct( wooper:state() ) -> wooper:state().
-destruct( State ) ->
-	State.
-
-
-
--spec getMeanEggsCount( wooper:state() ) -> request_return( egg_count() ).
+-spec getMeanEggsCount( wooper:state() ) -> const_request_return( egg_count() ).
 getMeanEggsCount( State ) ->
-	?wooper_return_state_result( State, 2 ).
+	wooper:const_return_result( 2 ).
 
 
 
 % Returns the number of teats a platypus has.
 %
-% (request)
-%
 % It is a mammal, though!
 %
--spec getTeatCount( wooper:state() ) -> request_return( teat_count() ).
+-spec getTeatCount( wooper:state() ) -> const_request_return( teat_count() ).
 getTeatCount( State ) ->
-	?wooper_return_state_result( State, 0 ).
+	wooper:const_return_result( 0 ).
 
 
 
 % Tells whether this platypus can eat specified food.
 %
-% (request)
-%
 % Platypuses are supposed carnivorous though:
--spec canEat( wooper:state(), food() ) -> request_return( boolean() ).
+-spec canEat( wooper:state(), food() ) -> const_request_return( boolean() ).
 canEat( State, leaf ) ->
-	?wooper_return_state_result( State, true );
+	wooper:const_return_result( true );
 
 canEat( State,chocolate ) ->
-	?wooper_return_state_result( State, true );
+	wooper:const_return_result( true );
 
 canEat( State,weed ) ->
-	?wooper_return_state_result( State, true );
+	wooper:const_return_result( true );
 
 canEat( State,fish ) ->
-	?wooper_return_state_result( State, true );
+	wooper:const_return_result( true );
 
 canEat( State, _OtherFood ) ->
-	?wooper_return_state_result( State, false ).
+	wooper:const_return_result( false ).
 
 
 
 % Returns the color of the nozzle of this platypus.
-%
-% (request)
-%
--spec getNozzleColor( wooper:state() ) -> request_return( nozzle_color() ).
+-spec getNozzleColor( wooper:state() ) -> const_request_return( nozzle_color() ).
 getNozzleColor( State )->
 
 	% If needing to test the crash of a request:
@@ -139,45 +99,37 @@ getNozzleColor( State )->
 	%B=2,
 	%A=B,
 
-	?wooper_return_state_result( State, getAttribute( State, nozzle_color ) ).
+	wooper:const_return_result( getAttribute( State, nozzle_color ) ).
 
 
 
 % Returns the list of alternate names for this platypus.
-%
-% (request)
-%
--spec getAlternateNames( wooper:state() ) -> request_return( [atom()] ).
+-spec getAlternateNames( wooper:state() ) -> const_request_return( [atom()] ).
 getAlternateNames( State ) ->
-	?wooper_return_state_result( State, ?getAttr(alternate_names) ).
+	wooper:const_return_result( ?getAttr(alternate_names) ).
 
 
 
 % Returns the first alternate name for this platypus and forget it.
-%
-% (request)
-%
 -spec popFirstAlternateName( wooper:state() ) -> request_return( atom() ).
 popFirstAlternateName( State ) ->
 	{ NewState, Name } = popFromAttribute( State, alternate_names ),
-	?wooper_return_state_result( NewState, Name ).
+	wooper:return_state_result( NewState, Name ).
 
 
 
 % Allows to test the creation and deletion of other WOOPER instances.
-%
-% (oneway)
-%
+-spec testCreationDeletion( wooper:state() ) -> oneway_return().
 testCreationDeletion( State ) ->
 
 	% Initially do-nothing:
-	FirstState = wooper:delete_synchronously_any_instance_referenced_in( [],
-																  State ),
+	FirstState =
+		wooper:delete_synchronously_any_instance_referenced_in( [], State ),
 
 	CatPid = class_Cat:synchronous_new_link( _Age=1, _Gender=male,
 								_FurColor=pink, _WhiskerColor=black ),
 
-	io:format( "Cat ~p created from platypus.~n", [ CatPid ] ),
+	io:format( "Cat ~p just created from platypus.~n", [ CatPid ] ),
 
 	CatState = setAttribute( FirstState, cat_pid, CatPid ),
 
@@ -193,17 +145,15 @@ testCreationDeletion( State ) ->
 
 	undefined = getAttribute( DeleteState, cat_pid ),
 
-	?wooper_return_state_only( DeleteState ).
+	wooper:return_state( DeleteState ).
 
 
 
 % Callback triggered, as we trap exits, whenever a linked process stops (here,
 % the created cat instance).
 %
-% (oneway)
-%
 -spec onWOOPERExitReceived( wooper:state(), pid(),
-							basic_utils:exit_reason() ) -> oneway_return().
+					basic_utils:exit_reason() ) -> const_oneway_return().
 onWOOPERExitReceived( State, Pid, ExitType ) ->
 
 	% Typically: "Received exit message '{{nocatch,
@@ -213,6 +163,7 @@ onWOOPERExitReceived( State, Pid, ExitType ) ->
 	%							badarith}},
 	% [...]"
 
-	io:format( "Received exit message '~p' from ~w.~n", [ ExitType, Pid ] ),
+	trace_utils:debug_fmt( "Received exit message '~p' from ~w.",
+						   [ ExitType, Pid ] ),
 
-	?wooper_return_state_only( State ).
+	wooper:const_return().
