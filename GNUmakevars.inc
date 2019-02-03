@@ -251,11 +251,6 @@ ifndef PREDECESSOR_PLT
 	   PREDECESSOR_PLT = $(MYRIAD_PLT_FILE)
 endif
 
-# To use a generic rule to produce it (unless already defined):
-ifndef PLT_FILE
-	   PLT_FILE = $(PACKAGE_TOP)/$(PACKAGE_NAME).plt
-endif
-
 
 # We define the path to the Myriad layer:
 #
