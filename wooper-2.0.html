@@ -93,7 +93,7 @@
 <li><a class="reference internal" href="#version-history-changes" id="id80">Version History &amp; Changes</a><ul>
 <li><a class="reference internal" href="#version-2-0-current-stable" id="id81">Version 2.0 [current stable]</a></li>
 <li><a class="reference internal" href="#version-1-x" id="id82">Version 1.x</a></li>
-<li><a class="reference internal" href="#version-1-0-current-stable" id="id83">Version 1.0 [current stable]</a></li>
+<li><a class="reference internal" href="#version-1-0" id="id83">Version 1.0</a></li>
 <li><a class="reference internal" href="#version-0-4" id="id84">Version 0.4</a></li>
 <li><a class="reference internal" href="#version-0-3" id="id85">Version 0.3</a></li>
 <li><a class="reference internal" href="#version-0-2" id="id86">Version 0.2</a></li>
@@ -635,8 +635,15 @@ So a reader in a hurry may want to skip these considerations and directly jump t
 </div>
 <div class="section" id="wooper-method-not-found">
 <h6><tt class="docutils literal">wooper_method_not_found</tt></h6>
-<p>The corresponding error message is <tt class="docutils literal">{wooper_method_not_found,InstancePid,Classname,MethodName,MethodArity,ListOfActualParameters}</tt>.</p>
-<p>For example <tt class="docutils literal"><span class="pre">{wooper_method_not_found,&lt;0.30.0&gt;,class_Cat,layEggs,2,...}</span></tt>.</p>
+<p>The corresponding error message is:</p>
+<pre class="literal-block">
+{wooper_method_not_found,InstancePid,Classname,MethodName,
+ MethodArity,ListOfActualParameters}
+</pre>
+<p>For example:</p>
+<pre class="literal-block">
+{wooper_method_not_found,&lt;0.30.0&gt;,class_Cat,layEggs,2,...}
+</pre>
 <p>Note that <tt class="docutils literal">MethodArity</tt> includes the implied state parameter (that will be discussed later), i.e. here <tt class="docutils literal">layEggs/2</tt> might be defined as <tt class="docutils literal">layEggs(State,NumberOfNewEggs) <span class="pre">-&gt;</span> <span class="pre">[..]</span></tt>.</p>
 <p>This error occurs whenever a called method could not be found in the whole inheritance graph of the target class. It means this method is not implemented, at least not with the deduced arity.</p>
 <p>More precisely, when a message <tt class="docutils literal"><span class="pre">{method_name,[Arg1,Arg2,..,ArgN]...}</span></tt> (request or oneway) is received, <tt class="docutils literal">method_name/N+1</tt> has be to called: WOOPER tries to find <tt class="docutils literal"><span class="pre">method_name(State,Arg1,..,ArgN)</span></tt>, and the method name and arity must match.</p>
@@ -644,15 +651,31 @@ So a reader in a hurry may want to skip these considerations and directly jump t
 </div>
 <div class="section" id="wooper-method-failed">
 <h6><tt class="docutils literal">wooper_method_failed</tt></h6>
-<p>The corresponding error message is <tt class="docutils literal">{wooper_method_failed,InstancePid,Classname,MethodName,MethodArity,ListOfActualParameters,ErrorTerm}</tt>.</p>
-<p>For example, <tt class="docutils literal"><span class="pre">{wooper_method_failed,&lt;0.30.0&gt;,class_Cat,myCrashingMethod,1,[],{{badmatch,create_bug},[..]]}</span></tt>.</p>
+<p>The corresponding error message is:</p>
+<pre class="literal-block">
+{wooper_method_failed,InstancePid,Classname,MethodName,
+ MethodArity, ListOfActualParameters,ErrorTerm}
+</pre>
+<p>For example:</p>
+<pre class="literal-block">
+{wooper_method_failed,&lt;0.30.0&gt;,class_Cat,myCrashingMethod,1,[],
+ {{badmatch,create_bug},[..]]}
+</pre>
 <p>If the exit message sent by the method specifies a PID, it is prepended to <tt class="docutils literal">ErrorTerm</tt>.</p>
 <p>Such a method error means that there is a runtime failure, it is generally deemed an instance-side issue (the caller should not be responsible for it, unless it sent incorrect parameters), thus the instance process logs that error, sends an error term to the caller (if and only if it is a request), and then exits with the same error term.</p>
 </div>
 <div class="section" id="wooper-method-faulty-return">
 <h6><tt class="docutils literal">wooper_method_faulty_return</tt></h6>
-<p>The corresponding error message is <tt class="docutils literal">{wooper_method_faulty_return,InstancePid,Classname,MethodName,MethodArity,ListOfActualParameters,ActualReturn}</tt>.</p>
-<p>For example, <tt class="docutils literal"><span class="pre">{wooper_method_faulty_return,&lt;0.30.0&gt;,class_Cat,myFaultyMethod,1,[],[{{state_holder,..]}</span></tt>.</p>
+<p>The corresponding error message is:</p>
+<pre class="literal-block">
+{wooper_method_faulty_return,InstancePid,Classname,MethodName,
+ MethodArity,ListOfActualParameters,ActualReturn}``.
+</pre>
+<p>For example:</p>
+<pre class="literal-block">
+{wooper_method_faulty_return,&lt;0.30.0&gt;,class_Cat,
+ myFaultyMethod,1,[],[{{state_holder,..]}
+</pre>
 <p>This error occurs only when being in debug mode.</p>
 <p>The main reason for this to happen is when debug mode is set and when a method implementation did not respect the expected method return convention (more on that later).</p>
 <p>It means that the method is not implemented correctly (it has a bug), or, possibly, that it was not (re)compiled with the proper debug mode, i.e. the one the caller was compiled with.</p>
@@ -669,12 +692,16 @@ Therefore one could make use of that information, as in:</p>
        <span class="p">[..];</span>
    <span class="p">{</span><span class="n">wooper_method_not_found</span><span class="p">,</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Class</span><span class="p">,</span><span class="nv">Method</span><span class="p">,</span><span class="nv">Arity</span><span class="p">,</span><span class="nv">Params</span><span class="p">}</span><span class="o">-&gt;</span>
        <span class="p">[..];</span>
-   <span class="p">{</span><span class="n">wooper_method_failed</span><span class="p">,</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Class</span><span class="p">,</span><span class="nv">Method</span><span class="p">,</span><span class="nv">Arity</span><span class="p">,</span><span class="nv">Params</span><span class="p">,</span><span class="nv">ErrorTerm</span><span class="p">}</span><span class="o">-&gt;</span>
+   <span class="p">{</span><span class="n">wooper_method_failed</span><span class="p">,</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Class</span><span class="p">,</span><span class="nv">Method</span><span class="p">,</span><span class="nv">Arity</span><span class="p">,</span><span class="nv">Params</span><span class="p">,</span>
+      <span class="nv">ErrorTerm</span><span class="p">}</span><span class="o">-&gt;</span>
        <span class="p">[..];</span>
-   <span class="c">%Errortermcanbeatuple{Pid,Error}aswell,dependingontheexit:
-</span>   <span class="p">{</span><span class="n">wooper_method_failed</span><span class="p">,</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Class</span><span class="p">,</span><span class="nv">Method</span><span class="p">,</span><span class="nv">Arity</span><span class="p">,</span><span class="nv">Params</span><span class="p">,{</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Error</span><span class="p">}}</span><span class="o">-&gt;</span>
+   <span class="c">% Error term can be a {Pid,Error} tuple as well, depending
+</span>   <span class="c">% on the exit:
+</span>   <span class="p">{</span><span class="n">wooper_method_failed</span><span class="p">,</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Class</span><span class="p">,</span><span class="nv">Method</span><span class="p">,</span><span class="nv">Arity</span><span class="p">,</span><span class="nv">Params</span><span class="p">,</span>
+      <span class="p">{</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Error</span><span class="p">}}</span><span class="o">-&gt;</span>
        <span class="p">[..];</span>
-   <span class="p">{</span><span class="n">wooper_method_faulty_return</span><span class="p">,</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Class</span><span class="p">,</span><span class="nv">Method</span><span class="p">,</span><span class="nv">Arity</span><span class="p">,</span><span class="nv">Params</span><span class="p">,</span><span class="nv">UnexpectedTerm</span><span class="p">}</span><span class="o">-&gt;</span>
+   <span class="p">{</span><span class="n">wooper_method_faulty_return</span><span class="p">,</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Class</span><span class="p">,</span><span class="nv">Method</span><span class="p">,</span><span class="nv">Arity</span><span class="p">,</span><span class="nv">Params</span><span class="p">,</span>
+         <span class="nv">UnexpectedTerm</span><span class="p">}</span><span class="o">-&gt;</span>
        <span class="p">[..];</span>
    <span class="n">wooper_method_returns_void</span><span class="o">-&gt;</span>
        <span class="p">[..];</span>
@@ -985,7 +1012,8 @@ Therefore one could make use of that information, as in:</p>
 <p>in order to call the <tt class="docutils literal">class_Creature</tt> version of the <tt class="docutils literal">setAge/2</tt> oneway.</p>
 <p>Finally, as one could expect, these functions have their const counterparts, namely: <tt class="docutils literal"><span class="pre">executeConstRequestAs/{3,4}</span></tt> and <tt class="docutils literal"><span class="pre">executeConstOnewayAs/{3,4}</span></tt>, whose usage offers no surprise, like in:</p>
 <pre class="literal-block">
-Color = executeConstRequestAs(MyState,class_Vehicle,getColorOf,[wheels])
+Color = executeConstRequestAs(MyState,class_Vehicle,
+                                 getColorOf,[wheels])
 </pre>
 </div>
 </div>
@@ -1069,15 +1097,30 @@ Color = executeConstRequestAs(MyState,class_Vehicle,getColorOf,[wheels])
 </blockquote>
 <p>A <strong>qualifier information</strong> is either a single qualifier, or a list of qualifiers.</p>
 <p>A <strong>qualifier</strong> can be:</p>
-<ul class="simple">
-<li>a <em>scope</em> qualifier: <tt class="docutils literal">public</tt>, <tt class="docutils literal">protected</tt> or <tt class="docutils literal">private</tt>; in future versions, a public attribute will correspond to the union of <tt class="docutils literal">settable</tt> and <tt class="docutils literal">gettable</tt> and will result in accessor methods being automatically generated; for example, should the <tt class="docutils literal">fur_color</tt> attribute be declared public, then:<ul>
-<li>the <tt class="docutils literal">getFurColor/1</tt> const request would be added (with its spec): <tt class="docutils literal">getFurColor(State) <span class="pre">-&gt;</span> <span class="pre">wooper:const_return_result(?getAttr(fur_color)).</span></tt></li>
-<li>the <tt class="docutils literal">setFurColor/2</tt> oneway would be added (with its spec): <tt class="docutils literal">setFurColor(State,FurColor) <span class="pre">-&gt;</span> <span class="pre">wooper:return_state(setAttribute(State,fur_color,FurColor)).</span></tt></li>
+<ul>
+<li><p class="first">a <em>scope</em> qualifier: <tt class="docutils literal">public</tt>, <tt class="docutils literal">protected</tt> or <tt class="docutils literal">private</tt>; in future versions, a public attribute will correspond to the union of <tt class="docutils literal">settable</tt> and <tt class="docutils literal">gettable</tt> and will result in accessor methods being automatically generated; for example, should the <tt class="docutils literal">fur_color</tt> attribute be declared public, then:</p>
+<ul>
+<li><p class="first">the <tt class="docutils literal">getFurColor/1</tt> const request would be added (with its spec):</p>
+<pre class="literal-block">
+getFurColor(State) -&gt;
+   wooper:const_return_result(?getAttr(fur_color)).
+</pre>
+</li>
+<li><p class="first">the <tt class="docutils literal">setFurColor/2</tt> oneway would be added (with its spec):</p>
+<pre class="literal-block">
+setFurColor(State,FurColor) -&gt;
+   wooper:return_state(setAttribute(State,fur_color,
+                                    FurColor)).
+</pre>
+</li>
 </ul>
 </li>
-<li>an <em>initialisation</em> qualifier: <tt class="docutils literal">{initial,18}</tt> would denote that the initial value of the corresponding attribute is <tt class="docutils literal">18</tt> (this value would then be set even before entering any constructor)</li>
-<li>a <em>mutability</em> qualifier: <tt class="docutils literal">{const,24}</tt> would denote that the corresponding attribute is <tt class="docutils literal">const</tt> and that its (fixed) value is <tt class="docutils literal">24</tt> (thus <tt class="docutils literal">const</tt> implies here <tt class="docutils literal">initial</tt>, which should not specified in that case); <tt class="docutils literal">const</tt> can also be specified just by itself (with no initial value), so that it can be initialised later, in constructors, and, of course, just once (this is useful for non-immediate, yet const, values)</li>
-<li>the <em>none</em> qualifier: <tt class="docutils literal">none</tt> implies that no specific qualifier is specified, and as a result the defaults apply; this qualifier can only be used by itself (not in a list), as an alternative to specifying an empty qualifier list</li>
+<li><p class="first">an <em>initialisation</em> qualifier: <tt class="docutils literal">{initial,18}</tt> would denote that the initial value of the corresponding attribute is <tt class="docutils literal">18</tt> (this value would then be set even before entering any constructor)</p>
+</li>
+<li><p class="first">a <em>mutability</em> qualifier: <tt class="docutils literal">{const,24}</tt> would denote that the corresponding attribute is <tt class="docutils literal">const</tt> and that its (fixed) value is <tt class="docutils literal">24</tt> (thus <tt class="docutils literal">const</tt> implies here <tt class="docutils literal">initial</tt>, which should not specified in that case); <tt class="docutils literal">const</tt> can also be specified just by itself (with no initial value), so that it can be initialised later, in constructors, and, of course, just once (this is useful for non-immediate, yet const, values)</p>
+</li>
+<li><p class="first">the <em>none</em> qualifier: <tt class="docutils literal">none</tt> implies that no specific qualifier is specified, and as a result the defaults apply; this qualifier can only be used by itself (not in a list), as an alternative to specifying an empty qualifier list</p>
+</li>
 </ul>
 <p>The defaults are:</p>
 <ul class="simple">
@@ -1087,7 +1130,8 @@ Color = executeConstRequestAs(MyState,class_Vehicle,getColorOf,[wheels])
 </ul>
 <p>So an example of attribute declaration could be:</p>
 <pre class="literal-block">
-{age,integer(),{initial,18},&quot;stores the current age of this creature&quot;}
+{age,integer(),{initial,18},
+    &quot;stores the current age of this creature&quot;}
 </pre>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -1104,7 +1148,8 @@ Color = executeConstRequestAs(MyState,class_Vehicle,getColorOf,[wheels])
 <pre class="code erlang literal-block">
 <span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_attributes</span><span class="p">,[</span>
           <span class="n">name</span><span class="p">,</span>
-          <span class="p">{</span><span class="n">age</span><span class="p">,</span><span class="n">integer</span><span class="p">(),{</span><span class="n">initial</span><span class="p">,</span><span class="mi">18</span><span class="p">},</span><span class="s">&quot;stores the current age of this creature&quot;</span><span class="p">},</span>
+          <span class="p">{</span><span class="n">age</span><span class="p">,</span><span class="n">integer</span><span class="p">(),{</span><span class="n">initial</span><span class="p">,</span><span class="mi">18</span><span class="p">},</span>
+                <span class="s">&quot;stores the current age of this creature&quot;</span><span class="p">},</span>
           <span class="n">birth_date</span><span class="p">,</span>
           <span class="p">{</span><span class="n">weight</span><span class="p">,</span><span class="s">&quot;total weight measured&quot;</span><span class="p">}]).</span>
 </pre>
@@ -1247,13 +1292,21 @@ If the attribute exists, but no subtraction can be performed on it (meaningless 
 </div>
 <div class="section" id="the-appendtoattribute-3-function">
 <h6>The <tt class="docutils literal">appendToAttribute/3</tt> function</h6>
-<p>The corresponding signature is <tt class="docutils literal">NewState = appendToAttribute(State,AttributeName,Element)</tt>: when having a list attribute, appends specified element to the attribute list, in first position.</p>
+<p>The corresponding signature is:</p>
+<pre class="literal-block">
+NewState = appendToAttribute(State,AttributeName,Element)
+</pre>
+<p>When having a list attribute, appends specified element to the attribute list, in first position.</p>
 <p>For example, if <tt class="docutils literal">a_list_attribute</tt> was already set to <tt class="docutils literal">[see_you,goodbye]</tt> in <tt class="docutils literal">State</tt>, then after <tt class="docutils literal">NewState = appendToAttribute(State,a_list_attribute,hello)</tt>, the <tt class="docutils literal">a_list_attribute</tt> attribute defined in <tt class="docutils literal">NewState</tt> will be equal to <tt class="docutils literal">[hello,see_you,goodbye]</tt>.</p>
 <p>Calling <tt class="docutils literal">appendToAttribute/3</tt> on a non-existing attribute will trigger a a <tt class="docutils literal">badmatch</tt> runtime error. If the attribute exists, but is not a list, an ill-formed list will be created (ex: <tt class="docutils literal">[8|false]</tt> when appending 8 to <tt class="docutils literal">false</tt>, which is not a list).</p>
 </div>
 <div class="section" id="the-deletefromattribute-3-function">
 <h6>The <tt class="docutils literal">deleteFromAttribute/3</tt> function</h6>
-<p>The corresponding signature is <tt class="docutils literal">NewState = deleteFromAttribute(State,AttributeName,Element)</tt>: when having a list attribute, deletes first match of specified element from the attribute list.</p>
+<p>The corresponding signature is:</p>
+<pre class="literal-block">
+NewState = deleteFromAttribute(State,AttributeName,Element)
+</pre>
+<p>When having a list attribute, deletes first match of specified element from the attribute list.</p>
 <p>For example: <tt class="docutils literal">NewState = deleteFromAttribute(State,a_list_attribute,hello)</tt>, with the value corresponding to the <tt class="docutils literal">a_list_attribute</tt> attribute in <tt class="docutils literal">State</tt> variable being <tt class="docutils literal">[goodbye,hello,cheers,hello,see_you]</tt> should return a state whose <tt class="docutils literal">a_list_attribute</tt> attribute would be equal to <tt class="docutils literal">[goodbye,cheers,hello,see_you]</tt>, all other attributes being unchanged.</p>
 <p>If no element in the list matches the specified one, no error will be triggered and the list will be kept as is.</p>
 <p>Calling <tt class="docutils literal">deleteFromAttribute/3</tt> on a non-existing attribute will trigger a <tt class="docutils literal">badmatch</tt> runtime error. If the attribute exists, but is not a list, a <tt class="docutils literal">function_clause</tt> runtime error will be issued.</p>
@@ -1338,7 +1391,8 @@ This is a 9 year old creature.
 <h5>Role of a  <tt class="docutils literal">new</tt> /<tt class="docutils literal">construct</tt> Pair</h5>
 <p>Whereas the purpose of the <tt class="docutils literal">new</tt> / <tt class="docutils literal">new_link</tt> operators is to <em>create</em> a working (active) instance on the user's behalf, the role of <tt class="docutils literal">construct</tt> is to <em>initialise</em> an instance of that class (regardless of how it was created, i.e. of which <tt class="docutils literal">new</tt> variation was triggered), while being able to be chained for inheritance, as explained later.</p>
 <p>Such an initialisation is of course part of the instance creation: all calls to any of the <tt class="docutils literal">new</tt> operators result in an underlying call to the corresponding constructor (<tt class="docutils literal">construct</tt> operator).</p>
-<p>For example, both creations stemming from <tt class="docutils literal">MyCat = class_Cat:new(A,B,C,D)</tt> and <tt class="docutils literal">MyCat = class_Cat:new_link(A,B,C,D)</tt> will rely on <tt class="docutils literal">class_Cat:construct/5</tt> to set up a proper initial state for the <tt class="docutils literal">MyCat</tt> instance; the same <tt class="docutils literal">class_Cat:construct(State,A,B,C,D)</tt> will be called for all creation cases (one may note that, because of its first parameter, which accounts for the WOOPER-provided initial <tt class="docutils literal">State</tt> parameter, the arity of <tt class="docutils literal">construct</tt> is equal to the one of <tt class="docutils literal">new</tt> / <tt class="docutils literal">new_link</tt> plus one).</p>
+<p>For example, both creations stemming from <tt class="docutils literal">MyCat = class_Cat:new(A,B,C,D)</tt> and <tt class="docutils literal">MyCat = class_Cat:new_link(A,B,C,D)</tt> will rely on <tt class="docutils literal">class_Cat:construct/5</tt> to set up a proper initial state for the <tt class="docutils literal">MyCat</tt> instance.</p>
+<p>The same <tt class="docutils literal">class_Cat:construct(State,A,B,C,D)</tt> will be called for all creation cases (one may note that, because of its first parameter, which accounts for the WOOPER-provided initial <tt class="docutils literal">State</tt> parameter, the arity of <tt class="docutils literal">construct</tt> is equal to the one of <tt class="docutils literal">new</tt> / <tt class="docutils literal">new_link</tt> plus one).</p>
 <p>The <tt class="docutils literal">new_link</tt> operator behaves exactly as the <tt class="docutils literal">new</tt> operator, except that it creates an instance that is Erlang-linked with the process that called that operator, exactly like <tt class="docutils literal">spawn_link</tt> behaves compared to <tt class="docutils literal">spawn</tt> <a class="footnote-reference" href="#id32" id="id31">[14]</a>.</p>
 <table class="docutils footnote" frame="void" id="id32" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -1433,16 +1487,18 @@ This is a 9 year old creature.
 <span class="c">% Local asynchronous creation:
 </span><span class="nv">MyFirstCat</span> <span class="o">=</span> <span class="nn">class_Cat</span><span class="p">:</span><span class="nf">new</span><span class="p">(_</span><span class="nv">Age</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">male</span><span class="p">,</span><span class="n">brown</span><span class="p">,</span><span class="n">white</span><span class="p">),</span>
 
-<span class="c">% The same, but a crash of this cat will crash the current process too:
+<span class="c">% The same, but a crash of this cat will crash the current
+% process too:
 </span><span class="nv">MySecondCat</span> <span class="o">=</span> <span class="nn">class_Cat</span><span class="p">:</span><span class="nf">new_link</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">female</span><span class="p">,</span><span class="n">black</span><span class="p">,</span><span class="n">white</span><span class="p">),</span>
 
-<span class="c">% This cat will be created on OtherNode, and the call will return only
-% once it is up and running or once the creation failed. As moreover the
-% cat instance is linked to the instance process, it may crash this
-% calling process (unless it traps EXIT signals):
-</span><span class="nv">MyThirdCat</span> <span class="o">=</span> <span class="nn">class_Cat</span><span class="p">:</span><span class="nf">remote_synchronous_timed_new_link</span><span class="p">(</span><span class="nv">OtherNode</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span>
-  <span class="n">male</span><span class="p">,</span><span class="n">grey</span><span class="p">,</span><span class="n">black</span><span class="p">),</span>
-<span class="p">[..]</span>
+<span class="c">% This cat will be created on OtherNode, and the call will
+% return only once it is up and running or once the creation
+% failed. As moreover the cat instance is linked to the
+% instance process, it may crash this calling process
+% (unless it traps EXIT signals):
+</span><span class="nv">MyThirdCat</span> <span class="o">=</span> <span class="nn">class_Cat</span><span class="p">:</span><span class="nf">remote_synchronous_timed_new_link</span><span class="p">(</span>
+                   <span class="nv">OtherNode</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">male</span><span class="p">,</span><span class="n">grey</span><span class="p">,</span><span class="n">black</span><span class="p">),</span>
+<span class="p">[...]</span>
 </pre>
 </div>
 <div class="section" id="definition-of-the-construct-operator">
@@ -1463,10 +1519,13 @@ This is a 9 year old creature.
 <span class="c">% Constructs a new Cat.
 </span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">,</span><span class="nv">FurColor</span><span class="p">,</span><span class="nv">WhiskerColor</span><span class="p">)</span> <span class="o">-&gt;</span>
   <span class="c">% First the (chained) direct mother classes:
-</span>  <span class="nv">MammalState</span> <span class="o">=</span> <span class="nn">class_Mammal</span><span class="p">:</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">,</span><span class="nv">FurColor</span><span class="p">),</span>
-  <span class="nv">ViviparousMammalState</span> <span class="o">=</span> <span class="nn">class_ViviparousBeing</span><span class="p">:</span><span class="nf">construct</span><span class="p">(</span><span class="nv">MammalState</span><span class="p">),</span>
+</span>  <span class="nv">MammalState</span> <span class="o">=</span> <span class="nn">class_Mammal</span><span class="p">:</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">,</span>
+                                       <span class="nv">FurColor</span><span class="p">),</span>
+  <span class="nv">ViviparousMammalState</span> <span class="o">=</span>
+      <span class="nn">class_ViviparousBeing</span><span class="p">:</span><span class="nf">construct</span><span class="p">(</span><span class="nv">MammalState</span><span class="p">),</span>
   <span class="c">% Then the class-specific attributes:
-</span>  <span class="n">setAttribute</span><span class="p">(</span><span class="nv">ViviparousMammalState</span><span class="p">,</span><span class="n">whisker_color</span><span class="p">,</span><span class="nv">WhiskerColor</span><span class="p">).</span>
+</span>  <span class="n">setAttribute</span><span class="p">(</span><span class="nv">ViviparousMammalState</span><span class="p">,</span><span class="n">whisker_color</span><span class="p">,</span>
+               <span class="nv">WhiskerColor</span><span class="p">).</span>
 </pre>
 <p>The fact that the <tt class="docutils literal">Mammal</tt> class itself inherits from the <tt class="docutils literal">Creature</tt> class does not have to appear here: it is to be managed directly by <tt class="docutils literal">class_Mammal:construct/4</tt> (at any given inheritance level, only direct mother classes must be taken into account).</p>
 <p>One should ensure that, in constructors, the successive states are always built from the last updated one, unlike this case (where no mother class has been declared):</p>
@@ -1800,7 +1859,11 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <span class="nv">MyDogPid</span> <span class="o">!</span> <span class="p">{</span><span class="n">startBarkingAt</span><span class="p">,</span><span class="nv">MyDuration</span><span class="p">,</span><span class="n">self</span><span class="p">()}</span>
 </pre>
 <p>This would have called a <tt class="docutils literal">request</tt> method <tt class="docutils literal">startBarkingAt/2</tt> (which could have been for example <tt class="docutils literal">startBarkingAt(State,TerminationOffset) <span class="pre">-&gt;</span> ...</tt>, the PID being interpreted by WOOPER as the request sender PID), a method that most probably does not even exist.</p>
-<p>This would result in a bit obscure error message like <tt class="docutils literal">Error in process &lt;0.43.0&gt; on node 'XXXX' with exit value: <span class="pre">{badarg,[{class_Dog,wooper_main_loop,1}]}</span></tt>.</p>
+<p>This would result in a bit obscure error message like:</p>
+<pre class="literal-block">
+Error in process &lt;0.43.0&gt; on node 'XXXX' with exit value:
+  {badarg,[{class_Dog,wooper_main_loop,1}]}
+</pre>
 </div>
 <div class="section" id="list-parameter-incorrectly-specified-in-call">
 <h6>List Parameter Incorrectly Specified In Call</h6>
@@ -1852,6 +1915,7 @@ $ <span class="nb">cd</span> Ceylan-WOOPER <span class="o">&amp;&amp;</span> mak
 <h2><a class="toc-backref" href="#id80">Version History &amp; Changes</a></h2>
 <div class="section" id="version-2-0-current-stable">
 <h3><a class="toc-backref" href="#id81">Version 2.0 [current stable]</a></h3>
+<p>Released officially on Sunday, February 3, 2019.</p>
 <p>Many improvements, notably:</p>
 <ul class="simple">
 <li>multiple different-arity constructors per class supported</li>
@@ -1869,8 +1933,8 @@ $ <span class="nb">cd</span> Ceylan-WOOPER <span class="o">&amp;&amp;</span> mak
 <h3><a class="toc-backref" href="#id82">Version 1.x</a></h3>
 <p>Many minor improvements, API enriched in a backward compatible manner.</p>
 </div>
-<div class="section" id="version-1-0-current-stable">
-<h3><a class="toc-backref" href="#id83">Version 1.0 [current stable]</a></h3>
+<div class="section" id="version-1-0">
+<h3><a class="toc-backref" href="#id83">Version 1.0</a></h3>
 <p>Countless improvements have been integrated in the course of the use of WOOPER, which has been now been stable for years.</p>
 <p>Since 2016 we switched back to a &quot;rolling release&quot;, not defining specific versions.</p>
 <p>The main change since the 0.4 version is the use of the newly-introduced <tt class="docutils literal">map</tt> Erlang datatype, resulting in the <tt class="docutils literal">hashtable</tt> module being replaced by the <tt class="docutils literal">map_hashtable</tt>. They obey to the same API and the <tt class="docutils literal">table</tt> pseudo-type abstracts out the actual choice in that matter (it is transparently parse-transformed into the currently-retained datatype).</p>
@@ -1930,7 +1994,7 @@ $ <span class="nb">cd</span> Ceylan-WOOPER <span class="o">&amp;&amp;</span> mak
 <h4>Understanding Compilation</h4>
 <p>WOOPER is the second level of a software stack beginning with Erlang and then Myriad.</p>
 <p>If the initial versions of WOOPER were mostly based on macros and headers, newer ones rely on the Erlang way of doing metaprogramming, namely parse-transforms.</p>
-<p>More precisely, the sources of a user-defined class are transformed by the standard Erlang toolchain (<tt class="docutils literal">erlc</tt> compiler) into an AST (<em>Abstract Syntax Tree</em>), which is first transformed by WOOPER (ex: to generate the new operators, to export any destructor, etc.) and then Myriad (ex: to support newer types such as <tt class="docutils literal">void/0</tt>, <tt class="docutils literal">maybe/1</tt> or <tt class="docutils literal">table/2</tt>).</p>
+<p>More precisely, the sources of a user-defined class are transformed by the standard Erlang toolchain (<tt class="docutils literal">erlc</tt> compiler) into an AST (<em>Abstract Syntax Tree</em>), which is first transformed by WOOPER (ex: to generate the new operators, to export any destructor, etc.) and then by Myriad (ex: to support newer types such as <tt class="docutils literal">void/0</tt>, <tt class="docutils literal">maybe/1</tt> or <tt class="docutils literal">table/2</tt>), which also provides much of the AST transformation support.</p>
 </div>
 <div class="section" id="understanding-the-mode-of-operation-of-a-wooper-instance">
 <h4>Understanding the Mode of Operation of a WOOPER Instance</h4>
@@ -2027,7 +2091,7 @@ $ <span class="nb">cd</span> Ceylan-WOOPER <span class="o">&amp;&amp;</span> mak
 </div>
 <div class="section" id="support">
 <h2><a class="toc-backref" href="#id95">Support</a></h2>
-<p>Bugs, questions, remarks, patches, requests for enhancements, etc. are to be sent to the <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">project interface</a>, or directly at the mail address mentioned at the beginning of this longer document.</p>
+<p>Bugs, questions, remarks, patches, requests for enhancements, etc. are to be reported to the <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">project interface</a> (typically <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/issues">issues</a>) or directly at the email address mentioned at the beginning of this longer document.</p>
 </div>
 <div class="section" id="please-react">
 <h2><a class="toc-backref" href="#id96">Please React!</a></h2>
