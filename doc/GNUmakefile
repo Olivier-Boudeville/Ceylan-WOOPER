@@ -25,8 +25,10 @@ DOC_FILES := $(DOC_GENERATED_FILES) wooper-example.png
 
 PROJECT_CSS := pygments-default.css,wooper.css
 
+PROJECT_ICON := wooper-icon.png
 
-WEB_CONTENT = *.html *.css *.png *.pdf
+
+WEB_CONTENT = *.html *.css *.png tmp-rst/*.pdf
 
 # Read from the user's environment:
 GITHUB_PAGES_BASE := $(shell basename "(WOOPER_WEB_MIRROR_BRANCH)")
