@@ -9,7 +9,10 @@
 -module(class_ViviparousBeing).
 
 
-% Determines what are the mother classes of this class (if any):
+-define( class_description, "Class modelling any kind of viviparous being." ).
+
+
+% Determines what are the direct mother classes of this class (if any):
 -define( superclasses, [] ).
 
 -define( class_attributes, [

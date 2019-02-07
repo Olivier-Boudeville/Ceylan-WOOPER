@@ -14,7 +14,11 @@
 -module(class_Cat).
 
 
-% Determines what are the mother classes of this class (if any):
+-define( class_description, "Class modelling any kind of cat, "
+							"and there are many." ).
+
+
+% Determines what are the direct mother classes of this class (if any):
 -define( superclasses, [ class_Mammal, class_ViviparousBeing ] ).
 
 -define( class_attributes, [

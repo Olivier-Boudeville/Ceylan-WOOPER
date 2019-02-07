@@ -10,7 +10,10 @@
 -module(class_Reptile).
 
 
-% Determines what are the mother classes of this class (if any):
+-define( class_description, "Class modelling any kind of reptile." ).
+
+
+% Determines what are the direct mother classes of this class (if any):
 -define( superclasses, [ class_Creature ] ).
 
 

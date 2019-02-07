@@ -154,7 +154,7 @@ ifndef BOOTSTRAP_MODULES
 	#
 	# - wooper_info: to manage class-level information
 
-	BOOTSTRAP_MODULES = $(WOOPER_TOP)/src/wooper_info.beam
+	BOOTSTRAP_MODULES = $(WOOPER_SRC)/wooper_info.beam
 
 endif
 

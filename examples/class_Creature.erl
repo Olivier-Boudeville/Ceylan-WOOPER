@@ -9,7 +9,10 @@
 -module(class_Creature).
 
 
-% Determines what are the mother classes of this class (if any):
+-define( class_description, "Top-level class modelling any kind of creature." ).
+
+
+% Determines what are the direct mother classes of this class (if any):
 -define( superclasses, [] ).
 
 
