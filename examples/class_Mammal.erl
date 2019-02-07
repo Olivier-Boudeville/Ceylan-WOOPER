@@ -9,7 +9,10 @@
 -module(class_Mammal).
 
 
-% Determines what are the mother classes of this class (if any):
+-define( class_description, "Class modelling any kind of mammal.").
+
+
+% Determines what are the direct mother classes of this class (if any):
 -define( superclasses, [ class_Creature ] ).
 
 -define( class_attributes, [ fur_color ] ).

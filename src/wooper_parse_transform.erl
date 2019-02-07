@@ -137,15 +137,19 @@
 
 -export([ run_standalone/1, run_standalone/2,
 		  parse_transform/2, apply_wooper_transform/1,
-		  generate_class_info_from/1, generate_module_info_from/1 ]).
+		  generate_class_info_from/1, create_class_info_from/1,
+		  check_class_info/1, generate_module_info_from/1 ]).
 
 
-% For function_info:
--include("ast_info.hrl").
 
 % For class_info, attribute_info, etc.:
 -include("wooper_info.hrl").
 
+% For display_trace/{1,2}:
+-include("wooper_debug.hrl").
+
+% For the function_info record:
+-include("ast_info.hrl").
 
 
 
@@ -162,9 +166,6 @@
 
 -type class_info() :: wooper_info:class_info().
 
-
-% For debugging:
--export([ check_class_info/1 ]).
 
 
 % Currently not used:
@@ -273,8 +274,7 @@ apply_wooper_transform( InputAST ) ->
 	% (here is the real WOOPER magic)
 	ClassInfo = generate_class_info_from( InputModuleInfo ),
 
-	?display_trace( "Class information generated, "
-					   "transforming it." ),
+	?display_trace( "Class information generated, transforming it." ),
 
 	% Finally perform WOOPER-specific transformation:
 	NewClassInfo = transform_class_info( ClassInfo ),
@@ -713,7 +713,8 @@ check_class_info( #class_info{ class={ Classname, _LocForm },
 
 		true ->
 			wooper_internals:raise_usage_error( "no constructor defined "
-				"(expecting at least one construct/N).", [], Classname );
+				"(expecting at least one construct/N defined).", [],
+				Classname );
 
 		false ->
 			ok

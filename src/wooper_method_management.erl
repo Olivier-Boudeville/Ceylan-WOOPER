@@ -32,7 +32,15 @@
 -module(wooper_method_management).
 
 
--export([ manage_methods/1, ensure_exported/2, methods_to_functions/5 ]).
+-export([ manage_methods/1, body_transformer/2, call_transformer/4,
+		  ensure_exported/2, ensure_exported_at/2, ensure_all_exported_in/2,
+		  methods_to_functions/5,
+		  check_spec/4, check_clause_spec/5, check_state_argument/3,
+		  function_nature_to_string/1,
+
+		  function_to_request_info/1, request_to_function_info/2,
+		  function_to_oneway_info/1, oneway_to_function_info/2,
+		  function_to_static_info/1, static_to_function_info/2 ]).
 
 
 % For the function_info record:
@@ -58,6 +66,9 @@
 -type marker_table() :: ast_info:section_marker_table().
 -type location() :: ast_base:form_location().
 -type function_table() :: ast_info:function_table().
+-type line() :: ast_base:line().
+-type ast_transforms() :: ast_transform:ast_transforms().
+-type ast_body() :: ast_clause:ast_body().
 
 -type compose_pair() :: wooper_parse_transform:compose_pair().
 
@@ -122,22 +133,20 @@ manage_methods( { CompleteFunctionTable,
 	% them are already in a final form (ex: they still use method terminators),
 	% so their processing shall not be skipped.
 
-	{ NewFunctionTable, NewRequestTable, NewOnewayTable, NewStaticTable } =
-		sort_out_functions( AllFunEntries, _FunctionTable=table:new(),
-							RequestTable, OnewayTable, StaticTable, Classname ),
-
 	ExportLoc = ast_info:get_default_export_function_location( MarkerTable ),
 
-	% We take advantage of this step to ensure that all methods are exported:
-	[ ExportedRequestTable, ExportedOnewayTable, ExportedStaticTable ] =
-		[ ensure_all_exported_in( T, ExportLoc )
-		  || T <- [ NewRequestTable, NewOnewayTable, NewStaticTable ] ],
+	% FunctionTable starts from scratch as all functions are to be found in
+	% AllFunEntries:
+	%
+	{ NewFunctionTable, NewRequestTable, NewOnewayTable, NewStaticTable } =
+		sort_out_functions( AllFunEntries, _FunctionTable=table:new(),
+			RequestTable, OnewayTable, StaticTable, Classname, ExportLoc ),
 
 
 	% Split as { Functions, Methods }:
-	{ NewFunctionTable, ClassInfo#class_info{ requests=ExportedRequestTable,
-											  oneways=ExportedOnewayTable,
-											  statics=ExportedStaticTable } }.
+	{ NewFunctionTable, ClassInfo#class_info{ requests=NewRequestTable,
+											  oneways=NewOnewayTable,
+											  statics=NewStaticTable } }.
 
 
 
@@ -145,7 +154,7 @@ manage_methods( { CompleteFunctionTable,
 % real nature (ex: a given Erlang function may actually be a WOOPER oneway).
 %
 sort_out_functions( _FunEntries=[], FunctionTable, RequestTable, OnewayTable,
-					StaticTable, _Classname ) ->
+					StaticTable, _Classname, _ExportLoc ) ->
 	{ FunctionTable, RequestTable, OnewayTable, StaticTable };
 
 % Checks that all sorted functions have an actual implementation:
@@ -153,21 +162,19 @@ sort_out_functions( _FunEntries=[ { FunId, #function_info{
 											  clauses=[],
 											  spec=Spec } } | _T ],
 					_FunctionTable, _RequestTable, _OnewayTable, _StaticTable,
-					Classname ) when Spec =/= undefined ->
-	wooper_internals:raise_usage_error( "function ~s/~B has a spec, yet "
-										"has never been defined.",
-										pair:to_list( FunId ), Classname );
+					Classname, _ExportLoc ) when Spec =/= undefined ->
+	wooper_internals:raise_usage_error(
+	  "function ~s/~B has a type specification, yet has never been defined.",
+	  pair:to_list( FunId ), Classname );
 
 sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 											clauses=OriginalClauses,
 											spec=Spec } } | T ],
 					FunctionTable, RequestTable, OnewayTable, StaticTable,
-					Classname ) ->
-
-	%trace_utils:debug_fmt( "sorting ~p", [ FunId ] ),
+					Classname, ExportLoc ) ->
 
 	%trace_utils:debug_fmt( "Examining Erlang function ~s/~B",
-	%                       [ FunName, Arity ] ),
+	%                       pair:to_list( FunId ) ),
 
 	% We used to infer the function nature based on its first clause, and then
 	% to make a custom full traversal to transform method terminators.
@@ -185,47 +192,54 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 	NewFunInfo = FunInfo#function_info{ clauses=NewClauses },
 
 	% Stores the result in the right category and recurses:
+	%
+	% (we ensure here that methods are exported, while they are still
+	% function_info records)
+	%
 	case FunNature of
 
 		function ->
 			check_spec( Spec, function, Qualifiers, Classname ),
-			NewFunctionTable = table:addNewEntry( FunId, NewFunInfo,
-												  FunctionTable ),
+			NewFunctionTable =
+				table:addNewEntry( FunId, NewFunInfo, FunctionTable ),
 			sort_out_functions( T, NewFunctionTable, RequestTable,
-								OnewayTable, StaticTable, Classname );
+					OnewayTable, StaticTable, Classname, ExportLoc );
 
 		request ->
 			check_spec( Spec, request, Qualifiers, Classname ),
 			check_state_argument( NewClauses, FunId, Classname ),
-			RequestInfo = function_to_request_info( NewFunInfo ),
+			ExportedFunInfo = ensure_exported_at( NewFunInfo, ExportLoc ),
+			RequestInfo = function_to_request_info( ExportedFunInfo ),
 			NewRequestTable = table:addNewEntry( FunId, RequestInfo,
 												 RequestTable ),
 			sort_out_functions( T, FunctionTable, NewRequestTable,
-								OnewayTable, StaticTable, Classname );
+					OnewayTable, StaticTable, Classname, ExportLoc );
 
 		oneway ->
 			check_spec( Spec, oneway, Qualifiers, Classname ),
 			check_state_argument( NewClauses, FunId, Classname ),
-			OnewayInfo = function_to_oneway_info( NewFunInfo ),
+			ExportedFunInfo = ensure_exported_at( NewFunInfo, ExportLoc ),
+			OnewayInfo = function_to_oneway_info( ExportedFunInfo ),
 			NewOnewayTable = table:addNewEntry( FunId, OnewayInfo,
 												OnewayTable ),
 			sort_out_functions( T, FunctionTable, RequestTable,
-								NewOnewayTable, StaticTable, Classname );
+					NewOnewayTable, StaticTable, Classname, ExportLoc );
 
 		static ->
 			check_spec( Spec, static, Qualifiers, Classname ),
-			StaticInfo = function_to_static_info( NewFunInfo ),
+			ExportedFunInfo = ensure_exported_at( NewFunInfo, ExportLoc ),
+			StaticInfo = function_to_static_info( ExportedFunInfo ),
 			NewStaticTable = table:addNewEntry( FunId, StaticInfo,
 												StaticTable ),
 			sort_out_functions( T, FunctionTable, RequestTable,
-								OnewayTable, NewStaticTable, Classname )
+					OnewayTable, NewStaticTable, Classname, ExportLoc )
 
 	end;
 
 sort_out_functions( _Functions=[ #function_info{ name=FunName,
 												 arity=Arity } | _T ],
 					_FunctionTable, _RequestTable, _OnewayTable,
-					_StaticTable, Classname ) ->
+					_StaticTable, Classname, _ExportLoc ) ->
 
 	% Error raised directly, could be appended to the class_info.errors:
 	wooper_internals:raise_usage_error( "no clause found for ~s/~B; "
@@ -234,9 +248,8 @@ sort_out_functions( _Functions=[ #function_info{ name=FunName,
 
 
 
-% Checks that the request spec (if any) corresponds indeed to a request,
-% i.e. relies on either the request_return/1 type or the const_request_return/1
-% one.
+% Checks that the method spec (if any) corresponds indeed to the right type of
+% method, i.e. relies on the right method terminators.
 %
 % (helper)
 %
@@ -255,7 +268,7 @@ check_spec( _LocSpec={ _Loc,
 
 
 
-% Checks the specified request clause spec.
+% Checks the specified method clause spec.
 %
 % (helper)
 
@@ -327,7 +340,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "~s/~B uses request_return/~B, "
 		"which does not exist; its correct arity is 1.",
-		[ length( Types ) | pair:to_list( FunId ) ], Classname, Line );
+		pair:to_list( FunId ) ++ [ length( Types ) ], Classname, Line );
 
 
 % Wrong arity for const_request_return/1:
@@ -336,7 +349,26 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "~s/~B uses const_request_return/~B, "
 		"which does not exist; its correct arity is 1.",
-		[ length( Types ) | pair:to_list( FunId ) ], Classname, Line );
+		pair:to_list( FunId ) ++ [ length( Types ) ], Classname, Line );
+
+
+% *_result used instead of *_return:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, Line, const_request_result, _Types } ] },
+	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "~s/~B uses the (unknown) "
+		"const_request_result type: probably that "
+		"const_request_return/1 was meant instead.",
+		pair:to_list( FunId ), Classname, Line );
+
+
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, Line, request_result, _Types } ] },
+	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "~s/~B uses the (unknown) "
+		"request_result type: probably that "
+		"request_return/1 was meant instead.",
+		pair:to_list( FunId ), Classname, Line );
 
 
 
@@ -418,6 +450,25 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 		[ length( Types ) | pair:to_list( FunId ) ], Classname, Line );
 
 
+% *_result used instead of *_return:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, Line, const_oneway_result, _Types } ] },
+	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "~s/~B uses the (unknown) "
+		"const_oneway_result type: probably that "
+		"const_oneway_return/0 was meant instead.",
+		pair:to_list( FunId ), Classname, Line );
+
+
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, Line, oneway_result, _Types } ] },
+	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "~s/~B uses the (unknown) "
+		"oneway_result type: probably that "
+		"oneway_return/0 was meant instead.",
+		pair:to_list( FunId ), Classname, Line );
+
+
 
 %% For static methods:
 
@@ -449,6 +500,16 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 		[ length( Types ) | pair:to_list( FunId ) ], Classname, Line );
 
 
+% *_result used instead of *_return:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, Line, static_result, _Types } ] },
+	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "~s/~B uses the (unknown) "
+		"static_result type: probably that "
+		"static_return/1 was meant instead.",
+		pair:to_list( FunId ), Classname, Line );
+
+
 %% For functions, nothing special to check:
 
 check_clause_spec( { type, _, 'fun',
@@ -459,21 +520,32 @@ check_clause_spec( { type, _, 'fun',
 
 %% For unmatched spec returns:
 
+% Presumably a result spec wrongly qualified as wooper:S instead of S:
+check_clause_spec( { type, Line, 'fun',
+					 _Seqs=[ _TypeProductForArgs,
+					 _ResultType={remote_type,_,[ {atom,_,wooper}, _, _ ] } ] },
+				   _FunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "the type specification of ~s/~B "
+		"is not expected to rely on a terminator prefixed with the wooper "
+		"module (just remove 'wooper:').", pair:to_list( FunId ), Classname,
+		Line );
+
 % Presumably a rogue request (not using the right return type):
 check_clause_spec( { type, Line, 'fun',
 					 _Seqs=[ _TypeProductForArgs, _ResultType ] },
 				   _FunNature=request, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "the clauses of ~s/~B indicate "
-		"that this is a request, yet no known request terminator is used.",
-		pair:to_list( FunId ), Classname, Line );
+		"that this is a request, yet in the type specification no known "
+		"request terminator is used.", pair:to_list( FunId ), Classname, Line );
 
 % Rogue oneway:
 check_clause_spec( { type, Line, 'fun',
 					 _Seqs=[ _TypeProductForArgs, _ResultType ] },
 				   _FunNature=oneway, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "the clauses of ~s/~B indicate "
-		"that this is a oneway, yet no known oneway terminator is used.",
-		pair:to_list( FunId ), Classname, Line );
+		"that this is a oneway, yet in the type specification no known "
+		"oneway terminator is used.", pair:to_list( FunId ), Classname,
+		Line );
 
 
 % Rogue static method:
@@ -481,20 +553,21 @@ check_clause_spec( { type, Line, 'fun',
 					 _Seqs=[ _TypeProductForArgs, _ResultType ] },
 				   _FunNature=static, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "the clauses of ~s/~B indicate "
-		"that this is a static method, yet no known static method terminator "
-		"is used.", pair:to_list( FunId ), Classname, Line );
+		"that this is a static method, yet in the type specification no known "
+		" static method terminator is used.", pair:to_list( FunId ), Classname,
+		Line );
 
 
 check_clause_spec( _UnexpectedTypeForm, FunNature, _Qualifiers, FunId,
 				   Classname ) ->
-	wooper_internals:raise_usage_error( "unexpected return type for ~s/~B, "
-		"that is detected as a ~s.",
+	wooper_internals:raise_usage_error( "unexpected return type in the type "
+		"specification of ~s/~B (which is detected as a ~s).",
 		pair:to_list( FunId ) ++ [ function_nature_to_string( FunNature ) ],
 		Classname, _Line=0 ).
 
 
 
-% Returns a textual description of specified function nature.
+% Returns a textual description of the specified function nature.
 %
 -spec function_nature_to_string( function_nature() ) -> text_utils:ustring().
 function_nature_to_string( request ) ->
@@ -529,12 +602,12 @@ check_state_argument( Clauses, FunId, Classname ) ->
 % (helper)
 %
 check_clause_for_state(
-  _Clause={ clause, _, _Params=[ {var,_,'State'} | _ ], [], _Body }, _FunId,
+  _Clause={ clause, _, _Params=[ {var,_,'State'} | _ ], _Guards, _Body }, _FunId,
   _Classname ) ->
 	ok;
 
 check_clause_for_state(
-  _Clause={ clause, _, _Params=[ {var,Line,NonState} | _ ], [], _Body },
+  _Clause={ clause, _, _Params=[ {var,Line,NonState} | _ ], _Guards, _Body },
   FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "the first parameter of this clause of "
 		"method ~s/~B shall be named 'State', not '~s'.",
@@ -546,7 +619,7 @@ check_clause_for_state(
 %
 check_clause_for_state( _Clause, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "the first parameter of this clause of "
-		"method ~s/~B shall be named 'State'.",	pair:to_list( FunId ),
+		"method ~s/~B shall be named 'State'.", pair:to_list( FunId ),
 		Classname ).
 
 
@@ -557,18 +630,18 @@ check_clause_for_state( _Clause, FunId, Classname ) ->
 %
 % We consider that no method is to be explicitly exported and that all actual
 % clauses of a method must explicitly terminate with a WOOPER method terminator
-% (of course the same for all clauses), rather than calling an helper function
-% that would use such a terminator (otherwise the nature of methods could not be
-% auto-detected, as there would be no way to determine whether said helper
-% should be considered as a method or not).
+% (the same for all clauses, except regarding constness), rather than calling an
+% helper function that would use such a terminator (otherwise the nature of
+% methods could not be auto-detected, as there would be no way to determine
+% whether said helper should be considered as a method or not).
 %
 -spec manage_method_terminators( meta_utils:clause_def(),
 				   meta_utils:function_id(), wooper:classname() ) ->
 		{ meta_utils:clause_def(), function_nature(), method_qualifiers() }.
 manage_method_terminators( _Clauses=[], FunId, Classname ) ->
-	wooper_internals:raise_usage_error( "the function ~s/~B is exported yet "
-										"not defined.", pair:to_list( FunId ),
-										Classname );
+	wooper_internals:raise_usage_error(
+	  "the function ~s/~B is exported yet not defined.", pair:to_list( FunId ),
+	  Classname );
 
 manage_method_terminators( Clauses, FunId, Classname ) ->
 
@@ -583,8 +656,8 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 	%                                            Params, Transforms )
 	%
 	% Transforms is an ast_transforms record that contains a
-	% transformation_state field, which contains a value of type:
-	%       maybe( { function_nature(), method_qualifiers() }
+	% transformation_state field, which itself contains a value of type:
+	%       maybe( { function_nature(), method_qualifiers() } ).
 	%
 	% Indeed it starts as 'undefined', then the first terminal call branch of
 	% the first clause allows to detect and set the function nature, and
@@ -596,427 +669,13 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 	% happens to be non-const (otherwise a non_const flag/qualifier would have
 	% to be introduced).
 
-	% As empty bodies may happen (ex: 'receive' without an 'after'):
-	BodyTransformFun = fun
 
-		( _BodyExprs=[], Transforms ) ->
-			{ _Exprs=[], Transforms };
-
-		% Commented-out as the last expression is managed differently (we cannot
-		% recurse easily), but the spirit remains:
-		%( _BodyExprs=[ LastExpr ], Transforms ) ->
-		%    ast_expression:transform_expressions( LastExpr, Transforms );
-
-		% Processes specifically each last expression of a body to be
-		% transformed (and only them), as it is the place where we can guess the
-		% nature of a function and possibly, if it is a method, at least some of
-		% its qualifiers.
-		%
-		% At least an element exists:
-		( BodyExprs, Transforms ) -> % superfluous: when is_list( BodyExprs ) ->
-
-			% Warning: we currently skip intermediate expressions as a whole (we
-			% do not transform them at all, as currently WOOPER does not have
-			% any need for that), but maybe in the future this will have to be
-			% changed.
-			%
-			% We cannot use easily a Y-combinator here, as the signature of this
-			% anonymous function is constrained:
-			%{ [ Expr | SomeFun(T) ] }, Transforms }
-			%
-			% More efficient than list_utils:extract_last_element/2 and then
-			% recreating the list:
-			[ LastExpr | RevFirstExprs ] = lists:reverse( BodyExprs ),
-
-			{ [ NewLastExpr ], NewTransforms } =
-				ast_expression:transform_expression( LastExpr, Transforms ),
-
-			NewExprs = lists:reverse( [ NewLastExpr | RevFirstExprs ] ),
-
-			{ NewExprs, NewTransforms }
-
-	end,
-
-	% In charge of detecting the method terminators and qualifiers:
-	%
-	% (anonymous mute variables correspond to line numbers)
-	%
-	CallTransformFun = fun
-
-		% First, requests:
-
-		% Better use the most precise return pseudo-function if this clause is
-		% const (since returning the initial State):
-		%
-		( _LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_state_result} },
-		  _Params=[ _StateExpr={ var, Line, 'State'}, _ResExpr ],
-		  Transforms ) ->
-			wooper_internals:raise_usage_error( "this const clause of "
-				"request ~s/~B shall use const_return_result/1 (instead "
-				"of return_state_result/2).", pair:to_list( FunId ),
-				Transforms, Line );
-
-
-		% First (correct, non-const) request detection:
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_state_result} },
-		  Params=[ _StateExpr, _ResExpr ],
-		  Transforms=#ast_transforms{ transformation_state=undefined } ) ->
-
-			%trace_utils:debug_fmt( "~s/~B detected as a non-const request.",
-			%					   pair:to_list( FunId ) ),
-
-			% So that wooper:return_state_result( S, R ) becomes simply:
-			% { S, R }:
-			NewExpr = { tuple, LineCall, Params },
-			NewTransforms = Transforms#ast_transforms{
-							  transformation_state={ request, [] } },
-			{ [ NewExpr ], NewTransforms };
-
-
-		% Already detected as a request, checking qualifiers:
-		%
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_state_result} },
-		  Params=[ _StateExpr, _ResExpr ],
-		  Transforms=#ast_transforms{
-				transformation_state={ request, Qualifiers } } ) ->
-
-			%trace_utils:debug_fmt( "~s/~B confirmed as a non-const request.",
-			%					   pair:to_list( FunId ) ),
-
-			% 'const' may or may not be still there, and will surely not:
-			NewQualifiers = lists:delete( const, Qualifiers ),
-
-			NewExpr = { tuple, LineCall, Params },
-
-			NewTransforms = Transforms#ast_transforms{
-					  transformation_state={ request, NewQualifiers } },
-
-			{ [ NewExpr ], NewTransforms };
-
-
-		% Faulty return_state_result/2 arity:
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_state_result} },
-		  Params,
-		  Transforms ) when length( Params ) =/= 2 ->
-			wooper_internals:raise_usage_error( "wrong arity (~B) specified "
-				"for wooper:return_state_result/2, for request ~s/~B.",
-				[ length( Params ) | pair:to_list( FunId ) ],
-				Transforms, LineCall );
-
-
-		% Nature mismatch:
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_state_result} },
-		  _Params,
-		  Transforms=#ast_transforms{
-			transformation_state={ OtherNature, _Qualifiers } } ) ->
-			wooper_internals:raise_usage_error( "method terminator mismatch "
-				"for method ~s/~B: wooper:return_state_result/2 implies "
-				"request, whereas was detected as a ~s.",
-				pair:to_list( FunId ) ++ [ OtherNature ],
-				Transforms, LineCall );
-
-
-		% First (correct, a priori const) request detection:
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,const_return_result} },
-		  Params=[ _ResExpr ],
-		  Transforms=#ast_transforms{ transformation_state=undefined } ) ->
-
-			%trace_utils:debug_fmt( "~s/~B detected as a const request.",
-			%					   pair:to_list( FunId ) ),
-
-			% So that wooper:const_return_result( R ) becomes simply:
-			% { S, R }:
-			NewExpr = { tuple, LineCall,
-						[ { var, LineCall, 'State' } | Params ] },
-			NewTransforms = Transforms#ast_transforms{
-							  transformation_state={ request, [ const ] } },
-			{ [ NewExpr ], NewTransforms };
-
-
-		% Already detected as a request, this clause is const, this will not
-		% change overall constness status:
-		%
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,const_return_result} },
-		  Params=[ _ResExpr ],
-		  Transforms=#ast_transforms{
-						transformation_state={ request, _Qualifiers } } ) ->
-
-			NewExpr = { tuple, LineCall,
-						[ { var, LineCall, 'State' } | Params ] },
-			{ [ NewExpr ], Transforms };
-
-
-		% Faulty const_return_result/1 arity:
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,const_return_result} },
-		  Params,
-		  Transforms ) when length( Params ) =/= 1 ->
-			wooper_internals:raise_usage_error( "wrong arity (~B) specified "
-				"for wooper:const_return_result/1, for request ~s/~B.",
-				[ length( Params ) | pair:to_list( FunId ) ],
-				Transforms, LineCall );
-
-
-		% Nature mismatch:
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,const_return_result} },
-		  _Params,
-		  Transforms=#ast_transforms{
-			transformation_state={ OtherNature, _Qualifiers } } ) ->
-			wooper_internals:raise_usage_error( "method terminator mismatch "
-				"for method ~s/~B: wooper:const_return_result/1 implies "
-				"request, whereas was detected as a ~s.",
-				pair:to_list( FunId ) ++ [ OtherNature ],
-				Transforms, LineCall );
-
-
-
-		% Second, oneways:
-
-		% Better use the most precise return pseudo-function if this clause is
-		% const (since returning the initial State):
-		%
-		( _LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_state} },
-		  _Params=[ _StateExpr={ var, Line, 'State'} ],
-		  Transforms ) ->
-			wooper_internals:raise_usage_error( "this const clause of oneway "
-				"~s/~B shall use const_return_result/0 (instead "
-				"of return_state/1).", pair:to_list( FunId ),
-				Transforms, Line );
-
-
-		% First (correct, non-const) oneway detection:
-		( _LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_state} },
-		  _Params=[ StateExpr ],
-		  Transforms=#ast_transforms{ transformation_state=undefined } ) ->
-
-			%trace_utils:debug_fmt( "~s/~B detected as a non-const oneway.",
-			%					   pair:to_list( FunId ) ),
-
-			% So that wooper:return_state( R ) becomes simply R:
-			NewExpr = StateExpr,
-			NewTransforms = Transforms#ast_transforms{
-							  transformation_state={ oneway, [] } },
-			{ [ NewExpr ], NewTransforms };
-
-
-		% Already detected as a oneway, checking qualifiers:
-		%
-		( _LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_state} },
-		  _Params=[ StateExpr ],
-		  Transforms=#ast_transforms{
-						transformation_state={ oneway, Qualifiers } } ) ->
-
-			% 'const' may or may not be still there, and will surely not:
-			NewQualifiers = lists:delete( const, Qualifiers ),
-
-			NewExpr = StateExpr,
-
-			NewTransforms = Transforms#ast_transforms{
-					  transformation_state={ oneway, NewQualifiers } },
-
-			{ [ NewExpr ], NewTransforms };
-
-
-		% Faulty return_state/1 arity:
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_state} },
-		  Params,
-		  Transforms ) when length( Params ) =/= 1 ->
-			wooper_internals:raise_usage_error( "wrong arity (~B) specified "
-				"for wooper:return_state/1, for oneway ~s/~B.",
-				[ length( Params ) | pair:to_list( FunId ) ],
-				Transforms, LineCall );
-
-
-		% Nature mismatch:
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,return_state} },
-		  _Params,
-		  Transforms=#ast_transforms{
-			transformation_state={ OtherNature, _Qualifiers } } ) ->
-			wooper_internals:raise_usage_error( "method terminator mismatch "
-				"for method ~s/~B: wooper:return_state/1 implies "
-				"oneway, whereas was detected as a ~s.",
-				pair:to_list( FunId ) ++ [ OtherNature ],
-				Transforms, LineCall );
-
-
-		% First (correct, a priori const) oneway detection:
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,const_return} },
-		  _Params=[],
-		  Transforms=#ast_transforms{ transformation_state=undefined } ) ->
-
-			%trace_utils:debug_fmt( "~s/~B detected as a const oneway.",
-			%					   pair:to_list( FunId ) ),
-
-			% So that wooper:const_return() becomes simply S:
-			NewExpr = { var, LineCall, 'State' },
-			NewTransforms = Transforms#ast_transforms{
-							  transformation_state={ oneway, [ const ] } },
-			{ [ NewExpr ], NewTransforms };
-
-
-		% Already detected as a oneway, this clause is const, this will not
-		% change overall constness status:
-		%
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,const_return} },
-		  _Params=[],
-		  Transforms=#ast_transforms{
-						transformation_state={ oneway, _Qualifiers } } ) ->
-
-			NewExpr = { var, LineCall, 'State' },
-
-			{ [ NewExpr ], Transforms };
-
-
-		% Faulty const_return/0 arity:
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,const_return} },
-		  Params,
-		  Transforms ) when Params =/= [] ->
-			wooper_internals:raise_usage_error( "wrong arity (~B) specified "
-				"for wooper:const_return_result/0, for oneway ~s/~B.",
-				[ length( Params ) | pair:to_list( FunId ) ],
-				Transforms, LineCall );
-
-
-		% Nature mismatch:
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,const_return} },
-		  _Params,
-		  Transforms=#ast_transforms{
-			transformation_state={ OtherNature, _Qualifiers } } ) ->
-			wooper_internals:raise_usage_error( "method terminator mismatch "
-				"for method ~s/~B: wooper:const_return/1 implies "
-				"oneway, whereas was detected as a ~s.",
-				pair:to_list( FunId ) ++ [ OtherNature ],
-				Transforms, LineCall );
-
-
-
-		% Third, static methods:
-
-		% First (correct) static method detection:
-		( _LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
-		  _Params=[ ResultExpr ],
-		  Transforms=#ast_transforms{ transformation_state=undefined } ) ->
-
-			%trace_utils:debug_fmt( "~s/~B detected as a static method.",
-			%					   pair:to_list( FunId ) ),
-
-			% So that wooper:return_static( R ) becomes simply R:
-			NewExpr = ResultExpr,
-			NewTransforms = Transforms#ast_transforms{
-							  transformation_state={ static, [] } },
-			{ [ NewExpr ], NewTransforms };
-
-
-		% Already detected as a static:
-		%
-		% (mostly the same clause as above, as qualifiers do not matter for
-		% static):
-		%
-		( _LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
-		  _Params=[ ResultExpr ],
-		  Transforms=#ast_transforms{
-						transformation_state={ static, _Qualifiers } } ) ->
-
-			%trace_utils:debug_fmt( "~s/~B confirmed as a static method.",
-			%					   pair:to_list( FunId ) ),
-
-			% So that wooper:return_static( R ) becomes simply R:
-			NewExpr = ResultExpr,
-			NewTransforms = Transforms,
-			{ [ NewExpr ], NewTransforms };
-
-
-		% Faulty static arity:
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
-		  Params,
-		  Transforms ) when length( Params ) =/= 2 ->
-			wooper_internals:raise_usage_error( "wrong arity (~B) specified "
-				"for wooper:return_static/1, for static method ~s/~B.",
-				[ length( Params ) | pair:to_list( FunId ) ],
-				Transforms, LineCall );
-
-
-		% Nature mismatch:
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
-		  _Params,
-		  Transforms=#ast_transforms{
-			transformation_state={ OtherNature, _Qualifiers } } ) ->
-			wooper_internals:raise_usage_error( "method terminator mismatch "
-				"for method ~s/~B: wooper:return_static/1 implies "
-				"static method, whereas was detected as a ~s.",
-				pair:to_list( FunId ) ++ [ OtherNature ],
-				Transforms, LineCall );
-
-
-		% Invalid method terminator:
-		( LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper},
-						 {atom,_,UnexpectedTerminator} },
-		  _Params,
-		  Transforms ) ->
-			wooper_internals:raise_usage_error( "invalid method terminator "
-				"specified for ~s/~B: wooper:~s does not exist "
-				"(for any arity).",
-				pair:to_list( FunId ) ++ [ UnexpectedTerminator ],
-				Transforms, LineCall );
-
-
-		% All other calls are to pass through, as they are:
-		( LineCall, FunctionRef, Params, Transforms ) ->
-
-			%trace_utils:debug_fmt( "~s/~B detected as a plain function;~n"
-			%	" - function ref is:~n~p~n - transform is:~n~p~n",
-			%	pair:to_list( FunId ) ++ [ FunctionRef, Transforms ] ),
-
-			SameExpr = { call, LineCall, FunctionRef, Params },
-			{ [ SameExpr ], Transforms }
-
-	end,
-
-	TransformTable = table:new( [ { body, BodyTransformFun },
-								  { call, CallTransformFun } ] ),
+	TransformTable = table:new( [ { body, fun body_transformer/2 },
+								  { call, fun call_transformer/4 } ] ),
 
 	Transforms = #ast_transforms{ transformed_module_name=Classname,
 								  transform_table=TransformTable,
+								  transformed_function_identifier=FunId,
 								  transformation_state=undefined },
 
 	%trace_utils:debug_fmt( "transforming now ~p.", [ FunId ] ),
@@ -1042,6 +701,424 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 	end,
 
 	{ NewClauses, FunNature, Qualifiers }.
+
+
+
+% Drives the AST transformation of a body: processes specifically each last
+% expression of a body to be transformed (and only them), as it is the place
+% where we can guess the nature of a function and possibly, if it is a method,
+% at least some of its qualifiers.
+%
+% Used to be an anonymous function, yet now exported so that it can be re-used
+% by upper layers.
+%
+-spec body_transformer( ast_body(), ast_transforms() ) ->
+							  { ast_body(), ast_transforms() }.
+% As empty bodies may happen (ex: 'receive' without an 'after'):
+body_transformer( _BodyExprs=[], Transforms ) ->
+	{ _Exprs=[], Transforms };
+
+
+% Commented-out as the last expression is managed differently (we cannot recurse
+% easily), but the spirit remains:
+%
+%body_transformer( _BodyExprs=[ LastExpr ], Transforms ) ->
+%    ast_expression:transform_expressions( LastExpr, Transforms );
+
+
+% At least an element exists here:
+body_transformer( BodyExprs, Transforms ) -> % superfluous: when is_list( BodyExprs ) ->
+
+	% Warning: we currently skip intermediate expressions as a whole (we do not
+	% transform them at all, as currently WOOPER does not have any need for
+	% that), but maybe in the future this will have to be changed.
+	%
+	% We cannot use easily a Y-combinator here, as the signature of this
+	% anonymous function is constrained: { [ Expr | SomeFun(T) ] }, Transforms }
+	%
+	% More efficient than list_utils:extract_last_element/2 and then recreating
+	% the list:
+	[ LastExpr | RevFirstExprs ] = lists:reverse( BodyExprs ),
+
+	{ [ NewLastExpr ], NewTransforms } =
+		ast_expression:transform_expression( LastExpr, Transforms ),
+
+	NewExprs = lists:reverse( [ NewLastExpr | RevFirstExprs ] ),
+
+	{ NewExprs, NewTransforms }.
+
+
+
+
+
+% In charge of detecting the method terminators and qualifiers, in a WOOPER
+% context.
+%
+% (anonymous mute variables correspond to line numbers)
+%
+-spec call_transformer( line(), ast_expression:function_ref_expression(),
+			ast_expression:params_expression(), ast_transforms() ) ->
+					  { [ ast_expression:ast_expression() ], ast_transforms() }.
+
+% First, requests:
+
+% Better use the most precise return pseudo-function if this clause is const
+% (since returning the initial State):
+%
+call_transformer( _LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+											{atom,_,return_state_result} },
+				  _Params=[ _StateExpr={ var, Line, 'State' }, _ResExpr ],
+				  Transforms=#ast_transforms{
+					transformed_function_identifier=FunId } ) ->
+	wooper_internals:raise_usage_error( "this const clause of "
+		"request ~s/~B shall use wooper:const_return_result/1 (instead "
+		"of wooper:return_state_result/2).", pair:to_list( FunId ), Transforms,
+		Line );
+
+% First (correct, non-const) request detection:
+call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+										   {atom,_,return_state_result} },
+				  Params=[ _StateExpr, _ResExpr ],
+				  Transforms=#ast_transforms{
+								%transformed_function_identifier=FunId,
+								transformation_state=undefined } ) ->
+
+	%trace_utils:debug_fmt( "~s/~B detected as a non-const request.",
+	%					   pair:to_list( FunId ) ),
+
+	% So that wooper:return_state_result( S, R ) becomes simply { S, R }:
+	NewExpr = { tuple, LineCall, Params },
+
+	NewTransforms = Transforms#ast_transforms{
+					  transformation_state={ request, [] } },
+
+	{ [ NewExpr ], NewTransforms };
+
+
+% Already detected as a request, checking qualifiers:
+call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+										   {atom,_,return_state_result} },
+				  Params=[ _StateExpr, _ResExpr ],
+				  Transforms=#ast_transforms{
+						%transformed_function_identifier=FunId,
+						transformation_state={ request, Qualifiers } } ) ->
+
+	%trace_utils:debug_fmt( "~s/~B confirmed as a non-const request.",
+	%					   pair:to_list( FunId ) ),
+
+	% 'const' may or may not be still there, and will surely not:
+	NewQualifiers = lists:delete( const, Qualifiers ),
+
+	NewExpr = { tuple, LineCall, Params },
+
+	NewTransforms = Transforms#ast_transforms{
+					  transformation_state={ request, NewQualifiers } },
+
+	{ [ NewExpr ], NewTransforms };
+
+
+% Faulty return_state_result/2 arity:
+call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+										   {atom,_,return_state_result} },
+				  Params,
+				  Transforms=#ast_transforms{
+								transformed_function_identifier=FunId } )
+  when length( Params ) =/= 2 ->
+	wooper_internals:raise_usage_error( "wrong arity (~B) specified "
+		"for wooper:return_state_result/2, for request ~s/~B.",
+		[ length( Params ) | pair:to_list( FunId ) ], Transforms, LineCall );
+
+
+% Nature mismatch:
+call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+										   {atom,_,return_state_result} },
+				  _Params,
+				  Transforms=#ast_transforms{
+					transformed_function_identifier=FunId,
+					transformation_state={ OtherNature, _Qualifiers } } ) ->
+	wooper_internals:raise_usage_error( "method terminator mismatch "
+		"for method ~s/~B: wooper:return_state_result/2 implies "
+		"request, whereas was detected as a ~s.",
+		pair:to_list( FunId ) ++ [ OtherNature ], Transforms, LineCall );
+
+
+% First (correct, a priori const) request detection:
+call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+										   {atom,_,const_return_result} },
+				  Params=[ _ResExpr ],
+				  Transforms=#ast_transforms{
+					%transformed_function_identifier=FunId,
+					transformation_state=undefined } ) ->
+
+	%trace_utils:debug_fmt( "~s/~B detected as a const request.",
+	%					   pair:to_list( FunId ) ),
+
+	% So that wooper:const_return_result( R ) becomes simply { S, R }:
+	NewExpr = { tuple, LineCall, [ { var, LineCall, 'State' } | Params ] },
+			NewTransforms = Transforms#ast_transforms{
+							  transformation_state={ request, [ const ] } },
+	{ [ NewExpr ], NewTransforms };
+
+
+% Already detected as a request, this clause is const, this will not change
+% overall constness status:
+%
+call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+										   {atom,_,const_return_result} },
+				  Params=[ _ResExpr ],
+				  Transforms=#ast_transforms{
+						transformation_state={ request, _Qualifiers } } ) ->
+
+	NewExpr = { tuple, LineCall, [ { var, LineCall, 'State' } | Params ] },
+	{ [ NewExpr ], Transforms };
+
+
+% Faulty const_return_result/1 arity:
+call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+										   {atom,_,const_return_result} },
+				  Params,
+				  Transforms=#ast_transforms{
+					transformed_function_identifier=FunId } )
+  when length( Params ) =/= 1 ->
+	wooper_internals:raise_usage_error( "wrong arity (~B) specified "
+		"for wooper:const_return_result/1, for request ~s/~B.",
+		[ length( Params ) | pair:to_list( FunId ) ], Transforms, LineCall );
+
+
+% Nature mismatch:
+call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+										   {atom,_,const_return_result} },
+				  _Params,
+				  Transforms=#ast_transforms{
+					transformed_function_identifier=FunId,
+					transformation_state={ OtherNature, _Qualifiers } } ) ->
+	wooper_internals:raise_usage_error( "method terminator mismatch "
+		"for method ~s/~B: wooper:const_return_result/1 implies "
+		"request, whereas was detected as a ~s.",
+		pair:to_list( FunId ) ++ [ OtherNature ], Transforms, LineCall );
+
+
+
+% Second, oneways:
+
+% Better use the most precise return pseudo-function if this clause is const
+% (since returning the initial State):
+%
+call_transformer( _LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+											{atom,_,return_state} },
+				  _Params=[ _StateExpr={ var, Line, 'State'} ],
+				  Transforms=#ast_transforms{
+					transformed_function_identifier=FunId } ) ->
+	wooper_internals:raise_usage_error( "this const clause of oneway "
+		"~s/~B shall use wooper:const_return/0 "
+		"(instead of wooper:return_state/1).",
+		pair:to_list( FunId ), Transforms, Line );
+
+
+% First (correct, non-const) oneway detection:
+call_transformer( _LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+											{atom,_,return_state} },
+				  _Params=[ StateExpr ],
+				  Transforms=#ast_transforms{
+					%transformed_function_identifier=FunId,
+					transformation_state=undefined } ) ->
+
+	%trace_utils:debug_fmt( "~s/~B detected as a non-const oneway.",
+	%					   pair:to_list( FunId ) ),
+
+	% So that wooper:return_state( S ) becomes simply S:
+	NewExpr = StateExpr,
+	NewTransforms = Transforms#ast_transforms{
+					  transformation_state={ oneway, [] } },
+	{ [ NewExpr ], NewTransforms };
+
+
+% Already detected as a oneway, checking qualifiers:
+call_transformer( _LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+											{atom,_,return_state} },
+				  _Params=[ StateExpr ],
+				  Transforms=#ast_transforms{
+						transformation_state={ oneway, Qualifiers } } ) ->
+
+	% 'const' may or may not be still there, and will surely not:
+	NewQualifiers = lists:delete( const, Qualifiers ),
+
+	NewExpr = StateExpr,
+
+	NewTransforms = Transforms#ast_transforms{
+					  transformation_state={ oneway, NewQualifiers } },
+
+	{ [ NewExpr ], NewTransforms };
+
+
+% Faulty return_state/1 arity:
+call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+										   {atom,_,return_state} },
+				  Params,
+				  Transforms=#ast_transforms{
+					transformed_function_identifier=FunId } )
+  when length( Params ) =/= 1 ->
+	wooper_internals:raise_usage_error( "wrong arity (~B) specified "
+		"for wooper:return_state/1, for oneway ~s/~B.",
+		[ length( Params ) | pair:to_list( FunId ) ], Transforms, LineCall );
+
+
+% Nature mismatch:
+call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+										   {atom,_,return_state} },
+				  _Params,
+				  Transforms=#ast_transforms{
+						transformed_function_identifier=FunId,
+						transformation_state={ OtherNature, _Qualifiers } } ) ->
+	wooper_internals:raise_usage_error( "method terminator mismatch "
+		"for method ~s/~B: wooper:return_state/1 implies "
+		"oneway, whereas was detected as a ~s.",
+		pair:to_list( FunId ) ++ [ OtherNature ], Transforms, LineCall );
+
+
+% First (correct, a priori const) oneway detection:
+call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+										   {atom,_,const_return} },
+				  _Params=[],
+				  Transforms=#ast_transforms{
+						%transformed_function_identifier=FunId,
+						transformation_state=undefined } ) ->
+
+	%trace_utils:debug_fmt( "~s/~B detected as a const oneway.",
+	%					   pair:to_list( FunId ) ),
+
+	% So that wooper:const_return() becomes simply S:
+	NewExpr = { var, LineCall, 'State' },
+	NewTransforms = Transforms#ast_transforms{
+					  transformation_state={ oneway, [ const ] } },
+	{ [ NewExpr ], NewTransforms };
+
+
+% Already detected as a oneway, this clause is const, this will not change
+% overall constness status:
+%
+call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+										   {atom,_,const_return} },
+				  _Params=[],
+				  Transforms=#ast_transforms{
+						transformation_state={ oneway, _Qualifiers } } ) ->
+
+	NewExpr = { var, LineCall, 'State' },
+
+	{ [ NewExpr ], Transforms };
+
+
+% Faulty const_return/0 arity:
+call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+										   {atom,_,const_return} },
+				  Params,
+				  Transforms=#ast_transforms{
+								transformed_function_identifier=FunId } )
+  when Params =/= [] ->
+	wooper_internals:raise_usage_error( "wrong arity (~B) specified "
+		"for wooper:const_return/0, for oneway ~s/~B.",
+		[ length( Params ) | pair:to_list( FunId ) ], Transforms, LineCall );
+
+
+% Nature mismatch:
+call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+										   {atom,_,const_return} },
+				  _Params,
+				  Transforms=#ast_transforms{
+					transformed_function_identifier=FunId,
+					transformation_state={ OtherNature, _Qualifiers } } ) ->
+	wooper_internals:raise_usage_error( "method terminator mismatch "
+		"for method ~s/~B: wooper:const_return/0 implies "
+		"oneway, whereas was detected as a ~s.",
+		pair:to_list( FunId ) ++ [ OtherNature ], Transforms, LineCall );
+
+
+
+% Third, static methods:
+
+% First (correct) static method detection:
+call_transformer( _LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
+		  _Params=[ ResultExpr ],
+		  Transforms=#ast_transforms{
+						%transformed_function_identifier=FunId,
+						transformation_state=undefined } ) ->
+
+	%trace_utils:debug_fmt( "~s/~B detected as a static method.",
+	%					   pair:to_list( FunId ) ),
+
+	% So that wooper:return_static( R ) becomes simply R:
+	NewExpr = ResultExpr,
+	NewTransforms = Transforms#ast_transforms{
+					  transformation_state={ static, [] } },
+	{ [ NewExpr ], NewTransforms };
+
+
+% Already detected as a static:
+%
+% (mostly the same clause as above, as qualifiers do not matter for static):
+%
+call_transformer( _LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
+		  _Params=[ ResultExpr ],
+		  Transforms=#ast_transforms{
+						%transformed_function_identifier=FunId,
+						transformation_state={ static, _Qualifiers } } ) ->
+
+	%trace_utils:debug_fmt( "~s/~B confirmed as a static method.",
+	%					   pair:to_list( FunId ) ),
+
+	% So that wooper:return_static( R ) becomes simply R:
+	NewExpr = ResultExpr,
+	NewTransforms = Transforms,
+	{ [ NewExpr ], NewTransforms };
+
+
+% Faulty static arity:
+call_transformer( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
+		  Params,
+		  Transforms=#ast_transforms{ transformed_function_identifier=FunId } )
+  when length( Params ) =/= 2 ->
+	wooper_internals:raise_usage_error( "wrong arity (~B) specified "
+		"for wooper:return_static/1, for static method ~s/~B.",
+		[ length( Params ) | pair:to_list( FunId ) ], Transforms, LineCall );
+
+
+% Nature mismatch:
+call_transformer( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
+		  _Params,
+		  Transforms=#ast_transforms{
+						transformed_function_identifier=FunId,
+						transformation_state={ OtherNature, _Qualifiers } } ) ->
+	wooper_internals:raise_usage_error( "method terminator mismatch "
+		"for method ~s/~B: wooper:return_static/1 implies "
+		"static method, whereas was detected as a ~s.",
+		pair:to_list( FunId ) ++ [ OtherNature ], Transforms, LineCall );
+
+
+% Invalid method terminator:
+call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+										   {atom,_,UnexpectedTerminator} },
+				  _Params,
+				  Transforms=#ast_transforms{
+								transformed_function_identifier=FunId } ) ->
+	wooper_internals:raise_usage_error( "invalid method terminator specified "
+		"for ~s/~B: wooper:~s does not exist (for any arity).",
+		pair:to_list( FunId ) ++ [ UnexpectedTerminator ], Transforms,
+		LineCall );
+
+
+% All other calls are to pass through, as they are:
+call_transformer( LineCall, FunctionRef, Params, Transforms ) ->
+
+	%trace_utils:debug_fmt( "~s/~B detected as a plain function;~n"
+	%	" - function ref is:~n~p~n - transform is:~n~p~n",
+	%	pair:to_list( FunId ) ++ [ FunctionRef, Transforms ] ),
+
+	SameExpr = { call, LineCall, FunctionRef, Params },
+	{ [ SameExpr ], Transforms }.
 
 
 
@@ -1082,7 +1159,13 @@ ensure_all_exported_in( FunctionTable, ExportLoc ) ->
 ensure_exported_at( FunInfo=#function_info{ exported=[] }, ExportLoc ) ->
 	FunInfo#function_info{ exported=[ ExportLoc ] };
 
-ensure_exported_at( FunInfo, _ExportLoc ) ->
+ensure_exported_at( FunInfo=#function_info{ name=Name,
+											arity=Arity }, _ExportLoc ) ->
+
+	wooper_internals:notify_warning( [ text_utils:format(
+		"~s/~B should not be explicitly exported, since methods "
+		"are automatically exported.", [ Name, Arity ] ) ] ),
+
 	FunInfo.
 
 
@@ -1121,11 +1204,6 @@ function_to_request_info( #function_info{ name=Name,
 										  callback=false
 										  %exported
 										} ) ->
-
-	wooper_internals:notify_warning( [ text_utils:format(
-		"~s/~B should not be explicitly exported, since requests "
-		"are automatically exported.", [ Name, Arity ] ) ] ),
-
 	#request_info{ name=Name,
 				   arity=Arity,
 				   %qualifiers=[]
@@ -1196,11 +1274,6 @@ function_to_oneway_info( #function_info{ name=Name,
 										 callback=false
 										 %exported
 									   } ) ->
-
-	wooper_internals:notify_warning( [ text_utils:format(
-		"~s/~B should not be explicitly exported, since oneways "
-		"are automatically exported.", [ Name, Arity ] ) ] ),
-
 	#oneway_info{ name=Name,
 				  arity=Arity,
 				  %qualifiers=[]
@@ -1271,11 +1344,6 @@ function_to_static_info( #function_info{ name=Name,
 										 callback=false
 										 %exported
 									   } ) ->
-
-	wooper_internals:notify_warning( [ text_utils:format(
-		"~s/~B should not be explicitly exported, since requests "
-		"are automatically exported.", [ Name, Arity ] ) ] ),
-
 	#static_info{ name=Name,
 				  arity=Arity,
 				  %qualifiers=[]

@@ -9,7 +9,10 @@
 -module(class_Platypus).
 
 
-% Determines what are the mother classes of this class (if any):
+-define( class_description, "Class modelling any kind of platypus." ).
+
+
+% Determines what are the direct mother classes of this class (if any):
 -define( superclasses, [ class_Mammal, class_OvoviviparousBeing ] ).
 
 

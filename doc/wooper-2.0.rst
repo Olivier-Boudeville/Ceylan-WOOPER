@@ -150,7 +150,10 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
 
  -module(class_Cat).
 
- % Determines what are the mother classes of this class (if any):
+ % Optional:
+ -define(class_description,"Models a domestic cat").
+
+ % Determines what are the direct mother classes of this class (if any):
  -define(superclasses,[class_Mammal,class_ViviparousBeing]).
 
  % Declaration of class-specific attributes:
@@ -300,11 +303,28 @@ A class is a blueprint to create objects, a common scheme describing the state a
 
 With WOOPER, each class has a unique name, such as ``class_Cat``.
 
-To allow for **encapsulation**, a WOOPER class is mapped to an Erlang module, whose name is by convention made from the ``class_`` prefix followed by the class name, in the so-called `CamelCase <http://en.wikipedia.org/wiki/CamelCase>`_: all words are spelled in lower-case except their first letter, and there are no separators between words, like in: *ThisIsAnExample*.
+To allow for **encapsulation**, a WOOPER class is mapped to an Erlang module, whose name is by convention made from the ``class_`` prefix followed by the class name, in the so-called `CamelCase <http://en.wikipedia.org/wiki/CamelCase>`_: all words are spelled in lower-case except their first letter, and there are no separators between words, like in: ``ThisIsAnExample``.
 
 So a class modeling, for example, a cat should translate into an Erlang module named ``class_Cat``, thus in a file named ``class_Cat.erl``. At the top of this file, the corresponding module would be therefore declared with: ``-module(class_Cat).``.
 
 Similarly, a pink flamingo class could be declared as ``class_PinkFlamingo``, in ``class_PinkFlamingo.erl``, which would include a ``-module(class_PinkFlamingo).`` declaration.
+
+
+
+Class Description
+.................
+
+A class should not be implemented without adding at least a short description of it. Rather than describing it through a mere in-code comment (hence only addressed to the class maintainer), a better approach is to used the ``class_description`` define, like in:
+
+.. code:: erlang
+
+ -define(class_description,"Class in charge of implementing the "
+							 "Foobar service.").
+
+Doing so allows that information to be available to humans and tools alike [#]_.
+
+.. [#] More generally, over time we tend to see any remaining comment as a potential candidate to "metadata promotion". This way, the corresponding information can be used in multiple contexts (ex: when generating documentation from code).
+
 
 
 Inheritance & Superclasses
@@ -704,10 +724,15 @@ The corresponding error message is::
   {wooper_method_not_found,InstancePid,Classname,MethodName,
    MethodArity,ListOfActualParameters}
 
+The corresponding error message is::
+
+  {wooper_method_not_found,InstancePid,Classname,MethodName,
+   MethodArity,ListOfActualParameters}.
 
 For example::
 
  {wooper_method_not_found,<0.30.0>,class_Cat,layEggs,2,...}
+
 
 Note that ``MethodArity`` includes the implied state parameter (that will be discussed later), i.e. here ``layEggs/2`` might be defined as ``layEggs(State,NumberOfNewEggs) -> [..]``.
 
@@ -727,10 +752,12 @@ The corresponding error message is::
  {wooper_method_failed,InstancePid,Classname,MethodName,
   MethodArity, ListOfActualParameters,ErrorTerm}
 
+
 For example::
 
  {wooper_method_failed,<0.30.0>,class_Cat,myCrashingMethod,1,[],
   {{badmatch,create_bug},[..]]}
+
 
 If the exit message sent by the method specifies a PID, it is prepended to ``ErrorTerm``.
 
@@ -750,6 +777,7 @@ For example::
 
  {wooper_method_faulty_return,<0.30.0>,class_Cat,
   myFaultyMethod,1,[],[{{state_holder,..]}
+
 
 This error occurs only when being in debug mode.
 
@@ -777,15 +805,15 @@ Therefore one could make use of that information, as in:
 	{wooper_method_not_found,Pid,Class,Method,Arity,Params}->
 		[..];
 	{wooper_method_failed,Pid,Class,Method,Arity,Params,
-	   ErrorTerm}->
+		  ErrorTerm}->
 		[..];
 	% Error term can be a {Pid,Error} tuple as well, depending
 	% on the exit:
 	{wooper_method_failed,Pid,Class,Method,Arity,Params,
-	   {Pid,Error}}->
+		  {Pid,Error}}->
 		[..];
 	{wooper_method_faulty_return,Pid,Class,Method,Arity,Params,
-		  UnexpectedTerm}->
+				 UnexpectedTerm}->
 		[..];
 	wooper_method_returns_void->
 		[..];
@@ -1031,6 +1059,9 @@ WOOPER will ensure that, in this case, ``wooper:const_return/0`` is preferred to
 	 io:format("My age is ~B~n.",[?getAttr(age)]),
 	 wooper:const_return().
 
+A oneway whose clauses are all ``const`` is itself a const oneway.
+
+
 
 Oneway Type Specifications
 ..........................
@@ -1258,9 +1289,8 @@ in order to call the ``class_Creature`` version of the ``setAge/2`` oneway.
 
 Finally, as one could expect, these functions have their const counterparts, namely: ``executeConstRequestAs/{3,4}`` and ``executeConstOnewayAs/{3,4}``, whose usage offers no surprise, like in::
 
-   Color = executeConstRequestAs(MyState,class_Vehicle,
-									getColorOf,[wheels])
-
+ Color = executeConstRequestAs(MyState,class_Vehicle,
+							   getColorOf,[wheels])
 
 
 
@@ -1362,11 +1392,11 @@ Declaring them
 
 Class-specific attributes may be **declared**, with some qualifiers.
 
-Attribute declarations are fully optional [#]_, yet specifying them is nevertheless recommended, at the first place for the developer and for any upcoming maintainer.
+Attribute declarations are fully optional [#]_, yet specifying them is nevertheless recommended, at the first place for the developer and for any upcoming maintainer. As a result, by default WOOPER will issue a warning should no attribute declaration be found.
 
 .. [#] Current versions of WOOPER do not specifically use these information, but future versions may.
 
-To do so, the ``class_attributes`` define must be set to a list of attribute declarations, like in:
+To do so, the ``class_attributes`` define must be set (prior to including the WOOPER header) to a list of attribute declarations, like in:
 
 
 .. code:: erlang
@@ -1376,6 +1406,11 @@ To do so, the ``class_attributes`` define must be set to a list of attribute dec
 			  ATTR_DECL2,
 			  [...]
 			  ATTR_DECLN]).
+  [...]
+  -include("wooper.hrl").
+  [...]
+
+
 
 
 These declarations are to relate only to the **class-specific** attributes, i.e. the ones specifically introduced by the class at hand, regardless of the ones inherited from the mother classes.
@@ -1389,7 +1424,7 @@ where:
  - ``Name`` is the name of that attribute, as an atom (ex: ``fur_color``)
  - ``Type`` corresponds to the `type specification <http://erlang.org/doc/reference_manual/typespec.html>`_ of that attribute (ex: ``[atom()]``, ``foo:color_index()``); note that the Erlang parser will not support the ``|`` (i.e. union) operator, like in ``'foo'|integer()``; we recommend to use the ``union`` pseudo-function instead (with any arity greater or equal to 2), like in: ``union('foo',integer())``
  - ``QualifierInfo`` is detailed just below
- - ``Description`` is a plain string describing the purpose of this attribute; this is a comment aimed only at humans, which preferably does not start with a capital letter and does not end with a dot (ex: ``"describes the color of the fur of this animal (not including whiskers)"`` or a shorter ``"color of the fur of this animal (not including whiskers)"``)
+ - ``Description`` is a plain string describing the purpose of this attribute; this is a comment aimed only at humans, which preferably does not start with a capital letter and does not end with a dot (ex: ``"describes the color of the fur of this animal (not including whiskers)"`` or a shorter, maybe better, ``"color of the fur of this animal (not including whiskers)"``)
 
 
 .. comment We would have preferred that, instead of ``'integer()'``, one could have specified directly ``integer()``, yet this does not seem possible with parse-transforms, as in the latter case it would trigger a parse error earlier in the transformation process.
@@ -1406,13 +1441,12 @@ A **qualifier** can be:
   - the ``getFurColor/1`` const request would be added (with its spec)::
 
 	  getFurColor(State) ->
-		 wooper:const_return_result(?getAttr(fur_color)).
+		   wooper:const_return_result(?getAttr(fur_color)).
 
   - the ``setFurColor/2`` oneway would be added (with its spec)::
-
 	  setFurColor(State,FurColor) ->
-		 wooper:return_state(setAttribute(State,fur_color,
-										  FurColor)).
+		   wooper:return_state(setAttribute(State,fur_color,
+											FurColor)).
 
 - an *initialisation* qualifier: ``{initial,18}`` would denote that the initial value of the corresponding attribute is ``18`` (this value would then be set even before entering any constructor)
 
@@ -1432,7 +1466,7 @@ The defaults are:
 So an example of attribute declaration could be::
 
  {age,integer(),{initial,18},
-	 "stores the current age of this creature"}
+  "stores the current age of this creature"}
 
 
 .. Note:: Currently, these information are only of use for the developer (i.e. for documentation purpose). No check is made about whether they are used, whether no other attributes are used, whether the type is meaningful and indeed enforced, the default initial value is not set, etc. Some of these information might be handled by future WOOPER versions.
@@ -1453,7 +1487,7 @@ Finally, a full example of the declaration of class attributes can be:
   -define(class_attributes,[
 			name,
 			{age,integer(),{initial,18},
-				  "stores the current age of this creature"},
+				 "stores the current age of this creature"},
 			birth_date,
 			{weight,"total weight measured"}]).
 
@@ -1820,7 +1854,8 @@ The ``deleteFromAttribute/3`` function
 
 The corresponding signature is::
 
-  NewState = deleteFromAttribute(State,AttributeName,Element)
+  NewState = deleteFromAttribute(State,AttributeName,
+								 Element)
 
 When having a list attribute, deletes first match of specified element from the attribute list.
 
@@ -1964,6 +1999,7 @@ For example, both creations stemming from ``MyCat = class_Cat:new(A,B,C,D)`` and
 
 The same ``class_Cat:construct(State,A,B,C,D)`` will be called for all creation cases (one may note that, because of its first parameter, which accounts for the WOOPER-provided initial ``State`` parameter, the arity of ``construct`` is equal to the one of ``new`` / ``new_link`` plus one).
 
+
 The ``new_link`` operator behaves exactly as the ``new`` operator, except that it creates an instance that is Erlang-linked with the process that called that operator, exactly like ``spawn_link`` behaves compared to ``spawn`` [#]_.
 
 .. [#] For example it induces no race condition between linking and termination in the case of a very short-lived spawned process.
@@ -2096,10 +2132,8 @@ Knowing that a cat can be created here out of four parameters (``Age``, ``Gender
   % instance process, it may crash this calling process
   % (unless it traps EXIT signals):
   MyThirdCat = class_Cat:remote_synchronous_timed_new_link(
-					 OtherNode,3,male,grey,black),
+								 OtherNode,3,male,grey,black),
   [...]
-
-
 
 
 .. Definition of the ``construct`` Operators
@@ -2426,6 +2460,8 @@ Class Developer Cheat Sheet
 
 When specifying a **class**: ``-module(class_Foobar).``
 
+Any **description** thereof: ``-define(class_description,"Class for...").``
+
 When specifying its **superclasses**: ``-define(superclasses,[A,B]).``
 
 When specifying its **class attributes**: ``-define(class_attributes,[ATTR1,ATTR2,...])``
@@ -2591,6 +2627,25 @@ We recommend that, as a WOOPER user, one enables its debug mode when developing 
 Then only, once one's code is mature enough, this debug mode may be disabled in order to obtain best performances.
 
 
+"No attribute declaration found" whereas a ``class_attributes`` define exists
+-----------------------------------------------------------------------------
+
+Most probably that your ``-define(class_attributes,[...]).`` define happens *after* the WOOPER header include.
+
+The correct order is:
+
+.. code:: erlang
+
+  -define(class_attributes,[
+			  ATTR_DECL1,
+			  ATTR_DECL2,
+			  [...]
+			  ATTR_DECLN]).
+  [...]
+  -include("wooper.hrl").
+  [...]
+
+
 
 General Case
 ------------
@@ -2623,6 +2678,7 @@ If it is not enough to clear things up, an additional step can be to add, on a p
 Then all incoming method calls will be traced, for easier debugging. It is seldom necessary to go till this level of detail.
 
 As there are a few common WOOPER gotchas though, the main ones are listed below.
+
 
 
 Mismatches In Method Call
@@ -2660,7 +2716,7 @@ This would have called a ``request`` method ``startBarkingAt/2`` (which could ha
 This would result in a bit obscure error message like::
 
   Error in process <0.43.0> on node 'XXXX' with exit value:
-	{badarg,[{class_Dog,wooper_main_loop,1}]}
+	{badarg,[{class_Dog,wooper_main_loop,1}]}.
 
 
 

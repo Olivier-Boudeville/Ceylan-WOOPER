@@ -67,7 +67,7 @@
 %
 % This record is to strictly supersede the Myriad-level function_info one.
 %
-% See also: the function_info counterpart Myriad records, defined in
+% See also: this counterpart function_info Myriad record, defined in
 % ast_info.hrl.
 %
 -record( request_info, {
@@ -121,10 +121,11 @@
 %
 % This record is to strictly supersede the Myriad-level function_info one.
 %
-% See also: the function_info counterpart Myriad records, defined in
+% See also: the function_info counterpart Myriad record, defined in
 % ast_info.hrl.
 %
 -record( oneway_info, {
+
 		   % The name of that oneway:
 		   name = undefined :: wooper:oneway_name(),
 
@@ -175,7 +176,7 @@
 %
 % This record is to strictly supersede the Myriad-level function_info one.
 %
-% See also: the function_info counterpart Myriad records, defined in
+% See also: the function_info counterpart Myriad record, defined in
 % ast_info.hrl.
 %
 -record( static_info, {
@@ -500,29 +501,3 @@
 
 
 } ).
-
-
-
-
-% Uncomment to enable WOOPER-level traces:
-%-define( enable_wooper_traces, ).
-
-
--ifdef(enable_wooper_traces).
-
--define( display_trace( S ), trace_utils:trace( "[WOOPER] " ++ S ) ).
-
--define( display_trace( S, F ),
-		 ast_utils:trace_fmt( "[WOOPER] " ++ S, F ) ).
-
--else. % enable_wooper_traces
-
-% To avoid variables being reported as unused depending on the mode:
-
--define( display_trace( S ),
-		 basic_utils:ignore_unused( { wooper_trace_disabled, S } ) ).
-
--define( display_trace( S, F ),
-		 basic_utils:ignore_unused({ wooper_trace_disabled, S, F } ) ).
-
--endif. % enable_wooper_traces

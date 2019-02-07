@@ -24,15 +24,16 @@
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Wednesday, December 24, 2014
-
-
-% This test class is useful to test the base services and also to serve as a
-% mother class (see class_ChildTestClass).
 %
 -module(class_BaseTestClass).
 
 
-% Determines what are the mother classes of this class (if any):
+-define( class_description, "Class introduced notably to test inheritance: "
+		 "tests the base services and also serves as a mother class "
+		 "(see class_ChildTestClass).").
+
+
+% Determines what are the direct mother classes of this class (if any):
 % (one of these two lines may or may not be uncommented)
 %-superclasses([]).
 %-define( superclasses, [] ).
