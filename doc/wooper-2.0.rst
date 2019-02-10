@@ -21,7 +21,7 @@
 
 :raw-html:`<a name="wooper_top"></a>`
 
-:raw-html:`<div class="banner"><p><em>WOOPER 2.0 documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper-2.0.html">browse mirror</a> <a href="wooper-2.0.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER 2.0]%20Remark">email us</a></p></div>`
+:raw-html:`<div class="banner"><p><em>WOOPER 2.0 documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/index.html">browse mirror</a> <a href="wooper-2.0.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER 2.0]%20Remark">email us</a></p></div>`
 
 
 
