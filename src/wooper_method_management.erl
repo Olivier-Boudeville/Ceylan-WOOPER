@@ -33,6 +33,7 @@
 
 
 -export([ manage_methods/1, body_transformer/2, call_transformer/4,
+		  get_blank_transformation_state/0,
 		  ensure_exported/2, ensure_exported_at/2, ensure_all_exported_in/2,
 		  methods_to_functions/5,
 		  check_spec/4, check_clause_spec/5, check_state_argument/3,
@@ -602,8 +603,14 @@ check_state_argument( Clauses, FunId, Classname ) ->
 % (helper)
 %
 check_clause_for_state(
-  _Clause={ clause, _, _Params=[ {var,_,'State'} | _ ], _Guards, _Body }, _FunId,
-  _Classname ) ->
+  _Clause={ clause, _, _Params=[ {var,_,'State'} | _ ], _Guards, _Body },
+  _FunId, _Classname ) ->
+	ok;
+
+% Tolerated iff throwing afterwards:
+check_clause_for_state(
+  _Clause={ clause, _, _Params=[ {var,_,'_State'} | _ ], _Guards, _Body },
+  _FunId, _Classname ) ->
 	ok;
 
 check_clause_for_state(
@@ -657,7 +664,7 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 	%
 	% Transforms is an ast_transforms record that contains a
 	% transformation_state field, which itself contains a value of type:
-	%       maybe( { function_nature(), method_qualifiers() } ).
+	%   { maybe( function_nature() ), method_qualifiers(),  } ).
 	%
 	% Indeed it starts as 'undefined', then the first terminal call branch of
 	% the first clause allows to detect and set the function nature, and
@@ -673,10 +680,11 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 	TransformTable = table:new( [ { body, fun body_transformer/2 },
 								  { call, fun call_transformer/4 } ] ),
 
-	Transforms = #ast_transforms{ transformed_module_name=Classname,
-								  transform_table=TransformTable,
-								  transformed_function_identifier=FunId,
-								  transformation_state=undefined },
+	Transforms = #ast_transforms{
+					transformed_module_name=Classname,
+					transform_table=TransformTable,
+					transformed_function_identifier=FunId,
+					transformation_state=get_blank_transformation_state() },
 
 	%trace_utils:debug_fmt( "transforming now ~p.", [ FunId ] ),
 
@@ -687,20 +695,32 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 	{ FunNature, Qualifiers } =
 			  case NewTransforms#ast_transforms.transformation_state of
 
-		undefined ->
+		{ undefined, _, _WOOPERExportSet } ->
 			%trace_utils:debug_fmt( "~s/~B detected as a plain function.",
 			%					   pair:to_list( FunId ) ),
 			{ function, _Qualifiers=[] };
 
-		% Ex: { request, [ const ] }
-		Other ->
-			%trace_utils:debug_fmt( "~s/~B detected as: ~p",
-			%					   pair:to_list( FunId ) ++ [ Other ] ),
-			Other
+		% Ex: { request, [ const ], _ }
+		{ OtherNature, SomeQualifiers, _WOOPERExportSet } ->
+			%trace_utils:debug_fmt( "~s/~B detected as: ~p (qualifiers: ~w)",
+			%    pair:to_list( FunId ) ++ [ OtherNature, Qualifiers ] ),
+			{ OtherNature, SomeQualifiers }
 
 	end,
 
 	{ NewClauses, FunNature, Qualifiers }.
+
+
+
+% Returns a suitable, blank transformation state.
+%
+% Defined to be safely reused from various locations.
+%
+get_blank_transformation_state() ->
+	{ _FunctionNature=undefined, _Qualifiers=[],
+	  _ConstExportSet=wooper:get_exported_functions_set() }.
+
+
 
 
 
@@ -776,12 +796,13 @@ call_transformer( _LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 		Line );
 
 % First (correct, non-const) request detection:
-call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
-										   {atom,_,return_state_result} },
-				  Params=[ _StateExpr, _ResExpr ],
-				  Transforms=#ast_transforms{
-								%transformed_function_identifier=FunId,
-								transformation_state=undefined } ) ->
+call_transformer( LineCall,
+		_FunctionRef={ remote, _, {atom,_,wooper},
+						{atom,_,return_state_result} },
+		Params=[ _StateExpr, _ResExpr ],
+		Transforms=#ast_transforms{
+			%transformed_function_identifier=FunId,
+			transformation_state={ undefined, _, WOOPERExportSet } } ) ->
 
 	%trace_utils:debug_fmt( "~s/~B detected as a non-const request.",
 	%					   pair:to_list( FunId ) ),
@@ -790,7 +811,7 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 	NewExpr = { tuple, LineCall, Params },
 
 	NewTransforms = Transforms#ast_transforms{
-					  transformation_state={ request, [] } },
+					  transformation_state={ request, [], WOOPERExportSet } },
 
 	{ [ NewExpr ], NewTransforms };
 
@@ -801,7 +822,8 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 				  Params=[ _StateExpr, _ResExpr ],
 				  Transforms=#ast_transforms{
 						%transformed_function_identifier=FunId,
-						transformation_state={ request, Qualifiers } } ) ->
+						transformation_state={ request, Qualifiers,
+											   WOOPERExportSet } } ) ->
 
 	%trace_utils:debug_fmt( "~s/~B confirmed as a non-const request.",
 	%					   pair:to_list( FunId ) ),
@@ -812,7 +834,8 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 	NewExpr = { tuple, LineCall, Params },
 
 	NewTransforms = Transforms#ast_transforms{
-					  transformation_state={ request, NewQualifiers } },
+					  transformation_state={ request, NewQualifiers,
+											 WOOPERExportSet } },
 
 	{ [ NewExpr ], NewTransforms };
 
@@ -835,7 +858,8 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 				  _Params,
 				  Transforms=#ast_transforms{
 					transformed_function_identifier=FunId,
-					transformation_state={ OtherNature, _Qualifiers } } ) ->
+					transformation_state={ OtherNature, _Qualifiers,
+										   _WOOPERExportSet } } ) ->
 	wooper_internals:raise_usage_error( "method terminator mismatch "
 		"for method ~s/~B: wooper:return_state_result/2 implies "
 		"request, whereas was detected as a ~s.",
@@ -843,20 +867,22 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 
 
 % First (correct, a priori const) request detection:
-call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
-										   {atom,_,const_return_result} },
-				  Params=[ _ResExpr ],
-				  Transforms=#ast_transforms{
-					%transformed_function_identifier=FunId,
-					transformation_state=undefined } ) ->
+call_transformer( LineCall,
+	  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,const_return_result} },
+	  Params=[ _ResExpr ],
+	  Transforms=#ast_transforms{
+			%transformed_function_identifier=FunId,
+			transformation_state={ undefined, [], WOOPERExportSet } } ) ->
 
 	%trace_utils:debug_fmt( "~s/~B detected as a const request.",
 	%					   pair:to_list( FunId ) ),
 
 	% So that wooper:const_return_result( R ) becomes simply { S, R }:
 	NewExpr = { tuple, LineCall, [ { var, LineCall, 'State' } | Params ] },
-			NewTransforms = Transforms#ast_transforms{
-							  transformation_state={ request, [ const ] } },
+
+	NewTransforms = Transforms#ast_transforms{
+			  transformation_state={ request, [ const ], WOOPERExportSet } },
+
 	{ [ NewExpr ], NewTransforms };
 
 
@@ -867,7 +893,8 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 										   {atom,_,const_return_result} },
 				  Params=[ _ResExpr ],
 				  Transforms=#ast_transforms{
-						transformation_state={ request, _Qualifiers } } ) ->
+						transformation_state={ request, _Qualifiers,
+											   _WOOPERExportSet } } ) ->
 
 	NewExpr = { tuple, LineCall, [ { var, LineCall, 'State' } | Params ] },
 	{ [ NewExpr ], Transforms };
@@ -891,7 +918,8 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 				  _Params,
 				  Transforms=#ast_transforms{
 					transformed_function_identifier=FunId,
-					transformation_state={ OtherNature, _Qualifiers } } ) ->
+					transformation_state={ OtherNature, _Qualifiers,
+										   _WOOPERExportSet } } ) ->
 	wooper_internals:raise_usage_error( "method terminator mismatch "
 		"for method ~s/~B: wooper:const_return_result/1 implies "
 		"request, whereas was detected as a ~s.",
@@ -921,7 +949,8 @@ call_transformer( _LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 				  _Params=[ StateExpr ],
 				  Transforms=#ast_transforms{
 					%transformed_function_identifier=FunId,
-					transformation_state=undefined } ) ->
+					transformation_state={ undefined, _Qualifiers,
+										   WOOPERExportSet } } ) ->
 
 	%trace_utils:debug_fmt( "~s/~B detected as a non-const oneway.",
 	%					   pair:to_list( FunId ) ),
@@ -929,7 +958,7 @@ call_transformer( _LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 	% So that wooper:return_state( S ) becomes simply S:
 	NewExpr = StateExpr,
 	NewTransforms = Transforms#ast_transforms{
-					  transformation_state={ oneway, [] } },
+					  transformation_state={ oneway, [], WOOPERExportSet } },
 	{ [ NewExpr ], NewTransforms };
 
 
@@ -938,7 +967,8 @@ call_transformer( _LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 											{atom,_,return_state} },
 				  _Params=[ StateExpr ],
 				  Transforms=#ast_transforms{
-						transformation_state={ oneway, Qualifiers } } ) ->
+						transformation_state={ oneway, Qualifiers,
+											   WOOPERExportSet } } ) ->
 
 	% 'const' may or may not be still there, and will surely not:
 	NewQualifiers = lists:delete( const, Qualifiers ),
@@ -946,7 +976,8 @@ call_transformer( _LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 	NewExpr = StateExpr,
 
 	NewTransforms = Transforms#ast_transforms{
-					  transformation_state={ oneway, NewQualifiers } },
+					  transformation_state={ oneway, NewQualifiers,
+											 WOOPERExportSet } },
 
 	{ [ NewExpr ], NewTransforms };
 
@@ -969,7 +1000,8 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 				  _Params,
 				  Transforms=#ast_transforms{
 						transformed_function_identifier=FunId,
-						transformation_state={ OtherNature, _Qualifiers } } ) ->
+						transformation_state={ OtherNature, _Qualifiers,
+											   _WOOPERExportSet } } ) ->
 	wooper_internals:raise_usage_error( "method terminator mismatch "
 		"for method ~s/~B: wooper:return_state/1 implies "
 		"oneway, whereas was detected as a ~s.",
@@ -982,7 +1014,8 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 				  _Params=[],
 				  Transforms=#ast_transforms{
 						%transformed_function_identifier=FunId,
-						transformation_state=undefined } ) ->
+						transformation_state={ undefined, _,
+											   WOOPERExportSet } } ) ->
 
 	%trace_utils:debug_fmt( "~s/~B detected as a const oneway.",
 	%					   pair:to_list( FunId ) ),
@@ -990,7 +1023,7 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 	% So that wooper:const_return() becomes simply S:
 	NewExpr = { var, LineCall, 'State' },
 	NewTransforms = Transforms#ast_transforms{
-					  transformation_state={ oneway, [ const ] } },
+		  transformation_state={ oneway, [ const ], WOOPERExportSet } },
 	{ [ NewExpr ], NewTransforms };
 
 
@@ -1001,7 +1034,8 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 										   {atom,_,const_return} },
 				  _Params=[],
 				  Transforms=#ast_transforms{
-						transformation_state={ oneway, _Qualifiers } } ) ->
+						transformation_state={ oneway, _Qualifiers,
+											   _WOOPERExportSet } } ) ->
 
 	NewExpr = { var, LineCall, 'State' },
 
@@ -1026,7 +1060,8 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 				  _Params,
 				  Transforms=#ast_transforms{
 					transformed_function_identifier=FunId,
-					transformation_state={ OtherNature, _Qualifiers } } ) ->
+					transformation_state={ OtherNature, _Qualifiers,
+										   _WOOPERExportSet } } ) ->
 	wooper_internals:raise_usage_error( "method terminator mismatch "
 		"for method ~s/~B: wooper:const_return/0 implies "
 		"oneway, whereas was detected as a ~s.",
@@ -1041,8 +1076,8 @@ call_transformer( _LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
 		  _Params=[ ResultExpr ],
 		  Transforms=#ast_transforms{
-						%transformed_function_identifier=FunId,
-						transformation_state=undefined } ) ->
+				%transformed_function_identifier=FunId,
+				transformation_state={ undefined, _, WOOPERExportSet } } ) ->
 
 	%trace_utils:debug_fmt( "~s/~B detected as a static method.",
 	%					   pair:to_list( FunId ) ),
@@ -1050,7 +1085,7 @@ call_transformer( _LineCall,
 	% So that wooper:return_static( R ) becomes simply R:
 	NewExpr = ResultExpr,
 	NewTransforms = Transforms#ast_transforms{
-					  transformation_state={ static, [] } },
+					  transformation_state={ static, [], WOOPERExportSet } },
 	{ [ NewExpr ], NewTransforms };
 
 
@@ -1062,8 +1097,9 @@ call_transformer( _LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
 		  _Params=[ ResultExpr ],
 		  Transforms=#ast_transforms{
-						%transformed_function_identifier=FunId,
-						transformation_state={ static, _Qualifiers } } ) ->
+				%transformed_function_identifier=FunId,
+				transformation_state={ static, _Qualifiers,
+									   _WOOPERExportSet } } ) ->
 
 	%trace_utils:debug_fmt( "~s/~B confirmed as a static method.",
 	%					   pair:to_list( FunId ) ),
@@ -1091,34 +1127,107 @@ call_transformer( LineCall,
 		  _Params,
 		  Transforms=#ast_transforms{
 						transformed_function_identifier=FunId,
-						transformation_state={ OtherNature, _Qualifiers } } ) ->
+						transformation_state={ OtherNature, _Qualifiers,
+											   _WOOPERExportSet } } ) ->
 	wooper_internals:raise_usage_error( "method terminator mismatch "
 		"for method ~s/~B: wooper:return_static/1 implies "
 		"static method, whereas was detected as a ~s.",
 		pair:to_list( FunId ) ++ [ OtherNature ], Transforms, LineCall );
 
 
+% The commented clause below cannot be kept, as a plain function may for example
+% terminate with a call to wooper:execute_request/4, with is licit and should
+% not be interpreted as an invalid method terminator:
+%
 % Invalid method terminator:
-call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
-										   {atom,_,UnexpectedTerminator} },
-				  _Params,
+%call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+%										   {atom,_,UnexpectedTerminator} },
+%				  _Params,
+%				  Transforms=#ast_transforms{
+%								transformed_function_identifier=FunId } ) ->
+%	wooper_internals:raise_usage_error( "invalid method terminator specified "
+%		"for ~s/~B: wooper:~s does not exist (for any arity).",
+%		pair:to_list( FunId ) ++ [ UnexpectedTerminator ], Transforms,
+%		LineCall );
+
+
+% So we selectively accept the WOOPER non-terminator functions, and reject the
+% others, i.e. the ones that the wooper module does not export:
+%
+% (the purpose is to intercept any wrong method terminator that would be
+% introduced by the user)
+%
+call_transformer( LineCall, FunctionRef={ remote, _, {atom,_,wooper},
+										  {atom,_,FunctionName} },
+				  Params,
 				  Transforms=#ast_transforms{
-								transformed_function_identifier=FunId } ) ->
-	wooper_internals:raise_usage_error( "invalid method terminator specified "
-		"for ~s/~B: wooper:~s does not exist (for any arity).",
-		pair:to_list( FunId ) ++ [ UnexpectedTerminator ], Transforms,
-		LineCall );
+						transformed_function_identifier=FunId,
+						transformation_state={ _Nature, _Qualifiers,
+											   WOOPERExportSet } } ) ->
+
+	CallFunId = { FunctionName, length( Params ) },
+
+	% So this call does not correspond to any known/expected method terminator;
+	% let's check whether it is a legit WOOPER call (allowed as last expression
+	% of a body) or a WOOPER-unknown one (hence most probably a faulty
+	% terminator):
+	%
+	case set_utils:member( CallFunId, WOOPERExportSet ) of
+
+		true ->
+			% OK, terminating a body with a call to a function of the wooper
+			% module is allowed (provided it is not a method but a plain
+			% function), so we let this call pass through:
+
+			%trace_utils:debug_fmt( "~s/~B detected as a plain function;~n"
+			%	" - function ref is:~n~p~n - transform is:~n~p~n",
+			%	pair:to_list( FunId ) ++ [ FunctionRef, Transforms ] ),
+
+			SameExpr = { call, LineCall, FunctionRef, Params },
+			{ [ SameExpr ], Transforms };
+
+		false ->
+
+			%trace_utils:debug_fmt( "Known functions exported by the wooper "
+			%					   "module: ~s",
+			%					   [ set_utils:to_string( WOOPERExportSet ) ] ),
+
+			%trace_utils:debug_fmt( "Known functions exported by the wooper "
+			%					   "module:~n  ~s",
+			%					   [ table:toString( WOOPERExportSet ) ] ),
+
+			wooper_internals:raise_usage_error( "invalid method terminator "
+			  "specified for ~s/~B: wooper:~s/~B is neither a known terminator "
+			  "nor an exported function.",
+			  pair:to_list( FunId ) ++ pair:to_list( CallFunId ),
+			  Transforms, LineCall )
+
+	end;
 
 
-% All other calls are to pass through, as they are:
-call_transformer( LineCall, FunctionRef, Params, Transforms ) ->
+% Finally, of course calls unrelated to WOOPER shall go through as well:
+call_transformer( LineCall, FunctionRef, Params,
+				  Transforms ) ->
+				  %Transforms=#ast_transforms{
+						%transformed_function_identifier=FunId,
+						%transformation_state={ Nature, Qualifiers,
+						%					   _WOOPERExportSet } } ) ->
 
-	%trace_utils:debug_fmt( "~s/~B detected as a plain function;~n"
-	%	" - function ref is:~n~p~n - transform is:~n~p~n",
-	%	pair:to_list( FunId ) ++ [ FunctionRef, Transforms ] ),
+	%trace_utils:debug_fmt( "Deducing that ~s/~B is a plain function "
+	%					   "(nature: ~p, qualifiers: ~p)",
+	%					   pair:to_list( FunId ) ++ [ Nature, Qualifiers ] ),
 
 	SameExpr = { call, LineCall, FunctionRef, Params },
 	{ [ SameExpr ], Transforms }.
+
+
+% To help debugging any non-match:
+%call_transformer( _LineCall, _FunctionRef, _Params, Transforms ) ->
+%
+%	trace_utils:debug_fmt( "Unexpected transforms:~n  ~s",
+%				   [ ast_transform:ast_transforms_to_string( Transforms ) ] ),
+%
+%	throw( { unexpected_transforms, Transforms } ).
 
 
 

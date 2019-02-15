@@ -95,6 +95,9 @@
 
 % Traps to detect any method terminator that would be left untransformed:
 %
+% Note: neither exported or even defined anymore, as now WOOPER checks at
+% compile time whether a given wooper:SomeFun(...) call is a terminator
+%
 -export([ return_state_result/2, return_state/1, return_static/1,
 		  const_return_result/1, const_return/0 ]).
 
@@ -125,6 +128,10 @@
 % Basics:
 -export([ get_class_manager/0, default_exit_handler/3, default_down_handler/5,
 		  default_node_up_handler/3, default_node_down_handler/3 ]).
+
+
+% To allow for finer checking:
+-export([ get_exported_functions_set/0 ]).
 
 
 % The record defining the state of a passive instance:
@@ -278,6 +285,10 @@
 -type state() :: #state_holder{}.
 
 
+% Allows to record the functions exported by a module (typically the 'wooper'
+% one):
+%
+-type function_export_set() :: set_utils:set( meta_utils:function_id() ).
 
 
 % We prefer having it prefixed by wooper:
@@ -300,7 +311,7 @@
 
 			   attribute_name/0, attribute_value/0, attribute_entry/0,
 			   attribute_qualifier/0,
-			   instance_pid/0, state/0 ]).
+			   instance_pid/0, state/0, function_export_set/0 ]).
 
 
 
@@ -2294,3 +2305,16 @@ const_return_result( _Value ) ->
 -spec const_return() -> no_return().
 const_return() ->
 	throw( { untransformed_method_terminator, const_return } ).
+
+
+
+% Returns a set containing pairs whose first element is the name of a function
+% exported from the wooper module, and whose second element is its corresponding
+% arity (of course multiple functions might share the same name but rely on
+% different arities).
+%
+% Typically useful to better intercept user errors in method terminators.
+%
+-spec get_exported_functions_set() -> function_export_set().
+get_exported_functions_set() ->
+	set_utils:new( meta_utils:list_exported_functions( ?MODULE ) ).

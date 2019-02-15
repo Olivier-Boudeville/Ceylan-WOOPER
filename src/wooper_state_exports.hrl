@@ -166,18 +166,18 @@
 
 
 % Checks that the value of specified attribute is 'undefined'.
+%
 % Triggers an exception otherwise.
 %
 % Note: operates on a state called 'State', thus must be a macro.
 %
 % The check could be disabled in debug mode.
 %
-% This results in function call, as a pure macro, if used more than once in a
-% function, would trigger warnings about unused variables or, more probably,
-% would attempt to perform unintended pattern matches.
+% Not a macro per se, in order to avoid unintended multiple function calls,
+% warnings about unused variables or, more probably, unintended pattern matches.
 %
--define( checkUndefined( Attribute ),
-	wooper_check_undefined( State, (Attribute) )
+-define( checkUndefined( AttributeName ),
+	wooper_check_undefined( (AttributeName), State )
 ).
 
 

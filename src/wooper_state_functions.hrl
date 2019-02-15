@@ -413,9 +413,8 @@ popFromAttribute( State, AttributeName ) ->
 
 
 % Helper function for the checkUndefined macro.
-%
--spec wooper_check_undefined( wooper:state(), attribute_name() ) -> void().
-wooper_check_undefined( State, Attribute ) ->
+-spec wooper_check_undefined( attribute_name(), wooper:state() ) -> void().
+wooper_check_undefined( Attribute, State ) ->
 
 	try
 
