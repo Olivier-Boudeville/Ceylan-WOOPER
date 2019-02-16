@@ -72,9 +72,8 @@ getTeatCount( State ) ->
 canEat( State, soup ) ->
 	wooper:const_return_result( true );
 
-canEat( State, chocolate ) ->
+canEat( _State, chocolate ) ->
 	throw( { harmful_food_detected, chocolate } );
-	%wooper:const_return_result( true );
 
 canEat( State, croquette ) ->
 	wooper:const_return_result( true );
