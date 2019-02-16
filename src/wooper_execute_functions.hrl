@@ -59,7 +59,7 @@
 executeRequest( State, RequestAtom ) when is_record( State, state_holder )
 										  andalso is_atom( RequestAtom ) ->
 
-	%trace_utils:debug_fmt( "executeRequest/2: executing ~s() from ~s.~n",
+	%trace_utils:debug_fmt( "executeRequest/2: executing ~s() from ~s.",
 	%	[ RequestAtom, State#state_holder.actual_class ] ),
 
 	wooper_handle_local_request_execution( RequestAtom, State,
@@ -129,7 +129,8 @@ executeRequest( State, RequestAtom, ArgumentList ) when
 	  is_record( State, state_holder ) andalso is_atom( RequestAtom )
 	  andalso is_list( ArgumentList ) ->
 
-	%trace_utils:debug_fmt( "executeRequest/3 with list: executing ~s(~w) from ~s.~n",
+	%trace_utils:debug_fmt( "executeRequest/3 with list: executing ~s(~w) "
+	%   "from ~s.",
 	%	[ RequestAtom, ArgumentList, State#state_holder.actual_class ] ),
 
 	wooper_handle_local_request_execution( RequestAtom, State, ArgumentList );
@@ -140,7 +141,7 @@ executeRequest( State, RequestAtom, StandaloneArgument ) when
 	  is_record( State, state_holder ) andalso is_atom( RequestAtom )->
 
 	%trace_utils:debug_fmt( "executeRequest/3 with standalone argument: "
-	%	"executing ~s(~w) from ~s.~n",
+	%	"executing ~s(~w) from ~s.",
 	%	[ RequestAtom, StandaloneArgument, State#state_holder.actual_class ] ),
 
 	wooper_handle_local_request_execution( RequestAtom, State,
@@ -201,7 +202,8 @@ executeRequestAs( State, Classname, RequestAtom )
   when is_record( State, state_holder ) andalso is_atom( Classname )
 	   andalso is_atom( RequestAtom ) ->
 
-	%trace_utils:debug_fmt( "executeRequestAs/3: executing ~s() from ~s with ~s.~n",
+	%trace_utils:debug_fmt( "executeRequestAs/3: executing ~s() from ~s "
+	%   "with ~s.",
 	%	[ RequestAtom, State#state_holder.actual_class, Classname ]),
 
 	wooper_handle_local_request_execution_as( RequestAtom, State,
@@ -254,8 +256,8 @@ executeRequestAs( State, Classname, RequestAtom, ArgumentList ) when
 	  is_record( State, state_holder ) andalso is_atom( Classname )
 	  andalso is_atom( RequestAtom ) andalso is_list( ArgumentList ) ->
 
-	%trace_utils:debug_fmt( "executeRequestAs/4 with list: executing ~s(~w) from ~s "
-	%  "with ~s.~n", [ RequestAtom, ArgumentList,
+	%trace_utils:debug_fmt( "executeRequestAs/4 with list: executing ~s(~w) "
+	%  "from ~s with ~s.", [ RequestAtom, ArgumentList,
 	% State#state_holder.actual_class, Classname ] ),
 
 	wooper_handle_local_request_execution_as( RequestAtom, State,
@@ -268,7 +270,7 @@ executeRequestAs( State, Classname, RequestAtom, StandaloneArgument ) when
 	  andalso is_atom( RequestAtom ) ->
 
 	%trace_utils:debug_fmt( "executeRequestAs/3 with standalone argument: "
-	%	"executing ~s(~w) from ~s with ~s.~n",
+	%	"executing ~s(~w) from ~s with ~s.",
 	%	[ RequestAtom, StandaloneArgument, State#state_holder.actual_class,
 	% Classname ] ),
 
@@ -328,7 +330,7 @@ executeConstRequestAs( State, Classname, RequestAtom, ArgumentList ) ->
 executeOneway( State, OnewayAtom ) when is_record( State, state_holder )
 										andalso is_atom( OnewayAtom ) ->
 
-	%trace_utils:debug_fmt( "executeOneway/2: executing ~s() from ~s.~n",
+	%trace_utils:debug_fmt( "executeOneway/2: executing ~s() from ~s.",
 	%   [ OnewayAtom, State#state_holder.actual_class ] ),
 
 	wooper_handle_local_oneway_execution( OnewayAtom, State, _ArgumentList=[] );
@@ -381,7 +383,8 @@ executeOneway( State, OnewayAtom, ArgumentList ) when
 	  is_record( State, state_holder ) andalso is_atom( OnewayAtom )
 	  andalso is_list( ArgumentList ) ->
 
-	%trace_utils:debug_fmt( "executeOneway/3 with list: executing ~s(~w) from ~s.~n",
+	%trace_utils:debug_fmt( "executeOneway/3 with list: executing ~s(~w) "
+	%   "from ~s.",
 	%	[ OnewayAtom, ArgumentList, State#state_holder.actual_class ] ),
 
 	wooper_handle_local_oneway_execution( OnewayAtom, State, ArgumentList );
@@ -392,7 +395,7 @@ executeOneway( State, OnewayAtom, StandaloneArgument ) when
 		is_record( State, state_holder ) andalso is_atom( OnewayAtom ) ->
 
 	%trace_utils:debug_fmt( "executeOneway/3 with standalone argument: "
-	%	"executing ~s(~w) from ~s.~n",
+	%	"executing ~s(~w) from ~s.",
 	%	[ OnewayAtom, StandaloneArgument, State#state_holder.actual_class ] ),
 
 	wooper_handle_local_oneway_execution( OnewayAtom, State,
@@ -457,7 +460,7 @@ executeOnewayAs( State, Classname, OnewayAtom )
   when is_record( State, state_holder ) andalso is_atom( Classname )
 	   andalso is_atom( OnewayAtom ) ->
 
-	%trace_utils:debug_fmt( "executeOnewayAs/3: executing ~s() from ~s.~n",
+	%trace_utils:debug_fmt( "executeOnewayAs/3: executing ~s() from ~s.",
 	%	[ OnewayAtom, State#state_holder.actual_class ] ),
 
 	wooper_handle_local_oneway_execution_as( OnewayAtom, State,
@@ -510,8 +513,8 @@ executeOnewayAs( State, Classname, OnewayAtom, ArgumentList ) when
 	  is_record( State, state_holder ) andalso is_atom( Classname )
 	  andalso is_atom( OnewayAtom ) andalso is_list( ArgumentList ) ->
 
-	%trace_utils:debug_fmt( "executeOneway/4 with list: executing ~s(~w) from ~s "
-	%           "with ~s.~n",
+	%trace_utils:debug_fmt( "executeOneway/4 with list: executing ~s(~w) "
+	%            "from ~s with ~s.",
 	%			 [ OnewayAtom, ArgumentList, State#state_holder.actual_class,
 	%               Classname ] ),
 
@@ -526,7 +529,7 @@ executeOnewayAs( State, Classname, OnewayAtom, StandaloneArgument ) when
 	  andalso is_atom( OnewayAtom ) ->
 
 	%trace_utils:debug_fmt( "executeOnewayAs/4 with standalone argument: "
-	%	"executing ~s(~w) from ~s with ~s.~n",
+	%	"executing ~s(~w) from ~s with ~s.",
 	%	[ OnewayAtom, StandaloneArgument, State#state_holder.actual_class,
 	% Classname ] ),
 
