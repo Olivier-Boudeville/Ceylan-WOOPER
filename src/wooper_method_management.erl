@@ -36,12 +36,14 @@
 		  get_blank_transformation_state/1,
 		  ensure_exported/2, ensure_exported_at/2, ensure_all_exported_in/2,
 		  methods_to_functions/5,
-		  check_spec/4, check_clause_spec/5, check_state_argument/3,
+		  take_spec_into_account/5, check_clause_spec/5, check_state_argument/3,
 		  function_nature_to_string/1,
 
-		  function_to_request_info/1, request_to_function_info/2,
-		  function_to_oneway_info/1, oneway_to_function_info/2,
-		  function_to_static_info/1, static_to_function_info/2 ]).
+		  function_to_request_info/2, request_to_function_info/2,
+		  function_to_oneway_info/2, oneway_to_function_info/2,
+		  function_to_static_info/2, static_to_function_info/2,
+
+		  format_log/2 ]).
 
 
 % For the function_info record:
@@ -57,13 +59,17 @@
 
 % The (WOOPER-level) nature of a given Erlang function.
 %
+% ('throw' designates a function whose all clauses throw an exception, and as
+% such may be temporarily not identified in terms of nature)
+%
 -type function_nature() :: 'constructor' | 'destructor'
-						 | 'request' | 'oneway' | 'static' | 'function'.
+			 | 'request' | 'oneway' | 'static' | 'function' | 'throw'.
 
 
 % Shorthands:
 
 -type function_info() :: ast_info:function_info().
+-type function_id() :: meta_utils:function_id().
 -type marker_table() :: ast_info:section_marker_table().
 -type location() :: ast_base:form_location().
 -type function_table() :: ast_info:function_table().
@@ -83,11 +89,11 @@
 
 % Implementation notes:
 
-
 % To determine whether a function is a method and, if yes, of what kind it is
 % (request, oneway, etc.), we have to traverse recursively at least one of its
 % clauses until finding at least one final expression in order to examine, check
-% and possibly transform any method terminator found.
+% and possibly transform any method terminator found. We chose to traverse all
+% clauses in order to catch any inconsistency in the user code.
 %
 % Recursing in nested local calls is not needed here, as by convention the
 % method terminators should be local to the method body.
@@ -101,8 +107,8 @@
 %
 % We preferred initially here the latter solution (lighter, simpler, safer), but
 % we had already a full logic (in Myriad's meta) to traverse and transform ASTs
-% or part thereof, so we rely on it for the best, now that it has been enriched
-% so that it can apply and maintain a transformation state.
+% or part thereof, so we relied on it for the best, now that it has been
+% enriched so that it can apply and maintain a transformation state.
 %
 % A combination of ast_transform:get_remote_call_transform_table/1 with
 % ast_expression:transform_expression/2 would have been close to what we needed,
@@ -110,6 +116,46 @@
 % by a tuple creation, i.e. an expression. Moreover we need to be stateful, to
 % remember any past method terminator and check their are consistent with the
 % newer ones being found.
+%
+% Finally, a difficulty is that normal functions by nature do not use
+% terminators, whereas, when handling a method, for example a clause not using
+% terminators among legit clauses shall be caught, despite the lack of an
+% explicit trigger. Another difficulty is to handle throws, which are compatible
+% with all function natures, and thus do not teach anything - even if they can
+% constitue the sole clauses of a given function (any type spec thereof is then
+% needed to remove this ambiguity).
+
+% So, here are the WOOPER traversal rules to cover these needs:
+%
+% - as always with Myriad, it is a depth-first, integral, single-pass traversal;
+% however we do not attempt anymore to merge this WOOPER pass with the Myriad
+% one, as for example calls into case patterns are irrelevant here
+%
+% - initially, the function nature is 'undefined'
+%
+% - we traverse all bodies of all function clauses
+
+% - when traversing a body, only its last expression (if any) is of interest for
+% WOOPER (all preceding expressions are thus skipped, WOOPER-wise)
+%
+% - as soon an element is found (ex: method terminator, throw), the
+% corresponding function nature supersedes the 'undefined' status
+%
+% - all (non-undefined) natures (resulting from method terminators) supersede
+% 'throw'
+%
+% - returning from a transformation with an 'undefined' nature implies the new
+% nature is 'function' (there is no method terminator nor throw in any nested
+% branch; it is a "by default" property)
+%
+% - the traversal does not recurse in calls, as by design a WOOPER terminator is
+% to be the most global one (i.e. the first one in any function composition) -
+% however deeply nested in branching clauses
+
+% Said otherwise, the traversal starts with the function clauses, which are
+% managed by our clause_transformer/2, in charge of calling body_transformer/2.
+% Should no method terminator nor throw be found, the function nature is still
+% at 'undefined', so we assign it to 'function'.
 
 
 
@@ -196,51 +242,71 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 	%					   [ FunId, function_nature_to_string( FunNature ),
 	%						 Qualifiers ] ),
 
+
 	NewFunInfo = FunInfo#function_info{ clauses=NewClauses },
+
+	% Last chance to determine the actual nature of a function reported as
+	% 'throw': it may have a type spec to remove ambiguity; any spec used also
+	% to check consistency with the guessed elements:
+	%
+	{ FinalNature, FinalQualifiers } = take_spec_into_account( Spec, FunId,
+										  FunNature, Qualifiers, Classname ),
 
 	% Stores the result in the right category and recurses:
 	%
-	% (we ensure here that methods are exported, while they are still
-	% function_info records)
-	%
-	case FunNature of
+	case FinalNature of
 
 		function ->
-			check_spec( Spec, function, Qualifiers, Classname ),
+
 			NewFunctionTable =
 				table:addNewEntry( FunId, NewFunInfo, FunctionTable ),
+
 			sort_out_functions( T, NewFunctionTable, RequestTable,
 					OnewayTable, StaticTable, Classname, ExportLoc,
 					WOOPERExportSet );
 
 		request ->
-			check_spec( Spec, request, Qualifiers, Classname ),
+
 			check_state_argument( NewClauses, FunId, Classname ),
+
 			ExportedFunInfo = ensure_exported_at( NewFunInfo, ExportLoc ),
-			RequestInfo = function_to_request_info( ExportedFunInfo ),
+
+			RequestInfo =
+				function_to_request_info( ExportedFunInfo, FinalQualifiers ),
+
 			NewRequestTable = table:addNewEntry( FunId, RequestInfo,
 												 RequestTable ),
+
 			sort_out_functions( T, FunctionTable, NewRequestTable,
 					OnewayTable, StaticTable, Classname, ExportLoc,
 					WOOPERExportSet );
 
 		oneway ->
-			check_spec( Spec, oneway, Qualifiers, Classname ),
+
 			check_state_argument( NewClauses, FunId, Classname ),
+
 			ExportedFunInfo = ensure_exported_at( NewFunInfo, ExportLoc ),
-			OnewayInfo = function_to_oneway_info( ExportedFunInfo ),
+
+			OnewayInfo =
+				function_to_oneway_info( ExportedFunInfo, FinalQualifiers ),
+
 			NewOnewayTable = table:addNewEntry( FunId, OnewayInfo,
 												OnewayTable ),
+
 			sort_out_functions( T, FunctionTable, RequestTable,
 					NewOnewayTable, StaticTable, Classname, ExportLoc,
 					WOOPERExportSet );
 
 		static ->
-			check_spec( Spec, static, Qualifiers, Classname ),
+
 			ExportedFunInfo = ensure_exported_at( NewFunInfo, ExportLoc ),
-			StaticInfo = function_to_static_info( ExportedFunInfo ),
+
+			StaticInfo =
+				function_to_static_info( ExportedFunInfo, FinalQualifiers ),
+
 			NewStaticTable = table:addNewEntry( FunId, StaticInfo,
 												StaticTable ),
+
 			sort_out_functions( T, FunctionTable, RequestTable,
 					OnewayTable, NewStaticTable, Classname, ExportLoc,
 					WOOPERExportSet )
@@ -259,22 +325,108 @@ sort_out_functions( _Functions=[ #function_info{ name=FunName,
 
 
 
-% Checks that the method spec (if any) corresponds indeed to the right type of
-% method, i.e. relies on the right method terminators.
+
+% Checks that the method spec (if any) corresponds indeed to the right nature of
+% function, i.e. relies on the right method terminators with the right
+% qualifiers, and returns a corresponding pair.
 %
 % (helper)
 %
--spec check_spec( maybe( ast_info:located_form() ), function_nature(),
-				  method_qualifiers(), wooper:classname() ) -> void().
-% Function specs are optional:
-check_spec( _LocSpec=undefined, _FunNature, _Qualifiers, _Classname ) ->
-	ok;
+-spec take_spec_into_account( maybe( ast_info:located_form() ), function_id(),
+	   function_nature(), method_qualifiers(), wooper:classname() ) ->
+						{ function_nature(), method_qualifiers() }.
+% Function specs are generally optional, yet are useful in all cases, and even
+% needed in some ones (ex: what is the actual nature of a function whose all
+% clauses throw?)
+take_spec_into_account( _LocSpec=undefined, FunId, _FunNature=throw,
+						_Qualifiers, Classname ) ->
+	wooper_internals:raise_usage_error(
+	  "all clauses of ~s/~B throw an exception; as a result this "
+	  "function can be of any nature. Please define a type specification for "
+	  "that function in order to remove this ambiguity "
+	  "(ex: use request_return/1 to mark it as a request).",
+	  pair:to_list( FunId ), Classname );
 
-check_spec( _LocSpec={ _Loc,
+% Special case for a function nature detected as 'throw': any information
+% collected from its spec is accepted as is (provided there is only one spec).
+%
+take_spec_into_account( _LocSpec={ _Loc,
+		   { attribute, _, spec, { FunId, [ ClauseSpec ] } } },
+					   FunId, _FunNature=throw, _Qualifiers, _Classname ) ->
+	get_info_from_clause_spec( ClauseSpec, FunId );
+
+% Throw function with a spec comprising multiple clauses is not supported:
+take_spec_into_account( _LocSpec={ _Loc,
+		   { attribute, _, spec, { FunId, _ClauseSpecs } } },
+					   _FunId, _FunNature=throw, _Qualifiers, Classname ) ->
+	wooper_internals:raise_usage_error(
+	  "all clauses of the function ~s/~B throw an exception; as a result this "
+	  "function can be of any nature. Its type specification shall however "
+	  "comprise a single clause to remove this ambiguity.",
+	  pair:to_list( FunId ), Classname );
+
+
+% No spec defined, non-throw, so input elements are accepted as such:
+take_spec_into_account( _LocSpec=undefined, _FunId, FunNature, Qualifiers,
+						_Classname ) ->
+	{ FunNature, Qualifiers };
+
+
+% Spec available for a non-throw:
+take_spec_into_account( _LocSpec={ _Loc,
 					   { attribute, _, spec, { FunId, ClauseSpecs } } },
-			FunNature, Qualifiers, Classname ) ->
+			_FunId, FunNature, Qualifiers, Classname ) ->
 	[ check_clause_spec( C, FunNature, Qualifiers, FunId, Classname )
-	  || C <- ClauseSpecs ].
+	  || C <- ClauseSpecs ],
+	% If check not failed, approved, so:
+	{ FunNature, Qualifiers }.
+
+
+
+% Returns a { FunctionNature, Qualifiers } pair deduced from specified clause
+% spec.
+%
+get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
+	_Seqs=[ _TypeProductForArgs,
+			_ResultType={ user_type, _, request_return, [ _RType ] } ] },
+						   _FunId ) ->
+	{ request, [] };
+
+
+get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
+	_Seqs=[ _TypeProductForArgs,
+			_ResultType={ user_type, _, const_request_return,
+						  [ _RType ] } ] }, _FunId ) ->
+	{ request, [ const ] };
+
+
+get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
+	_Seqs=[ _TypeProductForArgs,
+			_ResultType={ user_type, _, oneway_return, [] } ] },
+						   _FunId ) ->
+	{ oneway, [] };
+
+
+get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
+	_Seqs=[ _TypeProductForArgs,
+			_ResultType={ user_type, _, const_oneway_return, [] } ] },
+						   _FunId ) ->
+	{ oneway, [ const ] };
+
+
+get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
+	_Seqs=[ _TypeProductForArgs,
+			_ResultType={ user_type, _, static_return, [ _RType ] } ] },
+						   _FunId ) ->
+	{ static, [] };
+
+% For the rest, we assume it designates plain function:
+%
+% (wrong spelling, arity, etc. could be detected here as well, like with
+% check_clause_spec/5)
+%
+get_info_from_clause_spec( _ClauseSpec, _FunId ) ->
+	{ function, [] }.
 
 
 
@@ -594,6 +746,9 @@ function_nature_to_string( static ) ->
 function_nature_to_string( function ) ->
 	"plain function";
 
+function_nature_to_string( throw ) ->
+	"throw-only function";
+
 function_nature_to_string( undefined ) ->
 	"undefined type of function".
 
@@ -608,8 +763,8 @@ function_nature_to_string( undefined ) ->
 % introduces (ex: { var, LineCall, 'State'} added in the AST, hence the enforced
 % variable name).
 %
--spec check_state_argument( [ meta_utils:clause_def() ],
-					ast_info:function_id(), wooper:classname() ) -> void().
+-spec check_state_argument( [ meta_utils:clause_def() ], function_id(),
+							wooper:classname() ) -> void().
 check_state_argument( Clauses, FunId, Classname ) ->
 	[ check_clause_for_state( C, FunId, Classname ) || C <- Clauses ].
 
@@ -648,7 +803,7 @@ check_clause_for_state( _Clause, FunId, Classname ) ->
 
 % Infers the nature of the corresponding function and any relevant method
 % qualifier(s), ensures that all method terminators correspond, and transforms
-% them appropriately, in one pass.
+% them appropriately (for WOOPER), in one pass.
 %
 % We consider that no method is to be explicitly exported and that all actual
 % clauses of a method must explicitly terminate with a WOOPER method terminator
@@ -657,8 +812,8 @@ check_clause_for_state( _Clause, FunId, Classname ) ->
 % methods could not be auto-detected, as there would be no way to determine
 % whether said helper should be considered as a method or not).
 %
--spec manage_method_terminators( meta_utils:clause_def(),
-				   meta_utils:function_id(), wooper:classname() ) ->
+-spec manage_method_terminators( meta_utils:clause_def(), function_id(),
+								 wooper:classname() ) ->
 		{ meta_utils:clause_def(), function_nature(), method_qualifiers(),
 		  wooper:function_export_set() }.
 manage_method_terminators( _Clauses=[], FunId, Classname, _WOOPERExportSet ) ->
@@ -697,10 +852,27 @@ manage_method_terminators( Clauses, FunId, Classname, WOOPERExportSet ) ->
 	% happens to be non-const (otherwise a non_const flag/qualifier would have
 	% to be introduced).
 
+	% So this (WOOPER-level) transformation is quite different (ex: partial vs
+	% exhaustive) from the Myriad-level one that will be performed near the end
+	% of the overall processing (merging these two would be tricky and would not
+	% have much interest).
 
-	TransformTable = table:new( [ { clause, fun clause_transformer/2 },
-								  { body, fun body_transformer/2 },
-								  { call, fun call_transformer/4 } ] ),
+	% We traverse quite specifically the AST, so we override the default
+	% traversal with transformation triggers (ex: we must trigger our
+	% call-transformer only on final elements of bodies, not on test expressions
+	% of cases):
+	%
+	TransformTable = table:new( [
+			{ 'clause', fun clause_transformer/2 },
+			{ 'body', fun body_transformer/2 },
+			% Expression-level triggers:
+			{ 'call', fun call_transformer/4 },
+			{ 'if', fun if_transformer/3 },
+			{ 'case', fun case_transformer/4 },
+			{ 'simple_receive', fun simple_receive_transformer/3 },
+			{ 'receive_with_after', fun receive_with_after_transformer/5 },
+			{ 'try', fun try_transformer/6 },
+			{ 'catch', fun catch_transformer/3 } ] ),
 
 	Transforms = #ast_transforms{
 	  transformed_module_name=Classname,
@@ -720,6 +892,7 @@ manage_method_terminators( Clauses, FunId, Classname, WOOPERExportSet ) ->
 		{ undefined, _, _WOOPERExportSet } ->
 			%trace_utils:debug_fmt( "~s/~B detected as a plain function.",
 			%					   pair:to_list( FunId ) ),
+
 			{ function, _Qualifiers=[] };
 
 		% Ex: { request, [ const ], _ }
@@ -742,110 +915,36 @@ get_blank_transformation_state( WOOPERExportSet ) ->
 	{ _FunctionNature=undefined, _Qualifiers=[], WOOPERExportSet }.
 
 
+
+% List of WOOPER-specific transformers.
+
+
 % Drives the AST transformation of a clause.
 %
-% Its role is to switch, after the first terminal branch has been explored, a
-% function nature that would be still to 'undefined' to 'function', so that
-% later checking can be done.
+% For any clause, we are to transform here, for WOOPER, only the last expression
+% (not the preceding ones) of the body (hence not touching parameters or
+% guards).
+%
+% The goal is to feed the call-transformer only with relevant expressions.
 %
 -spec clause_transformer( ast_clause(), ast_transforms() ) ->
 						  { ast_clause(), ast_transforms() }.
 clause_transformer(
-  Clause={ clause, Line, _Params, _Guards, _Body },
-  Transforms=#ast_transforms{
-				transformed_function_identifier=FunId,
-				transformation_state={ InitialNature,
-									   Qualifiers, WOOPERExportSet } } ) ->
+  Clause={ clause, Line, Params, Guards, Body },
+  Transforms ) ?rec_guard ->
+  %Transforms=#ast_transforms{
+		%transformed_function_identifier=FunId,
+		%transformation_state={ InitialNature, InitialQualifiers,
+		%					   WOOPERExportSet } } ) ->
 
-	%trace_utils:debug_fmt( "Transforming clause ~p", [ Clause ] ),
+	trace_utils:debug_fmt( "Transforming for WOOPER clause ~p", [ Clause ] ),
 
-	% Here we track (all) clauses (functions ones, case ones, etc.).
+	% Will trigger our body_transformer/2:
+	{ NewBody, BodyTransforms } = ast_clause:transform_body( Body, Transforms ),
 
-	% Initially, the function nature is 'undefined'.
+	NewClause = { clause, Line, Params, Guards, NewBody },
 
-	% As soon as we return from the transformation of a clause whereas the
-	% nature is still 'undefined', this means that:
-	%
-	%  1. no method terminator has been found in the full branch (as we explore
-	%  the AST of a function depth-first)
-	%
-	%  2. it was the first terminal branch explored (as we assign systematically
-	%  the function nature when returning from a branch)
-	%
-	% So it was a plain function, we record that nature for further checking of
-	% the other terminal branches. As a result this transformer allows to
-	% discriminate 'no information yet' (hence function nature can be anything)
-	% from 'no method terminator found' (so it must be a plain function).
-
-	% First, before transforming this new clause, we reset any already
-	% established function nature, so that the transformation can determine by
-	% itself about this clause:
-	%
-	ResetTransforms = Transforms#ast_transforms{
-			transformation_state={ undefined, [], WOOPERExportSet } },
-
-	% Default processing re-used:
-	{ NewClause, NewTransforms=#ast_transforms{
-		  transformation_state={ NewRawNature, NewQualifiers, _WPRExpSet } } } =
-		ast_clause:transform_clause_default( Clause, ResetTransforms ),
-
-	NewNature = case NewRawNature of
-
-		undefined ->
-			function;
-
-		OtherNature ->
-			OtherNature
-
-	end,
-
-	% If the initial Nature was undefined, nothing can be checked:
-	{ FinalNature, FinalQualifiers } = case InitialNature of
-
-		% This is a first setting:
-		undefined ->
-			case NewNature of
-
-				undefined ->
-					{ function, [] };
-
-				Other ->
-					{ Other, NewQualifiers }
-
-			end;
-
-		% Confirmed setting:
-		NewNature ->
-			% Only case to handle is loss of constness:
-			case lists:member( const, Qualifiers )
-						andalso not lists:member( const, NewQualifiers ) of
-
-				% Actually is non-const then:
-				true ->
-					{ NewNature, NewQualifiers };
-
-				% As const as used to be:
-				false ->
-					{ NewNature, Qualifiers }
-
-			end;
-
-		% Non-matching setting:
-		_OtherNature ->
-			wooper_internals:raise_usage_error( "based on its first return "
-				"branch(es), function ~s/~B was determined to be a ~s, "
-				"yet the clause at line #~B indicates a ~s.",
-				pair:to_list( FunId ) ++ [
-				function_nature_to_string( InitialNature ), Line,
-				function_nature_to_string( NewNature ) ],
-				NewTransforms, Line )
-
-	end,
-
-	UpdatedTransforms = NewTransforms#ast_transforms{
-	  transformation_state={ FinalNature, FinalQualifiers, WOOPERExportSet } },
-
-	{ NewClause, UpdatedTransforms }.
+	{ NewClause, BodyTransforms }.
 
 
 
@@ -861,7 +960,9 @@ clause_transformer(
 -spec body_transformer( ast_body(), ast_transforms() ) ->
 							  { ast_body(), ast_transforms() }.
 % As empty bodies may happen (ex: 'receive' without an 'after'):
+% (nevertheless should never happen in this WOOPER traversal)
 body_transformer( _BodyExprs=[], Transforms ) ->
+	trace_utils:trace( "Transforming for WOOPER empty body." ),
 	{ _Exprs=[], Transforms };
 
 
@@ -876,6 +977,8 @@ body_transformer( _BodyExprs=[], Transforms ) ->
 body_transformer( BodyExprs, Transforms ) ->
 							 % superfluous: when is_list( BodyExprs )
 
+	trace_utils:trace_fmt( "Transforming for WOOPER body ~p", [ BodyExprs ] ),
+
 	% Warning: we currently skip intermediate expressions as a whole (we do not
 	% transform them at all, as currently WOOPER does not have any need for
 	% that), but maybe in the future this will have to be changed.
@@ -887,25 +990,75 @@ body_transformer( BodyExprs, Transforms ) ->
 	% the list:
 	[ LastExpr | RevFirstExprs ] = lists:reverse( BodyExprs ),
 
+	trace_utils:trace_fmt( "Requesting the transformation of last "
+						   "expression ~p", [ LastExpr ] ),
+
+	% This may or may not trigger in turn our call_transformer/2:
 	{ [ NewLastExpr ], NewTransforms } =
 		ast_expression:transform_expression( LastExpr, Transforms ),
 
 	NewExprs = lists:reverse( [ NewLastExpr | RevFirstExprs ] ),
 
-	{ NewExprs, NewTransforms }.
+	% As soon as we return from a branch, we can tell:
+	FinalTransfState = case NewTransforms#ast_transforms.transformation_state of
+
+		{ undefined, _, WOOPERExportSet } ->
+			trace_utils:debug_fmt( "Nature set from 'undefined' to 'function' "
+			   "after traversal of last body expression~n  ~p", [ LastExpr ] ),
+			{ function, [], WOOPERExportSet };
+
+		%Other ->
+		Other={ Nature, _Qualifiers, _WOOPERExportSet } ->
+			trace_utils:debug_fmt( "Nature kept to '~p' after traversal of "
+			  "last body expression~n  ~p", [ Nature, LastExpr ] ),
+			Other
+
+	end,
+
+	FinalTransforms = NewTransforms#ast_transforms{
+						transformation_state=FinalTransfState },
+
+	{ NewExprs, FinalTransforms }.
 
 
 
-
-
-% In charge of detecting the method terminators and qualifiers, in a WOOPER
-% context.
+% Drives the AST transformation of a call: in charge of detecting the method
+% terminators and qualifiers, in a WOOPER context.
+%
+% Only the top-level call is of interest here (no need to recurse to hunt for
+% method terminators).
 %
 % (anonymous mute variables correspond to line numbers)
 %
 -spec call_transformer( line(), ast_expression:function_ref_expression(),
 			ast_expression:params_expression(), ast_transforms() ) ->
 					  { [ ast_expression:ast_expression() ], ast_transforms() }.
+
+% Initial case: a (necessarily local) call to throw shall be intercepted, as any
+% clause of a method may throw, and it should not be interpreted as a non-method
+% clause; so:
+%
+call_transformer( LineCall, FunctionRef={atom,_,throw}, Params,
+				  Transforms=#ast_transforms{
+		  transformation_state={ _Nature, _Qualifiers, WOOPERExportSet } } ) ->
+
+	trace_utils:trace_fmt( "Transforming for WOOPER throw call, params: ~p.",
+						   [ Params ] ),
+
+	%trace_utils:trace( "throw expression intercepted" ),
+
+	% Reconstructs the original throw expression:
+	NewExpr = { call, LineCall, FunctionRef, Params },
+
+	% A throw cannot tell whether a given function clause is a method or a plain
+	% function (so we do not return 'undefined', which would be translated as
+	% plain function):
+	%
+	NewTransforms = Transforms#ast_transforms{
+		  transformation_state={ throw, [], WOOPERExportSet } },
+
+	{ [ NewExpr ], NewTransforms };
+
 
 % First, requests:
 
@@ -1339,24 +1492,82 @@ call_transformer( LineCall, FunctionRef, Params,
 				  Transforms=#ast_transforms{
 						%transformed_function_identifier=FunId,
 						transformation_state={ Nature, _Qualifiers,
-											   _WOOPERExportSet } } )
- when Nature =:= undefined orelse Nature =:= function ->
+											   _WOOPERExportSet } } ) ->
+ % No nature restriction, as even from a method we can explore 'normal' calls:
+ %when Nature =:= undefined orelse Nature =:= function ->
 
 	%trace_utils:debug_fmt( "Deducing that ~s/~B is a plain function "
 	%					   "(nature: ~p, qualifiers: ~p)",
 	%					   pair:to_list( FunId ) ++ [ Nature, Qualifiers ] ),
 
 	SameExpr = { call, LineCall, FunctionRef, Params },
+
+	trace_utils:debug_fmt( "Letting call remaining as ~p, while nature is ~p",
+						   [ SameExpr, Nature ] ),
+
 	{ [ SameExpr ], Transforms };
 
 
 % To help debugging any non-match:
-call_transformer( _LineCall, _FunctionRef, _Params, Transforms ) ->
+call_transformer( _LineCall, FunctionRef, _Params, Transforms ) ->
 
-	trace_utils:debug_fmt( "Unexpected transforms:~n  ~s",
-				   [ ast_transform:ast_transforms_to_string( Transforms ) ] ),
+	trace_utils:debug_fmt( "Unexpected transforms for call ~p:~n  ~s",
+				   [ FunctionRef,
+					 ast_transform:ast_transforms_to_string( Transforms ) ] ),
 
 	throw( { unexpected_transforms, Transforms } ).
+
+
+
+
+% Drives the AST transformation of a 'if' construct.
+%
+-spec if_transformer( line(), [ ast_if_clause() ], ast_transforms() ) ->
+						  { [ ast_expression() ], ast_transforms() ) ->
+if_transformer( Line, Clauses, Transforms ) ?rec_guard ->
+
+
+
+% Drives the AST transformation of a 'case' construct.
+%
+-spec case_transformer( line(), ast_expression(), [ ast_case_clause() ],
+		  ast_transforms() ) -> { [ ast_expression() ], ast_transforms() }.
+case_transformer( Line, TestExpression, CaseClauses, Transforms ) ?rec_guard ->
+
+
+% Drives the AST transformation of a 'simple_receive' construct.
+%
+-spec simple_receive_transformer( line(), [ ast_case_clause() ],
+		  ast_transforms() ) -> { [ ast_expression() ], ast_transforms() }.
+simple_receive_transformer( Line, ReceiveClauses, Transforms ) ?rec_guard ->
+
+
+% Drives the AST transformation of a 'receive_with_after' construct.
+%
+-spec receive_with_after_transformer( line(), [ ast_case_clause() ],
+		ast_expression(), [ ast_expression() ], ast_transforms() ) ->
+								{ [ ast_expression() ], ast_transforms() }.
+receive_with_after_transformer( Line, ReceiveClauses, AfterTest,
+					   AfterExpressions, Transforms ) ?rec_guard ->
+
+
+% Drives the AST transformation of a 'try' construct.
+%
+-spec try_transformer( line(), ast_body(), [ ast_case_clause() ],
+					 [ ast_case_clause() ], ast_body(), ast_transforms() ) ->
+						   { [ ast_expression() ], ast_transforms() }.
+try_transformer( Line, TryBody, TryClauses, CatchClauses, AfterBody,
+				 Transforms ) ?rec_guard ->
+
+
+% Drives the AST transformation of a 'catch' construct.
+%
+-spec catch_transformer( line(), ast_expression(), ast_transforms() ) ->
+							 { [ ast_expression() ], ast_transforms() }.
+catch_transformer( Line, Expression, Transforms ) ?rec_guard ->
+
+
+
 
 
 
@@ -1415,7 +1626,8 @@ ensure_exported_at( FunInfo=#function_info{ name=Name,
 % Converts specified (Myriad-level) function information into a (WOOPER-level)
 % request information.
 %
--spec function_to_request_info( function_info() ) -> request_info().
+-spec function_to_request_info( function_info(), method_qualifiers() ) ->
+									  request_info().
 function_to_request_info( #function_info{ name=Name,
 										  arity=Arity,
 										  location=Loc,
@@ -1423,10 +1635,11 @@ function_to_request_info( #function_info{ name=Name,
 										  clauses=Clauses,
 										  spec=Spec,
 										  callback=false,
-										  exported=[] } ) ->
+										  exported=[] },
+						  Qualifiers ) ->
 	#request_info{ name=Name,
 				   arity=Arity,
-				   %qualifiers=[]
+				   qualifiers=Qualifiers,
 				   location=Loc,
 				   line=Line,
 				   clauses=Clauses,
@@ -1441,17 +1654,18 @@ function_to_request_info( #function_info{ name=Name,
 										  spec=Spec,
 										  callback=false
 										  %exported
-										} ) ->
+										},
+						  Qualifiers ) ->
 	#request_info{ name=Name,
 				   arity=Arity,
-				   %qualifiers=[]
+				   qualifiers=Qualifiers,
 				   location=Loc,
 				   line=Line,
 				   clauses=Clauses,
 				   spec=Spec };
 
 
-function_to_request_info( Other ) ->
+function_to_request_info( Other, _Qualifiers ) ->
 	throw( { unexpected_function_info, Other, request } ).
 
 
@@ -1485,7 +1699,8 @@ request_to_function_info( Other, _Location ) ->
 % Converts specified (Myriad-level) function information into a (WOOPER-level)
 % oneway information.
 %
--spec function_to_oneway_info( function_info() ) -> oneway_info().
+-spec function_to_oneway_info( function_info(), method_qualifiers() ) ->
+									 oneway_info().
 function_to_oneway_info( #function_info{ name=Name,
 										 arity=Arity,
 										 location=Loc,
@@ -1493,10 +1708,11 @@ function_to_oneway_info( #function_info{ name=Name,
 										 clauses=Clauses,
 										 spec=Spec,
 										 callback=false,
-										 exported=[] } ) ->
+										 exported=[] },
+						 Qualifiers ) ->
 	#oneway_info{ name=Name,
 				  arity=Arity,
-				  %qualifiers=[]
+				  qualifiers=Qualifiers,
 				  location=Loc,
 				  line=Line,
 				  clauses=Clauses,
@@ -1511,17 +1727,18 @@ function_to_oneway_info( #function_info{ name=Name,
 										 spec=Spec,
 										 callback=false
 										 %exported
-									   } ) ->
+									   },
+						 Qualifiers ) ->
 	#oneway_info{ name=Name,
 				  arity=Arity,
-				  %qualifiers=[]
+				  qualifiers=Qualifiers,
 				  location=Loc,
 				  line=Line,
 				  clauses=Clauses,
 				  spec=Spec };
 
 
-function_to_oneway_info( Other ) ->
+function_to_oneway_info( Other, _Qualifiers ) ->
 	throw( { unexpected_function_info, Other, oneway } ).
 
 
@@ -1555,7 +1772,8 @@ oneway_to_function_info( Other, _Location ) ->
 % Converts specified (Myriad-level) function information into a (WOOPER-level)
 % static information.
 %
--spec function_to_static_info( function_info() ) -> static_info().
+-spec function_to_static_info( function_info(), method_qualifiers() ) ->
+									 static_info().
 function_to_static_info( #function_info{ name=Name,
 										 arity=Arity,
 										 location=Loc,
@@ -1563,10 +1781,11 @@ function_to_static_info( #function_info{ name=Name,
 										 clauses=Clauses,
 										 spec=Spec,
 										 callback=false,
-										 exported=[] } ) ->
+										 exported=[] },
+						 Qualifiers ) ->
 	#static_info{ name=Name,
 				  arity=Arity,
-				  %qualifiers=[]
+				  qualifiers=Qualifiers,
 				  location=Loc,
 				  line=Line,
 				  clauses=Clauses,
@@ -1581,17 +1800,18 @@ function_to_static_info( #function_info{ name=Name,
 										 spec=Spec,
 										 callback=false
 										 %exported
-									   } ) ->
+									   },
+						 Qualifiers ) ->
 	#static_info{ name=Name,
 				  arity=Arity,
-				  %qualifiers=[]
+				  qualifiers=Qualifiers,
 				  location=Loc,
 				  line=Line,
 				  clauses=Clauses,
 				  spec=Spec };
 
 
-function_to_static_info( Other ) ->
+function_to_static_info( Other, _Qualifiers ) ->
 	throw( { unexpected_function_info, Other, static } ).
 
 
@@ -1664,3 +1884,16 @@ methods_to_functions( RequestTable, OnewayTable, StaticTable,
 						  || { StId, StInfo } <- StaticPairs ],
 
 	table:addNewEntries( StaticAsFunPairs, WithOnewaysFunTable ).
+
+
+
+% To help debugging:
+format_log( FormatString, [ { Exprs, #ast_transforms{
+		transformation_state={Nature,_Qualifiers,_WOOPERExportSet} } } ] ) ->
+	Message = text_utils:format( "whose nature is '~s'; expressions are:~n  ~p",
+								 [ Nature, Exprs ] ),
+	text_utils:format( FormatString, [ Message ] );
+
+
+format_log( FormatString, Other ) ->
+	text_utils:format( FormatString, [ Other ] ).
