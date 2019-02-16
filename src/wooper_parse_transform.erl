@@ -260,7 +260,9 @@ apply_wooper_transform( InputAST ) ->
 
 	% First preprocesses the AST based on the Myriad parse transform, in order
 	% to benefit from its corresponding module_info record:
-	% (however no Myriad-level transformation performed yet)
+	%
+	% (however no Myriad-level transformation performed yet, will be done just
+	% before recomposing the module_info)
 	%
 	InputModuleInfo = ast_info:extract_module_info_from_ast( InputAST ),
 
@@ -287,37 +289,19 @@ apply_wooper_transform( InputAST ) ->
 	% Then translates back this class information in module information:
 	NewModuleInfo = generate_module_info_from( NewClassInfo ),
 
-	% Allows to have still functional class modules during the WOOPER
-	% developments, by bypassing the WOOPER transformations as a whole:
-	%
-	EnableWOOPERParseTransform = true,
-	%EnableWOOPERParseTransform = false,
-
-	ModuleInfoOfInterest = case EnableWOOPERParseTransform of
-
-		true ->
-			NewModuleInfo;
-
-		false ->
-			% Do-nothing operation then:
-			InputModuleInfo
-
-	end,
-
 	%trace_utils:debug_fmt(
 	%  "Module information just prior to Myriad transformation: ~s",
-	%  [ ast_info:module_info_to_string( ModuleInfoOfInterest ) ] ),
+	%  [ ast_info:module_info_to_string( NewModuleInfo ) ] ),
 
 	% And finally obtain the corresponding updated AST thanks to Myriad:
 	%
 	% (should be done as a final step as WOOPER may of course rely on
-	% Myriad-introducted facilities such as void, maybe, table, etc.)
+	% Myriad-introduced facilities such as void, maybe, table, etc.)
 
 	?display_trace( "Performing Myriad-level transformation." ),
 
 	{ TransformedModuleInfo, _MyriadTransforms } =
-		myriad_parse_transform:transform_module_info(
-							  ModuleInfoOfInterest ),
+		myriad_parse_transform:transform_module_info( NewModuleInfo ),
 
 	%trace_utils:debug_fmt(
 	%  "Module information after Myriad transformation: ~s",
