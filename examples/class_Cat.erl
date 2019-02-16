@@ -21,6 +21,7 @@
 % Determines what are the direct mother classes of this class (if any):
 -define( superclasses, [ class_Mammal, class_ViviparousBeing ] ).
 
+
 -define( class_attributes, [
    { whisker_color, whisker_color(), none, "50 shades of whiskers" } ] ).
 
@@ -72,7 +73,8 @@ canEat( State, soup ) ->
 	wooper:const_return_result( true );
 
 canEat( State, chocolate ) ->
-	wooper:const_return_result( true );
+	throw( { harmful_food_detected, chocolate } );
+	%wooper:const_return_result( true );
 
 canEat( State, croquette ) ->
 	wooper:const_return_result( true );
