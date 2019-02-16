@@ -33,7 +33,7 @@
 
 
 -export([ manage_methods/1, body_transformer/2, call_transformer/4,
-		  get_blank_transformation_state/0,
+		  get_blank_transformation_state/1,
 		  ensure_exported/2, ensure_exported_at/2, ensure_all_exported_in/2,
 		  methods_to_functions/5,
 		  check_spec/4, check_clause_spec/5, check_state_argument/3,
@@ -69,6 +69,7 @@
 -type function_table() :: ast_info:function_table().
 -type line() :: ast_base:line().
 -type ast_transforms() :: ast_transform:ast_transforms().
+-type ast_clause() :: ast_clause:ast_clause().
 -type ast_body() :: ast_clause:ast_body().
 
 -type compose_pair() :: wooper_parse_transform:compose_pair().
@@ -136,12 +137,16 @@ manage_methods( { CompleteFunctionTable,
 
 	ExportLoc = ast_info:get_default_export_function_location( MarkerTable ),
 
+	% Determined once for all:
+	WOOPERExportSet = wooper:get_exported_functions_set(),
+
 	% FunctionTable starts from scratch as all functions are to be found in
 	% AllFunEntries:
 	%
 	{ NewFunctionTable, NewRequestTable, NewOnewayTable, NewStaticTable } =
 		sort_out_functions( AllFunEntries, _FunctionTable=table:new(),
-			RequestTable, OnewayTable, StaticTable, Classname, ExportLoc ),
+			RequestTable, OnewayTable, StaticTable, Classname, ExportLoc,
+			WOOPERExportSet ),
 
 
 	% Split as { Functions, Methods }:
@@ -155,7 +160,7 @@ manage_methods( { CompleteFunctionTable,
 % real nature (ex: a given Erlang function may actually be a WOOPER oneway).
 %
 sort_out_functions( _FunEntries=[], FunctionTable, RequestTable, OnewayTable,
-					StaticTable, _Classname, _ExportLoc ) ->
+					StaticTable, _Classname, _ExportLoc, _WOOPERExportSet ) ->
 	{ FunctionTable, RequestTable, OnewayTable, StaticTable };
 
 % Checks that all sorted functions have an actual implementation:
@@ -163,7 +168,8 @@ sort_out_functions( _FunEntries=[ { FunId, #function_info{
 											  clauses=[],
 											  spec=Spec } } | _T ],
 					_FunctionTable, _RequestTable, _OnewayTable, _StaticTable,
-					Classname, _ExportLoc ) when Spec =/= undefined ->
+					Classname, _ExportLoc, _WOOPERExportSet )
+  when Spec =/= undefined ->
 	wooper_internals:raise_usage_error(
 	  "function ~s/~B has a type specification, yet has never been defined.",
 	  pair:to_list( FunId ), Classname );
@@ -172,7 +178,7 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 											clauses=OriginalClauses,
 											spec=Spec } } | T ],
 					FunctionTable, RequestTable, OnewayTable, StaticTable,
-					Classname, ExportLoc ) ->
+					Classname, ExportLoc, WOOPERExportSet ) ->
 
 	%trace_utils:debug_fmt( "Examining Erlang function ~s/~B",
 	%                       pair:to_list( FunId ) ),
@@ -183,8 +189,8 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 	% Now we reuse the Myriad ast_transforms instead, and perform everything
 	% (guessing/checking/transforming) in one pass:
 	%
-	{ NewClauses, FunNature, Qualifiers } =
-		manage_method_terminators( OriginalClauses, FunId, Classname ),
+	{ NewClauses, FunNature, Qualifiers } = manage_method_terminators(
+					  OriginalClauses, FunId, Classname, WOOPERExportSet ),
 
 	%trace_utils:debug_fmt( "~p is a ~s whose qualifiers are ~p.",
 	%					   [ FunId, function_nature_to_string( FunNature ),
@@ -204,7 +210,8 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 			NewFunctionTable =
 				table:addNewEntry( FunId, NewFunInfo, FunctionTable ),
 			sort_out_functions( T, NewFunctionTable, RequestTable,
-					OnewayTable, StaticTable, Classname, ExportLoc );
+					OnewayTable, StaticTable, Classname, ExportLoc,
+					WOOPERExportSet );
 
 		request ->
 			check_spec( Spec, request, Qualifiers, Classname ),
@@ -214,7 +221,8 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 			NewRequestTable = table:addNewEntry( FunId, RequestInfo,
 												 RequestTable ),
 			sort_out_functions( T, FunctionTable, NewRequestTable,
-					OnewayTable, StaticTable, Classname, ExportLoc );
+					OnewayTable, StaticTable, Classname, ExportLoc,
+					WOOPERExportSet );
 
 		oneway ->
 			check_spec( Spec, oneway, Qualifiers, Classname ),
@@ -224,7 +232,8 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 			NewOnewayTable = table:addNewEntry( FunId, OnewayInfo,
 												OnewayTable ),
 			sort_out_functions( T, FunctionTable, RequestTable,
-					NewOnewayTable, StaticTable, Classname, ExportLoc );
+					NewOnewayTable, StaticTable, Classname, ExportLoc,
+					WOOPERExportSet );
 
 		static ->
 			check_spec( Spec, static, Qualifiers, Classname ),
@@ -233,14 +242,15 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 			NewStaticTable = table:addNewEntry( FunId, StaticInfo,
 												StaticTable ),
 			sort_out_functions( T, FunctionTable, RequestTable,
-					OnewayTable, NewStaticTable, Classname, ExportLoc )
+					OnewayTable, NewStaticTable, Classname, ExportLoc,
+					WOOPERExportSet )
 
 	end;
 
 sort_out_functions( _Functions=[ #function_info{ name=FunName,
 												 arity=Arity } | _T ],
 					_FunctionTable, _RequestTable, _OnewayTable,
-					_StaticTable, Classname, _ExportLoc ) ->
+					_StaticTable, Classname, _ExportLoc, _WOOPERExportSet ) ->
 
 	% Error raised directly, could be appended to the class_info.errors:
 	wooper_internals:raise_usage_error( "no clause found for ~s/~B; "
@@ -570,7 +580,8 @@ check_clause_spec( _UnexpectedTypeForm, FunNature, _Qualifiers, FunId,
 
 % Returns a textual description of the specified function nature.
 %
--spec function_nature_to_string( function_nature() ) -> text_utils:ustring().
+-spec function_nature_to_string( maybe( function_nature() ) ) ->
+									   text_utils:ustring().
 function_nature_to_string( request ) ->
 	"request";
 
@@ -581,7 +592,11 @@ function_nature_to_string( static ) ->
 	"static method";
 
 function_nature_to_string( function ) ->
-	"plain function".
+	"plain function";
+
+function_nature_to_string( undefined ) ->
+	"undefined type of function".
+
 
 
 
@@ -644,16 +659,22 @@ check_clause_for_state( _Clause, FunId, Classname ) ->
 %
 -spec manage_method_terminators( meta_utils:clause_def(),
 				   meta_utils:function_id(), wooper:classname() ) ->
-		{ meta_utils:clause_def(), function_nature(), method_qualifiers() }.
-manage_method_terminators( _Clauses=[], FunId, Classname ) ->
+		{ meta_utils:clause_def(), function_nature(), method_qualifiers(),
+		  wooper:function_export_set() }.
+manage_method_terminators( _Clauses=[], FunId, Classname, _WOOPERExportSet ) ->
 	wooper_internals:raise_usage_error(
 	  "the function ~s/~B is exported yet not defined.", pair:to_list( FunId ),
 	  Classname );
 
-manage_method_terminators( Clauses, FunId, Classname ) ->
+manage_method_terminators( Clauses, FunId, Classname, WOOPERExportSet ) ->
 
 	% We define first the transformation functions in charge of the
 	% guessing/checking/transforming of the method terminators.
+	%
+	% The clause transform-fun allows to handle plain functions, knowing that,
+	% when no method terminator is found in a code branch, no specific behaviour
+	% can be triggered (used to result in such branches to be basically
+	% ignored).
 	%
 	% The body transform-fun will be used to skip all expressions of a body but
 	% the last one, while the call transform-fun will be applied to call
@@ -677,14 +698,15 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 	% to be introduced).
 
 
-	TransformTable = table:new( [ { body, fun body_transformer/2 },
+	TransformTable = table:new( [ { clause, fun clause_transformer/2 },
+								  { body, fun body_transformer/2 },
 								  { call, fun call_transformer/4 } ] ),
 
 	Transforms = #ast_transforms{
-					transformed_module_name=Classname,
-					transform_table=TransformTable,
-					transformed_function_identifier=FunId,
-					transformation_state=get_blank_transformation_state() },
+	  transformed_module_name=Classname,
+	  transform_table=TransformTable,
+	  transformed_function_identifier=FunId,
+	  transformation_state=get_blank_transformation_state( WOOPERExportSet ) },
 
 	%trace_utils:debug_fmt( "transforming now ~p.", [ FunId ] ),
 
@@ -716,10 +738,114 @@ manage_method_terminators( Clauses, FunId, Classname ) ->
 %
 % Defined to be safely reused from various locations.
 %
-get_blank_transformation_state() ->
-	{ _FunctionNature=undefined, _Qualifiers=[],
-	  _ConstExportSet=wooper:get_exported_functions_set() }.
+get_blank_transformation_state( WOOPERExportSet ) ->
+	{ _FunctionNature=undefined, _Qualifiers=[], WOOPERExportSet }.
 
+
+% Drives the AST transformation of a clause.
+%
+% Its role is to switch, after the first terminal branch has been explored, a
+% function nature that would be still to 'undefined' to 'function', so that
+% later checking can be done.
+%
+-spec clause_transformer( ast_clause(), ast_transforms() ) ->
+						  { ast_clause(), ast_transforms() }.
+clause_transformer(
+  Clause={ clause, Line, _Params, _Guards, _Body },
+  Transforms=#ast_transforms{
+				transformed_function_identifier=FunId,
+				transformation_state={ InitialNature,
+									   Qualifiers, WOOPERExportSet } } ) ->
+
+	%trace_utils:debug_fmt( "Transforming clause ~p", [ Clause ] ),
+
+	% Here we track (all) clauses (functions ones, case ones, etc.).
+
+	% Initially, the function nature is 'undefined'.
+
+	% As soon as we return from the transformation of a clause whereas the
+	% nature is still 'undefined', this means that:
+	%
+	%  1. no method terminator has been found in the full branch (as we explore
+	%  the AST of a function depth-first)
+	%
+	%  2. it was the first terminal branch explored (as we assign systematically
+	%  the function nature when returning from a branch)
+	%
+	% So it was a plain function, we record that nature for further checking of
+	% the other terminal branches. As a result this transformer allows to
+	% discriminate 'no information yet' (hence function nature can be anything)
+	% from 'no method terminator found' (so it must be a plain function).
+
+	% First, before transforming this new clause, we reset any already
+	% established function nature, so that the transformation can determine by
+	% itself about this clause:
+	%
+	ResetTransforms = Transforms#ast_transforms{
+			transformation_state={ undefined, [], WOOPERExportSet } },
+
+	% Default processing re-used:
+	{ NewClause, NewTransforms=#ast_transforms{
+		  transformation_state={ NewRawNature, NewQualifiers, _WPRExpSet } } } =
+		ast_clause:transform_clause_default( Clause, ResetTransforms ),
+
+	NewNature = case NewRawNature of
+
+		undefined ->
+			function;
+
+		OtherNature ->
+			OtherNature
+
+	end,
+
+	% If the initial Nature was undefined, nothing can be checked:
+	{ FinalNature, FinalQualifiers } = case InitialNature of
+
+		% This is a first setting:
+		undefined ->
+			case NewNature of
+
+				undefined ->
+					{ function, [] };
+
+				Other ->
+					{ Other, NewQualifiers }
+
+			end;
+
+		% Confirmed setting:
+		NewNature ->
+			% Only case to handle is loss of constness:
+			case lists:member( const, Qualifiers )
+						andalso not lists:member( const, NewQualifiers ) of
+
+				% Actually is non-const then:
+				true ->
+					{ NewNature, NewQualifiers };
+
+				% As const as used to be:
+				false ->
+					{ NewNature, Qualifiers }
+
+			end;
+
+		% Non-matching setting:
+		_OtherNature ->
+			wooper_internals:raise_usage_error( "based on its first return "
+				"branch(es), function ~s/~B was determined to be a ~s, "
+				"yet the clause at line #~B indicates a ~s.",
+				pair:to_list( FunId ) ++ [
+				function_nature_to_string( InitialNature ), Line,
+				function_nature_to_string( NewNature ) ],
+				NewTransforms, Line )
+
+	end,
+
+	UpdatedTransforms = NewTransforms#ast_transforms{
+	  transformation_state={ FinalNature, FinalQualifiers, WOOPERExportSet } },
+
+	{ NewClause, UpdatedTransforms }.
 
 
 
@@ -747,7 +873,8 @@ body_transformer( _BodyExprs=[], Transforms ) ->
 
 
 % At least an element exists here:
-body_transformer( BodyExprs, Transforms ) -> % superfluous: when is_list( BodyExprs ) ->
+body_transformer( BodyExprs, Transforms ) ->
+							 % superfluous: when is_list( BodyExprs )
 
 	% Warning: we currently skip intermediate expressions as a whole (we do not
 	% transform them at all, as currently WOOPER does not have any need for
@@ -1205,29 +1332,31 @@ call_transformer( LineCall, FunctionRef={ remote, _, {atom,_,wooper},
 	end;
 
 
-% Finally, of course calls unrelated to WOOPER shall go through as well:
+% Finally, of course calls unrelated to WOOPER shall go through as well -
+% provided this is either 'undefined' (single, direct clause) or 'function':
+%
 call_transformer( LineCall, FunctionRef, Params,
-				  Transforms ) ->
-				  %Transforms=#ast_transforms{
+				  Transforms=#ast_transforms{
 						%transformed_function_identifier=FunId,
-						%transformation_state={ Nature, Qualifiers,
-						%					   _WOOPERExportSet } } ) ->
+						transformation_state={ Nature, _Qualifiers,
+											   _WOOPERExportSet } } )
+ when Nature =:= undefined orelse Nature =:= function ->
 
 	%trace_utils:debug_fmt( "Deducing that ~s/~B is a plain function "
 	%					   "(nature: ~p, qualifiers: ~p)",
 	%					   pair:to_list( FunId ) ++ [ Nature, Qualifiers ] ),
 
 	SameExpr = { call, LineCall, FunctionRef, Params },
-	{ [ SameExpr ], Transforms }.
+	{ [ SameExpr ], Transforms };
 
 
 % To help debugging any non-match:
-%call_transformer( _LineCall, _FunctionRef, _Params, Transforms ) ->
-%
-%	trace_utils:debug_fmt( "Unexpected transforms:~n  ~s",
-%				   [ ast_transform:ast_transforms_to_string( Transforms ) ] ),
-%
-%	throw( { unexpected_transforms, Transforms } ).
+call_transformer( _LineCall, _FunctionRef, _Params, Transforms ) ->
+
+	trace_utils:debug_fmt( "Unexpected transforms:~n  ~s",
+				   [ ast_transform:ast_transforms_to_string( Transforms ) ] ),
+
+	throw( { unexpected_transforms, Transforms } ).
 
 
 
