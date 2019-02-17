@@ -95,6 +95,28 @@
 -type method_qualifiers() :: wooper:method_qualifiers().
 
 
+% Comment to disable logging (too detailed, almost untractable even to display):
+%-define( log_traversal, ).
+
+-ifdef(log_traversal).
+
+-define(debug,trace_utils:debug).
+-define(debug_fmt,trace_utils:debug_fmt).
+
+-define(trace,trace_utils:trace).
+-define(trace_fmt,trace_utils:trace_fmt).
+
+-else. % log_traversal
+
+-define(debug,trace_utils:void).
+-define(debug_fmt,trace_utils:void_fmt).
+
+-define(trace,trace_utils:void).
+-define(trace_fmt,trace_utils:void_fmt).
+
+-endif. % log_traversal
+
+
 
 % Implementation notes:
 
@@ -235,7 +257,7 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 					FunctionTable, RequestTable, OnewayTable, StaticTable,
 					Classname, ExportLoc, WOOPERExportSet ) ->
 
-	%trace_utils:debug_fmt( "Examining Erlang function ~s/~B",
+	%?debug_fmt( "Examining Erlang function ~s/~B",
 	%                       pair:to_list( FunId ) ),
 
 	% We used to infer the function nature based on its first clause, and then
@@ -247,7 +269,7 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 	{ NewClauses, FunNature, Qualifiers } = manage_method_terminators(
 					  OriginalClauses, FunId, Classname, WOOPERExportSet ),
 
-	%trace_utils:debug_fmt( "~p is a ~s whose qualifiers are ~p.",
+	%?debug_fmt( "~p is a ~s whose qualifiers are ~p.",
 	%					   [ FunId, function_nature_to_string( FunNature ),
 	%						 Qualifiers ] ),
 
@@ -832,6 +854,8 @@ manage_method_terminators( _Clauses=[], FunId, Classname, _WOOPERExportSet ) ->
 
 manage_method_terminators( Clauses, FunId, Classname, WOOPERExportSet ) ->
 
+	?trace_fmt( "Studying ~s/~B...", pair:to_list( FunId ) ),
+
 	% We define first the transformation functions in charge of the
 	% guessing/checking/transforming of the method terminators.
 	%
@@ -898,7 +922,7 @@ manage_method_terminators( Clauses, FunId, Classname, WOOPERExportSet ) ->
 	  transformed_function_identifier=FunId,
 	  transformation_state=get_blank_transformation_state( WOOPERExportSet ) },
 
-	%trace_utils:debug_fmt( "transforming now ~p.", [ FunId ] ),
+	%?debug_fmt( "transforming now ~p.", [ FunId ] ),
 
 	{ NewClauses, NewTransforms } =
 		ast_clause:transform_function_clauses( Clauses, Transforms ),
@@ -908,14 +932,14 @@ manage_method_terminators( Clauses, FunId, Classname, WOOPERExportSet ) ->
 			  case NewTransforms#ast_transforms.transformation_state of
 
 		{ undefined, _, _WOOPERExportSet } ->
-			%trace_utils:debug_fmt( "~s/~B detected as a plain function.",
+			%?debug_fmt( "~s/~B detected as a plain function.",
 			%					   pair:to_list( FunId ) ),
 
 			{ function, _Qualifiers=[] };
 
 		% Ex: { request, [ const ], _ }
 		{ OtherNature, SomeQualifiers, _WOOPERExportSet } ->
-			%trace_utils:debug_fmt( "~s/~B detected as: ~p (qualifiers: ~w)",
+			%?debug_fmt( "~s/~B detected as: ~p (qualifiers: ~w)",
 			%    pair:to_list( FunId ) ++ [ OtherNature, Qualifiers ] ),
 			{ OtherNature, SomeQualifiers }
 
@@ -948,14 +972,16 @@ get_blank_transformation_state( WOOPERExportSet ) ->
 -spec clause_transformer( ast_clause(), ast_transforms() ) ->
 						  { ast_clause(), ast_transforms() }.
 clause_transformer(
-  _Clause={ clause, Line, Params, Guards, Body },
+  Clause={ clause, Line, Params, Guards, Body },
   Transforms ) ?rec_guard ->
   %Transforms=#ast_transforms{
 		%transformed_function_identifier=FunId,
 		%transformation_state={ InitialNature, InitialQualifiers,
 		%					   WOOPERExportSet } } ) ->
 
-	%trace_utils:debug_fmt( "Transforming for WOOPER clause ~p", [ Clause ] ),
+	?debug_fmt( "Transforming for WOOPER clause ~p", [ Clause ] ),
+
+	% No need to reset transformation state, as done by body_transformer/3:
 
 	{ NewBody, BodyTransforms } = body_transformer( Body, Transforms, Line ),
 
@@ -990,18 +1016,20 @@ body_transformer( Body, Transforms=#ast_transforms{
 % Used to be an anonymous function, yet now exported so that it can be re-used
 % by upper layers.
 %
+% Note: resets its transforms by itself.
+%
 -spec body_transformer( ast_body(), ast_transforms(), line() ) ->
 							  { ast_body(), ast_transforms() }.
 % As empty bodies may happen (ex: 'receive' without an 'after'):
 % (nevertheless should never happen in this WOOPER traversal)
-body_transformer( _BodyExprs=[], Transforms, Line ) ->
+body_transformer( _BodyExprs=[], Transforms, _Line ) ->
 
-	%trace_utils:trace( "Transforming for WOOPER empty body." ),
+	?trace( "Transforming for WOOPER empty body." ),
 
-	UpdatedTransforms = update_transformation_state( Transforms,
-													 Transforms, Line ),
+	%UpdatedTransforms = update_transformation_state( Transforms,
+	%												 Transforms, Line ),
 
-	{ _Exprs=[], UpdatedTransforms };
+	{ _Exprs=[], Transforms };
 
 
 % Commented-out as the last expression is managed differently (we cannot recurse
@@ -1013,9 +1041,9 @@ body_transformer( _BodyExprs=[], Transforms, Line ) ->
 
 % At least an element exists here:
 body_transformer( BodyExprs, Transforms, Line ) ->
-							 % superfluous: when is_list( BodyExprs )
+								% superfluous: when is_list( BodyExprs )
 
-	%trace_utils:trace_fmt( "Transforming for WOOPER body ~p", [ BodyExprs ] ),
+	?trace_fmt( "Transforming for WOOPER body ~p", [ BodyExprs ] ),
 
 	% Warning: we currently skip intermediate expressions as a whole (we do not
 	% transform them at all, as currently WOOPER does not have any need for
@@ -1028,20 +1056,26 @@ body_transformer( BodyExprs, Transforms, Line ) ->
 	% the list:
 	[ LastExpr | RevFirstExprs ] = lists:reverse( BodyExprs ),
 
-	%trace_utils:trace_fmt( "Requesting the transformation of last "
-	%					   "expression ~p", [ LastExpr ] ),
+	?trace_fmt( "Requesting the transformation of last expression ~p",
+				[ LastExpr ] ),
+
+	ResetTransforms = reset_transformation_state( Transforms ),
 
 	% This may or may not trigger in turn our transformers, knowing that the
 	% standard body_transformer/2 is expected never to be called (always
 	% intercepted):
 	%
 	{ [ NewLastExpr ], NewTransforms } =
-		ast_expression:transform_expression( LastExpr, Transforms ),
+		ast_expression:transform_expression( LastExpr, ResetTransforms ),
 
 	NewExprs = lists:reverse( [ NewLastExpr | RevFirstExprs ] ),
 
 	UpdatedTransforms = update_transformation_state( Transforms,
 													 NewTransforms, Line ),
+
+	?trace_fmt( "Nature after body transformation: ~p",
+		[ element( 1,
+			   UpdatedTransforms#ast_transforms.transformation_state ) ] ),
 
 	{ NewExprs, UpdatedTransforms }.
 
@@ -1067,10 +1101,10 @@ call_transformer( LineCall, FunctionRef={atom,_,throw}, Params,
 				  Transforms=#ast_transforms{
 		  transformation_state={ _Nature, _Qualifiers, WOOPERExportSet } } ) ->
 
-	%trace_utils:trace_fmt( "Transforming for WOOPER throw call, params: ~p.",
-	%					   [ Params ] ),
+	?trace_fmt( "Transforming for WOOPER throw call, params: ~p.",
+						   [ Params ] ),
 
-	%trace_utils:trace( "throw expression intercepted" ),
+	%?trace( "throw expression intercepted" ),
 
 	% Reconstructs the original throw expression:
 	NewExpr = { call, LineCall, FunctionRef, Params },
@@ -1106,11 +1140,11 @@ call_transformer( LineCall,
 						{atom,_,return_state_result} },
 		Params=[ _StateExpr, _ResExpr ],
 		Transforms=#ast_transforms{
-			%transformed_function_identifier=FunId,
+			transformed_function_identifier=FunId,
 			transformation_state={ undefined, _, WOOPERExportSet } } ) ->
 
-	%trace_utils:debug_fmt( "~s/~B detected as a non-const request.",
-	%					   pair:to_list( FunId ) ),
+	?debug_fmt( "~s/~B detected as a non-const request.",
+				pair:to_list( FunId ) ),
 
 	% So that wooper:return_state_result( S, R ) becomes simply { S, R }:
 	NewExpr = { tuple, LineCall, Params },
@@ -1126,12 +1160,12 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 										   {atom,_,return_state_result} },
 				  Params=[ _StateExpr, _ResExpr ],
 				  Transforms=#ast_transforms{
-						%transformed_function_identifier=FunId,
+						transformed_function_identifier=FunId,
 						transformation_state={ request, Qualifiers,
 											   WOOPERExportSet } } ) ->
 
-	%trace_utils:debug_fmt( "~s/~B confirmed as a non-const request.",
-	%					   pair:to_list( FunId ) ),
+	?debug_fmt( "~s/~B confirmed as a non-const request.",
+				pair:to_list( FunId ) ),
 
 	% 'const' may or may not be still there, and will surely not:
 	NewQualifiers = lists:delete( const, Qualifiers ),
@@ -1176,11 +1210,11 @@ call_transformer( LineCall,
 	  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,const_return_result} },
 	  Params=[ _ResExpr ],
 	  Transforms=#ast_transforms{
-			%transformed_function_identifier=FunId,
+			transformed_function_identifier=FunId,
 			transformation_state={ undefined, [], WOOPERExportSet } } ) ->
 
-	%trace_utils:debug_fmt( "~s/~B detected as a const request.",
-	%					   pair:to_list( FunId ) ),
+	?debug_fmt( "~s/~B detected as a const request.",
+				pair:to_list( FunId ) ),
 
 	% So that wooper:const_return_result( R ) becomes simply { S, R }:
 	NewExpr = { tuple, LineCall, [ { var, LineCall, 'State' } | Params ] },
@@ -1253,12 +1287,12 @@ call_transformer( _LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 											{atom,_,return_state} },
 				  _Params=[ StateExpr ],
 				  Transforms=#ast_transforms{
-					%transformed_function_identifier=FunId,
+					transformed_function_identifier=FunId,
 					transformation_state={ undefined, _Qualifiers,
 										   WOOPERExportSet } } ) ->
 
-	%trace_utils:debug_fmt( "~s/~B detected as a non-const oneway.",
-	%					   pair:to_list( FunId ) ),
+	?debug_fmt( "~s/~B detected as a non-const oneway.",
+				pair:to_list( FunId ) ),
 
 	% So that wooper:return_state( S ) becomes simply S:
 	NewExpr = StateExpr,
@@ -1318,12 +1352,12 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 										   {atom,_,const_return} },
 				  _Params=[],
 				  Transforms=#ast_transforms{
-						%transformed_function_identifier=FunId,
+						transformed_function_identifier=FunId,
 						transformation_state={ undefined, _,
 											   WOOPERExportSet } } ) ->
 
-	%trace_utils:debug_fmt( "~s/~B detected as a const oneway.",
-	%					   pair:to_list( FunId ) ),
+	?debug_fmt( "~s/~B detected as a const oneway.",
+				pair:to_list( FunId ) ),
 
 	% So that wooper:const_return() becomes simply S:
 	NewExpr = { var, LineCall, 'State' },
@@ -1381,11 +1415,11 @@ call_transformer( _LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
 		  _Params=[ ResultExpr ],
 		  Transforms=#ast_transforms{
-				%transformed_function_identifier=FunId,
+				transformed_function_identifier=FunId,
 				transformation_state={ undefined, _, WOOPERExportSet } } ) ->
 
-	%trace_utils:debug_fmt( "~s/~B detected as a static method.",
-	%					   pair:to_list( FunId ) ),
+	?debug_fmt( "~s/~B detected as a static method.",
+				pair:to_list( FunId ) ),
 
 	% So that wooper:return_static( R ) becomes simply R:
 	NewExpr = ResultExpr,
@@ -1402,12 +1436,12 @@ call_transformer( _LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
 		  _Params=[ ResultExpr ],
 		  Transforms=#ast_transforms{
-				%transformed_function_identifier=FunId,
+				transformed_function_identifier=FunId,
 				transformation_state={ static, _Qualifiers,
 									   _WOOPERExportSet } } ) ->
 
-	%trace_utils:debug_fmt( "~s/~B confirmed as a static method.",
-	%					   pair:to_list( FunId ) ),
+	?debug_fmt( "~s/~B confirmed as a static method.",
+				pair:to_list( FunId ) ),
 
 	% So that wooper:return_static( R ) becomes simply R:
 	NewExpr = ResultExpr,
@@ -1484,20 +1518,20 @@ call_transformer( LineCall, FunctionRef={ remote, _, {atom,_,wooper},
 			% module is allowed (provided it is not a method but a plain
 			% function), so we let this call pass through:
 
-			%trace_utils:debug_fmt( "~s/~B detected as a plain function;~n"
-			%	" - function ref is:~n~p~n - transform is:~n~p~n",
-			%	pair:to_list( FunId ) ++ [ FunctionRef, Transforms ] ),
+			?debug_fmt( "~s/~B detected as a plain function;~n"
+				" - function ref is:~n~p~n - transform is:~n~p~n",
+				pair:to_list( FunId ) ++ [ FunctionRef, Transforms ] ),
 
 			SameExpr = { call, LineCall, FunctionRef, Params },
 			{ [ SameExpr ], Transforms };
 
 		false ->
 
-			%trace_utils:debug_fmt( "Known functions exported by the wooper "
+			%?debug_fmt( "Known functions exported by the wooper "
 			%					   "module: ~s",
 			%					   [ set_utils:to_string( WOOPERExportSet ) ] ),
 
-			%trace_utils:debug_fmt( "Known functions exported by the wooper "
+			%?debug_fmt( "Known functions exported by the wooper "
 			%					   "module:~n  ~s",
 			%					   [ table:toString( WOOPERExportSet ) ] ),
 
@@ -1513,22 +1547,23 @@ call_transformer( LineCall, FunctionRef={ remote, _, {atom,_,wooper},
 % Finally, of course calls unrelated to WOOPER shall go through as well -
 % provided this is either 'undefined' (single, direct clause) or 'function':
 %
-call_transformer( LineCall, FunctionRef, Params, Transforms ) ->
-				  %Transforms=#ast_transforms{
-						%transformed_function_identifier=FunId,
-						%transformation_state={ Nature, _Qualifiers,
-						%					   _WOOPERExportSet } } ) ->
+call_transformer( LineCall, FunctionRef, Params,
+				  %Transforms ) ->
+				  Transforms=#ast_transforms{
+						transformed_function_identifier=FunId,
+						transformation_state={ Nature, Qualifiers,
+											   _WOOPERExportSet } } ) ->
  % No nature restriction, as even from a method we can explore 'normal' calls:
  %when Nature =:= undefined orelse Nature =:= function ->
 
-	%trace_utils:debug_fmt( "Deducing that ~s/~B is a plain function "
-	%					   "(nature: ~p, qualifiers: ~p)",
-	%					   pair:to_list( FunId ) ++ [ Nature, Qualifiers ] ),
+	?debug_fmt( "Deducing that ~s/~B is a plain function "
+				"(nature: ~p, qualifiers: ~p)",
+				pair:to_list( FunId ) ++ [ Nature, Qualifiers ] ),
 
 	SameExpr = { call, LineCall, FunctionRef, Params },
 
-	%trace_utils:debug_fmt( "Letting call remaining as ~p, while nature is ~p",
-	%					   [ SameExpr, Nature ] ),
+	%?debug_fmt( "Letting call remaining as ~p, while nature is ~p",
+	%			[ SameExpr, Nature ] ),
 
 	{ [ SameExpr ], Transforms }.
 
@@ -1626,6 +1661,12 @@ receive_with_after_transformer( Line, ReceiveClauses, AfterTest,
 		lists:mapfoldl( fun case_clause_transformer/2,
 						_Acc0=Transforms, _List=ReceiveClauses ),
 
+	% Note that all "actual" updates in the transformation state are done by the
+	% call_transformer, which is to be called (almost) solely by
+	% body_transformer/3 - which is expected to catch and check state updates;
+	% that function is called in each sub-transformer above and called below as
+	% well, so no state change is expected to be missed:
+
 	% Test unchanged.
 
 	{ NewAfterBody, AfterTransforms } =
@@ -1717,12 +1758,20 @@ try_transformer( Line, TryBody, TryClauses, CatchClauses, AfterBody,
 							 { [ ast_expression() ], ast_transforms() }.
 catch_transformer( Line, Expression, Transforms ) ?rec_guard ->
 
+	% Only known place where a call_transformer might be called out of the
+	% context of body_transformer/3:
+
+	ResetTransforms = reset_transformation_state( Transforms ),
+
 	{ [ NewExpression ], NewTransforms } =
-		ast_expression:transform_expression( Expression, Transforms ),
+		ast_expression:transform_expression( Expression, ResetTransforms ),
+
+	UpdatedTransforms = update_transformation_state( Transforms,
+													 NewTransforms, Line ),
 
 	NewExpr = { 'catch', Line, NewExpression },
 
-	{ [ NewExpr ], NewTransforms }.
+	{ [ NewExpr ], UpdatedTransforms }.
 
 
 
@@ -1743,6 +1792,8 @@ if_clause_transformer( _Clause={ 'clause', Line, HeadPatternSequence=[],
 					   Transforms ) ?rec_guard ->
 
 	% Non-existing head and guards not traversed.
+
+	% No need to reset transformation state, as done by body_transformer/3:
 
 	% We only transform the body here (and this integrates the update
 	% logic regarding function detection):
@@ -1770,6 +1821,8 @@ case_clause_transformer( _Clause={ 'clause', Line, CaseHead=[ _Pattern ],
 						 Transforms ) ?rec_guard ->
 
 	% Pattern and guards not traversed.
+
+	% No need to reset transformation state, as done by body_transformer/3:
 
 	% We only transform the body here (and this integrates the update
 	% logic regarding function detection):
@@ -1801,6 +1854,8 @@ catch_clause_transformer(
 
 	% We believe that only the body is to be traversed here:
 
+	% No need to reset transformation state, as done by body_transformer/3:
+
 	{ NewBodyExprs, BodyTransforms } =
 		body_transformer( BodyExprs, Transforms, Line ),
 
@@ -1824,6 +1879,8 @@ catch_clause_transformer(
 
 	% We believe that only the body is to be traversed here:
 
+	% No need to reset transformation state, as done by body_transformer/3:
+
 	{ NewBodyExprs, BodyTransforms } =
 		body_transformer( BodyExprs, Transforms, Line ),
 
@@ -1838,8 +1895,26 @@ catch_clause_transformer(
 
 
 
+% Resets the transformation state, so that new findings can be compared to
+% previous knowledge.
+%
+% Otherwise, for example if having already a 'request' nature found and finding
+% afterwards a 'function' expression (i.e. a nature established by default), the
+% recorded nature would remain to 'request' and thus the mismatching 'function'
+% clause would not be detected.
+%
+-spec reset_transformation_state( ast_transforms() ) -> ast_transforms().
+reset_transformation_state( Transforms=#ast_transforms{
+		  transformation_state={ _Nature, _Qualifiers, WOOPERExportSet } } ) ->
+	Transforms#ast_transforms{
+			transformation_state={ undefined, [], WOOPERExportSet } }.
+
+
 % Returns an updated transformation state, based on an initial one and one
 % returned by a transformation.
+%
+% Note that the base one provided to the transformation in-between shall have
+% been reset (see reset_transformation_state/1).
 %
 -spec update_transformation_state( ast_transforms(), ast_transforms(),
 								   line() ) -> ast_transforms().
@@ -1940,6 +2015,10 @@ update_transformation_state(
 
 	end,
 
+	?debug_fmt( "Nature of ~s/~B: initial=~p, new raw=~p, "
+						   "new actual=~p, final=~p.", pair:to_list( FunId ) ++
+		   [ InitialNature, NewRawNature, NewActualNature, ResultingNature ] ),
+
 	NewTransforms#ast_transforms{ transformation_state={ ResultingNature,
 								ResultingQualifiers, WOOPERExportSet } }.
 
@@ -1955,7 +2034,7 @@ update_transformation_state(
 -spec ensure_exported( function_info(), marker_table() ) -> function_info().
 ensure_exported( FunInfo=#function_info{ exported=[] }, MarkerTable ) ->
 
-	%trace_utils:debug_fmt( "- auto-exporting ~s",
+	%?debug_fmt( "- auto-exporting ~s",
 	%					 [ ast_info:function_info_to_string( FunInfo ) ] ),
 
 	% Not exported yet, hence to export:
