@@ -32,7 +32,7 @@
 -module(wooper_method_management).
 
 
--export([ manage_methods/1, body_transformer/2, call_transformer/4,
+-export([ manage_methods/1, body_transformer/3, call_transformer/4,
 		  get_blank_transformation_state/1,
 		  ensure_exported/2, ensure_exported_at/2, ensure_all_exported_in/2,
 		  methods_to_functions/5,
@@ -51,6 +51,9 @@
 
 % For the ast_transforms record:
 -include("ast_transform.hrl").
+
+% for the rec_guard macro:
+-include("ast_utils.hrl").
 
 
 % For the class_info record:
@@ -74,9 +77,15 @@
 -type location() :: ast_base:form_location().
 -type function_table() :: ast_info:function_table().
 -type line() :: ast_base:line().
+
 -type ast_transforms() :: ast_transform:ast_transforms().
--type ast_clause() :: ast_clause:ast_clause().
+-type ast_expression() :: ast_expression:ast_expression().
 -type ast_body() :: ast_clause:ast_body().
+
+-type ast_clause() :: ast_clause:ast_clause().
+-type ast_if_clause() :: ast_clause:ast_if_clause().
+-type ast_case_clause() :: ast_clause:ast_case_clause().
+
 
 -type compose_pair() :: wooper_parse_transform:compose_pair().
 
@@ -153,7 +162,7 @@
 % however deeply nested in branching clauses
 
 % Said otherwise, the traversal starts with the function clauses, which are
-% managed by our clause_transformer/2, in charge of calling body_transformer/2.
+% managed by our clause_transformer/2, in charge of calling body_transformer/3.
 % Should no method terminator nor throw be found, the function nature is still
 % at 'undefined', so we assign it to 'function'.
 
@@ -863,8 +872,17 @@ manage_method_terminators( Clauses, FunId, Classname, WOOPERExportSet ) ->
 	% of cases):
 	%
 	TransformTable = table:new( [
+
 			{ 'clause', fun clause_transformer/2 },
+
+			% Finally the traversal is not driven by the overall Myriad logic:
+			% we drive it explicitly here, so the standard body_transformer/2 is
+			% expected never to be triggered: instead we explicitly trigger,
+			% from the WOOPER transformers, our body_transformer/3 variation; we
+			% nevertheless define the standard version to detect if ever it was
+			% called and this case report an error:
 			{ 'body', fun body_transformer/2 },
+
 			% Expression-level triggers:
 			{ 'call', fun call_transformer/4 },
 			{ 'if', fun if_transformer/3 },
@@ -930,21 +948,36 @@ get_blank_transformation_state( WOOPERExportSet ) ->
 -spec clause_transformer( ast_clause(), ast_transforms() ) ->
 						  { ast_clause(), ast_transforms() }.
 clause_transformer(
-  Clause={ clause, Line, Params, Guards, Body },
+  _Clause={ clause, Line, Params, Guards, Body },
   Transforms ) ?rec_guard ->
   %Transforms=#ast_transforms{
 		%transformed_function_identifier=FunId,
 		%transformation_state={ InitialNature, InitialQualifiers,
 		%					   WOOPERExportSet } } ) ->
 
-	trace_utils:debug_fmt( "Transforming for WOOPER clause ~p", [ Clause ] ),
+	%trace_utils:debug_fmt( "Transforming for WOOPER clause ~p", [ Clause ] ),
 
-	% Will trigger our body_transformer/2:
-	{ NewBody, BodyTransforms } = ast_clause:transform_body( Body, Transforms ),
+	{ NewBody, BodyTransforms } = body_transformer( Body, Transforms, Line ),
 
 	NewClause = { clause, Line, Params, Guards, NewBody },
 
-	{ NewClause, BodyTransforms }.
+	UpdatedTransforms = update_transformation_state( Transforms,
+							BodyTransforms, Line ),
+
+	{ NewClause, UpdatedTransforms }.
+
+
+
+% The standard body transformer, expected never to be called due to the
+% WOOPER-driven traversal of branching constructs.
+%
+-spec body_transformer( ast_body(), ast_transforms() ) ->
+							  { ast_body(), ast_transforms() }.
+body_transformer( Body, Transforms=#ast_transforms{
+							transformed_function_identifier=FunId } ) ->
+	wooper_internals:raise_usage_error( "standard body transform called when "
+		"traversing the AST of the ~s/~B function (abnormal); body was:~n  ~p",
+		pair:to_list( FunId ) ++ [ Body ], Transforms ).
 
 
 
@@ -957,13 +990,18 @@ clause_transformer(
 % Used to be an anonymous function, yet now exported so that it can be re-used
 % by upper layers.
 %
--spec body_transformer( ast_body(), ast_transforms() ) ->
+-spec body_transformer( ast_body(), ast_transforms(), line() ) ->
 							  { ast_body(), ast_transforms() }.
 % As empty bodies may happen (ex: 'receive' without an 'after'):
 % (nevertheless should never happen in this WOOPER traversal)
-body_transformer( _BodyExprs=[], Transforms ) ->
-	trace_utils:trace( "Transforming for WOOPER empty body." ),
-	{ _Exprs=[], Transforms };
+body_transformer( _BodyExprs=[], Transforms, Line ) ->
+
+	%trace_utils:trace( "Transforming for WOOPER empty body." ),
+
+	UpdatedTransforms = update_transformation_state( Transforms,
+													 Transforms, Line ),
+
+	{ _Exprs=[], UpdatedTransforms };
 
 
 % Commented-out as the last expression is managed differently (we cannot recurse
@@ -974,10 +1012,10 @@ body_transformer( _BodyExprs=[], Transforms ) ->
 
 
 % At least an element exists here:
-body_transformer( BodyExprs, Transforms ) ->
+body_transformer( BodyExprs, Transforms, Line ) ->
 							 % superfluous: when is_list( BodyExprs )
 
-	trace_utils:trace_fmt( "Transforming for WOOPER body ~p", [ BodyExprs ] ),
+	%trace_utils:trace_fmt( "Transforming for WOOPER body ~p", [ BodyExprs ] ),
 
 	% Warning: we currently skip intermediate expressions as a whole (we do not
 	% transform them at all, as currently WOOPER does not have any need for
@@ -990,35 +1028,22 @@ body_transformer( BodyExprs, Transforms ) ->
 	% the list:
 	[ LastExpr | RevFirstExprs ] = lists:reverse( BodyExprs ),
 
-	trace_utils:trace_fmt( "Requesting the transformation of last "
-						   "expression ~p", [ LastExpr ] ),
+	%trace_utils:trace_fmt( "Requesting the transformation of last "
+	%					   "expression ~p", [ LastExpr ] ),
 
-	% This may or may not trigger in turn our call_transformer/2:
+	% This may or may not trigger in turn our transformers, knowing that the
+	% standard body_transformer/2 is expected never to be called (always
+	% intercepted):
+	%
 	{ [ NewLastExpr ], NewTransforms } =
 		ast_expression:transform_expression( LastExpr, Transforms ),
 
 	NewExprs = lists:reverse( [ NewLastExpr | RevFirstExprs ] ),
 
-	% As soon as we return from a branch, we can tell:
-	FinalTransfState = case NewTransforms#ast_transforms.transformation_state of
+	UpdatedTransforms = update_transformation_state( Transforms,
+													 NewTransforms, Line ),
 
-		{ undefined, _, WOOPERExportSet } ->
-			trace_utils:debug_fmt( "Nature set from 'undefined' to 'function' "
-			   "after traversal of last body expression~n  ~p", [ LastExpr ] ),
-			{ function, [], WOOPERExportSet };
-
-		%Other ->
-		Other={ Nature, _Qualifiers, _WOOPERExportSet } ->
-			trace_utils:debug_fmt( "Nature kept to '~p' after traversal of "
-			  "last body expression~n  ~p", [ Nature, LastExpr ] ),
-			Other
-
-	end,
-
-	FinalTransforms = NewTransforms#ast_transforms{
-						transformation_state=FinalTransfState },
-
-	{ NewExprs, FinalTransforms }.
+	{ NewExprs, UpdatedTransforms }.
 
 
 
@@ -1042,8 +1067,8 @@ call_transformer( LineCall, FunctionRef={atom,_,throw}, Params,
 				  Transforms=#ast_transforms{
 		  transformation_state={ _Nature, _Qualifiers, WOOPERExportSet } } ) ->
 
-	trace_utils:trace_fmt( "Transforming for WOOPER throw call, params: ~p.",
-						   [ Params ] ),
+	%trace_utils:trace_fmt( "Transforming for WOOPER throw call, params: ~p.",
+	%					   [ Params ] ),
 
 	%trace_utils:trace( "throw expression intercepted" ),
 
@@ -1488,11 +1513,11 @@ call_transformer( LineCall, FunctionRef={ remote, _, {atom,_,wooper},
 % Finally, of course calls unrelated to WOOPER shall go through as well -
 % provided this is either 'undefined' (single, direct clause) or 'function':
 %
-call_transformer( LineCall, FunctionRef, Params,
-				  Transforms=#ast_transforms{
+call_transformer( LineCall, FunctionRef, Params, Transforms ) ->
+				  %Transforms=#ast_transforms{
 						%transformed_function_identifier=FunId,
-						transformation_state={ Nature, _Qualifiers,
-											   _WOOPERExportSet } } ) ->
+						%transformation_state={ Nature, _Qualifiers,
+						%					   _WOOPERExportSet } } ) ->
  % No nature restriction, as even from a method we can explore 'normal' calls:
  %when Nature =:= undefined orelse Nature =:= function ->
 
@@ -1502,70 +1527,421 @@ call_transformer( LineCall, FunctionRef, Params,
 
 	SameExpr = { call, LineCall, FunctionRef, Params },
 
-	trace_utils:debug_fmt( "Letting call remaining as ~p, while nature is ~p",
-						   [ SameExpr, Nature ] ),
+	%trace_utils:debug_fmt( "Letting call remaining as ~p, while nature is ~p",
+	%					   [ SameExpr, Nature ] ),
 
-	{ [ SameExpr ], Transforms };
+	{ [ SameExpr ], Transforms }.
 
 
 % To help debugging any non-match:
-call_transformer( _LineCall, FunctionRef, _Params, Transforms ) ->
+% call_transformer( _LineCall, FunctionRef, _Params, Transforms ) ->
+%
+%	trace_utils:error_fmt( "Unexpected transforms for call ~p:~n  ~s",
+%				   [ FunctionRef,
+%					 ast_transform:ast_transforms_to_string( Transforms ) ] ),
+%
+%	throw( { unexpected_transforms, Transforms } ).
 
-	trace_utils:debug_fmt( "Unexpected transforms for call ~p:~n  ~s",
-				   [ FunctionRef,
-					 ast_transform:ast_transforms_to_string( Transforms ) ] ),
 
-	throw( { unexpected_transforms, Transforms } ).
 
+% In the transformers below, we drive the traversal as needed, for example not
+% to recurse into case test expressions and alike (which must not be considered
+% for function nature diagnosis).
+%
+% So we define here the WOOPER counterpart versions of the
+% ast_clause:transform_*_clause functions.
 
 
 
 % Drives the AST transformation of a 'if' construct.
 %
+% (see ast_expression:transform_if/3)
+%
 -spec if_transformer( line(), [ ast_if_clause() ], ast_transforms() ) ->
-						  { [ ast_expression() ], ast_transforms() ) ->
-if_transformer( Line, Clauses, Transforms ) ?rec_guard ->
+						  { [ ast_expression() ], ast_transforms() }.
+if_transformer( Line, IfClauses, Transforms ) ?rec_guard ->
+
+	{ NewIfClauses, NewTransforms } =
+		lists:mapfoldl( fun if_clause_transformer/2, _Acc0=Transforms,
+						_List=IfClauses ),
+
+	NewExpr = { 'if', Line, NewIfClauses },
+
+	{ [ NewExpr ], NewTransforms }.
 
 
 
 % Drives the AST transformation of a 'case' construct.
 %
+% (see ast_expression:transform_case/4)
+%
 -spec case_transformer( line(), ast_expression(), [ ast_case_clause() ],
 		  ast_transforms() ) -> { [ ast_expression() ], ast_transforms() }.
 case_transformer( Line, TestExpression, CaseClauses, Transforms ) ?rec_guard ->
 
+	% Test expression not traversed here.
+
+	{ NewCaseClauses, CaseTransforms } =
+		lists:mapfoldl( fun case_clause_transformer/2, _Acc0=Transforms,
+						_List=CaseClauses ),
+
+	NewExpr = { 'case', Line, TestExpression, NewCaseClauses },
+
+	{ [ NewExpr ], CaseTransforms }.
+
+
 
 % Drives the AST transformation of a 'simple_receive' construct.
+%
+% (see ast_expression:transform_simple_receive/3)
 %
 -spec simple_receive_transformer( line(), [ ast_case_clause() ],
 		  ast_transforms() ) -> { [ ast_expression() ], ast_transforms() }.
 simple_receive_transformer( Line, ReceiveClauses, Transforms ) ?rec_guard ->
 
+	% Receive clauses are actually case clauses:
+	{ NewReceiveClauses, NewTransforms } =
+		lists:mapfoldl( fun case_clause_transformer/2,
+						_Acc0=Transforms, _List=ReceiveClauses ),
+
+	NewExpr = { 'receive', Line, NewReceiveClauses },
+
+	{ [ NewExpr ], NewTransforms }.
+
+
+
 
 % Drives the AST transformation of a 'receive_with_after' construct.
 %
+% (see ast_expression:transform_receive_with_after/5)
+%
 -spec receive_with_after_transformer( line(), [ ast_case_clause() ],
-		ast_expression(), [ ast_expression() ], ast_transforms() ) ->
+		ast_expression(), ast_body(), ast_transforms() ) ->
 								{ [ ast_expression() ], ast_transforms() }.
 receive_with_after_transformer( Line, ReceiveClauses, AfterTest,
-					   AfterExpressions, Transforms ) ?rec_guard ->
+								AfterBody, Transforms ) ?rec_guard ->
+
+	% Receive clauses are actually case clauses:
+	{ NewReceiveClauses, ReceiveTransforms } =
+		lists:mapfoldl( fun case_clause_transformer/2,
+						_Acc0=Transforms, _List=ReceiveClauses ),
+
+	% Test unchanged.
+
+	{ NewAfterBody, AfterTransforms } =
+		body_transformer( AfterBody, ReceiveTransforms, Line ),
+
+	NewExpr = { 'receive', Line, NewReceiveClauses, AfterTest, NewAfterBody },
+
+	{ [ NewExpr ], AfterTransforms }.
+
+
 
 
 % Drives the AST transformation of a 'try' construct.
 %
+% Actually it is rather tricky, as a try, in terms of return value, can have 3
+% different forms (cf. http://erlang.org/doc/reference_manual/expressions.html):
+%
+% (1) try EXPR catch (CATCH_PATTERN_1 -> BODY_1), (CATCH_PATTERN_2 -> BODY_2)
+%
+% (2) try EXPR of (PATTERN_1 -> BODY_1), (PATTERN_2 -> BODY_2) catch
+% (CATCH_PATTERN_A -> BODY_A), (CATCH_PATTERN_B -> BODY_B),...
+%
+% (3) like (2), with an additional AFTER_BODY, whose value is lost
+%
+% So, here, for (1) EXPR is a possible return value, whereas not for (2) and
+% (3), and we have to discriminate among these cases.
+%
+% (see also ast_expression:transform_try/6)
+%
 -spec try_transformer( line(), ast_body(), [ ast_case_clause() ],
 					 [ ast_case_clause() ], ast_body(), ast_transforms() ) ->
 						   { [ ast_expression() ], ast_transforms() }.
+% Form (1): no try clauses (and no after):
+try_transformer( Line, TryBody, TryClauses=[], CatchClauses, AfterBody=[],
+				 Transforms ) ?rec_guard ->
+
+	% Only returns through TryBody or CatchClauses:
+
+	{ NewTryBody, TryBodyTranforms } =
+		body_transformer( TryBody, Transforms, Line ),
+
+	{ NewCatchClauses, CatchTransforms } =
+		lists:mapfoldl( fun catch_clause_transformer/2, _Acc0=TryBodyTranforms,
+						_List=CatchClauses ),
+
+	% After body not transformed, as actually never returned:
+	%{ NewAfterBody, AfterTransforms } =
+	%	body_transformer( AfterBody, CatchTransforms, Line ),
+
+	NewExpr = { 'try', Line, NewTryBody, TryClauses, NewCatchClauses,
+				AfterBody },
+
+	{ [ NewExpr ], CatchTransforms };
+
+
+% Form (2) and (3): we have try clauses (and after body can be ignored):
 try_transformer( Line, TryBody, TryClauses, CatchClauses, AfterBody,
 				 Transforms ) ?rec_guard ->
 
+	% Only returns through TryClauses (not TryBody) or CatchClauses:
+
+	% These are case clauses:
+	{ NewTryClauses, TryTransforms } =
+		lists:mapfoldl( fun case_clause_transformer/2, _Acc0=Transforms,
+						_List=TryClauses ),
+
+	% These are catch clauses:
+	{ NewCatchClauses, CatchTransforms } =
+		lists:mapfoldl( fun catch_clause_transformer/2, _Acc0=TryTransforms,
+						_List=CatchClauses ),
+
+
+	% After body not transformed, as actually never returned:
+	%{ NewAfterBody, AfterTransforms } =
+	%	body_transformer( AfterBody, CatchTransforms, Line ),
+
+	NewExpr = { 'try', Line, TryBody, NewTryClauses, NewCatchClauses,
+				AfterBody },
+
+	{ [ NewExpr ], CatchTransforms }.
+
+
 
 % Drives the AST transformation of a 'catch' construct.
+%
+% Not: for catch as an expression, not as a component of try.
 %
 -spec catch_transformer( line(), ast_expression(), ast_transforms() ) ->
 							 { [ ast_expression() ], ast_transforms() }.
 catch_transformer( Line, Expression, Transforms ) ?rec_guard ->
 
+	{ [ NewExpression ], NewTransforms } =
+		ast_expression:transform_expression( Expression, Transforms ),
+
+	NewExpr = { 'catch', Line, NewExpression },
+
+	{ [ NewExpr ], NewTransforms }.
+
+
+
+
+
+% Subsection for WOOPER helper transformers.
+%
+% They may be used by multiple top-level transformers.
+
+
+
+% Transforms an 'if' clause just for the sake of WOOPER.
+%
+% (corresponds to ast_clause:transform_if_clause/2)
+%
+if_clause_transformer( _Clause={ 'clause', Line, HeadPatternSequence=[],
+								 GuardSequence, BodyExprs },
+					   Transforms ) ?rec_guard ->
+
+	% Non-existing head and guards not traversed.
+
+	% We only transform the body here (and this integrates the update
+	% logic regarding function detection):
+	%
+	{ NewBodyExprs, BodyTransforms } =
+		body_transformer( BodyExprs, Transforms, Line ),
+
+	NewExpr = { 'clause', Line, HeadPatternSequence, GuardSequence,
+				NewBodyExprs },
+
+	Res = { NewExpr, BodyTransforms },
+
+	%ast_utils:display_debug( "... returning if clause and state ~p", [ Res ] ),
+
+	Res.
+
+
+
+% Transforms a 'case' clause just for the sake of WOOPER.
+%
+% (corresponds to ast_clause:transform_case_clause/2)
+%
+case_clause_transformer( _Clause={ 'clause', Line, CaseHead=[ _Pattern ],
+								   GuardSequence, BodyExprs },
+						 Transforms ) ?rec_guard ->
+
+	% Pattern and guards not traversed.
+
+	% We only transform the body here (and this integrates the update
+	% logic regarding function detection):
+	%
+	{ NewBodyExprs, BodyTransforms } =
+		body_transformer( BodyExprs, Transforms, Line ),
+
+	NewExpr = { 'clause', Line, CaseHead, GuardSequence,
+				NewBodyExprs },
+
+	Res = { NewExpr, BodyTransforms },
+
+	%ast_utils:display_debug( "... returning case clause and state ~p",
+	%                         [ Res ] ),
+
+	Res.
+
+
+% Transforms a 'catch' clause just for the sake of WOOPER.
+%
+% (corresponds to ast_clause:transform_catch_clause/2)
+%
+catch_clause_transformer(
+  _Clause={ 'clause', Line, Throw=[ { throw, _Pattern, _Any } ], GuardSequence,
+			BodyExprs },
+  Transforms ) ?rec_guard ->
+
+	%ast_utils:display_debug( "Intercepting catch clause ~p...", [ Clause ] ),
+
+	% We believe that only the body is to be traversed here:
+
+	{ NewBodyExprs, BodyTransforms } =
+		body_transformer( BodyExprs, Transforms, Line ),
+
+	NewExpr = { 'clause', Line, Throw, GuardSequence, NewBodyExprs },
+
+	Res = { NewExpr, BodyTransforms },
+
+	%ast_utils:display_debug( "... returning catch clause and state ~p",
+	%                         [ Res ] ),
+
+	Res;
+
+
+catch_clause_transformer(
+  _Clause={ 'clause', Line, Head=[ _HeadPattern={ _X, _P, _Any } ],
+			GuardSequence, BodyExprs },
+  Transforms ) ?rec_guard ->
+
+	%ast_utils:display_debug( "Intercepting catch clause with variable ~p...",
+	%						 [ Clause ] ),
+
+	% We believe that only the body is to be traversed here:
+
+	{ NewBodyExprs, BodyTransforms } =
+		body_transformer( BodyExprs, Transforms, Line ),
+
+	NewExpr = { 'clause', Line, Head, GuardSequence, NewBodyExprs },
+
+	Res = { NewExpr, BodyTransforms },
+
+	%ast_utils:display_debug( "... returning catch clause with variable "
+	%                         "and state ~p", [ Res ] ),
+
+	Res.
+
+
+
+% Returns an updated transformation state, based on an initial one and one
+% returned by a transformation.
+%
+-spec update_transformation_state( ast_transforms(), ast_transforms(),
+								   line() ) -> ast_transforms().
+update_transformation_state(
+  _InitialTransforms=#ast_transforms{ transformation_state={ InitialNature,
+						InitialQualifiers, _WOOPERExportSet } },
+  NewTransforms=#ast_transforms{
+				   transformed_function_identifier=FunId,
+				   transformation_state={ NewRawNature,
+										  NewQualifiers, WOOPERExportSet } },
+  Line ) ->
+
+	% As soon as we return from the transformation whereas the nature is still
+	% 'undefined', this means that:
+	%
+	%  1. no method terminator has been found in the full branch (as we explore
+	%  the AST of a function depth-first)
+	%
+	%  2. it was the first terminal branch explored (as we assign systematically
+	%  the function nature when returning from a branch)
+	%
+	% So it was a plain function, we record that nature for further checking of
+	% the other terminal branches. As a result this transformer allows to
+	% discriminate 'no information yet' (hence function nature can be anything)
+	% from 'no method terminator found' (so it must be a plain function).
+
+	NewPair = { NewActualNature, NewActualQualifiers } = case NewRawNature of
+
+		undefined ->
+			{ function, [] };
+
+		_ ->
+			{ NewRawNature, NewQualifiers }
+
+	end,
+
+
+	% Regarding function nature, following rules apply:
+	%
+	% 1. if the initial nature is 'undefined', any new nature (throw or method
+	% one) will supersede it
+	%
+	% 2. if the initial nature is 'throw', the same applies (either superseded
+	% by throw or a method one)
+	%
+	% 3. if the initial nature is a method one, this nature will be:
+	%
+	%   - confirmed if new nature is the same
+	%   - kept as is if new nature is throw (no additional information)
+	%   - mismatching if new nature is a different method one
+
+	{ ResultingNature, ResultingQualifiers } = case InitialNature of
+
+		undefined ->
+			NewPair;
+
+		throw ->
+			NewPair;
+
+		NewActualNature ->
+			% Confirmed nature, only case to handle is loss of constness:
+			case lists:member( const, InitialQualifiers )
+				andalso not lists:member( const, NewActualQualifiers ) of
+
+				% Actually is non-const then:
+				true ->
+					{ NewActualNature, NewActualQualifiers };
+
+				% As const as used to be:
+				false ->
+					{ NewActualNature, InitialQualifiers }
+
+			end;
+
+		_MismatchingNature ->
+			case NewActualNature of
+
+				throw ->
+					% Can happen for example if first clause of function of
+					% interest is a 'function' one, next one is a 'throw':
+					%
+					% (by design InitialNature cannot be 'undefined' or 'throw'
+					% here)
+					%
+					{ InitialNature, InitialQualifiers };
+
+				_ ->
+					wooper_internals:raise_usage_error(
+					  "the ~s/~B function was "
+					  "detected as a ~s, yet the clause at line #~B indicates "
+					  "it is a ~s.", pair:to_list( FunId ) ++ [
+						  function_nature_to_string( InitialNature ),
+						  Line,
+						  function_nature_to_string( NewActualNature ) ],
+					  NewTransforms, Line )
+
+			end
+
+	end,
+
+	NewTransforms#ast_transforms{ transformation_state={ ResultingNature,
+								ResultingQualifiers, WOOPERExportSet } }.
 
 
 
