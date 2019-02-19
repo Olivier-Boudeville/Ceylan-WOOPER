@@ -32,11 +32,21 @@
 -module(wooper_method_management).
 
 
--export([ manage_methods/1, body_transformer/3, call_transformer/4,
-		  get_blank_transformation_state/1,
+-export([ manage_methods/1,
+
+		  get_wooper_transform_table/0,
+
+		  % Sharable, top-level transformers:
+		  clause_transformer/2, body_transformer/2, call_transformer/4,
+		  if_transformer/3, case_transformer/4, simple_receive_transformer/3,
+		  receive_with_after_transformer/5, try_transformer/6,
+		  catch_transformer/3,
+
+		  get_blank_transformation_state/0, get_blank_transformation_state/1,
 		  ensure_exported/2, ensure_exported_at/2, ensure_all_exported_in/2,
 		  methods_to_functions/5,
-		  take_spec_into_account/5, check_clause_spec/5, check_state_argument/3,
+		  take_spec_into_account/5, get_info_from_clause_spec/3,
+		  check_clause_spec/5, check_state_argument/3,
 		  function_nature_to_string/1,
 
 		  function_to_request_info/2, request_to_function_info/2,
@@ -79,6 +89,8 @@
 -type line() :: ast_base:line().
 
 -type ast_transforms() :: ast_transform:ast_transforms().
+-type ast_transform_table() :: ast_transform:ast_transform_table().
+
 -type ast_expression() :: ast_expression:ast_expression().
 -type ast_body() :: ast_clause:ast_body().
 
@@ -89,9 +101,9 @@
 
 -type compose_pair() :: wooper_parse_transform:compose_pair().
 
--type request_table() :: wooper_info:request_info().
--type oneway_table() :: wooper_info:oneway_info().
--type static_table() :: wooper_info:static_info().
+-type request_table() :: wooper_info:request_table().
+-type oneway_table() :: wooper_info:oneway_table().
+-type static_table() :: wooper_info:static_table().
 -type method_qualifiers() :: wooper:method_qualifiers().
 
 
@@ -284,7 +296,6 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 										  FunNature, Qualifiers, Classname ),
 
 	% Stores the result in the right category and recurses:
-	%
 	case FinalNature of
 
 		function ->
@@ -378,23 +389,25 @@ take_spec_into_account( _LocSpec=undefined, FunId, _FunNature=throw,
 	  "(ex: use request_return/1 to mark it as a request).",
 	  pair:to_list( FunId ), Classname );
 
+
 % Special case for a function nature detected as 'throw': any information
 % collected from its spec is accepted as is (provided there is only one spec).
 %
 take_spec_into_account( _LocSpec={ _Loc,
 		   { attribute, _, spec, { FunId, [ ClauseSpec ] } } },
-					   FunId, _FunNature=throw, _Qualifiers, _Classname ) ->
-	get_info_from_clause_spec( ClauseSpec, FunId );
+					   FunId, _FunNature=throw, _Qualifiers, Classname ) ->
+	get_info_from_clause_spec( ClauseSpec, FunId, Classname );
+
 
 % Throw function with a spec comprising multiple clauses is not supported:
 take_spec_into_account( _LocSpec={ _Loc,
-		   { attribute, _, spec, { FunId, _ClauseSpecs } } },
+		   { attribute, Line, spec, { FunId, _ClauseSpecs } } },
 					   _FunId, _FunNature=throw, _Qualifiers, Classname ) ->
 	wooper_internals:raise_usage_error(
 	  "all clauses of the function ~s/~B throw an exception; as a result this "
 	  "function can be of any nature. Its type specification shall however "
 	  "comprise a single clause to remove this ambiguity.",
-	  pair:to_list( FunId ), Classname );
+	  pair:to_list( FunId ), Classname, Line );
 
 
 % No spec defined, non-throw, so input elements are accepted as such:
@@ -420,43 +433,92 @@ take_spec_into_account( _LocSpec={ _Loc,
 get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
 	_Seqs=[ _TypeProductForArgs,
 			_ResultType={ user_type, _, request_return, [ _RType ] } ] },
-						   _FunId ) ->
+						   _FunId, _Classname ) ->
 	{ request, [] };
 
 
 get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
 	_Seqs=[ _TypeProductForArgs,
+			_ResultType={ user_type, Line, request_return, RTypes } ] },
+						   FunId, Classname ) ->
+	wooper_internals:raise_usage_error(
+	  "wrong arity of the specified WOOPER return type for the spec of ~s/~B: "
+	  "it should be request_return/1 (not request_return/~B).",
+	  pair:to_list( FunId ) ++ [ length( RTypes ) ], Classname, Line );
+
+
+get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
+	_Seqs=[ _TypeProductForArgs,
 			_ResultType={ user_type, _, const_request_return,
-						  [ _RType ] } ] }, _FunId ) ->
+						  [ _RType ] } ] }, _FunId, _Classname ) ->
 	{ request, [ const ] };
 
 
 get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
 	_Seqs=[ _TypeProductForArgs,
+			_ResultType={ user_type, Line, const_request_return, RTypes } ] },
+						   FunId, Classname ) ->
+	wooper_internals:raise_usage_error(
+	  "wrong arity of the specified WOOPER return type for the spec of ~s/~B: "
+	  "it should be const_request_return/1 (not const_request_return/~B).",
+	  pair:to_list( FunId ) ++ [ length( RTypes ) ], Classname, Line );
+
+
+get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
+	_Seqs=[ _TypeProductForArgs,
 			_ResultType={ user_type, _, oneway_return, [] } ] },
-						   _FunId ) ->
+						   _FunId, _Classname ) ->
 	{ oneway, [] };
 
 
 get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
 	_Seqs=[ _TypeProductForArgs,
+			_ResultType={ user_type, Line, oneway_return, RTypes } ] },
+						   FunId, Classname ) ->
+	wooper_internals:raise_usage_error(
+	  "wrong arity of the specified WOOPER return type for the spec of ~s/~B: "
+	  "it should be oneway_return/0 (not oneway_return/~B).",
+	  pair:to_list( FunId ) ++ [ length( RTypes ) ], Classname, Line );
+
+
+get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
+	_Seqs=[ _TypeProductForArgs,
 			_ResultType={ user_type, _, const_oneway_return, [] } ] },
-						   _FunId ) ->
+						   _FunId, _Classname ) ->
 	{ oneway, [ const ] };
 
 
 get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
 	_Seqs=[ _TypeProductForArgs,
+			_ResultType={ user_type, Line, const_oneway_return, RTypes } ] },
+						   FunId, Classname ) ->
+	wooper_internals:raise_usage_error(
+	  "wrong arity of the specified WOOPER return type for the spec of ~s/~B: "
+	  "it should be const_oneway_return/0 (not const_oneway_return/~B).",
+	  pair:to_list( FunId ) ++ [ length( RTypes ) ], Classname, Line );
+
+
+get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
+	_Seqs=[ _TypeProductForArgs,
 			_ResultType={ user_type, _, static_return, [ _RType ] } ] },
-						   _FunId ) ->
+						   _FunId, _Classname ) ->
 	{ static, [] };
+
+get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
+	_Seqs=[ _TypeProductForArgs,
+			_ResultType={ user_type, Line, static_return, RTypes } ] },
+						   FunId, Classname ) ->
+	wooper_internals:raise_usage_error(
+	  "wrong arity of the specified WOOPER return type for the spec of ~s/~B: "
+	  "it should be static_return/1 (not static_return/~B).",
+	  pair:to_list( FunId ) ++ [ length( RTypes ) ], Classname, Line );
 
 % For the rest, we assume it designates plain function:
 %
 % (wrong spelling, arity, etc. could be detected here as well, like with
 % check_clause_spec/5)
 %
-get_info_from_clause_spec( _ClauseSpec, _FunId ) ->
+get_info_from_clause_spec( _ClauseSpec, _FunId, _Classname ) ->
 	{ function, [] }.
 
 
@@ -752,6 +814,18 @@ check_clause_spec( { type, Line, 'fun',
 		Line );
 
 
+check_clause_spec( { type, _, 'fun', [ _Args,
+		_ResultType={ user_type, Line, TypeName, RTypes } ] },
+				   FunNature, _Qualifiers, FunId,
+				   Classname ) ->
+	%code_utils:display_stacktrace(),
+	wooper_internals:raise_usage_error( "unexpected return type (~s/~B) "
+		"in the type specification of ~s/~B (which is detected as a ~s).",
+		[ TypeName, length( RTypes ) | pair:to_list( FunId ) ]
+						 ++ [ function_nature_to_string( FunNature ) ],
+		Classname, Line );
+
+
 check_clause_spec( _UnexpectedTypeForm, FunNature, _Qualifiers, FunId,
 				   Classname ) ->
 	wooper_internals:raise_usage_error( "unexpected return type in the type "
@@ -762,7 +836,6 @@ check_clause_spec( _UnexpectedTypeForm, FunNature, _Qualifiers, FunId,
 
 
 % Returns a textual description of the specified function nature.
-%
 -spec function_nature_to_string( maybe( function_nature() ) ) ->
 									   text_utils:ustring().
 function_nature_to_string( request ) ->
@@ -781,7 +854,15 @@ function_nature_to_string( throw ) ->
 	"throw-only function";
 
 function_nature_to_string( undefined ) ->
-	"undefined type of function".
+	"undefined type of function";
+
+% An unknown nature is not deemed an error here, so that upper layers do not
+% have to define their own, very similar version of check_clause_spec/5 for
+% example.
+%
+function_nature_to_string( Other ) when is_atom( Other ) ->
+	text_utils:format( "function whose nature, '~s', is not known of WOOPER",
+					   [ Other ] ).
 
 
 
@@ -844,7 +925,7 @@ check_clause_for_state( _Clause, FunId, Classname ) ->
 % whether said helper should be considered as a method or not).
 %
 -spec manage_method_terminators( meta_utils:clause_def(), function_id(),
-								 wooper:classname() ) ->
+						 wooper:classname(), wooper:function_export_set()) ->
 		{ meta_utils:clause_def(), function_nature(), method_qualifiers(),
 		  wooper:function_export_set() }.
 manage_method_terminators( _Clauses=[], FunId, Classname, _WOOPERExportSet ) ->
@@ -856,65 +937,7 @@ manage_method_terminators( Clauses, FunId, Classname, WOOPERExportSet ) ->
 
 	?trace_fmt( "Studying ~s/~B...", pair:to_list( FunId ) ),
 
-	% We define first the transformation functions in charge of the
-	% guessing/checking/transforming of the method terminators.
-	%
-	% The clause transform-fun allows to handle plain functions, knowing that,
-	% when no method terminator is found in a code branch, no specific behaviour
-	% can be triggered (used to result in such branches to be basically
-	% ignored).
-	%
-	% The body transform-fun will be used to skip all expressions of a body but
-	% the last one, while the call transform-fun will be applied to call
-	% expressions found there, as:
-	%
-	% { NewExpr, NewTransforms } = TransformFun( LineCall, FunctionRef,
-	%                                            Params, Transforms )
-	%
-	% Transforms is an ast_transforms record that contains a
-	% transformation_state field, which itself contains a value of type:
-	%   { maybe( function_nature() ), method_qualifiers(),  } ).
-	%
-	% Indeed it starts as 'undefined', then the first terminal call branch of
-	% the first clause allows to detect and set the function nature, and
-	% afterwards all other branches are checked against it, and transformed.
-
-	% Note that a member method is const iff all its clauses are const; so a
-	% method is flagged initially as const depending on the constness of its
-	% first clause, and loses any initial const status as soon as one clause
-	% happens to be non-const (otherwise a non_const flag/qualifier would have
-	% to be introduced).
-
-	% So this (WOOPER-level) transformation is quite different (ex: partial vs
-	% exhaustive) from the Myriad-level one that will be performed near the end
-	% of the overall processing (merging these two would be tricky and would not
-	% have much interest).
-
-	% We traverse quite specifically the AST, so we override the default
-	% traversal with transformation triggers (ex: we must trigger our
-	% call-transformer only on final elements of bodies, not on test expressions
-	% of cases):
-	%
-	TransformTable = table:new( [
-
-			{ 'clause', fun clause_transformer/2 },
-
-			% Finally the traversal is not driven by the overall Myriad logic:
-			% we drive it explicitly here, so the standard body_transformer/2 is
-			% expected never to be triggered: instead we explicitly trigger,
-			% from the WOOPER transformers, our body_transformer/3 variation; we
-			% nevertheless define the standard version to detect if ever it was
-			% called and this case report an error:
-			{ 'body', fun body_transformer/2 },
-
-			% Expression-level triggers:
-			{ 'call', fun call_transformer/4 },
-			{ 'if', fun if_transformer/3 },
-			{ 'case', fun case_transformer/4 },
-			{ 'simple_receive', fun simple_receive_transformer/3 },
-			{ 'receive_with_after', fun receive_with_after_transformer/5 },
-			{ 'try', fun try_transformer/6 },
-			{ 'catch', fun catch_transformer/3 } ] ),
+	TransformTable = get_wooper_transform_table(),
 
 	Transforms = #ast_transforms{
 	  transformed_module_name=Classname,
@@ -949,12 +972,90 @@ manage_method_terminators( Clauses, FunId, Classname, WOOPERExportSet ) ->
 
 
 
-% Returns a suitable, blank transformation state.
+
+% Returns a blank transformation state, based on the WOOPER exports.
 %
 % Defined to be safely reused from various locations.
 %
-get_blank_transformation_state( WOOPERExportSet ) ->
-	{ _FunctionNature=undefined, _Qualifiers=[], WOOPERExportSet }.
+get_blank_transformation_state() ->
+	WOOPERExportSet = wooper:get_exported_functions_set(),
+	get_blank_transformation_state( WOOPERExportSet ).
+
+
+
+% Returns a suitable, blank transformation state, from specified export set.
+%
+% Defined to be safely reused from various locations.
+%
+get_blank_transformation_state( ExportSet ) ->
+	{ _FunctionNature=undefined, _Qualifiers=[], ExportSet }.
+
+
+
+% Returns the WOOPER-specific transform table.
+-spec get_wooper_transform_table() -> ast_transform_table().
+get_wooper_transform_table() ->
+
+	% We define first the transformation functions in charge of the
+	% guessing/checking/transforming of the method terminators.
+	%
+	% The clause transform-fun allows to handle plain functions, knowing that,
+	% when no method terminator is found in a code branch, no specific behaviour
+	% can be triggered (used to result in such branches to be basically
+	% ignored).
+	%
+	% The body transform-fun will be used to skip all expressions of a body but
+	% the last one, while the call transform-fun will be applied to call
+	% expressions found there, as:
+	%
+	% { NewExpr, NewTransforms } = TransformFun( LineCall, FunctionRef,
+	%                                            Params, Transforms )
+	%
+	% Transforms is an ast_transforms record that contains a
+	% transformation_state field, which itself contains a value of type:
+	%   { maybe( function_nature() ), method_qualifiers(),  } ).
+	%
+	% Indeed it starts as 'undefined', then the first terminal call branch of
+	% the first clause allows to detect and set the function nature, and
+	% afterwards all other branches are checked against it, and transformed.
+
+	% Note that a member method is const iff all its clauses are const; so a
+	% method is flagged içnitially as const depending on the constness of its
+	% first clause, and loses any initial const status as soon as one clause
+	% happens to be non-const (otherwise a non_const flag/qualifier would have
+	% to be introduced).
+
+	% So this (WOOPER-level) transformation is quite different (ex: partial vs
+	% exhaustive) from the Myriad-level one that will be performed near the end
+	% of the overall processing (merging these two would be tricky and would not
+	% have much interest).
+
+	% WOOPER traverses quite specifically the AST, so we override the default
+	% traversal with transformation triggers (ex: we must trigger our
+	% call-transformer only on final elements of bodies, not on test expressions
+	% of cases):
+	%
+	table:new( [
+
+			{ 'clause', fun clause_transformer/2 },
+
+			% Finally the traversal is not driven by the overall Myriad logic:
+			% we drive it explicitly here, so the standard body_transformer/2 is
+			% expected never to be triggered: instead we explicitly trigger,
+			% from the WOOPER transformers, our body_transformer/3 variation; we
+			% nevertheless define the standard version to detect if ever it was
+			% called, and in this case report a blocking error:
+			{ 'body', fun body_transformer/2 },
+
+			% Expression-level triggers:
+			{ 'call', fun call_transformer/4 },
+			{ 'if', fun if_transformer/3 },
+			{ 'case', fun case_transformer/4 },
+			{ 'simple_receive', fun simple_receive_transformer/3 },
+			{ 'receive_with_after', fun receive_with_after_transformer/5 },
+			{ 'try', fun try_transformer/6 },
+			{ 'catch', fun catch_transformer/3 } ] ).
+
 
 
 
@@ -1002,8 +1103,10 @@ clause_transformer(
 body_transformer( Body, Transforms=#ast_transforms{
 							transformed_function_identifier=FunId } ) ->
 	wooper_internals:raise_usage_error( "standard body transform called when "
-		"traversing the AST of the ~s/~B function (abnormal); body was:~n  ~p",
-		pair:to_list( FunId ) ++ [ Body ], Transforms ).
+		"traversing the AST of the ~s/~B function (abnormal); "
+		"body was:~n  ~p;~nCorresponding stacktrace was: ~s",
+		pair:to_list( FunId ) ++ [ Body, code_utils:interpret_stacktrace() ],
+		Transforms, _Line=0 ).
 
 
 
@@ -1454,7 +1557,7 @@ call_transformer( LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
 		  Params,
 		  Transforms=#ast_transforms{ transformed_function_identifier=FunId } )
-  when length( Params ) =/= 2 ->
+  when length( Params ) =/= 1 ->
 	wooper_internals:raise_usage_error( "wrong arity (~B) specified "
 		"for wooper:return_static/1, for static method ~s/~B.",
 		[ length( Params ) | pair:to_list( FunId ) ], Transforms, LineCall );
@@ -1471,6 +1574,77 @@ call_transformer( LineCall,
 	wooper_internals:raise_usage_error( "method terminator mismatch "
 		"for method ~s/~B: wooper:return_static/1 implies "
 		"static method, whereas was detected as a ~s.",
+		pair:to_list( FunId ) ++ [ OtherNature ], Transforms, LineCall );
+
+
+
+
+% Fourth, throwing declarations, to mark the return of a given call as a throw:
+
+
+% First (correct) throwing helper detection:
+call_transformer( _LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,throwing} },
+		  _Params=[ ResultExpr ],
+		  Transforms=#ast_transforms{
+				transformed_function_identifier=FunId,
+				transformation_state={ undefined, _, WOOPERExportSet } } ) ->
+
+	?debug_fmt( "~s/~B detected as a throwing method.",
+				pair:to_list( FunId ) ),
+
+	% So that wooper:throwing( R ) becomes simply R (assimilated to a mere
+	% throw):
+	%
+	NewExpr = ResultExpr,
+	NewTransforms = Transforms#ast_transforms{
+					  transformation_state={ throw, [], WOOPERExportSet } },
+	{ [ NewExpr ], NewTransforms };
+
+
+% Already detected as a throw:
+%
+% (mostly the same clause as above, as qualifiers do not matter for throwing):
+%
+call_transformer( _LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,throwing} },
+		  _Params=[ ResultExpr ],
+		  Transforms=#ast_transforms{
+				transformed_function_identifier=FunId,
+				transformation_state={ throw, _Qualifiers,
+									   _WOOPERExportSet } } ) ->
+
+	?debug_fmt( "~s/~B confirmed as a throw method.",
+				pair:to_list( FunId ) ),
+
+	% So that wooper:throwing( R ) becomes simply R:
+	NewExpr = ResultExpr,
+	NewTransforms = Transforms,
+	{ [ NewExpr ], NewTransforms };
+
+
+% Faulty throwing arity:
+call_transformer( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,throwing} },
+		  Params,
+		  Transforms=#ast_transforms{ transformed_function_identifier=FunId } )
+  when length( Params ) =/= 1 ->
+	wooper_internals:raise_usage_error( "wrong arity (~B) specified "
+		"for wooper:throwing/1, for method ~s/~B.",
+		[ length( Params ) | pair:to_list( FunId ) ], Transforms, LineCall );
+
+
+% Nature mismatch:
+call_transformer( LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,throwing} },
+		  _Params,
+		  Transforms=#ast_transforms{
+						transformed_function_identifier=FunId,
+						transformation_state={ OtherNature, _Qualifiers,
+											   _WOOPERExportSet } } ) ->
+	wooper_internals:raise_usage_error( "method terminator mismatch "
+		"for method ~s/~B: wooper:throwing/1 implies "
+		"throwing method, whereas was detected as a ~s.",
 		pair:to_list( FunId ) ++ [ OtherNature ], Transforms, LineCall );
 
 
@@ -1537,7 +1711,7 @@ call_transformer( LineCall, FunctionRef={ remote, _, {atom,_,wooper},
 
 			wooper_internals:raise_usage_error( "invalid method terminator "
 			  "specified for ~s/~B: wooper:~s/~B is neither a known terminator "
-			  "nor an exported function.",
+			  "nor a WOOPER-exported function.",
 			  pair:to_list( FunId ) ++ pair:to_list( CallFunId ),
 			  Transforms, LineCall )
 

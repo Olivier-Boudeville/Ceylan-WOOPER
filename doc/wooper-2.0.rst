@@ -309,6 +309,9 @@ So a class modeling, for example, a cat should translate into an Erlang module n
 
 Similarly, a pink flamingo class could be declared as ``class_PinkFlamingo``, in ``class_PinkFlamingo.erl``, which would include a ``-module(class_PinkFlamingo).`` declaration.
 
+Note that, unless specifically ambiguous, for the sake of brevity classes are often referred to by their name without their ``class_`` prefix.
+
+For example ``PinkFlamingo`` can be understood as a shorthand for the actual classname, ``class_PinkFlamingo``.
 
 
 Class Description
@@ -846,7 +849,11 @@ Here we reverse the point of view: instead of **calling** a method, we are in th
 
 A method signature has always for first parameter the state of the instance, for example: ``getAge(State) -> [..]``, or ``getCoordinate(State,Index) -> [..]``.
 
-For the sake of clarity, this variable should always be named ``State`` exactly (implying it shall not be named for example ``MyState`` or muted as ``_State``). This convention is now enforced at compile-time.
+For the sake of clarity, this variable should always be named ``State`` exactly (implying it shall not be named for example ``MyState``, or muted as ``_State`` [#]_). This convention is now enforced at compile-time.
+
+.. [#] The only legit place for ``_State`` is when a method clause does not use at all the state variable, which, in practice, happens only when a clause throws an exception.
+
+
 
 A method must always return at least the newer instance state, so that WOOPER can rely on it from now onward.
 
@@ -1444,6 +1451,7 @@ A **qualifier** can be:
 		   wooper:const_return_result(?getAttr(fur_color)).
 
   - the ``setFurColor/2`` oneway would be added (with its spec)::
+
 	  setFurColor(State,FurColor) ->
 		   wooper:return_state(setAttribute(State,fur_color,
 											FurColor)).
@@ -2343,6 +2351,112 @@ Miscellaneous Technical Points
 ==============================
 
 
+Methods Not Returning Anything of Interest
+------------------------------------------
+
+Not all functions or static methods (or even requests) are pure, and sometimes only the side-effects of their execution are of interest, in which case nothing relevant may have to be returned [#]_.
+
+.. [#] So, why one use a request instead of a oneway then? One reason is synchronisation, so that the caller code can block until the request has completed. Nevertheless for that use case we recommend that such a request returns a conventional, self-describing, preferably unique atom, such as ``foobar_server_stopped``. We will focus here mostly on the static methods that would have no meaningful value to return.
+
+
+For such needs, our `Myriad <http://myriad.esperide.org>`_ base layer introduced the opaque pseudo-builtin type ``void()`` (nothing fancy), which is to be used by WOOPER methods as well.
+
+Should one need a value of the ``void/0`` type, we recommend using the ``void`` atom.
+
+As a result (pun!), one may define:
+
+.. code:: erlang
+
+  -spec stop() -> static_return( void() ).
+  stop() ->
+	[...] % Do some side-effects
+	wooper:return_static( void ).
+
+
+Introducing specific method terminators for that would have been possible (ex: ``static_void_return/0``), yet multiplying the syntactical constructs would probably hurt the terseness of the underlying language.
+
+
+
+
+
+Exception-Throwing Methods
+--------------------------
+
+A **clause of a method may simply always throw an exception**, and WOOPER will manage it automatically if possible.
+
+More precisely, such a clause is considered licit yet not giving information about the method type. So, should there be other, non-throwing clauses, WOOPER will still be able to identify the nature of the method.
+
+Otherwise (all clauses always throw), the class developer will have to give a hint about the actual nature of that function - thanks to a type specification.
+
+For example, if defining the API of an abstract class (say, an ``AbstractShape`` class) whereas, for a given method signature (ex: ``getArea/1``), there is no meaningful default implementation, one may for example write:
+
+.. code:: erlang
+
+   getArea(_State) ->
+	   % For an abstract shape, no possible definition;
+	   % so catching any child class not overriding it,
+	   % thanks to:
+	   %
+	   throw(not_overridden).
+
+
+However, from the point of view of WOOPER, ``getArea/1``, short of using any method terminator, can be of any nature (for example a method or an helper function). WOOPER will then request the developer to clarify this ambiguity by adding a type spec, such as:
+
+.. code:: erlang
+
+   -spec getArea(wooper:state()) -> const_request_return(area()).
+
+This will be sufficient for WOOPER.
+
+
+In other related cases, it may be convenient instead to centralise the management of a range of failures in specific **helper functions that always throw** (such a function never returns), like in:
+
+.. code:: erlang
+
+   manage_foobar_failure(X,Y) ->
+	   [...]
+	   throw({foobar_failed,{X,Y}}).
+
+
+Writing a method relying on such an helper function could be:
+
+.. code:: erlang
+
+   doSomething(State,A) ->
+
+	   case foobar(A,State) of
+
+		  {value,Result} ->
+			  wooper:const_return_result(Result);
+
+		  {error,Error} ->
+			  manage_foobar_failure(A,Error)
+
+	   end.
+
+The problem is that this call to ``manage_foobar_failure/2`` does not include a method terminator, and thus this branch would be, from the WOOPER point of view, the one of an helper function, thus clashing with the other branches (here telling it is a const request).
+
+A solution could be to write instead:
+
+.. code:: erlang
+
+  [...]
+		  {error,Error} ->
+			  Dummy = manage_foobar_failure(A,Error),
+			  wooper:const_return_result(Dummy)
+
+but that resulting code would not be that satisfactory (a bit ugly, not so readable).
+
+So, instead, WOOPER introduced the ``throwing/1`` method terminator, allowing the following, clearer, more elegant, code:
+
+.. code:: erlang
+
+  [...]
+		  {error,Error} ->
+			  wooper:throwing( manage_foobar_failure(A,Error) )
+
+
+
 ``delete_any_instance_referenced_in/2``
 ---------------------------------------
 
@@ -2579,7 +2693,7 @@ To run a test (ex: ``class_Cat_test.erl``), when WOOPER has already been compile
 
 :raw-latex:`\pagebreak`
 
-Good Practises
+Good Practices
 ==============
 
 When using WOOPER, the following conventions are deemed useful to respect (even if they are not mandatory).
@@ -2593,6 +2707,10 @@ All **attributes** of an instance should better be defined **from the constructo
 **Class-specific attributes** should be specified (using the ``class_attributes`` define), as doing so brings up much useful information to the developer/maintainer.
 
 **Type specifications** should be used for at least most non-internal functions (such as constructors, methods, etc.).
+
+There are always welcome, and in some corner cases they are also needed by WOOPER in order to discriminate between equally possible cases (see `Exception-Throwing Methods`_ for more information).
+
+
 
 The **naming conventions** (ex: ``CamelCase`` / ``snake_case``) shall be respected; notably, helper functions and static methods (which, from an Erlang point of view, are mostly just exported functions) should be named like C functions, in ``snake_case`` (ex: ``compute_sum``) rather than being written in CamelCase (ex: no helper function should be named ``computeSum``), to avoid mixing up these different kinds of code.
 
@@ -2880,7 +2998,7 @@ The main change since the 0.4 version is the use of the newly-introduced ``map``
 
 .. This was the latest stable version of the legacy WOOPER branch, which ranges from the 0.x series to the 1.x series. Although now the 2.x series is the recommended one, it does not fully deprecate this branch as some (rather uncommon) use cases might find the mode of operation of the 1.x series, which is based on hashtables rather than on parse transforms, more suitable.
 
-.. Indeed, contrary to more recent versions, this 1.x series allows for example attributes to be dynamically added and removed (which is, however, usually considered as a bad practise).
+.. Indeed, contrary to more recent versions, this 1.x series allows for example attributes to be dynamically added and removed (which is, however, usually considered as a bad practice).
 
 .. The memory footprint of instances of the 1.x series is generally significantly higher, as for the execution durations.
 

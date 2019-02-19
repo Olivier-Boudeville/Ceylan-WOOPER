@@ -36,19 +36,16 @@
 
 
 % Very generic:
-%
 -export([ get_classname/1, get_attribute_pairs/1, state_to_string/1,
 		  get_class_filename/1 ]).
 
 
 % Settings helpers:
-%
 -export([ get_synchronous_time_out/1 ]).
 
 
 
 % Communication helpers for active instances:
-%
 -export([ execute_request/3, execute_request/4, send_requests/3,
 
 		  send_requests_and_wait_acks/4, send_requests_and_wait_acks/5,
@@ -64,7 +61,6 @@
 
 
 % Creation helpers:
-%
 -export([ create_hosting_process/2,
 		  construct_and_run/2, construct_and_run_synchronous/3,
 		  construct_passive/2 ]).
@@ -72,7 +68,6 @@
 
 
 % Destruction helpers:
-%
 -export([ delete_any_instance_referenced_in/2,
 		  delete_synchronously_any_instance_referenced_in/2,
 		  safe_delete_synchronously_any_instance_referenced_in/2,
@@ -83,14 +78,13 @@
 
 
 % Method execution for passive instances:
-%
 -export([ execute_request/2, % already exported: execute_request/3,
 		  execute_oneway/2, execute_oneway/3 ]).
 
 
 % Infrequently-called functions for state management:
-%
 -export([ get_all_attributes/1 ]).
+
 
 
 % Traps to detect any method terminator that would be left untransformed:
@@ -105,7 +99,6 @@
 
 
 % For log and error reporting:
-%
 -export([ log_info/1, log_info/2,
 		  log_warning/1, log_warning/2,
 		  log_error/1, log_error/2, log_error/3,
@@ -137,11 +130,6 @@
 % The record defining the state of a passive instance:
 -define( passive_record, state_holder ).
 
-
-% Defined here because embodied instances rely on the main loop which needs that
-% information to destruct the corresponding instance:
-%
-%-superclasses([]).
 
 
 % For the name of the registered process that keeps the per-class method
@@ -311,7 +299,8 @@
 
 			   attribute_name/0, attribute_value/0, attribute_entry/0,
 			   attribute_qualifier/0,
-			   instance_pid/0, state/0, function_export_set/0 ]).
+			   instance_pid/0, passive_instance/0, state/0,
+			   function_export_set/0 ]).
 
 
 
@@ -1779,9 +1768,10 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 % the caller, and have the process instance exit.
 %
 -spec on_failed_request( request_name(), method_arguments(), pid(),
-						 basic_utils:error_type(), code_utils:stack_trace(),
-						 wooper:state() ) -> no_return().
-on_failed_request( RequestName, ArgumentList, CallerPid, Reason, ErrorTerm,
+						 basic_utils:error_type(), basic_utils:error_term(),
+						 code_utils:stack_trace(), wooper:state() ) ->
+							   no_return().
+on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType, ErrorTerm,
 				   Stacktrace, State ) ->
 
 	Arity = length( ArgumentList ) + 1,
@@ -1793,7 +1783,7 @@ on_failed_request( RequestName, ArgumentList, CallerPid, Reason, ErrorTerm,
 			   " - stack trace was (latest calls first):~n~s~n"
 			   " - caller being process ~w"
 			   " - for request parameters:~n  ~p~n",
-			   [ ModulePrefix, RequestName, Arity, Reason, ErrorTerm,
+			   [ ModulePrefix, RequestName, Arity, ErrorType, ErrorTerm,
 				 code_utils:interpret_stacktrace( Stacktrace ), CallerPid,
 				 ArgumentList ],
 			   State ),
@@ -1801,7 +1791,7 @@ on_failed_request( RequestName, ArgumentList, CallerPid, Reason, ErrorTerm,
 	% ArgumentList and actual method module not propagated back to the caller:
 	%
 	ErrorReason = { request_failed, State#state_holder.actual_class,
-					self(), RequestName, { Reason, ErrorTerm } },
+					self(), RequestName, { ErrorType, ErrorTerm } },
 
 	CallerPid ! { wooper_error, ErrorReason },
 
@@ -1816,9 +1806,10 @@ on_failed_request( RequestName, ArgumentList, CallerPid, Reason, ErrorTerm,
 % the caller, and have the process instance exit.
 %
 -spec on_failed_oneway( oneway_name(), method_arguments(),
-						basic_utils:error_type(), code_utils:stack_trace(),
-						wooper:state() ) -> no_return().
-on_failed_oneway( OnewayAtom, ArgumentList, Reason, ErrorTerm, Stacktrace,
+						basic_utils:error_type(), basic_utils:error_term(),
+						code_utils:stack_trace(), wooper:state() ) ->
+							  no_return().
+on_failed_oneway( OnewayAtom, ArgumentList, ErrorType, ErrorTerm, Stacktrace,
 				  State ) ->
 
 	Arity = length( ArgumentList ) + 1,
@@ -1829,8 +1820,8 @@ on_failed_oneway( OnewayAtom, ArgumentList, Reason, ErrorTerm, Stacktrace,
 			   " - with error term:~n  ~p~n~n"
 			   " - stack trace was (latest calls first):~n~s~n"
 			   " - for oneway parameters:~n  ~p~n",
-			   [ ModulePrefix, OnewayAtom, Arity, Reason, ErrorTerm,
-				  code_utils:interpret_stacktrace( Stacktrace ),
+			   [ ModulePrefix, OnewayAtom, Arity, ErrorType, ErrorTerm,
+				 code_utils:interpret_stacktrace( Stacktrace ),
 				 ArgumentList ], State ),
 
 			% No caller to notify, for oneways.

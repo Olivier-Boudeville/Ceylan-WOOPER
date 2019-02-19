@@ -110,6 +110,18 @@ someRequest( State, Arg ) ->
 	wooper:const_return_result( Arg + 7 ).
 
 
+% Used to mask to WOOPER an actual throw:
+-spec my_throw_helper() -> no_return().
+my_throw_helper() ->
+	throw( report_exception ).
+
+
+% To test wooper:throwing/1:
+-spec testThrow( wooper:state() ) -> const_oneway_return().
+testThrow( _State ) ->
+	%wooper:const_return().
+	wooper:throwing( my_throw_helper() ).
+
 
 
 % Returns some mean count.

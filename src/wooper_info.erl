@@ -142,6 +142,8 @@
 
 % Shorthands:
 -type attribute_name() :: wooper:attribute_name().
+-type function_id() :: meta_utils:function_id().
+
 
 
 -export([ init_class_info/0,
@@ -828,7 +830,7 @@ static_method_info_to_string( #static_info{ name=Name,
 
 % Returns the function identifiers of all WOOPER builtins.
 %
--spec get_wooper_builtins() -> [ ast_info:function_id() ].
+-spec get_wooper_builtins() -> [ function_id() ].
 get_wooper_builtins() ->
 	get_metadata_builtins() ++ get_state_builtins() ++ get_execution_builtins()
 		++ get_inner_builtins() ++ get_helper_builtins()
@@ -839,7 +841,7 @@ get_wooper_builtins() ->
 % Returns the function identifiers of the WOOPER builtins regarding class
 % metadata.
 %
--spec get_metadata_builtins() -> [ ast_info:function_id() ].
+-spec get_metadata_builtins() -> [ function_id() ].
 get_metadata_builtins() ->
 	[ {getSuperclasses,1}
 
@@ -858,7 +860,7 @@ get_metadata_builtins() ->
 
 % Returns the function identifiers of the WOOPER builtins regarding state.
 %
--spec get_state_builtins() -> [ ast_info:function_id() ].
+-spec get_state_builtins() -> [ function_id() ].
 get_state_builtins() ->
 	[ {hasAttribute,2},
 	  {removeAttribute,2},
@@ -891,7 +893,7 @@ get_state_builtins() ->
 % Returns the function identifiers of the WOOPER builtins regarding behaviour
 % (execution).
 %
--spec get_execution_builtins() -> [ ast_info:function_id() ].
+-spec get_execution_builtins() -> [ function_id() ].
 get_execution_builtins() ->
 	[ {executeRequest,2},
 	  {executeRequest,3},
@@ -908,7 +910,7 @@ get_execution_builtins() ->
 % Returns the function identifiers of the WOOPER inner builtins (defined for its
 % own mode of operation).
 %
--spec get_inner_builtins() -> [ ast_info:function_id() ].
+-spec get_inner_builtins() -> [ function_id() ].
 get_inner_builtins() ->
 	[ {wooper_main_loop,1},
 	  {wooper_lookup_method,3},
@@ -934,7 +936,7 @@ get_inner_builtins() ->
 
 % Returns the function identifiers of the WOOPER helper builtins.
 %
--spec get_helper_builtins() -> [ ast_info:function_id() ].
+-spec get_helper_builtins() -> [ function_id() ].
 get_helper_builtins() ->
 	[ {is_wooper_debug,0},
 	  {wooper_check_undefined,2} ].
@@ -943,7 +945,7 @@ get_helper_builtins() ->
 
 % Returns the function identifiers of the WOOPER serialisation builtins.
 %
--spec get_serialisation_builtins() -> [ ast_info:function_id() ].
+-spec get_serialisation_builtins() -> [ function_id() ].
 get_serialisation_builtins() ->
 	[ {pre_serialise_hook,1},
 	  {serialise,3},

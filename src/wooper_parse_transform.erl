@@ -160,9 +160,9 @@
 -type function_info() :: ast_info:function_info().
 -type function_table() :: ast_info:function_table().
 
--type request_table() :: wooper_method_management:request_table().
--type oneway_table() :: wooper_method_management:oneway_table().
--type static_table() :: wooper_method_management:static_table().
+-type request_table() :: wooper_info:request_table().
+-type oneway_table() :: wooper_info:oneway_table().
+-type static_table() :: wooper_info:static_table().
 
 -type class_info() :: wooper_info:class_info().
 
