@@ -2894,9 +2894,9 @@ Currently no source archive is specifically distributed, please refer to the fol
 Using Cutting-Edge GIT
 ----------------------
 
-We try to ensure that the main line (in the ``master`` branch) always stays functional (sorry for the pun). Evolutions are to be take place in feature branches.
+We try to ensure that the main line (in the ``master`` branch) always stays functional (sorry for the pun). Evolutions are to take place in feature branches.
 
-This layer, ``Ceylan-WOOPER``, relies (only) on:
+This OOP layer, ``Ceylan-WOOPER``, relies (only) on:
 
 - `Erlang <http://www.erlang.org/>`_, version 21.0 or higher
 - the `Ceylan-Myriad <http://myriad.esperide.org>`_ base layer
@@ -3342,6 +3342,7 @@ Have fun with WOOPER!
 
 .. figure:: wooper-title.png
    :alt: WOOPER logo
-   :scale: 35
+   :width: 50 %
+   :align: center
 
 :raw-html:`<a name="wooper_bottom"></a>`
