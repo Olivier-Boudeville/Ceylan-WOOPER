@@ -70,7 +70,7 @@ export-to-official:
 
 export-to-mirror:
 	@echo "   Exporting WOOPER documentation to mirror website in $(WOOPER_WEB_MIRROR_BRANCH)"
-	@/bin/cp -f $(WEB_CONTENT) $(WOOPER_WEB_MIRROR_BRANCH) && cd $(WOOPER_WEB_MIRROR_BRANCH) && git add . && git merge -s ours && git commit -m "WOOPER doc updated." && git push
+	@/bin/cp -f $(WEB_CONTENT) $(WOOPER_WEB_MIRROR_BRANCH) && cd $(WOOPER_WEB_MIRROR_BRANCH) && git add . && git merge -s ours && git commit -m "WOOPER doc updated." && git push && git pull --ff-only
 
 
 clean: clean-doc
