@@ -2351,6 +2351,89 @@ Miscellaneous Technical Points
 ==============================
 
 
+
+Calling a Method Clause from Another
+------------------------------------
+
+Sometimes, defining a clause based on the result of another one (of the same function) proves convenient. With methods, there are different ways to do so, some better than others.
+
+For example, let's suppose we defined this (non-const) request:
+
+.. code:: erlang
+
+  -spec getPriceFor(wooper:state(),string()) ->
+		  request_return(price()).
+  getPriceFor(State,ArticleStringDescription) ->
+	{Price,NewState} = [...some code...]
+	wooper:return_state_result(NewState,Price).
+
+
+Now, we would like to support article descriptions being also possibly binary strings, without having to bother introducing a new price-establishing intermediary function (such as the ``foo/2`` one, below) that would be common to the two corresponding clauses, like in:
+
+.. code:: erlang
+
+  getPriceFor(State,ArticleStringDescription) ->
+		 when is_list(ArticleStringDescription) ->
+	{Price,NewState} = foo(ArticleStringDescription,State),
+	wooper:return_state_result(NewState,Price);
+
+  getPriceFor(State,ArticleBinDescription)
+		 when is_binary(ArticleBinDescription) ->
+	{Price,NewState} = foo(binary_to_list(ArticleBinDescription),
+						   State),
+	wooper:return_state_result(NewState,Price).
+
+  % Too cumbersome to define an extra function such as:
+  foo(ArticleStringDescription,State)->
+	[...some code...]
+
+
+So our first impulse would be to write instead something like:
+
+.. code:: erlang
+
+  % (same clause)
+  getPriceFor(State,ArticleStringDescription) ->
+		 when is_list(ArticleStringDescription) ->
+	{Price,NewState} = [...some code...]
+	wooper:return_state_result(NewState,Price);
+
+  % Added clause:
+  getPriceFor(State,ArticleBinDescription) ->
+		 when is_binary(ArticleBinDescription) ->
+	getPriceFor(State,
+		binary_to_list(ArticleBinDescription)).
+
+
+However this would not be correct, as the second clause lacks a terminator, and WOOPER does not accept that (it might be the sign that the developer believes he is writing an helper function).
+
+So we would like to use ``wooper:return_state_result/2`` for the second clause as well, however we shall then have a state and a price to feed this terminator. How can we obtain them from the presumably opaque term returned by the ``wooper:return_state_result/2`` call of the first clause?
+
+The answer is quite simple: all WOOPER method terminators being actually no-op, they are replaced at compilation-time by the actual terms they were given.
+
+So a terminator taking only a state as parameter is replaced literally by this state (ex: ``wooper:return_state(FooState)`` is actually ``FooState``), while one taking two returns a pair (ex: ``wooper:return_state_result(FooState,Res)`` is actually ``{FooState,Res}``). No black magic here!
+
+Therefore the implementation we target could be best [#]_ written as:
+
+.. code:: erlang
+
+ % (same clause)
+ getPriceFor(State,ArticleStringDescription) ->
+		 when is_list(ArticleStringDescription) ->
+	{Price,NewState} = [...some code...]
+	wooper:return_state_result(NewState,Price);
+
+  % Added clause:
+  getPriceFor(State,ArticleBinDescription)
+		 when is_binary(ArticleBinDescription) ->
+	{NewState,Price} = getPriceFor(State,
+		binary_to_list(ArticleBinDescription)),
+	wooper:return_state_result(NewState,Price).
+
+.. [#] ``wooper:executeRequest/3`` could be used instead of matching the result of ``wooper:return_state_result/2`` and breaking its opaqueness - but (even it is a matter of taste here) we prefer the more direct and efficient approach that was presented.
+
+
+
 Methods Not Returning Anything of Interest
 ------------------------------------------
 
@@ -2963,9 +3046,9 @@ Version 2.0 [current stable]
 
 Released officially on Sunday, February 3, 2019.
 
-Many improvements, notably:
+It has been a large rewriting of this layer, with much improvements notably:
 
-- multiple different-arity constructors per class supported
+- multiple different-arity constructors per class are supported now
 - no more ``wooper_construct_parameters``, longer ``wooper_construct_export`` or ``wooper_construct_export`` defines
 - automatic detection and export of constructors, any destructor and methods
 - WOOPER method terminators introduced (ex: ``wooper:return_state_result/2``, instead of the ``?wooper_return_state_result`` macro)
@@ -2979,19 +3062,24 @@ More generally, many macros and definitions in the WOOPER header files moved to 
 
 .. comment The 2.0 release was codenamed the "*Zero-Overhead WOOPER*", as opposed to the legacy versions (prior to 2.x), codenamed "*Hashtable-based WOOPER*".
 
+Although this version does not share any code with the various experiments and candidate 2.0 versions that had been previously developed (thanks at least to Ulf and Nicolas in 2010, and to Enrique and Roland in 2013, both operating at that time on the so-called *Zero-Overhead WOOPER* version), these preliminary works surely helped defining the API that we deem suitable now, and that we implemented in the current version.
+
 
 Version 1.x
 -----------
 
-Many minor improvements, API enriched in a backward compatible manner.
+Since 2016 we switched back to a "rolling version", not really defining specific release milestones.
+
+Many minor improvements integrated, API enriched in a backward compatible manner.
+
+These versions have been pretty stable very soon, and did the job for nearly a decade (2008-2018), during which various attempts of radical improvements were performed.
+
 
 
 Version 1.0
 -----------
 
 Countless improvements have been integrated in the course of the use of WOOPER, which has been now been stable for years.
-
-Since 2016 we switched back to a "rolling release", not defining specific versions.
 
 The main change since the 0.4 version is the use of the newly-introduced ``map`` Erlang datatype, resulting in the ``hashtable`` module being replaced by the ``map_hashtable``. They obey to the same API and the ``table`` pseudo-type abstracts out the actual choice in that matter (it is transparently parse-transformed into the currently-retained datatype).
 
