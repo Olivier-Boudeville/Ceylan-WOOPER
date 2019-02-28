@@ -900,7 +900,7 @@ For example:
 
 Two remarks there:
 
-- ``register_settings/2`` is an helper function here; the ``State`` parameter is intentionally put in last position to help the reader distinguishing it from methods
+- ``register_settings/2`` is an helper function here; the ``State`` parameter is intentionally put in last position to help the reader distinguishing it from methods (see `Helper vs Static`_ for more information on this topic)
 - returning a constant atom (``settings_declared``) has actually an interest: it allows to make that operation synchronous (i.e. the caller is to wait for that result atom; it is only when the caller will have received it that it will know for sure that the operation was performed; otherwise a oneway shall be used)
 
 
@@ -2349,6 +2349,22 @@ See the ``passive_instance_test`` module for more details.
 
 Miscellaneous Technical Points
 ==============================
+
+
+.. helpers::
+
+Helper vs Static
+----------------
+
+In the context of a class, one may wonder what is the difference between an **exported helper function** and a **static method**?
+
+In terms of actual runtime evaluation, none.
+
+In terms of source code, there is little difference: the former just has to use the ``wooper:return_static/1`` to terminate its clauses and, should it use a type spec, this one should specify a return type based on ``return_static/1``.
+
+In terms of semantics, there are more differences: a static method is meant to stand by itself, whether or not an instance of that class exists, and to provide higher-level services.
+
+On the contrary, an exported helper function is just a convenience for code-reuse, a means of sharing code between classes. Typically it centralises code of use by multiple methods, which often results in such an helper to have as a parameter a ``State`` variable (preferably listed last among its parameters, for clarity/uniformity) - whereas this cannot happen with static methods.
 
 
 
