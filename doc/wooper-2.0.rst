@@ -2351,7 +2351,7 @@ Miscellaneous Technical Points
 ==============================
 
 
-.. helpers::
+.. _helpers:
 
 Helper vs Static
 ----------------
@@ -2707,6 +2707,10 @@ When defining a **static method**:
 - its **spec** should rely, for its return type, on ``static_return(T())``
 - each of its clause should terminate with ``wooper:return_static(R)``
 
+
+Finding it difficult not to mix the keywords for spec return types (ex: ``request_return/1``) and method terminators (ex: ``wooper:return_state_result/2``)?
+
+A mnemonic could be that the a spec return type designates a *term* (a returned one, hence a ``request_return/1``) whereas a method terminator designates an *action* (returning a state and a result, hence to ``wooper:return_state_result/2``).
 
 
 

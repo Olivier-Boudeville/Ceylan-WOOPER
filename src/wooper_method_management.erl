@@ -613,7 +613,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _ResultType={ user_type, Line, const_request_result, _Types } ] },
 	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "~s/~B uses the (unknown) "
-		"const_request_result type: probably that "
+		"'const_request_result' type: probably that "
 		"const_request_return/1 was meant instead.",
 		pair:to_list( FunId ), Classname, Line );
 
@@ -622,7 +622,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _ResultType={ user_type, Line, request_result, _Types } ] },
 	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "~s/~B uses the (unknown) "
-		"request_result type: probably that "
+		"'request_result' type: probably that "
 		"request_return/1 was meant instead.",
 		pair:to_list( FunId ), Classname, Line );
 
@@ -711,7 +711,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _ResultType={ user_type, Line, const_oneway_result, _Types } ] },
 	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "~s/~B uses the (unknown) "
-		"const_oneway_result type: probably that "
+		"'const_oneway_result' type: probably that "
 		"const_oneway_return/0 was meant instead.",
 		pair:to_list( FunId ), Classname, Line );
 
@@ -720,7 +720,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _ResultType={ user_type, Line, oneway_result, _Types } ] },
 	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "~s/~B uses the (unknown) "
-		"oneway_result type: probably that "
+		"'oneway_result' type: probably that "
 		"oneway_return/0 was meant instead.",
 		pair:to_list( FunId ), Classname, Line );
 
@@ -761,7 +761,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _ResultType={ user_type, Line, static_result, _Types } ] },
 	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "~s/~B uses the (unknown) "
-		"static_result type: probably that "
+		"'static_result' type: probably that "
 		"static_return/1 was meant instead.",
 		pair:to_list( FunId ), Classname, Line );
 
@@ -810,7 +810,7 @@ check_clause_spec( { type, Line, 'fun',
 				   _FunNature=static, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "the clauses of ~s/~B indicate "
 		"that this is a static method, yet in the type specification no known "
-		" static method terminator is used.", pair:to_list( FunId ), Classname,
+		"static method terminator is used.", pair:to_list( FunId ), Classname,
 		Line );
 
 
@@ -1904,13 +1904,13 @@ try_transformer( Line, TryBody, TryClauses, CatchClauses, AfterBody,
 
 	% These are case clauses:
 	{ NewTryClauses, TryTransforms } =
-		lists:mapfoldl( fun case_clause_transformer/2, _Acc0=Transforms,
-						_List=TryClauses ),
+		lists:mapfoldl( fun case_clause_transformer/2, _FirstAcc0=Transforms,
+						_FirstList=TryClauses ),
 
 	% These are catch clauses:
 	{ NewCatchClauses, CatchTransforms } =
-		lists:mapfoldl( fun catch_clause_transformer/2, _Acc0=TryTransforms,
-						_List=CatchClauses ),
+		lists:mapfoldl( fun catch_clause_transformer/2,
+						_SecondAcc0=TryTransforms, _SecondList=CatchClauses ),
 
 
 	% After body not transformed, as actually never returned:
@@ -2190,7 +2190,7 @@ update_transformation_state(
 	end,
 
 	?debug_fmt( "Nature of ~s/~B: initial=~p, new raw=~p, "
-						   "new actual=~p, final=~p.", pair:to_list( FunId ) ++
+				"new actual=~p, final=~p.", pair:to_list( FunId ) ++
 		   [ InitialNature, NewRawNature, NewActualNature, ResultingNature ] ),
 
 	NewTransforms#ast_transforms{ transformation_state={ ResultingNature,
@@ -2490,7 +2490,7 @@ methods_to_functions( RequestTable, OnewayTable, StaticTable,
 
 	RequestAsFunPairs = [
 		 { ReqId, request_to_function_info( ReqInfo, ExportLoc ) }
-						  || { ReqId, ReqInfo } <- RequestPairs ],
+						 || { ReqId, ReqInfo } <- RequestPairs ],
 
 	WithRequestsFunTable = table:addNewEntries( RequestAsFunPairs,
 												InitFunctionTable ),

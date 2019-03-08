@@ -70,7 +70,7 @@
 % Approximate average class count for the program.
 %
 % (ideally should be slightly above the maximum number of actual classes being
-% instanciated)
+% instantiated)
 %
 -define( wooper_class_count_upper_bound, 128 ).
 

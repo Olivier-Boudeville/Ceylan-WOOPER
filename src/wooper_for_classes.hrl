@@ -50,7 +50,7 @@ wooper_get_superclasses() ->
 	?superclasses.
 
 
-% We prefer to define such an helper pseudo-function iff a define has been
+% We prefer defining such an helper pseudo-function iff a define has been
 % specified:
 
 %% -else. % superclasses
@@ -67,16 +67,17 @@ wooper_get_superclasses() ->
 
 % Not even needed: -export([ wooper_get_class_attributes/0 ]).
 
+
 % Reuse that define, since it has been specified:
-%
-% Note: if your compiler points to these lines, you must have introduced a parse
-% (syntax) error in your 'class_attributes' define.
-%
 wooper_get_class_attributes() ->
+
+	% Note: if your compiler points to these lines, you must have introduced a
+	% parse (syntax) error in your 'class_attributes' define.
+	%
 	?class_attributes.
 
 
-% We prefer to define such an helper pseudo-function iff a define has been
+% We prefer defining such an helper pseudo-function iff a define has been
 % specified:
 
 %% -else. % class_attributes
