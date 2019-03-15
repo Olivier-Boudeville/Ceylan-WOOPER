@@ -63,35 +63,27 @@
 
 
 % Instance loading:
-%
--export([
-
-		  load/1, load/3, load_link/1, load_link/3,
+-export([ load/1, load/3, load_link/1, load_link/3,
 
 		  synchronous_load/1, synchronous_load/3, synchronous_load_link/1,
 		  synchronous_load_link/3,
 
 		  remote_synchronisable_load_link/2, remote_synchronisable_load_link/4,
 		  remote_synchronous_timed_load_link/2,
-		  remote_synchronous_timed_load_link/4
-
-		]).
+		  remote_synchronous_timed_load_link/4 ]).
 
 
 
 % Instance deserialisation:
-%
 -export([ deserialise/4 ]).
 
 
 
 % Serialisation helpers:
-%
 -export([ handle_private_processes/2, mute_attributes/2,
 		  check_attributes_equal/3, replace_attribute/3, replace_attributes/3,
 		  merge_list_for/3, merge_lists_for/3,
-		  list_restoration_markers/0
-		]).
+		  list_restoration_markers/0 ]).
 
 
 
@@ -106,7 +98,6 @@
 
 
 % The serialisation form of an instance, as an Erlang term:
-%
 -type term_serialisation() :: [ attribute_entry() ].
 
 
@@ -196,7 +187,7 @@ load( BinSerialisation ) ->
 load( BinSerialisation, EntryTransformer, UserData ) ->
 
 	spawn( fun() -> deserialise( BinSerialisation, EntryTransformer,
-										UserData, _ListenerPid=undefined )
+								 UserData, _ListenerPid=undefined )
 		   end ).
 
 
@@ -229,7 +220,7 @@ load_link( BinSerialisation ) ->
 				 basic_utils:user_data() ) -> pid().
 load_link( BinSerialisation, EntryTransformer, UserData ) ->
 	spawn_link( fun() -> deserialise( BinSerialisation, EntryTransformer,
-										UserData, _ListenerPid=undefined )
+									  UserData, _ListenerPid=undefined )
 				end ).
 
 
@@ -289,7 +280,7 @@ synchronous_load( BinSerialisation, EntryTransformer, UserData ) ->
 -spec synchronous_load_link( bin_serialisation() ) -> pid().
 synchronous_load_link( BinSerialisation ) ->
 	synchronous_load_link( BinSerialisation, _EntryTransformer=undefined,
-			   _UserData=undefined ).
+						   _UserData=undefined ).
 
 
 
@@ -374,7 +365,7 @@ remote_synchronisable_load_link( Node, BinSerialisation, EntryTransformer,
 
 	spawn_link( Node,
 			fun() -> deserialise( BinSerialisation, EntryTransformer,
-										 UserData, _ListenerPid=CreatorPid )
+								  UserData, _ListenerPid=CreatorPid )
 			end ).
 
 
@@ -416,7 +407,7 @@ remote_synchronous_timed_load_link( Node, BinSerialisation, EntryTransformer,
 
 	SpawnedPid = spawn_link( Node,
 			fun() -> deserialise( BinSerialisation, EntryTransformer,
-										 UserData, _ListenerPid=CreatorPid )
+								  UserData, _ListenerPid=CreatorPid )
 			end ),
 
 	% Blocks until the spawned process answers or a time-out occurs:
@@ -464,8 +455,8 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 	{ RandomState, OtherEntries } = option_list:extract( wooper_random_state,
 														 SerialisedEntries ),
 
-	HookedEntries = pre_deserialise_hook( { Classname, OtherEntries },
-										  UserData ),
+	HookedEntries =
+		pre_deserialise_hook( { Classname, OtherEntries }, UserData ),
 
 	% Slight optimisation compared to using wooper:retrieve_virtual_table/0
 	% upfront later:
@@ -614,7 +605,7 @@ mute_attributes( AttributeNameList, State ) ->
 
 								_ ->
 									setAttribute( AccState, AttrName,
-												 ?term_restoration_marker )
+												  ?term_restoration_marker )
 
 							end;
 
@@ -645,8 +636,8 @@ check_attributes_equal( _AttributeNames=[], _AttributeEntries,
 check_attributes_equal( _AttributeNames=[ AttributeName | T ], AttributeEntries,
 						State ) ->
 
-	{ AttributeValue, RemainingEntries } = option_list:extract(
-								 _K=AttributeName, AttributeEntries ),
+	{ AttributeValue, RemainingEntries } =
+		option_list:extract( _K=AttributeName, AttributeEntries ),
 
 	case ?getAttr(AttributeName) of
 

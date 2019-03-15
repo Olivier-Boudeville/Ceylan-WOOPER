@@ -1352,9 +1352,13 @@ An example of use:
   [..]
 
 
+See also the section about `Methods Not Returning Anything of Interest`_, which may apply to static methods notably.
+
 .. comment Hence static methods can be called from anywhere, no qualifier like public, protected or private apply to them.
 
-Finally, having static methods leaves little interest to defining and exporting one's standard, plain functions; when doing so, one should wonder whether a static method could not be a solution at least as good.
+Finally, having static methods leaves little interest to defining and exporting one's standard, plain (helper) functions; when doing so, one should wonder whether a static method could not be a solution at least as good.
+
+So the main purpose left to helpers is to factor out common, framework-internal code (not targeted at users) across methods (and possibly classes), especially when it involves an instance state (ex: ``display_foo(Color,Index,State) ->...``).
 
 
 :raw-latex:`\pagebreak`
@@ -1422,14 +1426,17 @@ To do so, the ``class_attributes`` define must be set (prior to including the WO
 
 These declarations are to relate only to the **class-specific** attributes, i.e. the ones specifically introduced by the class at hand, regardless of the ones inherited from the mother classes.
 
+
 The most general form of an **attribute declaration** includes the following four information::
 
  {Name,Type,QualifierInfo,Description}
 
 where:
 
+.. _`attribute declaration`:
+
  - ``Name`` is the name of that attribute, as an atom (ex: ``fur_color``)
- - ``Type`` corresponds to the `type specification <http://erlang.org/doc/reference_manual/typespec.html>`_ of that attribute (ex: ``[atom()]``, ``foo:color_index()``); note that the Erlang parser will not support the ``|`` (i.e. union) operator, like in ``'foo'|integer()``; we recommend to use the ``union`` pseudo-function instead (with any arity greater or equal to 2), like in: ``union('foo',integer())``
+ - ``Type`` corresponds to the `type specification <http://erlang.org/doc/reference_manual/typespec.html>`_ of that attribute (ex: ``[atom()]``, ``foo:color_index()``); note that the Erlang parser will not support the ``|`` (i.e. union) operator, like in ``'foo'|integer()``; we recommend to use the ``union`` variadic pseudo-function instead (with any arity greater or equal to 2), like in: ``union('foo',integer())``
  - ``QualifierInfo`` is detailed just below
  - ``Description`` is a plain string describing the purpose of this attribute; this is a comment aimed only at humans, which preferably does not start with a capital letter and does not end with a dot (ex: ``"describes the color of the fur of this animal (not including whiskers)"`` or a shorter, maybe better, ``"color of the fur of this animal (not including whiskers)"``)
 
@@ -2446,7 +2453,7 @@ Therefore the implementation we target could be best [#]_ written as:
 		binary_to_list(ArticleBinDescription)),
 	wooper:return_state_result(NewState,Price).
 
-.. [#] ``wooper:executeRequest/3`` could be used instead of matching the result of ``wooper:return_state_result/2`` and breaking its opaqueness - but (even it is a matter of taste here) we prefer the more direct and efficient approach that was presented.
+.. [#] ``wooper:executeRequest/3`` could be used instead of matching the result of ``wooper:return_state_result/2`` and breaking its opaqueness - but (even it is a matter of taste here) we prefer the more direct and efficient approach that was presented. Note though that in general they do not bear the same semantics: ``wooper:executeRequest/3`` calls a possibly overridden version of the specified method, whereas a direct call targets specifically the class-local version of that method.
 
 
 
@@ -2466,15 +2473,17 @@ As a result (pun!), one may define:
 
 .. code:: erlang
 
-  -spec stop() -> static_return( void() ).
+  -spec stop() -> static_return(void()).
   stop() ->
 	[...] % Do some side-effects
-	wooper:return_static( void ).
+	wooper:return_static(void).
 
 
-Introducing specific method terminators for that would have been possible (ex: ``static_void_return/0``), yet multiplying the syntactical constructs would probably hurt the terseness of the underlying language.
+Introducing specific method terminators to convey that meaning would have been possible, yet multiplying the syntactical constructs would probably hurt the terseness of the underlying language.
 
+However, as, fairly frequently, static methods have nothing meaningful to return, the ``wooper:return_static_void/0`` method terminator and its spec-level counterpart ``static_void_return()`` type have been introduced [#]_.
 
+.. [#] This method terminator is replaced at compilation-time by a no-op, thus the static method returns actually the previous expression - unless there is none, in which case the ``wooper_void_return`` atom is returned (the caller is not expected to match a void result anyway).
 
 
 
@@ -2704,13 +2713,13 @@ When defining a **oneway**:
 
 When defining a **static method**:
 
-- its **spec** should rely, for its return type, on ``static_return(T())``
-- each of its clause should terminate with ``wooper:return_static(R)``
+- its **spec** should rely, for its return type, either on ``static_return(T())`` or on ``static_void_return()``
+- each of its clause should terminate with ``wooper:return_static(R)`` or with ``wooper:return_static_void()``
 
 
 Finding it difficult not to mix the keywords for spec return types (ex: ``request_return/1``) and method terminators (ex: ``wooper:return_state_result/2``)?
 
-A mnemonic could be that the a spec return type designates a *term* (a returned one, hence a ``request_return/1``) whereas a method terminator designates an *action* (returning a state and a result, hence to ``wooper:return_state_result/2``).
+A mnemonic could be that a spec return type designates a returned *term* (hence for example a ``request_return/1`` - more generally such types always end with ``_return``) whereas a method terminator designates an *action* (returning a state and a result, hence to ``wooper:return_state_result/2`` for example).
 
 
 
@@ -2865,6 +2874,15 @@ The correct order is:
   [...]
   -include("wooper.hrl").
   [...]
+
+
+
+Compilation Error Pointing to ``wooper_for_classes.hrl``
+--------------------------------------------------------
+
+As the comment in ``wooper_get_class_attributes/0`` (in said header file) hints, the ``class_attributes`` define in the class at hand is most probably incorrect (syntax error).
+
+The compilation error message should help; if it is ``syntax error before: '|'``, a union type for an attribute must have been defined with ``|``, instead of with the ``union`` variadic pseudo-operator. See the section about `attribute declaration`_ for more details.
 
 
 

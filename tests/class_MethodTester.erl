@@ -70,7 +70,6 @@ destruct( State ) ->
 
 
 % Returns the name of this instance.
-%
 -spec getName( wooper:state() ) -> const_request_return( name() ).
 getName( State ) ->
 	trace_utils:trace( "getName/1" ),
@@ -78,7 +77,6 @@ getName( State ) ->
 
 
 % Sets the name of this instance.
-%
 -spec setName( wooper:state(), name() ) -> oneway_return().
 setName( State, Name ) ->
 
@@ -90,10 +88,16 @@ setName( State, Name ) ->
 
 
 % Returns a value established in a static context.
-%
 -spec get_static_info( integer(), integer() ) -> static_return( integer() ).
 get_static_info( A, B ) ->
 
 	trace_utils:trace( "get_static_info/2 called" ),
 
 	wooper:return_static( A + B + 10 ).
+
+
+% Test of a static method returning nothing (void return):
+-spec test_static_void() -> static_void_return().
+test_static_void() ->
+	%trace_utils:debug( "test_static_void/0 called!" ),
+	wooper:return_static_void().

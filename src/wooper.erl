@@ -144,13 +144,12 @@
 
 % Actual definitions the shorthands in wooper_types_exports.hrl refer to:
 
+
 % An atom prefixed with 'class_':
-%
 -type classname() :: atom().
 
 
 % A method name (ex: 'setColor'):
-%
 -type method_name() :: meta_utils:function_name().
 
 
@@ -236,7 +235,9 @@
 -type const_oneway_return() :: void().
 
 -type static_return( T ) :: static_result( T ).
+
 % Constness irrelevant for static methods.
+
 
 
 -type attribute_name() :: atom().
@@ -422,7 +423,6 @@ execute_request( PassiveInstance, RequestName, RequestArgs )
 
 
 % (helper)
-%
 execute_request_waiter( TargetInstancePID, RequestName, RequestArgs ) ->
 
 	receive
@@ -464,7 +464,6 @@ execute_request( RequestName, RequestArgs, TargetInstancePID,
 
 
 % (helper)
-%
 execute_request_waiter( ExpectedResult, TargetInstancePID, RequestName,
 						RequestArgs ) ->
 
@@ -801,10 +800,11 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 
 			  { embody, [ Class, ConstructionParameters ] } ->
 
-				%io:format( "Process ~w becoming asynchronously an instance "
-				%		   "of class '~s', constructed from following "
-				%		   "parameters:~n~p.~n",
-				%		   [ self(), Class, ConstructionParameters ] ),
+				%trace_utils:debug_fmt(
+				%   "Process ~w becoming asynchronously an instance "
+				%	"of class '~s', constructed from following "
+				%	"parameters:~n~p.",
+				%	[ self(), Class, ConstructionParameters ] ),
 
 				% Never returns:
 				construct_and_run( Class, ConstructionParameters );
@@ -813,10 +813,11 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 			  % We might need to notify another process than the caller:
 			  { embody, [ Class, ConstructionParameters ], ToNotifyPid } ->
 
-				%io:format( "Process ~w becoming synchronously an instance "
-				%		   "of class '~s', constructed from following "
-				%		   "parameters:~n~p.~n",
-				%		   [ self(), Class, ConstructionParameters ] ),
+				%trace_utils:debug_fmt(
+				%   "Process ~w becoming synchronously an instance "
+				%	"of class '~s', constructed from following "
+				%	"parameters:~n~p.",
+				%	[ self(), Class, ConstructionParameters ] ),
 
 				% Never returns:
 				construct_and_run_synchronous( Class, ConstructionParameters,
@@ -928,7 +929,7 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 construct_and_run( Classname, ConstructionParameters ) ->
 
 	%trace_utils:debug_fmt( "wooper:construct_and_run for class ~p "
-	%                       "and parameters ~p.~n",
+	%                       "and parameters ~p.",
 	%						[ Classname, ConstructionParameters ] ),
 
 	%check_classname_and_arity( Classname, ConstructionParameters ),
@@ -1138,13 +1139,12 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 
 
 % Constructs a passive instance: returns the initial state thereof.
-%
 -spec construct_passive( classname(), construction_parameters() ) ->
 							   passive_instance().
 construct_passive( Classname, ConstructionParameters ) ->
 
 	%trace_utils:debug_fmt( "wooper:construct_passive for class ~s "
-	%					   "and parameters ~p.~n",
+	%					   "and parameters ~p.",
 	%					   [ Classname, ConstructionParameters ] ),
 
 	cond_utils:if_defined( wooper_debug,
@@ -1184,7 +1184,6 @@ construct_passive( Classname, ConstructionParameters ) ->
 
 
 % Executes specified oneway on specified passive instance.
-%
 -spec execute_oneway( passive_instance(), oneway_name() ) ->
 							passive_instance().
 execute_oneway( PassiveInstance, OnewayName )
@@ -1200,7 +1199,6 @@ execute_oneway( PassiveInstance, OnewayName )
 
 
 % Executes specified oneway on specified passive instance.
-%
 -spec execute_oneway( passive_instance(), oneway_name(), method_arguments() ) ->
 							passive_instance().
 execute_oneway( PassiveInstance, OnewayName, OnewayArgs )
@@ -1284,7 +1282,7 @@ get_class_manager() ->
 			after 10000 ->
 
 				log_error( "wooper:get_class_manager: "
-					"unable to find WOOPER class manager after 10 seconds.~n"
+					"unable to find WOOPER class manager after 10 seconds."
 					"Please check that WOOPER has been compiled beforehand." ),
 
 				undefined
@@ -1313,7 +1311,7 @@ default_exit_handler( PidOrPort, ExitReason, State ) ->
 
 	log_warning( "WOOPER default EXIT handler of the ~w "
 				 "instance ~w ignored the following EXIT message "
-				 "from ~w:~n'~p'.~n",
+				 "from ~w:~n'~p'.",
 				 [ State#state_holder.actual_class, self(), PidOrPort,
 				   ExitReason ] ),
 
@@ -1348,7 +1346,7 @@ default_down_handler( MonitorReference, MonitoredType, MonitoredElement,
 	log_warning( "WOOPER default DOWN handler of the ~w "
 						"instance ~w ignored the following down notification "
 						"'~s' for monitored element ~p of type '~p' "
-						"(monitor reference: ~w).~n",
+						"(monitor reference: ~w).",
 						[ State#state_holder.actual_class, self(), ExitReason,
 						  MonitoredElement, MonitoredType, MonitorReference ] ),
 
@@ -1372,7 +1370,7 @@ default_node_up_handler( Node, MonitorNodeInfo, State ) ->
 
 	log_warning( "WOOPER default node up handler of the ~w "
 				 "instance ~w ignored the connection notification "
-				 "for node '~s' (information: ~p).~n",
+				 "for node '~s' (information: ~p).",
 				 [ State#state_holder.actual_class, self(), Node,
 				   MonitorNodeInfo ] ),
 
@@ -1396,13 +1394,11 @@ default_node_down_handler( Node, MonitorNodeInfo, State ) ->
 
 	log_warning( "WOOPER default node down handler of the ~w "
 						"instance ~w ignored the disconnection notification "
-						"for node '~s' (information: ~p).~n",
+						"for node '~s' (information: ~p).",
 						[ State#state_holder.actual_class, self(), Node,
 						  MonitorNodeInfo ] ),
 
 	State.
-
-
 
 
 
@@ -1512,7 +1508,6 @@ filter_wooper_attributes( _AttrPairs=[ AttrEntry={ Name, _Value } | T ],
 
 
 % Returns a list of the attribute names that are used internally by WOOPER.
-%
 -spec get_wooper_reserved_attribute_names() -> [ attribute_name() ].
 get_wooper_reserved_attribute_names() ->
 	[].
@@ -1881,7 +1876,8 @@ send_and_listen( InstancePid, RequestName, Arguments ) ->
 
 		{ wooper_result, Result } ->
 
-			%io:format( "Result of call to '~w' with arguments '~w': ~s~n",
+			%trace_utils:debug_fmt(
+			%   "Result of call to '~w' with arguments '~w': ~s",
 			%	[ RequestName, Arguments,
 			%	 text_utils:term_to_string( Result ) ] ),
 
@@ -1889,7 +1885,8 @@ send_and_listen( InstancePid, RequestName, Arguments ) ->
 
 		Anything ->
 
-			%io:format( "Answer to call to '~w' with arguments '~w': ~s~n",
+			%trace_utils:debug_fmt(
+			% "Answer to call to '~w' with arguments '~w': ~s",
 			%	[ RequestName, Arguments,
 			%	  text_utils:term_to_string( Anything ) ] ),
 
@@ -2022,14 +2019,16 @@ delete_synchronously_any_instance_referenced_in( Attributes, PreTestLiveliness,
 	{ TargetAttributes, TargetPids } = delete_pid_from( Attributes,
 												PreTestLiveliness, State ),
 
-	%io:format( "delete_synchronously_any_instance_referenced_in:~n"
-	%			" - attributes are: ~p~n"
-	%			" - PIDs are: ~p~n", [ TargetAttributes, TargetPids ] ),
+	%trace_utils:debug_fmt(
+	%       "delete_synchronously_any_instance_referenced_in:~n"
+	%		" - attributes are: ~p~n"
+	%		" - PIDs are: ~p~n", [ TargetAttributes, TargetPids ] ),
 
 	% Waits for their completion:
 	wait_for_deletion_ack( TargetPids ),
 
-	%io:format( "(all deletion acks received for ~p)~n", [ TargetAttributes ] ),
+	%trace_utils:debug_fmt( "(all deletion acks received for ~p)",
+	%                       [ TargetAttributes ] ),
 
 	% Erases deleted PIDs:
 	UndefinedAttributes = [ { AttrName, undefined } ||
@@ -2117,8 +2116,8 @@ delete_pid_from( [ Attr | T ], DeleteMessage, PreTestLiveliness, State,
 									 State, [ Attr | AccAttr ], AccPid );
 
 				false ->
-					%io:format( "Deleting now ~s (PID: ~w).~n",
-					% [ Attr, Pid ] ),
+					%trace_utils:debug_fmt( "Deleting now ~s (PID: ~w).",
+					%                        [ Attr, Pid ] ),
 					Pid ! DeleteMessage,
 					delete_pid_from( T, DeleteMessage, PreTestLiveliness,
 							 State, [ Attr | AccAttr ], [ Pid | AccPid ] )
@@ -2160,7 +2159,8 @@ delete_synchronously_instance( InstancePid ) ->
 -spec delete_synchronously_instances( [ instance_pid() ] ) -> void().
 delete_synchronously_instances( InstanceList ) ->
 
-	%io:format( "delete_synchronously_instances for ~p.~n", [ InstanceList ] ),
+	%trace_utils:debug_fmt( "delete_synchronously_instances for ~p.",
+	%                       [ InstanceList ] ),
 
 	DeleteMessage = { synchronous_delete, self() },
 
@@ -2203,9 +2203,10 @@ wait_for_deletion_ack( WaitedPids ) ->
 					ok;
 
 				NewWaitedPids ->
-					io:format( "(still waiting for the synchronous deletion of "
-							   "following live WOOPER instance(s): ~p)~n",
-							   [ NewWaitedPids ] ),
+					trace_utils:debug_fmt(
+					  "(still waiting for the synchronous deletion of "
+					  "following live WOOPER instance(s): ~p)",
+					  [ NewWaitedPids ] ),
 
 					% Warns, but does not trigger failures:
 					wait_for_deletion_ack( NewWaitedPids )
@@ -2221,7 +2222,7 @@ examine_waited_deletions( _WaitedPids=[], Acc ) ->
 
 examine_waited_deletions( _WaitedPids=[ Pid | T ], Acc ) ->
 
-	%io:format( "Testing whether ~p is alive...~n", [ Pid ] ),
+	%trace_utils:debug_fmt( "Testing whether ~p is alive...", [ Pid ] ),
 
 	% Manages processes that are not local as well:
 	case basic_utils:is_alive( Pid ) of
@@ -2230,8 +2231,9 @@ examine_waited_deletions( _WaitedPids=[ Pid | T ], Acc ) ->
 			examine_waited_deletions( T, [ Pid | Acc ] );
 
 		false ->
-			io:format( "Stopped waiting for the deletion of instance "
-					   "whose PID is ~p: not found alive.~n", [ Pid ] ),
+			trace_utils:debug_fmt(
+			  "Stopped waiting for the deletion of instance "
+			  "whose PID is ~p: not found alive.", [ Pid ] ),
 
 			examine_waited_deletions( T, Acc )
 
@@ -2261,7 +2263,6 @@ safe_delete_synchronously_instances( InstanceList ) ->
 
 
 % Deletes specified passive instance.
-%
 -spec delete_passive( passive_instance() ) -> void().
 delete_passive( _PassiveInstance ) ->
 	%trace_utils:trace( "Passive instance deleted." ),

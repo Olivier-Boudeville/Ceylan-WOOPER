@@ -506,6 +506,12 @@ get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
 
 get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
 	_Seqs=[ _TypeProductForArgs,
+			_ResultType={ user_type, _, static_void_return, [] } ] },
+						   _FunId, _Classname ) ->
+	{ static, [] };
+
+get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
+	_Seqs=[ _TypeProductForArgs,
 			_ResultType={ user_type, Line, static_return, RTypes } ] },
 						   FunId, Classname ) ->
 	wooper_internals:raise_usage_error(
@@ -736,6 +742,13 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	ok;
 
 
+% Void return:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, _, static_void_return, [] } ] },
+	 _FunNature=static, _Qualifiers, _FunId, _Classname ) ->
+	ok;
+
+
 % Spec implies static method whereas is not:
 check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _ResultType={ user_type, Line, static_return, [ _RType ] } ] },
@@ -753,6 +766,15 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "~s/~B uses static_return/~B, "
 		"which does not exist; its correct arity is 1.",
+		[ length( Types ) | pair:to_list( FunId ) ], Classname, Line );
+
+
+% Wrong arity for static_void_return/1:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, Line, static_void_return, Types } ] },
+	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "~s/~B uses static_void_return/~B, "
+		"which does not exist; its correct arity is 0.",
 		[ length( Types ) | pair:to_list( FunId ) ], Classname, Line );
 
 
@@ -775,6 +797,17 @@ check_clause_spec( { type, _, 'fun',
 
 
 %% For unmatched spec returns:
+
+% A method is not supposed to return explicity a state():
+check_clause_spec( { type, Line, 'fun',
+					 _Seqs=[ _TypeProductForArgs,
+					 _ResultType={remote_type,_,[ {atom,_,wooper},
+									{atom,_,state},[] ] } ] },
+				   _FunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "the type specification of ~s/~B "
+		"is not expected to directly specify wooper:state() as a returned type. "
+		"Maybe oneway_return() or alike was meant instead?",
+		pair:to_list( FunId ), Classname, Line );
 
 % Presumably a result spec wrongly qualified as wooper:S instead of S:
 check_clause_spec( { type, Line, 'fun',
@@ -1157,6 +1190,7 @@ body_transformer( BodyExprs, Transforms, Line ) ->
 	%
 	% More efficient than list_utils:extract_last_element/2 and then recreating
 	% the list:
+	%
 	[ LastExpr | RevFirstExprs ] = lists:reverse( BodyExprs ),
 
 	?trace_fmt( "Requesting the transformation of last expression ~p",
@@ -1168,10 +1202,33 @@ body_transformer( BodyExprs, Transforms, Line ) ->
 	% standard body_transformer/2 is expected never to be called (always
 	% intercepted):
 	%
-	{ [ NewLastExpr ], NewTransforms } =
+	% (in practice, either one expression is returned, or in some cases none at
+	% all; at least they are supposed to be already in-order - no need to
+	% reverse them)
+	%
+	{ NewLastExprs, NewTransforms } =
 		ast_expression:transform_expression( LastExpr, ResetTransforms ),
 
-	NewExprs = lists:reverse( [ NewLastExpr | RevFirstExprs ] ),
+	NewExprs = case lists:reverse( RevFirstExprs ) ++ NewLastExprs of
+
+		% An empty body may happen (ex: if defining a static method returning
+		% void whilr having no prior expression), which would not be legit:
+		%
+		[] ->
+
+			PlaceholderAtom = wooper_void_return,
+
+			%trace_utils:warning_fmt(
+			%  "Empty method body, replaced by the returning "
+			%  "of atom '~s'.", [ PlaceholderAtom ] ),
+
+			% We return this, as something have to be returned:
+			[ {atom,Line,PlaceholderAtom} ];
+
+		NonEmptyExprs ->
+			NonEmptyExprs
+
+	end,
 
 	UpdatedTransforms = update_transformation_state( Transforms,
 													 NewTransforms, Line ),
@@ -1510,10 +1567,25 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 		pair:to_list( FunId ) ++ [ OtherNature ], Transforms, LineCall );
 
 
-
 % Third, static methods:
 
-% First (correct) static method detection:
+% First (correct) static method detection of void return:
+call_transformer( _LineCall,
+		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static_void} },
+		  _Params=[],
+		  Transforms=#ast_transforms{
+				transformed_function_identifier=FunId,
+				transformation_state={ undefined, _, WOOPERExportSet } } ) ->
+
+	?debug_fmt( "~s/~B detected as a static method (void return).",
+				pair:to_list( FunId ) ),
+
+	% So that wooper:return_static( void ) becomes a no-op:
+	NewTransforms = Transforms#ast_transforms{
+					  transformation_state={ static, [], WOOPERExportSet } },
+	{ [], NewTransforms };
+
+
 call_transformer( _LineCall,
 		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
 		  _Params=[ ResultExpr ],

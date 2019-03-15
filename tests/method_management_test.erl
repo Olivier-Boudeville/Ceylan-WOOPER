@@ -101,6 +101,8 @@ run() ->
 
 	Expected = class_MethodTester:get_static_info( A, B ),
 
+	wooper_void_return = class_MethodTester:test_static_void(),
+
 	test_facilities:display( "Test success." ),
 
 	wooper:delete_synchronously_instance( TestedPid ),
