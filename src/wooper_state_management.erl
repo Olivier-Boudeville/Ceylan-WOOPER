@@ -39,8 +39,6 @@
 -include("wooper_info.hrl").
 
 
--type attribute_info() :: wooper_info:attribute_info().
-
 -type attribute_table() :: wooper_info:attribute_table().
 
 
@@ -61,8 +59,8 @@
 % -attributes([ { name, name(), [ const, protected ], "Some name" }, ... ] ).
 %
 % However we then end up with {error,{24,erl_parse,"bad attribute"}} (because of
-% name() being interpreted as an unexpected function call), and this user
-% attribute information is lost.
+% name() being interpreted as an unexpected function call, targeting an
+% undefined function), and this user attribute information is lost.
 %
 % The parentheses are necessary for types, as they can be polymorphic, so
 % instead, we can:
@@ -74,65 +72,133 @@
 % -define( attributes, [ { name, name(), [ const, protected ], "Some name" },
 %                          ... ] ).
 %
-% We finally preferred the latter to the former, even if it somehow is
-% inconsistent with the -superclasses([...]) attribute (as '-attributes(...).'
+% We finally preferred the latter to the former, even if it somehow would be
+% inconsistent with a -superclasses([...]) attribute (as '-attributes(...).'
 % would have thus been expected in turn).
 %
 % We finally chose to support the recommended '-define(superclasses,[...]).',
-% for the sake of homogeneity/least surprise.
+% for the sake of homogeneity/least surprise, and then to disable the support
+% for the '-superclasses([...]).' parse attribute, for consistency.
+%
+% As a result, finally, both use defines instead of parse attributes.
 
 
 % Processes the class-specific attributes.
-%
 -spec manage_attributes( class_info() ) -> class_info().
 manage_attributes( ClassInfo=#class_info{ class={ Classname, _LocForm },
 										  attributes=AttributeTable,
-										  functions=FunctionTable } ) ->
+										  function_exports=FunExportTable,
+										  functions=FunctionTable,
+										  statics=StaticTable,
+										  markers=MarkerTable } ) ->
 
 	%trace_utils:trace( "Managing class attributes." ),
 
 	% Now the sole means of declaring the class attributes is by specifying a
 	% class_attributes define (rather than a type-limiting -attributes parse
-	% attribute.
+	% attribute).
 	%
-	% So we rely on the automatically-defined wooper_get_class_attributes/0 to
-	% unveil (at compilation time) the value of this attribute, should it be
-	% defined:
+	% So we rely on the automatically-defined
+	% wooper_get_class_specific_attributes/0 function to unveil (at compilation
+	% time) the value of this attribute, should it be defined.
+	%
+	% We used to get rid of this automatically-defined function, yet getting
+	% attribute information would surely be useful for various uses
+	% (ex:introspection); however we cannot keep the AST that we got from the
+	% macro as it is, as it would not compile (ex: if a class attribute involves
+	% a integer() type, the compiler will expect a integer/0 function to be
+	% defined in that module); so we have to transform that AST into one that
+	% can compile, and name the function differently as it has a different
+	% signature (moreover it shall be static method).
+	%
+	% So the ultimately targeted function get_class_specific_attributes/0 will
+	% be obtained from% the temporary, automatically-defined:
+	%
+	AttrTempFunKey = { wooper_get_class_specific_attributes, 0 },
 
-	AttrFunKey = { wooper_get_class_attributes, 0 },
+	% Thanks to the macro conditionals in wooper_for_classes.hrl, in all cases
+	% (even if no class_attributes define was specified), the getter shall be
+	% defined (possibly just as an empty list):
+	%
+	{ #function_info{
 
-	case table:hasEntry( AttrFunKey, FunctionTable ) of
+		 clauses=[ { clause, _Line, _Patterns=[],
+								  _Guards=[], _Body=[ AttrListForm ] } ],
+		 exported=ExportLocs },
 
-		true ->
+	  ShrunkFunTable } = table:extractEntry( AttrTempFunKey, FunctionTable ),
 
-			% Attributes read, we get rid of this automatically-defined
-			% pseudo-function:
-			%
-			{ _AttrFunInfo=#function_info{ clauses=[
-					   { clause, _Line, _Patterns=[], _Guards=[],
-						 _Body=[ AttrListForm ] } ] },
-			  ShrunkFunctionTable } = table:extractEntry( AttrFunKey,
-														  FunctionTable ),
+	NewFunExportTable = ast_info:ensure_function_not_exported( AttrTempFunKey,
+										ExportLocs, FunExportTable ),
 
-			%trace_utils:debug_fmt( "Class attribute declaration form:~n~p",
-			%					   [ AttrListForm ] ),
+	% First, register the corresponding attributes:
+	NewAttributeTable = register_attributes_from_form( AttrListForm,
+												AttributeTable, Classname ),
 
-			NewAttributeTable =
-				register_attributes_from_form( AttrListForm, AttributeTable,
-											   Classname ),
+	% Then fix the AST of the temporary function, for the final getter one:
+	NewAttrListForm = transform_attribute_getter_form( AttrListForm ),
 
-			%trace_utils:debug_fmt( "As class-specific attributes, we have ~s",
-			%				   [ attributes_to_string( NewAttributeTable ) ] ),
+	NewLine = 0,
 
-			ClassInfo#class_info{ attributes=NewAttributeTable,
-								  functions=ShrunkFunctionTable };
+	NewClauses = [ { clause, NewLine, _NewPatterns=[], _NewGuards=[],
+					 _NewBody=[ NewAttrListForm ] } ],
 
 
-		false ->
-			trace_utils:warning( "No attribute declaration found." ),
-			ClassInfo
+	% Note that we will have to add get_class_specific_attributes/0, but also to
+	% remove wooper_get_class_specific_attributes/0; we cannot easily convert
+	% the function_info of the latter to the one of the former (as for example
+	% different exported names and specs will apply), so we do a bit like
+	% meta_utils:remove_function/2 (cannot be reused as it is, as it operates on
+	% a module_info, not a class_info).
 
-	end.
+	% First, adding get_class_specific_attributes/0:
+
+	TargetFunName = get_class_specific_attributes,
+
+	DefLoc = ast_info:get_default_definition_function_location( MarkerTable ),
+
+	% Corresponds to '-spec get_class_specific_attributes() ->
+	%    static_return( [ wooper_info:attribute_info() ] )':
+	%
+	%NewSpec = [ { type, NewLine, 'fun',
+	%			  [ { type, NewLine, product, [] },
+	%				{ user_type, NewLine, static_return,
+	%				  [ { type, NewLine, list,
+	%					  [ { remote_type, NewLine,
+	%						  [ {atom,NewLine,wooper_info},
+	%							{atom,NewLine,attribute_info},[] ]
+	%						} ] } ] } ] } ],
+
+	%NewSpec = [ { type, NewLine, 'fun',
+	%			  [ { type, NewLine, product, [] },
+	%				[ { type, NewLine, list,
+	%					  [ { remote_type, NewLine,
+	%						  [ {atom,NewLine,wooper_info},
+	%							{atom,NewLine,attribute_info},[] ]
+	%						} ] } ] ] } ],
+
+	NewSpec = undefined,
+
+	NewStaticInfo = #static_info{ name=TargetFunName,
+								  arity=0,
+								  qualifiers=[ public, final ],
+								  location=DefLoc,
+								  line=NewLine,
+								  clauses=NewClauses,
+								  spec=NewSpec },
+
+	AttrTargetFunKey = { TargetFunName, 0 },
+
+	NewStaticTable = table:addNewEntry( AttrTargetFunKey, NewStaticInfo,
+										StaticTable ),
+
+	%trace_utils:debug_fmt( "As class-specific attributes, we have ~s",
+	%					   [ attributes_to_string( NewAttributeTable ) ] ),
+
+	ClassInfo#class_info{ attributes=NewAttributeTable,
+						  function_exports=NewFunExportTable,
+						  functions=ShrunkFunTable,
+						  statics=NewStaticTable }.
 
 
 
@@ -163,8 +229,8 @@ register_attributes_from_form( AttrListForm, AttributeTable, Classname ) ->
 % Note: there is no point in trying to obtain a line number from the forms
 % related to class_attributes; indeed, this is just a (preprocessor) define, so
 % it has no source location, and any line obtained from a related form would
-% point to the wooper_get_class_attributes/0 pseudo-function that we introduced
-% - not to the location of said attributes in the file.
+% point to the wooper_get_class_specific_attributes/0 pseudo-function that we
+% introduced - not to the location of said attributes in the file.
 
 % (helper)
 register_helper( _AttrFormList=[], AttributeTable, _Classname ) ->
@@ -260,12 +326,209 @@ register_attribute( AttrNameForm, TypeForm, QualifiersForm, DescriptionForm,
 
 
 
+% Returns a clause that is compilable, a list of { AttrName, AttrType,
+% AttrQualifier, AttrDescription } quadruplets.
+%
+% Currently:
+%
+% - AttrName is an atom (ex: 'color')
+% - AttrType is 'undefined' (not transformed in a compilable form yet)
+% - AttrQualifier is 'undefined' (no detailed "parsing" yet)
+% - AttrDescription is the expected string
+%
+transform_attribute_getter_form( RawForm ) ->
+
+	%trace_utils:debug_fmt( "Raw attribute form: ~p", [ RawForm ] ),
+
+	% Replaces '{ cons,_, {atom,_,foo},..' by '[ {atom,_foo}, ...':
+
+	ListForm = ast_generation:form_to_list( RawForm ),
+
+	%trace_utils:debug_fmt( "Attribute form as list: ~p", [ ListForm ] ),
+
+	FilteredForm = filter_attribute_forms( ListForm, _Acc=[] ),
+
+	%trace_utils:debug_fmt( "Filtered form: ~p", [ FilteredForm ] ),
+
+	FilteredForm.
+
+
+
+% Selects only the attribute names (as forms).
+%
+% (helper)
+%
+filter_attribute_forms( _ListForm=[], Acc ) ->
+
+	% Each accumulated element is now in an AST form, only have to convert their
+	% list (once reversed to match the original order of attribute
+	% declarations):
+	%
+	ast_generation:list_to_form( lists:reverse( Acc ) );
+
+
+% Just with an attribute name specified (match to distinguish from a tuple):
+filter_attribute_forms( _ListForm=[ Name={ atom, _Line, _Name } | T ], Acc ) ->
+
+	AttrName = filter_name( Name ),
+
+	AttrInfo = convert_to_attribute_info_form( AttrName,
+		_AttrType=get_default_type_ast(),
+		_AttrQualifier=get_default_qualifiers_ast(),
+		_AttrDescription=get_undefined_form() ),
+
+	filter_attribute_forms( T, [ AttrInfo | Acc ] );
+
+
+% Attribute name and description specified:
+filter_attribute_forms( _ListForm=[ { tuple, _Line,
+									  [ Name, Description ] } | T ], Acc ) ->
+
+	AttrName = filter_name( Name ),
+
+	AttrDescription = filter_description( Description ),
+
+	AttrInfo = convert_to_attribute_info_form( AttrName,
+		_AttrType=get_default_type_ast(),
+		_AttrQualifier=get_default_qualifiers_ast(),
+		AttrDescription ),
+
+	filter_attribute_forms( T, [ AttrInfo | Acc ] );
+
+
+% Attribute name, type and description specified:
+filter_attribute_forms( _ListForm=[
+		  { tuple, _Line, [ Name, Type, Description ] } | T ], Acc ) ->
+
+	AttrName = filter_name( Name ),
+
+	AttrType = filter_type( Type ),
+
+	AttrDescription = filter_description( Description ),
+
+	AttrInfo = convert_to_attribute_info_form( AttrName, AttrType,
+		_AttrQualifier=get_default_qualifiers_ast(), AttrDescription ),
+
+	filter_attribute_forms( T, [ AttrInfo | Acc ] );
+
+
+% Attribute name, type, qualifier and description specified:
+filter_attribute_forms( _ListForm=[ { tuple, _Line,
+				   [ Name, Type, Qualifier, Description ] } | T ], Acc ) ->
+
+	AttrName = filter_name( Name ),
+
+	AttrType = filter_type( Type ),
+
+	AttrQualifier = filter_qualifier( Qualifier ),
+
+	AttrDescription = filter_description( Description ),
+
+	AttrInfo = convert_to_attribute_info_form( AttrName, AttrType,
+										AttrQualifier, AttrDescription ),
+
+	filter_attribute_forms( T, [ AttrInfo | Acc ] );
+
+
+filter_attribute_forms( [ OtherForm | _T ], _Acc ) ->
+	wooper_internals:raise_usage_error(
+	  "invalid class attribute: ~p", [ OtherForm ] ).
+
+
+
+% Per attribute metadata filters:
+
+filter_name( NameForm={ atom, _Line, _AttrName } ) ->
+	NameForm;
+
+filter_name( OtherNameForm ) ->
+	wooper_internals:raise_usage_error(
+	  "invalid name for class attribute: ~p", [ OtherNameForm ] ).
+
+
+
+% TO-DO: adopt a type language (ex: a type foo( integer(), bar() ) could be
+% translated as { foo, [ { integer, [] }, { bar, [] } ] }, i.e. a type T
+% depending on types T1, T2, ..., Tn would be described in terms of
+% data-structure as a {T,[T1,T2,..,Tn]} pair.
+%
+filter_type( _Type ) ->
+
+	% Ex: name() can be represented as: '{call,_,{atom,_,name},[]}.'.
+
+	%trace_utils:debug_fmt( "Not translating type ~p.", [ Type ] ),
+
+	get_default_type_ast().
+
+
+
+% TO-DO: check and canonicalise the qualifier spec:
+filter_qualifier( _Qualifier ) ->
+
+	% Ex: [ const, protected ] is represented as:
+	% {cons,_, {atom,_,const}, {cons,_,{atom,_,protected},{nil,_}}}.
+
+	%trace_utils:debug_fmt( "Not translating qualifier ~p.", [ Qualifier ] ),
+
+	Line = 0,
+
+	% Returning the AST form of []:
+	{ nil, Line }.
+
+
+
+% Filters the specified form corresponding to an attribute description.
+filter_description( AttrDescription={ string, Line, _DescString } ) ->
+	% Returning a binary version thereof:
+	{ bin, Line, [ { bin_element, Line, AttrDescription,
+					   default, default } ] };
+
+filter_description( UnexpectedAttrDescription ) ->
+	throw( { unexpected_attribute_description, UnexpectedAttrDescription } ).
+
+
+
+% Returns a form element corresponding to 'undefined':
+get_undefined_form() ->
+	{ atom, _Line=0, 'undefined' }.
+
+
+
+% Returns a form element corresponding to the default type:
+get_default_type_ast() ->
+
+	Line = 0,
+
+	% Default is any(), encoded as a term as { any, [] }, whose AST is:
+	{ tuple, Line, [ { atom, Line, any }, { nil, Line } ] }.
+
+
+
+% Returns a form element corresponding to the default qualifiers:
+get_default_qualifiers_ast() ->
+	% Default is []:
+	{ nil, _Line=0 }.
+
+
+
+
+% Converts specified quadruplet into the proper AST form of an attribute_info
+% record, knowing that the tuple elements are already in an AST form.
+%
+convert_to_attribute_info_form( ASTName, ASTType, ASTQualifier,
+								ASTDescription ) ->
+	Line = 0,
+	{ tuple, Line, [ _Tag={ atom, Line, attribute_info }, ASTName, ASTType,
+					 ASTQualifier, ASTDescription ] }.
+
+
+
 % Checks of attribute meta-data:
 
 
 % Vetting specified attribute name:
-handle_attribute_name( _NameForm={atom,_,AtomName}, _Classname ) ->
-	AtomName;
+handle_attribute_name( NameForm={ atom, _, _AtomName }, _Classname ) ->
+	NameForm;
 
 handle_attribute_name( _OtherForm, Classname ) ->
 	wooper_internals:raise_usage_error( "invalid name for class attribute.", [],
@@ -375,7 +638,6 @@ handle_attribute_description( _DescriptionForm, Classname, AttrName ) ->
 
 
 % Returns a textual description of specified attribute table.
-%
 -spec attributes_to_string( attribute_table() ) -> text_utils:ustring().
 attributes_to_string( AttributeTable ) ->
 
@@ -398,8 +660,8 @@ attributes_to_string( AttributeTable ) ->
 
 
 % Returns a textual description of specified attribute information.
-%
--spec attribute_to_string( attribute_info() ) -> text_utils:ustring().
+-spec attribute_to_string( wooper_info:attribute_info() ) ->
+								 text_utils:ustring().
 attribute_to_string( #attribute_info{ name=Name,
 									  type=TypeForm,
 									  qualifiers=Qualifiers,

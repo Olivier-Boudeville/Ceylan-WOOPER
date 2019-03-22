@@ -27,9 +27,9 @@
 -module(class_MultipleConstructors).
 
 
--define( class_description, "Allows testing the support of multiple "
-							"constructors: three different ones are defined, "
-							"none exported." ).
+-define( class_description,
+		 "Allows the testing the support of multiple constructors: three "
+		 "different ones are defined, none exported." ).
 
 
 % Determines what are the direct mother classes of this class (if any):
@@ -46,7 +46,6 @@
 
 
 % Constructs a new instance from two construction parameters.
-%
 -spec construct( wooper:state(), name(), gender() ) -> wooper:state().
 construct( State, Name, Gender ) ->
 	% No mother class.
@@ -87,19 +86,12 @@ destruct( State ) ->
 
 
 % Returns the name of this instance.
-%
-% (const request)
-%
-
 -spec getName( wooper:state() ) -> const_request_return( name() ).
 getName( State ) ->
 	wooper:const_return_result( ?getAttr(name) ).
 
 
 % Returns the gender of this instance.
-%
-% (const request; hence wooper:const_return_result/1 should have been used)
-%
 -spec getGender( wooper:state() ) -> const_request_return( gender() ).
 getGender( State ) ->
 	wooper:const_return_result( ?getAttr(gender) ).

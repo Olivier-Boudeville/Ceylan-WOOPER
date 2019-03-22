@@ -46,13 +46,14 @@
 
 
 	% The qualifiers (if any) that apply to this attribute:
-	qualifiers = [] :: [ wooper:attribute_qualifier() ],
+	qualifiers = [] :: maybe( [ wooper:attribute_qualifier() ] ),
 
 
 	% Textual description (if any) of that attribute (free text):
 	description = undefined :: maybe( text_utils:bin_string() )
 
  } ).
+
 
 
 
@@ -112,9 +113,6 @@
 } ).
 
 
--type request_info() :: #request_info{}.
-
-
 
 % Stores and centralises WOOPER-level information gathered about a given oneway
 % method.
@@ -167,9 +165,6 @@
 } ).
 
 
--type oneway_info() :: #oneway_info{}.
-
-
 
 % Stores and centralises WOOPER-level information gathered about a given static
 % method.
@@ -216,24 +211,15 @@
 
 		   % The type specification (if any) of that static, as an abstract
 		   % form:
+		   %
 		   spec = undefined :: maybe( wooper_info:located_method_spec() )
 
 } ).
 
 
--type static_info() :: #static_info{}.
-
-
 
 % Description of the class name:
 -type class_entry() :: maybe( { wooper:classname(), ast_info:located_form() } ).
-
-
-% Description of the superclasses:
--type superclasses_entry() :: { [ wooper:classname() ],
-								maybe( ast_info:located_form() ) }.
-
-
 
 
 % Stores and centralises WOOPER-level information gathered about a given class.
@@ -250,10 +236,8 @@
 		class :: class_entry(),
 
 
-		% Ordered list of the superclasses of this class and its associated
-		% located form (if any is known):
-		%
-		superclasses :: superclasses_entry(),
+		% Ordered list of the superclasses of this class:
+		superclasses :: [ wooper:classname() ],
 
 
 		% All the class-specific attributes of the instances (hence not
@@ -263,7 +247,6 @@
 
 
 		% All inherited attribute definitions for this class:
-		%
 		inherited_attributes :: wooper_info:attribute_table(),
 
 
@@ -311,7 +294,6 @@
 
 
 		% Include definitions:
-		%
 		include_defs = [] :: [ ast_info:located_form() ],
 
 
@@ -342,12 +324,10 @@
 
 
 		% Lists the functions imported by that module, per-module.
-		%
 		function_imports :: ast_info:function_import_table(),
 
 
 		% The definitions of the function imports:
-		%
 		function_imports_defs = [] :: [ ast_info:located_form() ],
 
 
@@ -375,7 +355,6 @@
 
 
 		% All information about the constructor(s) of that class:
-		%
 		constructors :: wooper_info:constructor_table(),
 
 
@@ -386,7 +365,6 @@
 
 
 		% All information about the destructor (if any) of that class:
-		%
 		destructor = undefined :: maybe( ast_info:function_info() ),
 
 
@@ -464,7 +442,6 @@
 
 
 		% The definitions of the list of optional callbacks:
-		%
 		optional_callbacks_defs = [] :: [ ast_info:located_form() ],
 
 
@@ -483,12 +460,10 @@
 
 
 		% Section markers, offering reference locations to AST transformations.
-		%
 		markers :: ast_info:section_marker_table(),
 
 
 		% Error information collected when traversing the AST.
-		%
 		errors = [] :: [ ast_info:error() ],
 
 

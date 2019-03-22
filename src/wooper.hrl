@@ -163,7 +163,6 @@
 
 % First exports:
 
--include("wooper_classes_exports.hrl").
 -include("wooper_defines_exports.hrl").
 -include("wooper_destruction_exports.hrl").
 -include("wooper_execute_exports.hrl").

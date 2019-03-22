@@ -32,7 +32,7 @@
 -module(wooper_class_management).
 
 
--export([ check_classname/1, manage_classname/2, manage_superclasses/2 ]).
+-export([ check_classname/1, manage_classname/2, manage_superclasses/1 ]).
 
 
 
@@ -81,7 +81,6 @@
 
 
 % Ensures that specified name is a legit class name, and returns it.
-%
 -spec check_classname( any() ) -> atom().
 check_classname( Name ) when is_atom( Name ) ->
 
@@ -103,7 +102,6 @@ check_classname( Other ) ->
 
 
 % Registers the corresponding classname into specified class information.
-%
 -spec manage_classname( module_entry(), class_info() ) -> class_info().
 manage_classname( _ModuleEntry=undefined, _ClassInfo ) ->
 	wooper_internals:raise_usage_error( "no module name was defined" );
@@ -117,185 +115,46 @@ manage_classname( _ModuleEntry={ _ModuleName=Classname, ModuleDef },
 
 
 % Registers the declared superclasses (if any) into specified class information.
-%
--spec manage_superclasses( ast_info:attribute_table(), class_info() ) ->
-							  class_info().
-manage_superclasses( ParseAttrTable,
-					 ClassInfo=#class_info{ class={ Classname, _ClassLocForm },
-											functions=FunctionTable,
-											markers=MarkerTable } ) ->
+-spec manage_superclasses( class_info() ) -> class_info().
+manage_superclasses( ClassInfo=#class_info{ class={ Classname, _ClassLocForm },
+											functions=FunctionTable } ) ->
 
-	% Useful to check any '-define(superclasses,...).':
-	SupFunKey = { wooper_get_superclasses, 0 },
+	% Following searching through parse attributes is not done anymore, as now
+	% we rely exclusively on a define instead (i.e. -define( superclasses, [ A,
+	% B ]):
 
-	{ Superclasses, RegisteredClassInfo } =
-			% Looking first for any '-superclasses(...).' parse attribute:
-			case table:lookupEntry( superclasses, ParseAttrTable ) of
+	%{ Superclasses, RegisteredClassInfo } =
+	%		% Looking first for any '-superclasses(...).' parse attribute:
+	%		case table:lookupEntry( superclasses, ParseAttrTable ) of
 
-		% A single declaration expected:
-		{ value, [ E={ SuperclassList, _SuperclassDef } ] } ->
+	% The define itself is visible only from the preprocessor (not from the
+	% compiler), so its definition is obtained thanks to an ad hoc, always
+	% defined function (get_superclasses/0, defined in
+	% wooper_for_classes.hrl); we used to remove that function once the actual
+	% superclasses were known, yet it may be useful (typically for
+	% introspection), so it is now kept.
 
-			Classnames = [ check_classname( Cl ) || Cl <- SuperclassList ],
-			ShrunkParseAttrTable = table:removeEntry( superclasses,
-													  ParseAttrTable ),
-			%trace_utils:debug_fmt( "Superclasses ~p specified through a "
-			%					   "-superclasses(...). attribute",
-			%					   [ Classnames ] ),
+	#function_info{ clauses=[ { clause, _Line, _Patterns=[], _Guards=[],
+								_Body=[ ReturnForm ] } ] } =
+		table:getEntry( { get_superclasses, 0 }, FunctionTable ),
 
-			case table:hasEntry( SupFunKey, FunctionTable ) of
+	% ReturnForm expected to correspond to wooper:return_static( [A, B] ):
+	{ call, _, { remote, _, {atom,_,wooper}, {atom,_,return_static} } ,
+	  [ AtomListForm ] } = ReturnForm,
 
-				true ->
-					% We do not take the risk of interpreting the corresponding
-					% define:
-					%
-					wooper_internals:raise_usage_error( "the superclasses have "
-						"been defined both as an attribute "
-						"(i.e. '-superclasses([...]).') and as a define "
-						"(i.e. '-define( superclasses, [] ).').",
-						[], Classname );
+	SuperNames = try
 
-				false ->
-					% Any prior value superseded, no merging here:
-					{ Classnames,
-					  ClassInfo#class_info{
-						superclasses=E,
-						parse_attributes=ShrunkParseAttrTable } }
+			ast_generation:form_to_atoms( AtomListForm )
 
-			end;
+		catch _:_ ->
 
+			%wooper_internals:raise_usage_error( "invalid superclasses define: "
+			%	"a list of atoms was expected.", Classname, _NoLine=0 )
 
-		% Cannot be empty, hence more than one declaration here:
-		{ value, L } ->
+			wooper_internals:raise_usage_error( "invalid superclasses define: "
+				"a list of atoms was expected, not ~p.", [ AtomListForm ],
+				Classname, _NoLine=0 )
 
-			% Can probably never happen, as a parser
-			% error({epp_error,{redefine,superclasses}}) is bound to be raised
-			% first:
-			%
-			wooper_internals:raise_usage_error(
-			  "multiple '-superclasses([...]).' found: ~p.",
-			  L, Classname );
+	end,
 
-		key_not_found ->
-
-			% No '-superclasses(...).' used, maybe '-define(superclasses,[...])'
-			% has been specified instead?
-			% By design wooper_get_superclasses/0 is expected to be
-			% automatically defined, so that this define is explicit:
-
-			{ Classnames, NewFunctionTable } =
-						case table:lookupEntry( SupFunKey, FunctionTable ) of
-
-				{ value,
-				  _SupFunInfo=#function_info{ clauses=[
-					   { clause, _HelperLine, _Patterns=[], _Guards=[],
-						 _Body=[ AtomListForm ] } ] } } ->
-
-					SuperNames = try
-
-								   ast_generation:form_to_atoms( AtomListForm )
-
-								 catch _:_ ->
-
-									wooper_internals:raise_usage_error(
-									  "invalid superclasses define: "
-									  "a list of atoms was expected.",
-									  Classname, _NoLine=0 )
-
-								 end,
-
-					%trace_utils:debug_fmt( "Superclasses ~p specified through "
-					%					   "a superclasses define.",
-					%					   [ SuperNames ] ),
-
-					% This function was serving no other purpose:
-					ShrunkFunctionTable =
-						table:removeEntry( SupFunKey, FunctionTable ),
-
-					{ SuperNames, ShrunkFunctionTable };
-
-				key_not_found ->
-					%trace_utils:debug( "No define, no attribute, hence no "
-					%				   "superclass specified." ),
-					{ _SuperNames=[], FunctionTable }
-
-			end,
-
-			{ Classnames, ClassInfo#class_info{
-							superclasses={ Classnames, _LocForm=undefined },
-							functions=NewFunctionTable } }
-
-		end,
-
-	% We now have to implement what used to be:
-
-	% Static method (i.e. a mere function) that returns the list of the
-	% superclasses of that class.
-	%
-	% Generally not to be called by the user, see getSuperclasses/1 instead.
-	%
-	%-spec get_superclasses() -> static_return( [ wooper:classname() ] ).
-	%get_superclasses() ->
-	%	?superclasses.
-
-	% Now to be auto-generated and to become:
-
-	%get_superclasses() ->
-	%	wooper:static( Superclasses ).
-	%
-	% i.e. actually:
-	%get_superclasses() ->
-	%	Superclasses.
-
-	Line = 0,
-
-	GetSupName = get_superclasses,
-	GetSupArity = 0,
-
-	GeSupFunId = { GetSupName, GetSupArity },
-
-	GetSupSpecForm = { attribute, Line, spec, { GeSupFunId,
-				[ { type, Line, 'fun',
-					[ _SpecParams={ type, Line, product, [] },
-					  _SpecRes={ user_type, Line, static_return,
-								 [ { type, Line, list, [ { remote_type, Line,
-							[ {atom,Line,wooper},
-							  {atom,Line,classname}, [] ] } ] } ] } ] } ] } },
-
-	% Already checked to be a list of atoms:
-	ClassesForm = ast_generation:atoms_to_form( Superclasses ),
-
-	% Will end up in a { function, Line, GetSupName, GetSupArity, [ GetSupClause
-	% ]... } form:
-	%
-	% Note: we could have directly returned the list L of superclasses, but we
-	% prefer returning wooper:return_static( L ) so that the WOOPER parse
-	% transform detects this function as all other static methods.
-	%
-	GetSupClause = { clause, Line, [], [], [
-		{ call, Line, { remote, Line, {atom,Line,wooper},
-						{atom,Line,return_static} },
-		  [ ClassesForm ] } ] } ,
-
-	% Where this generated get_superclasses/0 will be defined:
-	DefinitionLoc =
-		ast_info:get_default_definition_function_location( MarkerTable ),
-
-	% We used to auto-export this static method, however no method is expected
-	% to be specifically exported, thus this has been disabled:
-	%ExportLoc = ast_info:get_default_export_function_location( MarkerTable ),
-
-	GetSupInfo = #function_info{ name=GetSupName,
-								 arity=GetSupArity,
-								 location=DefinitionLoc,
-								 line=Line,
-								 clauses=[ GetSupClause ],
-								 spec={ DefinitionLoc, GetSupSpecForm },
-								 callback=false,
-								 %exported=[ ExportLoc ] },
-								 exported=[] },
-
-	% Ensure not already defined (ex: by an unwary user):
-	FinalFunctionTable = table:addNewEntry( GeSupFunId, GetSupInfo,
-					RegisteredClassInfo#class_info.functions ),
-
-	RegisteredClassInfo#class_info{ functions=FinalFunctionTable }.
+	ClassInfo#class_info{ superclasses={ SuperNames, _LocForm=undefined } }.

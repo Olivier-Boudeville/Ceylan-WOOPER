@@ -101,6 +101,10 @@
 
 -type compose_pair() :: wooper_parse_transform:compose_pair().
 
+-type request_info() :: wooper_info:request_info().
+-type oneway_info() ::  wooper_info:oneway_info().
+-type static_info() ::  wooper_info:static_info().
+
 -type request_table() :: wooper_info:request_table().
 -type oneway_table() :: wooper_info:oneway_table().
 -type static_table() :: wooper_info:static_table().
@@ -2520,8 +2524,7 @@ function_to_static_info( Other, _Qualifiers ) ->
 % Converts specified (WOOPER-level) static information into a (Myriad-level)
 % function information.
 %
--spec static_to_function_info( static_info(), location() ) ->
-									 function_info().
+-spec static_to_function_info( static_info(), location() ) -> function_info().
 static_to_function_info( #static_info{ name=Name,
 									   arity=Arity,
 									   % Unused: qualifiers

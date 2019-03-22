@@ -197,6 +197,9 @@
 
 							% This method does not change the state of the
 							% instance it is applied on:
+							%
+							% (only meaningful for requests and oneways)
+							%
 						  | 'const'.
 
 
@@ -244,6 +247,9 @@
 -type attribute_value() :: any().
 
 -type attribute_entry() :: { attribute_name(), attribute_value() }.
+
+% The type-as-a-term of an attribute:
+-type attribute_type() :: type_utils:type().
 
 
 % Qualifiers applying to attributes:
@@ -299,10 +305,13 @@
 			   static_return/1,
 
 			   attribute_name/0, attribute_value/0, attribute_entry/0,
-			   attribute_qualifier/0,
+			   attribute_type/0, attribute_qualifier/0,
 			   instance_pid/0, passive_instance/0, state/0,
 			   function_export_set/0 ]).
 
+
+% Note: the {attribute, request, oneway, static, class}_info/0 types are
+% exported from wooper_info.
 
 
 % For getAttr and al:
@@ -1515,7 +1524,6 @@ get_wooper_reserved_attribute_names() ->
 
 
 % Returns a textual representation of the attributes of the specified state.
-%
 -spec state_to_string( wooper:state() ) -> string().
 state_to_string( State ) ->
 

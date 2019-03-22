@@ -28,9 +28,10 @@
 -module(class_BaseTestClass).
 
 
--define( class_description, "Class introduced notably to test inheritance: "
-		 "tests the base services and also serves as a mother class "
-		 "(see class_ChildTestClass).").
+-define( class_description,
+		 "Class introduced notably to test inheritance: tests the base "
+		 "services and also serves as a mother class "
+		 "(see class_ChildTestClass)." ).
 
 
 % Determines what are the direct mother classes of this class (if any):
@@ -46,11 +47,10 @@
 
 
 % Class-specific attributes:
--define( class_attributes,
-		 [ { name, name(), [ const, protected ], "Name of this creature" },
-		   { gender, gender(), "Gender of this creature" },
-		   { age, integer(), { initial, 0 },
-			 "The current age of this creature" } ]).
+-define( class_attributes, [
+	{ name, name(), [ const, protected ], "Name of this creature" },
+	{ gender, gender(), "Gender of this creature" },
+	{ age, integer(), { initial, 0 }, "The current age of this creature" } ] ).
 
 
 

@@ -243,7 +243,6 @@ parse_transform( InputAST, _Options ) ->
 
 
 % Transforms specified AST for WOOPER.
-%
 -spec apply_wooper_transform( ast() ) -> { ast(), class_info() }.
 apply_wooper_transform( InputAST ) ->
 
@@ -357,6 +356,7 @@ generate_class_info_from( ModuleInfo ) ->
 create_class_info_from(
   % We basically reuse (as they are, or after relevant transformations) all
   % information gathered from the module:
+  %
   _ModuleInfo=#module_info{ module=ModuleEntry,
 							compilation_options=CompileOptTable,
 							compilation_option_defs=CompileOptDefs,
@@ -423,8 +423,8 @@ create_class_info_from(
 	ClassInClassInfo = wooper_class_management:manage_classname( ModuleEntry,
 															VerbatimClassInfo ),
 
-	SuperClassInfo = wooper_class_management:manage_superclasses(
-					   ParseAttrTable, ClassInClassInfo ),
+	SuperClassInfo =
+		wooper_class_management:manage_superclasses( ClassInClassInfo ),
 
 
 	AttrClassInfo = wooper_state_management:manage_attributes( SuperClassInfo ),
@@ -532,7 +532,6 @@ create_class_info_from(
 
 
 % Adds specified function into the corresponding table.
-%
 -spec add_function( meta_utils:function_name(), arity(), ast_base:form(),
 					function_table() ) -> function_table().
 add_function( Name, Arity, Form, FunctionTable ) ->
@@ -572,7 +571,6 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 
 
 % Adds specified request into the corresponding table.
-%
 -spec add_request( wooper:request_name(), arity(), ast_base:form(),
 				   request_table() ) -> request_table().
 add_request( Name, Arity, Form, RequestTable ) ->
@@ -611,7 +609,6 @@ add_request( Name, Arity, Form, RequestTable ) ->
 
 
 % Adds specified oneway into the corresponding table.
-%
 -spec add_oneway( wooper:oneway_name(), arity(), ast_base:form(),
 				  oneway_table() ) -> oneway_table().
 add_oneway( Name, Arity, Form, OnewayTable ) ->
@@ -650,7 +647,6 @@ add_oneway( Name, Arity, Form, OnewayTable ) ->
 
 
 % Adds specified static method into the corresponding table.
-%
 -spec add_static_method( wooper:static_name(), arity(), ast_base:form(),
 						 static_table() ) -> static_table().
 add_static_method( Name, Arity, Form, StaticTable ) ->
@@ -724,7 +720,6 @@ get_new_variation_names() ->
 
 
 % Transforms (at the WOOPER level) specified class information.
-%
 -spec transform_class_info( class_info() ) -> class_info().
 transform_class_info( ClassInfo ) ->
 	% Nothing specific done currently!
@@ -740,9 +735,9 @@ transform_class_info( ClassInfo ) ->
 -spec generate_module_info_from( class_info() ) -> module_info().
 generate_module_info_from( #class_info{
 				 class=ClassEntry,
-				 superclasses={ _Superclasses, MaybeSuperclassesLocDef },
+				 %superclasses
 
-				 attributes=AttributeTable,
+				 attributes=_AttributeTable,
 
 				 % No impact onto the class-related module itself:
 				 inherited_attributes=_InheritedAttributeTable,
@@ -790,12 +785,6 @@ generate_module_info_from( #class_info{
 				 errors=Errors,
 
 				 unhandled_forms=UnhandledForms } ) ->
-
-	% Adds back the relevant (WOOPER-related) parse attributes that were
-	% interpreted (even though they might not be so useful now):
-	%
-	FullParseAttrTable = gather_parse_attributes( ParseAttrTable,
-									  MaybeSuperclassesLocDef, AttributeTable ),
 
 	% In addition to the plain, classical functions already in
 	% FunctionExportTable and Functions, we have to add back constructors,
@@ -863,7 +852,7 @@ generate_module_info_from( #class_info{
 		compilation_options=CompileOptTable,
 		compilation_option_defs=CompileOptDefs,
 
-		parse_attributes=FullParseAttrTable,
+		parse_attributes=ParseAttrTable,
 
 		% Untouched:
 		remote_spec_defs=RemoteSpecDefs,
@@ -882,29 +871,6 @@ generate_module_info_from( #class_info{
 		errors=Errors,
 		unhandled_forms=UnhandledForms }.
 
-
-
-% Recreates a complete table of parse attributes, from specified arguments.
-%
--spec gather_parse_attributes( ast_info:attribute_table(),
-	   maybe( ast_info:located_form() ), wooper_info:attribute_table()  ) ->
-									 ast_info:attribute_table().
-gather_parse_attributes( ParseAttrTable, MaybeSuperclassesLocDef,
-						 _AttributeTable ) ->
-
-	% AttributeTable not yet populated.
-
-	case MaybeSuperclassesLocDef of
-
-		undefined ->
-			ParseAttrTable;
-
-		SuperclassesLocDef ->
-			% V must be a list of {AttrValue,LocForm} pairs:
-			table:addNewEntry( _K=superclasses,
-							   _V=[ SuperclassesLocDef ], ParseAttrTable )
-
-	end.
 
 
 % Registers specified functions in specified (function) table, detecting

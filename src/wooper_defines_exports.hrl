@@ -115,11 +115,6 @@
 
 
 
-% We should now prefer using wooper:state() to wooper:state():
-%-type wooper:state() :: wooper:state().
-
-
-
 % Now that type-checking on the state record is performed in debug mode, in both
 % modes method results are sent directly:
 %

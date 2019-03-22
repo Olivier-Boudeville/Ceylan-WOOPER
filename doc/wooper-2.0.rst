@@ -337,14 +337,14 @@ A WOOPER class can inherit from other classes, in which case the state and behav
 
 Being in a **multiple inheritance** context, a given class can have any number (``[0..n]``) of direct mother classes, which themselves may have their mother classes, and so on. This is to lead to a class hierarchy that forms a direct, acyclic graph.
 
-The direct mother classes (and only them) are to be declared in WOOPER thanks to the ``superclasses`` define [#]_. For example, a class with no mother class should specify, once having declared its module:
+The direct mother classes (and only them) are to be declared in WOOPER thanks to the ``superclasses`` define. For example, a class with no mother class should specify, once having declared its module:
 
 .. code:: erlang
 
  -define(superclasses,[]).
 
 
-.. [#] Alternatively, this definition could be done thanks to the ``-superclasses([]).`` parse attribute, but for the sake of consistency with the class attributes that will be presented next, the define-based form is the one that we recommend.
+.. comment .. [#] Alternatively, this definition could be done thanks to the ``-superclasses([]).`` parse attribute, but for the sake of consistency with the class attributes that will be presented next, the define-based form is the one that we recommend.
 
 
 In this particular case, with no mother class to be declared, this ``superclasses`` define could be omitted as a whole (yet this would be probably less obvious to the reader).
@@ -2651,6 +2651,22 @@ Quite similarly to ``EXIT`` messages, node monitors and ``nodeup`` / ``nodedown`
 Should these oneways be not available for the class at hand, the default WOOPER node handlers (namely ``wooper:default_node_up_handler/3`` and ``default_node_down_handler/3`` respectively) will be used (they just perform console-based notifications).
 
 Note that ``nodedown`` messages shall not be mixed up with the ``DOWN`` messages of the previous section.
+
+
+Introspection
+-------------
+
+Here are the class-level information that can be fetched from the name of a class (as a result they are static methods):
+
+- ``get_superclasses/0`` will return the (ordered) list of the declared direct mother classes of this class
+- ``get_class_specific_attributes/0`` will return the (in-order) list of declared class-specific attribute metadata, as a list of ``wooper_info:attribute_info/0`` records, containing, for a given attribute: its name, type, qualifiers and description
+
+For example:
+
+.. code:: erlang
+
+  class_Platypus:get_superclasses().
+  [class_Mammal,class_OvoviviparousBeing]
 
 
 

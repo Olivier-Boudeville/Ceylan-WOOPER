@@ -28,7 +28,6 @@
 
 
 % Centralisation of class-level information.
-%
 -module(wooper_info).
 
 
@@ -39,8 +38,35 @@
 
 -type class_info() :: #class_info{}.
 
--type attribute_info() :: #attribute_info{}.
+-type superclasses() :: [ wooper:classname() ].
 
+
+% Shorthand:
+-type attribute_qualifier() :: wooper:attribute_qualifier().
+
+
+-type attribute_qualifiers() :: attribute_qualifier()
+							  | [ attribute_qualifier() ].
+
+-type attribute_description() :: text_utils:ustring().
+
+
+% How attributes are to be specified by the user:
+-type attribute_spec() ::
+
+		wooper:attribute_name()
+
+	  | { wooper:attribute_name(), attribute_description() }
+
+	  | { wooper:attribute_name(), wooper:attribute_type(),
+		  attribute_description() }
+
+	  | { wooper:attribute_name(), wooper:attribute_type(),
+		  attribute_qualifiers(), attribute_description() }.
+
+
+
+-type attribute_info() :: #attribute_info{}.
 
 % Stores all class-level information (i.e. metadata) regarding attributes (class
 % ones, not parse ones).
@@ -55,6 +81,10 @@
 % The type specification of a method:
 -type located_method_spec() :: { ast_info:location(), method_spec() }.
 
+
+-type request_info() :: #request_info{}.
+-type oneway_info() :: #oneway_info{}.
+-type static_info() :: #static_info{}.
 
 
 
@@ -106,8 +136,8 @@
 % Table storing reference definitions of oneway methods.
 %
 % Quite similar to ast_info:function_table().
--type oneway_table() :: table:table( wooper:oneway_id(),
-									 wooper_info:oneway_info() ).
+%
+-type oneway_table() :: table:table( wooper:oneway_id(), oneway_info() ).
 
 
 
@@ -115,8 +145,7 @@
 %
 % Quite similar to ast_info:function_table().
 %
--type request_table() :: table:table( wooper:request_id(),
-									  wooper_info:request_info() ).
+-type request_table() :: table:table( wooper:request_id(), request_info() ).
 
 
 
@@ -124,14 +153,14 @@
 %
 % Quite similar to ast_info:function_table().
 %
--type static_table() :: table:table( wooper:static_id(),
-									 wooper_info:static_info() ).
+-type static_table() :: table:table( wooper:static_id(), static_info() ).
 
 
 
 
--export_type([ class_info/0, class_entry/0, superclasses_entry/0,
-			   attribute_info/0, attribute_table/0,
+-export_type([ class_info/0, class_entry/0,
+			   attribute_qualifiers/0,
+			   attribute_spec/0, attribute_info/0, attribute_table/0,
 			   method_spec/0, located_method_spec/0,
 			   oneway_export_table/0, request_export_table/0,
 			   static_export_table/0,
@@ -181,7 +210,7 @@ init_class_info() ->
 	% or being initialised at record construction:
 	%
 	#class_info{ class=undefined,
-				 superclasses={ [], undefined },
+				 superclasses=[],
 				 attributes=EmptyTable,
 				 inherited_attributes=EmptyTable,
 				 compilation_options=EmptyTable,
@@ -245,7 +274,7 @@ class_info_to_string( ClassInfo, DoIncludeForms ) ->
 					 text_utils:indentation_level() ) -> text_utils:ustring().
 class_info_to_string( #class_info{
 						 class=ClassEntry,
-						 superclasses=SuperclassesEntry,
+						 superclasses=Superclasses,
 						 attributes=AttributeTable,
 						 inherited_attributes=InheritedAttributes,
 						 compilation_options=CompileOpts,
@@ -300,7 +329,7 @@ class_info_to_string( #class_info{
 
 	end,
 
-	Infos = [ superclasses_to_string( SuperclassesEntry, DoIncludeForms,
+	Infos = [ superclasses_to_string( Superclasses, DoIncludeForms,
 									  NextIndentationLevel ),
 
 			  class_specific_attributes_to_string( AttributeTable,
@@ -397,40 +426,22 @@ class_entry_to_string( _ClassEntry={ ThisClassname,
 
 
 
-% Returns a textual representation of the superclasses corresponding to
-% specified entry.
-%
--spec superclasses_to_string( superclasses_entry(), boolean(),
+% Returns a textual representation of the specified superclasses.
+-spec superclasses_to_string( superclasses(), boolean(),
 					  text_utils:indentation_level() ) -> text_utils:ustring().
-superclasses_to_string( _SuperclassesEntry={ _SuperclassNames=[],
-											 _SuperclassesLocDef },
-						_DoIncludeForms,
+superclasses_to_string( _Superclasses=[], _DoIncludeForms,
 						_IndentationLevel ) ->
 	"no known superclass";
 
-superclasses_to_string( _SuperclassesEntry={ SuperclassNames,
-											 SuperclassesLocDef },
-						DoIncludeForms,
+superclasses_to_string( Superclasses, _DoIncludeForms,
 						_NextIndentationLevel ) ->
 
-	BaseString = text_utils:format( "~B known superclasses: ~p",
-							 [ length( SuperclassNames ), SuperclassNames ] ),
-
-	case DoIncludeForms of
-
-		true ->
-			text_utils:format( "~s (defined as ~p)",
-							   [ BaseString, SuperclassesLocDef ] );
-
-		false ->
-			BaseString
-
-	end.
+	text_utils:format( "~B known superclasses: ~p",
+					   [ length( Superclasses ), Superclasses ] ).
 
 
 
 % Returns a textual representation of the specified class-specific attributes.
-%
 -spec class_specific_attributes_to_string( attribute_table(), boolean(),
 				text_utils:indentation_level() ) -> text_utils:ustring().
 class_specific_attributes_to_string( AttributeTable, DoIncludeForms,
@@ -485,7 +496,6 @@ inherited_attributes_to_string( AttributeTable, DoIncludeForms,
 
 
 % Returns a textual representation of the specified attribute information.
-%
 -spec attribute_info_to_string( attribute_info(), boolean() ) ->
 									  text_utils:ustring().
 attribute_info_to_string( _AttributeInfo, _DoIncludeForms ) ->
@@ -494,7 +504,6 @@ attribute_info_to_string( _AttributeInfo, _DoIncludeForms ) ->
 
 
 % Returns a textual representation of the specified constructor information.
-%
 -spec constructors_to_string( constructor_table(), boolean(),
 					  text_utils:indentation_level() ) -> text_utils:ustring().
 constructors_to_string( ConstructorTable, DoIncludeForms, IndentationLevel ) ->
@@ -528,7 +537,6 @@ constructors_to_string( ConstructorTable, DoIncludeForms, IndentationLevel ) ->
 
 
 % Returns a textual representation of the specified destructor information.
-%
 -spec destructor_to_string( maybe( ast_info:function_info() ), boolean(),
 					text_utils:indentation_level() ) -> text_utils:ustring().
 destructor_to_string( _DestructorInfo=undefined, _DoIncludeForms,
@@ -543,8 +551,7 @@ destructor_to_string( DestructorFunInfo, DoIncludeForms, IndentationLevel ) ->
 
 
 % Returns a textual representation of the specified information about requests.
-%
--spec requests_to_string( wooper_info:request_table(), boolean(),
+-spec requests_to_string( request_table(), boolean(),
 				  text_utils:indentation_level() ) -> text_utils:ustring().
 requests_to_string( RequestTable, DoIncludeForms, IndentationLevel ) ->
 
@@ -568,7 +575,6 @@ requests_to_string( RequestTable, DoIncludeForms, IndentationLevel ) ->
 
 
 % Returns a textual representation of the specified request information.
-%
 -spec request_info_to_string( request_info(), boolean(),
 				   text_utils:indentation_level() ) -> text_utils:ustring().
 request_info_to_string( #request_info{ name=Name,
@@ -636,8 +642,7 @@ request_info_to_string( #request_info{ name=Name,
 
 
 % Returns a textual representation of the specified information about oneways.
-%
--spec oneways_to_string( wooper_info:oneway_table(), boolean(),
+-spec oneways_to_string( oneway_table(), boolean(),
 				  text_utils:indentation_level() ) -> text_utils:ustring().
 oneways_to_string( OnewayTable, DoIncludeForms, IndentationLevel ) ->
 
@@ -661,7 +666,6 @@ oneways_to_string( OnewayTable, DoIncludeForms, IndentationLevel ) ->
 
 
 % Returns a textual representation of the specified oneway information.
-%
 -spec oneway_info_to_string( oneway_info(), boolean(),
 				   text_utils:indentation_level() ) -> text_utils:ustring().
 oneway_info_to_string( #oneway_info{ name=Name,
@@ -730,7 +734,7 @@ oneway_info_to_string( #oneway_info{ name=Name,
 % Returns a textual representation of the specified information about static
 % methods.
 %
--spec static_methods_to_string( wooper_info:static_table(), boolean(),
+-spec static_methods_to_string( static_table(), boolean(),
 				  text_utils:indentation_level() ) -> text_utils:ustring().
 static_methods_to_string( StaticTable, DoIncludeForms, IndentationLevel ) ->
 
@@ -754,7 +758,6 @@ static_methods_to_string( StaticTable, DoIncludeForms, IndentationLevel ) ->
 
 
 % Returns a textual representation of the specified static method information.
-%
 -spec static_method_info_to_string( static_info(), boolean(),
 				   text_utils:indentation_level() ) -> text_utils:ustring().
 static_method_info_to_string( #static_info{ name=Name,
@@ -829,7 +832,6 @@ static_method_info_to_string( #static_info{ name=Name,
 
 
 % Returns the function identifiers of all WOOPER builtins.
-%
 -spec get_wooper_builtins() -> [ function_id() ].
 get_wooper_builtins() ->
 	get_metadata_builtins() ++ get_state_builtins() ++ get_execution_builtins()
@@ -859,7 +861,6 @@ get_metadata_builtins() ->
 
 
 % Returns the function identifiers of the WOOPER builtins regarding state.
-%
 -spec get_state_builtins() -> [ function_id() ].
 get_state_builtins() ->
 	[ {hasAttribute,2},
@@ -935,7 +936,6 @@ get_inner_builtins() ->
 
 
 % Returns the function identifiers of the WOOPER helper builtins.
-%
 -spec get_helper_builtins() -> [ function_id() ].
 get_helper_builtins() ->
 	[ {is_wooper_debug,0},
