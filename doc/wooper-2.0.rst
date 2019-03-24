@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2019 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Sunday, March 17, 2019
+:Lastly updated: Sunday, March 24, 2019
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -2653,13 +2653,13 @@ Should these oneways be not available for the class at hand, the default WOOPER 
 Note that ``nodedown`` messages shall not be mixed up with the ``DOWN`` messages of the previous section.
 
 
-Introspection
--------------
+A bit of Introspection
+----------------------
 
 Here are the class-level information that can be fetched from the name of a class (as a result they are static methods):
 
 - ``get_superclasses/0`` will return the (ordered) list of the declared direct mother classes of this class
-- ``get_class_specific_attributes/0`` will return the (in-order) list of declared class-specific attribute metadata, as a list of ``wooper_info:attribute_info/0`` records, containing, for a given attribute: its name, type, qualifiers and description
+- ``get_class_specific_attributes/0`` will return the (in-order) list of declared class-specific attribute metadata, as a list of ``wooper_info:attribute_info/0`` records, containing, for a given attribute: its name, type, qualifiers and textual description
 
 For example:
 
