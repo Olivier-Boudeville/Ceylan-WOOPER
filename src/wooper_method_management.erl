@@ -1082,6 +1082,7 @@ get_wooper_transform_table() ->
 			% from the WOOPER transformers, our body_transformer/3 variation; we
 			% nevertheless define the standard version to detect if ever it was
 			% called, and in this case report a blocking error:
+			%
 			{ 'body', fun body_transformer/2 },
 
 			% Expression-level triggers:
