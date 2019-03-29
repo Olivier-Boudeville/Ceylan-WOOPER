@@ -136,7 +136,17 @@ manage_superclasses( ClassInfo=#class_info{ class={ Classname, _ClassLocForm },
 
 	#function_info{ clauses=[ { clause, _Line, _Patterns=[], _Guards=[],
 								_Body=[ ReturnForm ] } ] } =
-		table:getEntry( { get_superclasses, 0 }, FunctionTable ),
+		case table:lookupEntry( { get_superclasses, 0 }, FunctionTable ) of
+
+			{ value, GetSupFunInfo } ->
+				GetSupFunInfo;
+
+			key_not_found ->
+				wooper_internals:raise_usage_error(
+				  "no get_superclasses/0 defined: has wooper.hrl been included?",
+				  Classname, _NoSpecificLine=0 )
+
+		end,
 
 	% ReturnForm expected to correspond to wooper:return_static( [A, B] ):
 	{ call, _, { remote, _, {atom,_,wooper}, {atom,_,return_static} } ,

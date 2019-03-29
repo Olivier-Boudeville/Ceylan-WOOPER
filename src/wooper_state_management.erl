@@ -226,13 +226,15 @@ register_attributes_from_form( AttrListForm, AttributeTable, Classname ) ->
 
 
 
+
 % Note: there is no point in trying to obtain a line number from the forms
 % related to class_attributes; indeed, this is just a (preprocessor) define, so
 % it has no source location, and any line obtained from a related form would
 % point to the wooper_get_class_specific_attributes/0 pseudo-function that we
 % introduced - not to the location of said attributes in the file.
-
+%
 % (helper)
+%
 register_helper( _AttrFormList=[], AttributeTable, _Classname ) ->
 	AttributeTable;
 
@@ -282,10 +284,11 @@ register_helper( _AttrFormList=[ _AttrForm={ tuple,_,
 % Errors:
 register_helper( _AttrForm=[ { tuple,_, Forms } | _T ], _AttributeTable,
 				 Classname ) ->
-	wooper_internals:raise_usage_error( "invalid attribute declaration tuple in "
-		"the 'class_attributes' define (expecting a size of 2, 3 or 4; "
-		"got ~B elements).",
-		[ length( Forms ) ], Classname );
+	wooper_internals:raise_usage_error(
+	  "invalid attribute declaration tuple in "
+	  "the 'class_attributes' define (expecting a size of 2, 3 or 4; "
+	  "got ~B elements).",
+	  [ length( Forms ) ], Classname );
 
 register_helper( _OtherAttrForm, _AttributeTable, Classname ) ->
 	wooper_internals:raise_usage_error( "invalid attribute declaration in "
@@ -545,7 +548,8 @@ handle_attribute_name( _OtherForm, Classname ) ->
 handle_attribute_type( _TypeForm=undefined, _Classname, _AttrName ) ->
 	undefined;
 
-handle_attribute_type( TypeForm, _Classname, _AttrName ) when is_tuple( TypeForm ) ->
+handle_attribute_type( TypeForm, _Classname, _AttrName )
+  when is_tuple( TypeForm ) ->
 
 	%trace_utils:warning_fmt( "Storing attribute type as its raw form:~n  ~p",
 	%						 [ TypeForm ] ),
@@ -554,8 +558,8 @@ handle_attribute_type( TypeForm, _Classname, _AttrName ) when is_tuple( TypeForm
 
 % Probably never triggered:
 handle_attribute_type( _TypeForm, Classname, AttrName ) ->
-	wooper_internals:raise_usage_error( "invalid type for class attribute '~s'.",
-										[ AttrName ], Classname ).
+	wooper_internals:raise_usage_error(
+	  "invalid type for class attribute '~s'.", [ AttrName ], Classname ).
 
 
 
@@ -573,7 +577,8 @@ handle_attribute_qualifiers( Qualifiers={cons,_,_H,_T}, Classname, AttrName ) ->
 	QualifierList = ast_generation:form_to_list( Qualifiers ),
 
 	% It could be checked that no initial is specified if a const is.
-	[ handle_attribute_qualifier( Q, Classname, AttrName ) || Q <- QualifierList ];
+	[ handle_attribute_qualifier( Q, Classname, AttrName )
+	  || Q <- QualifierList ];
 
 % A single qualifier shall be promoted to a list:
 handle_attribute_qualifiers( Qualifier, Classname, AttrName ) ->
@@ -632,7 +637,7 @@ handle_attribute_description( _DescriptionForm={string,_,Description},
 
 handle_attribute_description( _DescriptionForm, Classname, AttrName ) ->
 	wooper_internals:raise_usage_error(
-	  "invalid description (not a string) for class attribute '~s'.",
+	  "invalid description (not a string) for class attribute '~p'.",
 	  [ AttrName ], Classname ).
 
 
@@ -683,8 +688,7 @@ attribute_to_string( #attribute_info{ name=Name,
 			"with no associated description";
 
 		_ ->
-			text_utils:format( "whose description is '~s'",
-							   [ Description ] )
+			text_utils:format( "whose description is '~s'", [ Description ] )
 
 	end,
 

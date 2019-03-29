@@ -28,7 +28,6 @@
 
 
 % Gathering of internal helpers.
-%
 -module(wooper_internals).
 
 
