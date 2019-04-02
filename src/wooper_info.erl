@@ -92,7 +92,6 @@
 % Method export tables.
 
 
-
 % Table storing the export declarations for oneway methods.
 %
 % Quite similar to ast_info:function_export_table().
@@ -397,7 +396,7 @@ class_info_to_string( #class_info{
 			  ast_info:unhandled_forms_to_string( UnhandledForms,
 							 DoIncludeForms, NextIndentationLevel ) ],
 
-		text_utils:format( "Information about class ~s:~s", [ ClassnameString,
+		text_utils:format( "Information about class ~s: ~s", [ ClassnameString,
 				 text_utils:strings_to_string( Infos, IndentationLevel ) ] ).
 
 

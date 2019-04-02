@@ -150,7 +150,7 @@ run( IsDebug ) ->
 			receive
 
 				{ wooper_result, InspectString } ->
-					test_facilities:display( "Instance description:~s",
+					test_facilities:display( "Instance description: ~s",
 											 [ InspectString ] )
 			end;
 
