@@ -1784,7 +1784,7 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType, ErrorTerm,
 	log_error( ": request ~s~s/~B failed (cause: ~s):~n~n"
 			   " - with error term:~n  ~p~n~n"
 			   " - stack trace was (latest calls first):~n~s~n"
-			   " - caller being process ~w"
+			   " - caller being process ~w~n"
 			   " - for request parameters:~n  ~p~n",
 			   [ ModulePrefix, RequestName, Arity, ErrorType, ErrorTerm,
 				 code_utils:interpret_stacktrace( Stacktrace ), CallerPid,

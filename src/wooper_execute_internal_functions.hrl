@@ -183,6 +183,8 @@ wooper_execute_method( MethodAtom, Parameters, State )
 
 		key_not_found ->
 
+			Classname = State#state_holder.actual_class,
+
 			case State#state_holder.request_sender of
 
 				undefined ->
@@ -191,14 +193,15 @@ wooper_execute_method( MethodAtom, Parameters, State )
 					% method name and arity returned as separate tuple
 					% elements, as if in a single string ("M/A"), the result
 					% is displayed as a list:
-					wooper:log_error( "Error: oneway method ~s/~B not found, "
-									  "parameters were:~n~p~n",
-									  [ MethodAtom, MethodArity, Parameters ],
-									  State ),
+					%
+					wooper:log_error(
+					  "Error: oneway ~s:~s/~B not found, "
+					  "parameters were:~n~p~n",
+					  [ Classname, MethodAtom, MethodArity, Parameters ],
+					  State ),
 
 					throw( { wooper_oneway_not_found, self(),
-							 State#state_holder.actual_class,
-							 MethodAtom, MethodArity, Parameters } );
+							 Classname, MethodAtom, MethodArity, Parameters } );
 
 				_ ->
 
@@ -207,14 +210,14 @@ wooper_execute_method( MethodAtom, Parameters, State )
 					% crash *after* having performed any relevant action (ex:
 					% send back a relevant answer):
 					%
-					wooper:log_error( "Error: request ~s/~B not found, "
-									  "parameters were:~n~p~n",
-									  [ MethodAtom, MethodArity, Parameters ],
-									  State ),
+					wooper:log_error(
+					  "Error: request ~s:~s/~B not found, "
+					  "parameters were:~n~p~n",
+					  [ Classname, MethodAtom, MethodArity, Parameters ],
+					  State ),
 
 					throw( { wooper_request_not_found, self(),
-							 State#state_holder.actual_class,
-							 MethodAtom, MethodArity, Parameters } )
+							 Classname, MethodAtom, MethodArity, Parameters } )
 
 
 			% No other term can be returned.
@@ -252,6 +255,8 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 
 		key_not_found ->
 
+			Classname = State#state_holder.actual_class,
+
 			case State#state_holder.request_sender of
 
 				undefined ->
@@ -262,12 +267,12 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 					% as if in a single string ("M/A"), the result is displayed
 					% as a list:
 					%
-					wooper:log_error( "Error: oneway ~s/~B not found, "
-									  "parameters were:~n~p",
-									  [ MethodAtom, MethodArity, Parameters ] ),
+					wooper:log_error(
+					  "Error: oneway ~s:~s/~B not found, "
+					  "parameters were:~n~p",
+					  [ Classname, MethodAtom, MethodArity, Parameters ] ),
 
-					throw( { wooper_oneway_not_found, self(),
-							 State#state_holder.actual_class,
+					throw( { wooper_oneway_not_found, self(), Classname,
 							 MethodAtom, MethodArity, Parameters } );
 
 				_ ->
@@ -277,12 +282,12 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 					% crash after having performed any relevant action (ex: send
 					% back a relevant answer):
 					%
-					wooper:log_error( "Error: request ~s/~B not found, "
-									  "parameters were:~n~p~n",
-									  [ MethodAtom, MethodArity, Parameters ] ),
+					wooper:log_error(
+					  "Error: request ~s:~s/~B not found, "
+					  "parameters were:~n~p~n",
+					  [ Classname, MethodAtom, MethodArity, Parameters ] ),
 
-					throw( { wooper_request_not_found, self(),
-							 State#state_holder.actual_class,
+					throw( { wooper_request_not_found, self(), Classname,
 							 MethodAtom, MethodArity, Parameters } )
 
 			end

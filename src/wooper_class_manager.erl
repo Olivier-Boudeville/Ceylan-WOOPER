@@ -27,12 +27,12 @@
 
 
 
-% Module of the WOOPER class manager.
+% Module corresponding to the WOOPER class manager singleton.
 %
 % The purpose of this process is, on a per-node basis, to create and notably to
 % serve to instances the virtual table corresponding to the actual class they
 % are corresponding to.
-
+%
 % This way each virtual table is computed only once per node, and no significant
 % per-instance memory is used for the virtual table: all the instances of a
 % given class just refer to a common virtual table stored by this manager, and
@@ -133,8 +133,7 @@ display_msg( _String ) ->
 
 
 
-% Starts a new blank class manager.
-%
+% Starts a new, blank, class manager.
 -spec start( pid() ) -> void().
 start( ClientPID ) ->
 
@@ -198,6 +197,7 @@ loop( Tables ) ->
 		{ get_table, Module, Pid } ->
 			{ NewTables, TargetTable } = get_virtual_table_for( Module,
 																Tables ),
+
 			Pid ! { virtual_table, TargetTable },
 			loop( NewTables );
 
@@ -225,9 +225,9 @@ loop( Tables ) ->
 % table.
 %
 -spec get_virtual_table_for( basic_utils:module_name(),
-							?wooper_table_type:?wooper_table_type() )
-		-> { ?wooper_table_type:?wooper_table_type(),
-			 ?wooper_table_type:?wooper_table_type() }.
+							 ?wooper_table_type:?wooper_table_type() ) ->
+								   { ?wooper_table_type:?wooper_table_type(),
+									 ?wooper_table_type:?wooper_table_type() }.
 get_virtual_table_for( Module, Tables ) ->
 
 	case ?wooper_table_type:lookupEntry( Module, Tables ) of
@@ -243,18 +243,24 @@ get_virtual_table_for( Module, Tables ) ->
 			display_table_creation( Module ),
 			ModuleTable = create_method_table_for( Module ),
 
-			% Each class has its virtual table optimised:
-			OptimisedModuleTable = ?wooper_table_type:optimise(
-															   ModuleTable ),
+			%trace_utils:debug_fmt( "Virtual table for ~s: ~s",
+			%	   [ Module, ?wooper_table_type:toString( ModuleTable ) ] ),
+
+			% Each class had its virtual table optimised:
+			%OptimisedModuleTable =
+			%	?wooper_table_type:optimise( ModuleTable ),
 
 			% Here the table could be patched with destruct/1, if defined.
-			ClassTable = ?wooper_table_type:addEntry( Module,
-											 OptimisedModuleTable, Tables ),
+			ClassTable =
+				?wooper_table_type:addEntry( Module, ModuleTable, Tables ),
 
-			% And the table of virtual tables is itself optimised each time a
-			% new class is introduced:
-			{ ?wooper_table_type:optimise( ClassTable ),
-			 OptimisedModuleTable }
+			% And the table of virtual tables was itself optimised each time a
+			% new class was introduced:
+			%
+			{ %?wooper_table_type:optimise( ClassTable ),
+			  ClassTable,
+			  % OptimisedModuleTable }
+			  ModuleTable }
 
 	end.
 
@@ -299,23 +305,32 @@ update_method_table_with( Module, Hashtable ) ->
 % virtual table.
 %
 select_function( _,0 )                                                -> false ;
+
 select_function( new,_ )                                              -> false ;
 select_function( new_link,_ )                                         -> false ;
+select_function( new_passive,_ )                                      -> false ;
+
 select_function( synchronous_new,_ )                                  -> false ;
 select_function( synchronous_new_link,_ )                             -> false ;
 select_function( synchronous_timed_new,_ )                            -> false ;
 select_function( synchronous_timed_new_link,_ )                       -> false ;
+
+select_function( remote_synchronisable_new,_ )                        -> false ;
+select_function( remote_synchronisable_new_link,_ )                   -> false ;
+
 select_function( remote_new,_ )                                       -> false ;
 select_function( remote_new_link,_ )                                  -> false ;
 select_function( remote_synchronous_new,_ )                           -> false ;
 select_function( remote_synchronous_new_link,_ )                      -> false ;
 select_function( remote_synchronous_timed_new,_ )                     -> false ;
 select_function( remote_synchronous_timed_new_link,_ )                -> false ;
+
 select_function( construct,_ )                                        -> false ;
 select_function( destruct,1 )                                         -> false ;
 select_function( delete_any_instance_referenced_in,_ )                -> false ;
 select_function( delete_synchronously_any_instance_referenced_in,_ )  -> false ;
 select_function( delete_synchronously_instances,_ )                   -> false ;
+
 select_function( wooper_check_undefined,_ )                           -> false ;
 select_function( wooper_construct_and_run,_ )                         -> false ;
 select_function( wooper_construct_and_run_synchronous,_ )             -> false ;
@@ -329,10 +344,48 @@ select_function( wooper_get_all_attributes,_ )                        -> false ;
 select_function( wooper_get_state_description,_ )                     -> false ;
 select_function( wooper_get_virtual_table_description,_ )             -> false ;
 select_function( wooper_pop_from_attribute,_ )                        -> false ;
+select_function( wooper_effective_method_execution,4 )                -> false ;
+select_function( wooper_execute_method,3 )                            -> false ;
+select_function( wooper_execute_method_as,4 )                         -> false ;
+select_function( wooper_get_instance_description,1 )                  -> false ;
+select_function( wooper_handle_local_oneway_execution,3 )             -> false ;
+select_function( wooper_handle_local_request_execution,3 )            -> false ;
+select_function( wooper_handle_remote_oneway_execution,3 )            -> false ;
+select_function( wooper_handle_remote_request_execution,4 )           -> false ;
+select_function( wooper_main_loop,1 )                                 -> false ;
+
+select_function( addKeyValueToAttribute, 4 )                          -> false ;
+select_function( addToAttribute, 3 )                                  -> false ;
+select_function( appendToAttribute, 3 )                               -> false ;
+select_function( concatToAttribute, 3  )                              -> false ;
+select_function( decrementAttribute, 2 )                              -> false ;
+select_function( deleteFromAttribute, 3 )                             -> false ;
+select_function( getAttribute, 2 )                                    -> false ;
+select_function( getAttributes, 2 )                                   -> false ;
+select_function( hasAttribute, 2 )                                    -> false ;
+select_function( incrementAttribute, 2 )                              -> false ;
+select_function( popFromAttribute, 2 )                                -> false ;
+select_function( removeAttribute, 2 )                                 -> false ;
+select_function( setAttribute, 3 )                                    -> false ;
+select_function( setAttributes, 2 )                                   -> false ;
+select_function( subtractFromAttribute, 3 )                           -> false ;
+select_function( toggleAttribute, 2 )                                 -> false ;
+
+select_function( post_deserialise_hook, 1 )                           -> false ;
+select_function( post_serialise_hook, 3 )                             -> false ;
+select_function( pre_deserialise_hook, 2 )                            -> false ;
+select_function( pre_serialise_hook, 1 )                              -> false ;
+
 select_function( executeOneway,_ )                                    -> false ;
-select_function( executeRequest,_ )                                   -> false ;
+select_function( executeConstOneway,_ )                               -> false ;
 select_function( executeOnewayAs,_ )                                  -> false ;
+select_function( executeConstOnewayAs,_ )                             -> false ;
+
+select_function( executeRequest,_ )                                   -> false ;
+select_function( executeConstRequest,_ )                              -> false ;
 select_function( executeRequestAs,_ )                                 -> false ;
+select_function( executeConstRequestAs,_ )                            -> false ;
+
 select_function( module_info,1)                                       -> false ;
 % Includes 'wooper_get_instance_description/1', which could be useful to debug:
 select_function( _, _ )                                               -> true.

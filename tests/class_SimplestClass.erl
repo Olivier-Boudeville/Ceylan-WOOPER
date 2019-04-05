@@ -63,7 +63,8 @@ construct( State, Age, Gender ) ->
 % the appropriate test is made beforehand):
 %
 % Allows to test also the automatic destructor generation:
-%-spec destruct( wooper:state() ) -> wooper:state().
+%
+-spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
 	State.
 
@@ -73,9 +74,6 @@ destruct( State ) ->
 
 
 % Returns the age of this creature.
-%
-% (const request)
-%
 -spec getAge( wooper:state() ) -> const_request_return( age() ).
 getAge( State ) ->
 	wooper:const_return_result( ?getAttr(age) ).
@@ -83,9 +81,6 @@ getAge( State ) ->
 
 
 % Sets the age of this creature.
-%
-% (oneway)
-%
 -spec setAge( wooper:state(), age() ) -> oneway_return().
 setAge( State, _NewAge ) ->
 	% Mother implementation chosen faulty to check override:
@@ -94,9 +89,6 @@ setAge( State, _NewAge ) ->
 
 
 % Increments the age of this creature.
-%
-% (oneway)
-%
 -spec declareBirthday( wooper:state() ) -> oneway_return().
 declareBirthday( State ) ->
 	wooper:return_state(
@@ -105,9 +97,6 @@ declareBirthday( State ) ->
 
 
 % Returns the gender of this creature.
-%
-% (const request)
-%
 -spec getGender( wooper:state() ) -> const_request_return( gender() ).
 getGender( State ) ->
 	wooper:const_return_result( ?getAttr(gender) ).
@@ -115,8 +104,6 @@ getGender( State ) ->
 
 
 % Returns a class-specific arbitrary number.
-%
-% (request)
 -spec getArbitraryNumber( wooper:state() ) -> const_request_return( number() ).
 getArbitraryNumber( State ) ->
 	wooper:const_return_result( 10 ).
@@ -130,7 +117,6 @@ getArbitraryNumber( State ) ->
 %
 % Must not be called from the Creature test, otherwise will fail.
 %
-% (oneway).
 -spec testDirectMethodExecution( wooper:state(), age() ) -> oneway_return().
 testDirectMethodExecution( State, NewAge ) ->
 
@@ -173,7 +159,6 @@ testDirectMethodExecution( State, NewAge ) ->
 % The returned value of the setAttribute call was correct, but any side-effect
 % triggered by f (sending a message, writing a trace, etc.) happened twice.
 %
-% (oneway)
 -spec testSingleExecution( wooper:state() ) -> oneway_return().
 testSingleExecution( State ) ->
 	wooper:return_state( setAttribute( side_effect_function( State ),
@@ -200,8 +185,6 @@ example_fun() ->
 
 
 % This looks like a method, but it is not (returning only a string):
-%
-% (function)
 -spec toString( wooper:state() ) -> string().
 toString( State ) ->
 	table:toString( State#state_holder.attribute_table ).

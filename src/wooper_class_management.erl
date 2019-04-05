@@ -142,8 +142,8 @@ manage_superclasses( ClassInfo=#class_info{ class={ Classname, _ClassLocForm },
 				GetSupFunInfo;
 
 			key_not_found ->
-				wooper_internals:raise_usage_error(
-				  "no get_superclasses/0 defined: has wooper.hrl been included?",
+				wooper_internals:raise_usage_error( "no get_superclasses/0 "
+				  "defined: has wooper.hrl been included?",
 				  Classname, _NoSpecificLine=0 )
 
 		end,
@@ -166,5 +166,7 @@ manage_superclasses( ClassInfo=#class_info{ class={ Classname, _ClassLocForm },
 				Classname, _NoLine=0 )
 
 	end,
+
+	%trace_utils:debug_fmt( "Detected superclasses: ~p", [ SuperNames ] ),
 
 	ClassInfo#class_info{ superclasses={ SuperNames, _LocForm=undefined } }.

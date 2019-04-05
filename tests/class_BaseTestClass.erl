@@ -60,7 +60,6 @@
 
 
 % Constructs a new instance.
-%
 -spec construct( wooper:state(), name(), gender() ) -> wooper:state().
 construct( State, Name, Gender ) ->
 	% No mother class.
@@ -76,7 +75,6 @@ construct( State, Name, Gender ) ->
 
 
 % Returns the name of this creature.
-%
 -spec getName( wooper:state() ) -> const_request_return( name() ).
 getName( State ) ->
 	Name = ?getAttr(name),
@@ -84,18 +82,12 @@ getName( State ) ->
 
 
 % Sets the name of this creature.
-%
-% (oneway)
-%
 setName( State, Name ) ->
 	NewState = setAttribute( State, name, Name ),
 	wooper:return_state( NewState ).
 
 
 % A request not meant to be overridden.
-%
-% (request)
-%
 -spec aRequest( wooper:state(), integer() ) ->
 					  const_request_return( integer() ).
 aRequest( State, Arg ) ->
@@ -103,7 +95,6 @@ aRequest( State, Arg ) ->
 
 
 % A request meant to be overridden.
-%
 -spec someRequest( wooper:state(), integer() ) ->
 						 const_request_return( integer() ).
 someRequest( State, Arg ) ->
@@ -123,10 +114,6 @@ testThrow( _State ) ->
 	wooper:throwing( my_throw_helper() ).
 
 
-
 % Returns some mean count.
-%
-% (static)
-%
 get_some_mean_count() ->
 	wooper:return_static( 6 ).

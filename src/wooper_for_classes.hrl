@@ -131,3 +131,42 @@ wooper_get_class_specific_attributes() ->
 
 
 -endif. % class_attributes
+
+
+
+
+% Returns the description (if any) specified for this class.
+%
+% Note: available to the user.
+%
+-spec get_class_description() ->
+			static_return( maybe( wooper_info:class_description() ) ).
+
+
+
+-ifdef(class_description).
+
+
+% Reuse that define, since it has been specified.
+%
+% Note that the body of this function will be rewritten by the WOOPER parse
+% transform.
+%
+get_class_description() ->
+
+	% Note: if your compiler points to these lines, you must have introduced a
+	% parse (syntax) error in your 'class_description' define (expected to be a
+	% string).
+	%
+	wooper:return_static( ?class_description ).
+
+
+-else. % class_attributes
+
+
+% Nothing specified:
+get_class_description() ->
+   wooper:return_static( undefined ).
+
+
+-endif. % class_attributes

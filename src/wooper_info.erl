@@ -38,6 +38,12 @@
 
 -type class_info() :: #class_info{}.
 
+
+% The description of a class:
+-type class_description() :: text_utils:ustring().
+
+
+% Mother classes (usually direct ones):
 -type superclasses() :: [ wooper:classname() ].
 
 
@@ -157,7 +163,7 @@
 
 
 
--export_type([ class_info/0, class_entry/0,
+-export_type([ class_info/0, class_description/0, class_entry/0,
 			   attribute_qualifiers/0,
 			   attribute_spec/0, attribute_info/0, attribute_table/0,
 			   method_spec/0, located_method_spec/0,
