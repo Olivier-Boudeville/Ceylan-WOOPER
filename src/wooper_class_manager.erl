@@ -347,7 +347,10 @@ select_function( wooper_pop_from_attribute,_ )                        -> false ;
 select_function( wooper_effective_method_execution,4 )                -> false ;
 select_function( wooper_execute_method,3 )                            -> false ;
 select_function( wooper_execute_method_as,4 )                         -> false ;
-select_function( wooper_get_instance_description,1 )                  -> false ;
+
+% Might be useful, currently still enabled:
+%select_function( wooper_get_instance_description,1 )                 -> false ;
+
 select_function( wooper_handle_local_oneway_execution,3 )             -> false ;
 select_function( wooper_handle_local_request_execution,3 )            -> false ;
 select_function( wooper_handle_remote_oneway_execution,3 )            -> false ;
