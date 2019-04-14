@@ -98,8 +98,7 @@ setAttribute( State, AttributeName, AttributeValue ) ->
 	   attribute_table=?wooper_table_type:addEntry(
 		   AttributeName,
 		   AttributeValue,
-		   State#state_holder.attribute_table )
-   }.
+		   State#state_holder.attribute_table ) }.
 
 
 
@@ -122,8 +121,7 @@ setAttributes( State, ListOfAttributePairs ) ->
    State#state_holder{
 	   attribute_table=?wooper_table_type:addEntries(
 		   ListOfAttributePairs,
-		   State#state_holder.attribute_table )
-   }.
+		   State#state_holder.attribute_table ) }.
 
 
 
@@ -193,8 +191,7 @@ removeAttribute( State, AttributeName ) ->
 
 	State#state_holder{
 		attribute_table=?wooper_table_type:removeEntry( AttributeName,
-			State#state_holder.attribute_table )
-	}.
+			State#state_holder.attribute_table ) }.
 
 
 
@@ -213,8 +210,7 @@ addToAttribute( State, AttributeName, Value ) ->
 		attribute_table=?wooper_table_type:addToEntry(
 			AttributeName,
 			Value,
-			State#state_holder.attribute_table )
-	}.
+			State#state_holder.attribute_table ) }.
 
 
 
@@ -233,8 +229,7 @@ subtractFromAttribute( State, AttributeName, Value ) ->
 		attribute_table=?wooper_table_type:subtractFromEntry(
 			AttributeName,
 			Value,
-			State#state_holder.attribute_table )
-	}.
+			State#state_holder.attribute_table ) }.
 
 
 
@@ -253,8 +248,7 @@ incrementAttribute( State, AttributeName ) ->
 		attribute_table=?wooper_table_type:addToEntry(
 			AttributeName,
 			_Value=1,
-			State#state_holder.attribute_table )
-	}.
+			State#state_holder.attribute_table ) }.
 
 
 
@@ -273,8 +267,7 @@ decrementAttribute( State, AttributeName ) ->
 		attribute_table=?wooper_table_type:addToEntry(
 			AttributeName,
 			_Value=-1,
-			State#state_holder.attribute_table )
-	}.
+			State#state_holder.attribute_table ) }.
 
 
 
@@ -290,8 +283,7 @@ toggleAttribute( State, BooleanAttributeName ) ->
 	State#state_holder{
 		attribute_table=?wooper_table_type:toggleEntry(
 			BooleanAttributeName,
-			State#state_holder.attribute_table )
-	}.
+			State#state_holder.attribute_table ) }.
 
 
 
@@ -311,8 +303,7 @@ appendToAttribute( State, AttributeName, Element ) ->
 		attribute_table=?wooper_table_type:appendToEntry(
 			AttributeName,
 			Element,
-			State#state_holder.attribute_table )
-	}.
+			State#state_holder.attribute_table ) }.
 
 
 
@@ -335,8 +326,7 @@ concatToAttribute( State, AttributeName, List ) ->
 		attribute_table=?wooper_table_type:concatToEntry(
 			AttributeName,
 			List,
-			State#state_holder.attribute_table )
-	}.
+			State#state_holder.attribute_table ) }.
 
 
 
@@ -356,8 +346,7 @@ deleteFromAttribute( State, AttributeName, Element ) ->
 		attribute_table=?wooper_table_type:deleteFromEntry(
 			AttributeName,
 			Element,
-			State#state_holder.attribute_table )
-	}.
+			State#state_holder.attribute_table ) }.
 
 
 
@@ -383,12 +372,10 @@ addKeyValueToAttribute( State, AttributeName, Key, Value ) ->
 			AttributeName,
 
 			?wooper_table_type:addEntry( Key, Value,
-				?wooper_table_type:getEntry( AttributeName,
+				?wooper_table_type:getValue( AttributeName,
 					State#state_holder.attribute_table ) ),
 
-			State#state_holder.attribute_table )
-
-	}.
+			State#state_holder.attribute_table ) }.
 
 
 

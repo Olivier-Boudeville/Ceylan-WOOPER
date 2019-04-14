@@ -29,25 +29,22 @@
 % of an instance.
 
 
--export([
-		 setAttribute/3, setAttributes/2,
-		 getAttribute/2, getAttributes/2,
-		 is_wooper_debug/0,
-		 hasAttribute/2,
-		 removeAttribute/2,
-		 addToAttribute/3,
-		 subtractFromAttribute/3,
-		 incrementAttribute/2,
-		 decrementAttribute/2,
-		 toggleAttribute/2,
-		 appendToAttribute/3,
-		 concatToAttribute/3,
-		 deleteFromAttribute/3,
-		 addKeyValueToAttribute/4,
-		 popFromAttribute/2,
-		 wooper_check_undefined/2
-
-		]).
+-export([ setAttribute/3, setAttributes/2,
+		  getAttribute/2, getAttributes/2,
+		  is_wooper_debug/0,
+		  hasAttribute/2,
+		  removeAttribute/2,
+		  addToAttribute/3,
+		  subtractFromAttribute/3,
+		  incrementAttribute/2,
+		  decrementAttribute/2,
+		  toggleAttribute/2,
+		  appendToAttribute/3,
+		  concatToAttribute/3,
+		  deleteFromAttribute/3,
+		  addKeyValueToAttribute/4,
+		  popFromAttribute/2,
+		  wooper_check_undefined/2 ]).
 
 
 
@@ -290,7 +287,7 @@
 % See also: the getAttr/1 shorthand.
 %
 %-define( getAttribute( State, AttributeName ),
-%	?wooper_table_type:getEntry( (AttributeName),
+%	?wooper_table_type:getValue( (AttributeName),
 %		(State)#state_holder.attribute_table ) ).
 
 
@@ -464,7 +461,7 @@
 %		attribute_table = ?wooper_table_type:addEntry(
 %			(AttributeName),
 %			?wooper_table_type:addEntry( (Key), (Value),
-%				?wooper_table_type:getEntry( (AttributeName),
+%				?wooper_table_type:getValue( (AttributeName),
 %					(State)#state_holder.attribute_table ) ),
 %			(State)#state_holder.attribute_table )
 %	}
