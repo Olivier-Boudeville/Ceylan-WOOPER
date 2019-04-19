@@ -107,12 +107,21 @@
 
 -ifdef(wooper_debug).
 
+
 % State-related helpers (only available in debug mode):
 -export([ virtual_table_to_string/1,
 		  instance_to_string/1,
 		  display_state/1,
 		  display_virtual_table/1,
 		  display_instance/1 ]).
+
+
+-else. % wooper_debug
+
+
+% Exported as otherwise reported as unused:
+-export([ check_classname_and_arity/2 ]).
+
 
 -endif. % wooper_debug
 
