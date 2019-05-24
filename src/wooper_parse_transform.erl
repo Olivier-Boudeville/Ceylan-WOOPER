@@ -87,28 +87,20 @@
 
 % Regarding function/method exports:
 %
-% We could have preferred that methods are auto-exported (defining them would
-% have sufficed, with no particular export declaration), yet:
+% We preferred that methods are auto-exported (defining them is sufficient, no
+% particular export declaration needed):
 %
-% - a pseudo-export line (i.e. '-export([ setColor/2, ...]).') would have to be
-% generated and placed
+% - a pseudo-export line (i.e. '-export([ setColor/2, ...]).') is generated and
+% appropriately placed in the AST
 %
 % - knowing that we want -spec lines (even in the form '-oneway setColor(...,
 % ... ) -> ...') to remain optional, the kind of a method
-% (oneway/request/static) would have to be inferred at compilation-time, which
-% is not easy (ex: scanning for wooper:oneway_return/1 through all "leaves" of
-% the call graph); moreover, all standard functions could be static ones, and
-% thus would be exported, which is not desirable
+% (oneway/request/static) is inferred at compilation-time, based on method
+% terminators (ex: scanning for wooper:oneway_return/1 through all "leaves" of
+% the call graph)
 %
-% As a result, we preferred relying on explicit exports:
-%
-% - '-export([ f/1, g/0 ])' for simple functions, as usual
-% - '-oneway_export([ setColor/2, resetFoo/1 ]) for oneway methods
-% - '-request_export([ getColor/1, isFooReset/1 ]) for request methods
-% - '-static_export([ get_mean_count/1, get_default_name/0 ]) for static methods
-%
-% As for constructor(s) and destructor (if any), there are auto-exported (i.e.
-% all construct/N and destruct/1 functions).
+% Constructor(s) and destructor (if any) are also auto-exported (i.e. all
+% construct/N and destruct/1 functions).
 
 
 % Regarding function/method type specifications:

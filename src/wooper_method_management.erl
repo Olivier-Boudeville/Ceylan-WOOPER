@@ -384,6 +384,7 @@ sort_out_functions( _Functions=[ #function_info{ name=FunName,
 % Function specs are generally optional, yet are useful in all cases, and even
 % needed in some ones (ex: what is the actual nature of a function whose all
 % clauses throw?)
+%
 take_spec_into_account( _LocSpec=undefined, FunId, _FunNature=throw,
 						_Qualifiers, Classname ) ->
 	wooper_internals:raise_usage_error(
