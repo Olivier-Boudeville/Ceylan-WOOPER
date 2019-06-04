@@ -49,8 +49,7 @@
 
 
 
-% Waits for incoming method calls and serves them.
-%
+% Waits for the incoming method calls, and serves them.
 -spec wooper_main_loop( wooper:state() ) -> 'deleted'. % no_return().
 wooper_main_loop( State ) ->
 
@@ -63,8 +62,9 @@ wooper_main_loop( State ) ->
 
 		% Requests (thus with response):
 
-		% Instance PID could be sent back as well to discriminate received
-		% answers on the caller side (if interleaving requests).
+		% The target instance PID could be sent back as well, in order to
+		% discriminate received answers on the caller side (if it was
+		% interleaving requests).
 
 		{ MethodAtom, ArgumentList, CallerPid }
 				when is_pid( CallerPid ) and is_list( ArgumentList ) ->
@@ -366,4 +366,4 @@ wooper_main_loop( State ) ->
 	end.
 
 	% Commented out to preserve (presumably) tail-recursion:
-	% io:format( "wooper_main_loop exited.~n" ).
+	% trace_utils:trace( "wooper_main_loop exited." ).

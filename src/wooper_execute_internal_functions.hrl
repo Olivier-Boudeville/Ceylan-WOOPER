@@ -794,23 +794,31 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 
 		% This is the normal, most likely, expected case:
 		{ ExecState, wooper_method_returns_void } ->
+
+			%trace_utils:debug( "Normal oneway return." ),
+
 			% Just an additional checking that it was not changed
 			% (post-condition):
 			undefined = ExecState#state_holder.request_sender,
 			ExecState;
 
+
 		% This is a oneway/request mismatch apparently:
 		{ _OnewayState, { wooper_result, UnexpectedResult } } ->
 
-			wooper:log_error( "Error: method ~s:~s/~B, which was called with "
-				"parameters ~p, returned a result (~p) whereas, according to "
-				"its call, it was expected to be a oneway.~n"
-				"Either the oneway implementation is incorrect "
-				"or it is a request that has been incorrectly "
+			%trace_utils:error( "Incorrect, request-like oneway return." ),
+
+			Class = State#state_holder.actual_class,
+			Arity = length( ArgumentList ) + 1,
+
+			wooper:log_error( ": method ~s:~s/~B, which was called with "
+				"following parameters:~n~p~n returned a result (~p) whereas, "
+				"according to its call, it was expected to be a oneway.~n"
+				"So either the oneway implementation of ~s:~s/~B is incorrect, "
+				"or it is actually a request that has been incorrectly "
 				"called as a oneway.",
-				[ State#state_holder.actual_class, OnewayAtom,
-				  length( ArgumentList ) + 1, ArgumentList,
-				  UnexpectedResult ], State ),
+				[ Class, OnewayAtom, Arity, ArgumentList,
+				  UnexpectedResult, Class, OnewayAtom, Arity ], State ),
 
 			% No wooper_error can be returned (caller not known).
 

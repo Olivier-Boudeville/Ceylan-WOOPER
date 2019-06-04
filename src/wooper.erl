@@ -673,13 +673,27 @@ wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
 -spec wait_for_request_acknowledgements( basic_utils:count(), ack_atom() ) ->
 											   void().
 wait_for_request_acknowledgements( _Count=0, _AckAtom ) ->
+
+	%trace_utils:debug_fmt(
+	%  "[~w] No more waiting of the '~s' acknowledgement atom.",
+	%  [ self(), AckAtom ] ),
+
 	ok;
 
+
 wait_for_request_acknowledgements( Count, AckAtom ) ->
+
+	%trace_utils:debug_fmt( "[~w] Waiting for ~B '~s' acknowledgement atom(s).",
+	%						[ self(), Count, AckAtom ] ),
 
 	receive
 
 		{ wooper_result, AckAtom } ->
+
+			%trace_utils:debug_fmt(
+			%  "[~w] Received a '~s' acknowledgement atom.",
+			%  [ self(), AckAtom ] ),
+
 			wait_for_request_acknowledgements( Count-1, AckAtom )
 
 	end.
