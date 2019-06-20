@@ -77,7 +77,12 @@ construct( State, Name, Gender ) ->
 % Returns the name of this creature.
 -spec getName( wooper:state() ) -> const_request_return( name() ).
 getName( State ) ->
+
 	Name = ?getAttr(name),
+
+	%trace_utils:debug_fmt( "getName/1 request called by ~w.",
+	%					   [ ?getSender() ] ),
+
 	wooper:const_return_result( Name ).
 
 

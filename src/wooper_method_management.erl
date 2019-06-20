@@ -810,8 +810,8 @@ check_clause_spec( { type, Line, 'fun',
 									{atom,_,state},[] ] } ] },
 				   _FunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "the type specification of ~s/~B "
-		"is not expected to directly specify wooper:state() as a returned type. "
-		"Maybe oneway_return() or alike was meant instead?",
+		"is not expected to directly specify wooper:state() as a "
+		"returned type. Maybe oneway_return() or alike was meant instead?",
 		pair:to_list( FunId ), Classname, Line );
 
 % Presumably a result spec wrongly qualified as wooper:S instead of S:
@@ -1576,8 +1576,8 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 % Third, static methods:
 
 % First (correct) static method detection of void return:
-call_transformer( _LineCall,
-		  _FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static_void} },
+call_transformer( _LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
+											{atom,_,return_static_void} },
 		  _Params=[],
 		  Transforms=#ast_transforms{
 				transformed_function_identifier=FunId,

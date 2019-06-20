@@ -1460,6 +1460,30 @@ retrieve_virtual_table( Classname ) ->
 %
 -spec trigger_error( basic_utils:exception_class(), term(), classname(),
 		 [ method_arguments() ], code_utils:stack_trace() ) -> no_return().
+trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
+	   _Stacktrace=[
+			 _UndefCall={ ModuleName, FunctionName, UndefArgs, _Loc } | _ ] ) ->
+
+	% An undef error is difficult to investigate (multiple possible reasons
+	% behind), let's be nice to the developer:
+
+	UndefArity = length( UndefArgs ),
+
+	Diagnosis = code_utils:interpret_undef_exception( ModuleName, FunctionName,
+													  UndefArity ),
+
+	Arity = length( ConstructionParameters ) + 1,
+
+	log_error( "~nWOOPER error for PID ~w, "
+			   "constructor (~s:construct/~B) failed due to an 'undef' "
+			   "call to ~s:~s/~B; diagnosis: ~s.",
+			   [ self(), Classname, Arity, ModuleName, FunctionName,
+				 UndefArity, Diagnosis ] ),
+
+	throw( { wooper_constructor_failed, self(), Classname, Arity,
+			 { undef, { ModuleName, FunctionName, UndefArity } } } );
+
+
 trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
 			   Stacktrace ) ->
 
@@ -1768,23 +1792,23 @@ log_error( FormatString, ValueList, State )
   when is_record( State, state_holder ) ->
 	io:format( "~n", [] ),
 
-	% Node information distracting:
-	%log_error( "WOOPER error for ~s instance of PID ~w on node ~s"
+	% Node information would be uselessly distracting:
+	%log_error( "WOOPER error for ~s instance of PID ~w on node ~s: "
 	%		   ++ FormatString,
 	%		   [ State#state_holder.actual_class, self(),
 	%            node() | ValueList ] );
-	log_error( "WOOPER error for ~s instance of PID ~w"
+	log_error( "WOOPER error for ~s instance of PID ~w: "
 			   ++ FormatString,
 			   [ State#state_holder.actual_class, self() | ValueList ] );
 
 log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 	io:format( "~n", [] ),
-	% Node information distracting:
+	% Node information would be uselessly distracting:
 	%log_error( "WOOPER error for instance of PID ~w on node ~s triggered "
-	%		   "in module ~s" ++ FormatString,
+	%		   "in module ~s: " ++ FormatString,
 	%		   [ self(), ModuleName, node() | ValueList ] ).
 	log_error( "WOOPER error for instance of PID ~w triggered "
-			   "in module ~s" ++ FormatString,
+			   "in module ~s: " ++ FormatString,
 			   [ self(), ModuleName | ValueList ] ).
 
 
@@ -1804,10 +1828,10 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType, ErrorTerm,
 
 	ModulePrefix = lookup_method_prefix( RequestName, Arity, State ),
 
-	log_error( ": request ~s~s/~B failed (cause: ~s):~n~n"
+	log_error( "request ~s~s/~B failed (cause: ~s):~n~n"
 			   " - with error term:~n  ~p~n~n"
 			   " - stack trace was (latest calls first):~n~s~n"
-			   " - caller being process ~w~n"
+			   " - caller being process ~w~n~n"
 			   " - for request parameters:~n  ~p~n",
 			   [ ModulePrefix, RequestName, Arity, ErrorType, ErrorTerm,
 				 code_utils:interpret_stacktrace( Stacktrace ), CallerPid,
@@ -1815,11 +1839,15 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType, ErrorTerm,
 			   State ),
 
 	% ArgumentList and actual method module not propagated back to the caller:
-	%
 	ErrorReason = { request_failed, State#state_holder.actual_class,
 					self(), RequestName, { ErrorType, ErrorTerm } },
 
 	CallerPid ! { wooper_error, ErrorReason },
+
+	% Investigating a transient case where no message other than request_failed
+	% was output:
+	%
+	%timer:sleep( 1000 ),
 
 	% We do not want a duplicate error message, yet we cannot use 'normal' as
 	% linked processes would not be triggered:
@@ -1842,7 +1870,7 @@ on_failed_oneway( OnewayAtom, ArgumentList, ErrorType, ErrorTerm, Stacktrace,
 
 	ModulePrefix = lookup_method_prefix( OnewayAtom, Arity, State ),
 
-	log_error( ": oneway ~s~s/~B failed (cause: ~s):~n~n"
+	log_error( "oneway ~s~s/~B failed (cause: ~s):~n~n"
 			   " - with error term:~n  ~p~n~n"
 			   " - stack trace was (latest calls first):~n~s~n"
 			   " - for oneway parameters:~n  ~p~n",
