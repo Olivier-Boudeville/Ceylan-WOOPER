@@ -1710,7 +1710,7 @@ get_all_attributes( State ) ->
 
 
 
-% Declares automatically the relevent BEAM directories in the code path, so that
+% Declares automatically the relevant BEAM directories in the code path, so that
 % Ceylan-WOOPER can be fully usable from then on.
 %
 % Note:
