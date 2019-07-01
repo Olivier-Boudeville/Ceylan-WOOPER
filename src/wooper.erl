@@ -1718,6 +1718,9 @@ get_all_attributes( State ) ->
 % - the code_utils.beam module of Ceylan-Myriad must be available from the
 % current code path
 %
+% - the CEYLAN_MYRIAD and CEYLAN_WOOPER environment variables must be defined
+% and must point to the respective root directories
+%
 % - the determined directories are not specifically checked for existence,
 % and are added at the end of the code path.
 %
