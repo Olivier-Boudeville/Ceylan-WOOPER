@@ -2211,7 +2211,7 @@ delete_synchronously_instance( InstancePid ) ->
 % Deletes specified instances synchronously (yet in parallel).
 %
 % Will wait forever the effective termination of all instances (and will
-% regularly write a message on the console if waiting for too long) .
+% regularly write a message on the console if waiting for too long).
 %
 % (exported helper)
 %
