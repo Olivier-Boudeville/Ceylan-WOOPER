@@ -86,6 +86,10 @@
 -export([ get_all_attributes/1 ]).
 
 
+% Extra features:
+-export([ declare_beam_dirs_for_wooper/0 ]).
+
+
 
 % Traps to detect any method terminator that would be left untransformed:
 %
@@ -1703,6 +1707,24 @@ display_instance( State ) ->
 -spec get_all_attributes( wooper:state() ) -> [ attribute_entry() ].
 get_all_attributes( State ) ->
 	?wooper_table_type:enumerate( State#state_holder.attribute_table ).
+
+
+
+% Declares automatically the relevent BEAM directories in the code path, so that
+% Ceylan-WOOPER can be fully usable from then on.
+%
+% Note:
+%
+% - the code_utils.beam module of Ceylan-Myriad must be available from the
+% current code path
+%
+% - the determined directories are not specifically checked for existence,
+% and are added at the end of the code path.
+%
+-spec declare_beam_dirs_for_wooper() -> void().
+declare_beam_dirs_for_wooper() ->
+	code_utils:declare_beam_dirs_for_myriad(),
+	code_utils:declare_beam_dirs_for( "CEYLAN_WOOPER" ).
 
 
 
