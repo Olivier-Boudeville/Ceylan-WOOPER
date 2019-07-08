@@ -353,6 +353,8 @@
 %-include("wooper_classes_functions.hrl").
 
 
+% For myriad_spawn*:
+-include("spawn_utils.hrl").
 
 
 
@@ -863,7 +865,7 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 
 	end,
 
-	spawn_link( Node, WaitFun ).
+	?myriad_spawn_link( Node, WaitFun ).
 
 
 
@@ -1303,7 +1305,10 @@ get_class_manager() ->
 			?wooper_class_manager_name;
 
 		_ ->
-			spawn( ?wooper_class_manager_name, start, [ self() ] ),
+
+			% Not linking, at least for consistency with the previous case:
+			?myriad_spawn( ?wooper_class_manager_name, start, [ self() ] ),
+
 			% Only dealing with registered managers (instead of using directly
 			% their PID) allows to be sure only one instance (singleton) is
 			% being used, to avoid the case of two managers being launched at

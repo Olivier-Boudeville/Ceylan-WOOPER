@@ -50,6 +50,10 @@
 -type operator_table() :: wooper_parse_transform:operator_table().
 
 
+% For myriad_spawn*:
+-include("spawn_utils.hrl").
+
+
 
 % Extracts the constructors found in the specified function table, and
 % interprets them to enrich the specified class information.
@@ -223,7 +227,7 @@ manage_new_operators( _ConstructPairs=[ { Arity, FunInfo } | T ], FunctionTable,
 -spec add_v1_operators( wooper:classname(), arity(), ast_base:form_location(),
 			ast_base:form_location(), boolean(), operator_table() ) ->
 							  operator_table().
-add_v1_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
+add_v1_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
 	% Let's create from scratch the corresponding operator definition, export
@@ -261,6 +265,8 @@ add_v1_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 	%
 	HeaderParams = ast_generation:get_header_params( NewArity ),
 
+	SpawnExpr = get_spawn_expression_for( IsDebugMode, Line ),
+
 	% For the call to wooper:construct_and_run/2:
 	RunCall = get_run_call( Line ),
 
@@ -274,7 +280,7 @@ add_v1_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 				   ast_generation:enumerated_variables_to_form( NewArity ) ],
 
 	NewClause = { clause, Line, HeaderParams, [],
-				  [{ call, Line, {atom,Line,spawn},
+				  [{ call, Line, SpawnExpr,
 					 [ {'fun', Line,
 						{ clauses,
 						  [ { clause, Line,[],[],
@@ -323,8 +329,10 @@ add_v1_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 	%		  wooper:construct_and_run( class_Foo, [ A, B ] )
 	% end ).
 
+	SpawnLinkExpr = get_spawn_link_expression_for( IsDebugMode, Line ),
+
 	NewLinkClause = { clause, Line, HeaderParams, [],
-					  [{ call, Line, {atom,Line,spawn_link},
+					  [{ call, Line, SpawnLinkExpr,
 						 [ {'fun', Line,
 							{ clauses,
 							  [ { clause, Line,[],[],
@@ -362,7 +370,7 @@ add_v1_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 -spec add_v2_operators( wooper:classname(), arity(), ast_base:form_location(),
 			ast_base:form_location(), boolean(), operator_table() ) ->
 							  operator_table().
-add_v2_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
+add_v2_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
 	% Same strategy as add_v1_operators/5:
@@ -374,8 +382,6 @@ add_v2_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 
 	% Let's start with:
 	SyncNewName = synchronous_new,
-
-	SyncNewId = { SyncNewName, SyncNewArity },
 
 	Line = 0,
 
@@ -400,16 +406,19 @@ add_v2_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 	S1 = { match, Line, {var,Line,'CreatorPid'},
 		   { call, Line, {atom,Line,self}, [] } },
 
+	SpawnExpr = get_spawn_expression_for( IsDebugMode, Line ),
 
 	% For the call to wooper:construct_and_run_synchronous/2:
 	SyncRunCall = get_sync_run_call( Line ),
+
+	SyncNewId = { SyncNewName, SyncNewArity },
 
 	CallParams = [ {atom,Line,Classname},
 				   ast_generation:enumerated_variables_to_form( SyncNewArity ),
 				   {var,Line,'CreatorPid'} ],
 
 	S2 = { match, Line, {var,Line,'SpawnedPid'},
-		   { call, Line, {atom,Line,spawn},
+		   { call, Line, SpawnExpr,
 			[ {'fun',Line,
 			  { clauses,
 				[ {clause,Line,[],[],
@@ -447,12 +456,10 @@ add_v2_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 
 	% Next, roughly the same but with a link:
 
-	SyncNewLinkName = synchronous_new_link,
-
-	SyncNewLinkId = { SyncNewLinkName, SyncNewArity },
+	SpawnLinkExpr = get_spawn_link_expression_for( IsDebugMode, Line ),
 
 	S2Link = { match, Line, {var,Line,'SpawnedPid'},
-			   { call, Line, {atom,Line,spawn_link},
+			   { call, Line, SpawnLinkExpr,
 				 [ {'fun',Line,
 					{ clauses,
 					  [ {clause,Line,[],[],
@@ -460,6 +467,10 @@ add_v2_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 
 	SyncNewLinkClause = { clause, Line, HeaderParams, [],
 						  [ S1, S2Link, S3 ] },
+
+	SyncNewLinkName = synchronous_new_link,
+
+	SyncNewLinkId = { SyncNewLinkName, SyncNewArity },
 
 	SyncNewLinkSpecForm = { attribute, Line, spec, { SyncNewLinkId,
 	   [ { type, Line, 'fun',
@@ -535,6 +546,8 @@ add_v3_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 		   { call, Line, {atom,Line,self}, [] } },
 
 
+	SpawnExpr = get_spawn_expression_for( IsDebugMode, Line ),
+
 	% For the call to wooper:construct_and_run_synchronous/2:
 	SyncRunCall = get_sync_run_call( Line ),
 
@@ -543,7 +556,7 @@ add_v3_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				   {var,Line,'CreatorPid'} ],
 
 	S2 = { match, Line, {var,Line,'SpawnedPid'},
-		   { call, Line, {atom,Line,spawn},
+		   { call, Line, SpawnExpr,
 			 [ {'fun', Line,
 				{ clauses,
 				  [ { clause,Line,[],[],
@@ -582,16 +595,18 @@ add_v3_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 
 	OpNewLinkName = synchronous_timed_new_link,
 
-	OpNewLinkId = { OpNewLinkName, OpArity },
+	SpawnLinkExpr = get_spawn_link_expression_for( IsDebugMode, Line ),
 
 	S2Link = { match, Line, {var,Line,'SpawnedPid'},
-			   { call, Line, {atom,Line,spawn_link},
+			   { call, Line, SpawnLinkExpr,
 				 [ {'fun',Line,
 					{ clauses,
 					  [ {clause,Line,[],[],
 						 [ {call,Line,SyncRunCall,CallParams } ] } ] } } ] } },
 
 	OpNewLinkClause = { clause, Line, HeaderParams, [], [ S1, S2Link, S3 ] },
+
+	OpNewLinkId = { OpNewLinkName, OpArity },
 
 	OpLinkSpecForm = { attribute, Line, spec, { OpNewLinkId,
 	   [ { type, Line, 'fun',
@@ -620,7 +635,7 @@ add_v3_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 -spec add_v4_operators( wooper:classname(), arity(), ast_base:form_location(),
 			ast_base:form_location(), boolean(), operator_table() ) ->
 							  operator_table().
-add_v4_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
+add_v4_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
 	% Overall arity (with node()):
@@ -651,13 +666,15 @@ add_v4_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 	HeaderParams =
 		[ {var,Line,'Node'} | ast_generation:get_header_params( ArgArity ) ],
 
+	SpawnExpr = get_spawn_expression_for( IsDebugMode, Line ),
+
 	RunCall = get_run_call( Line ),
 
 	CallParams = [ {atom,Line,Classname},
 				   ast_generation:enumerated_variables_to_form( ArgArity ) ],
 
 	OpNewClause = { clause, Line, HeaderParams, [],
-					[{ call, Line, {atom,Line,spawn},
+					[{ call, Line, SpawnExpr,
 					   [ {var,Line,'Node'},
 						 {'fun', Line,
 						  { clauses,
@@ -701,10 +718,10 @@ add_v4_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 
 	OpNewLinkName = remote_new_link,
 
-	OpNewLinkId = { OpNewLinkName, OpArity },
+	SpawnLinkExpr = get_spawn_link_expression_for( IsDebugMode, Line ),
 
 	OpNewLinkClause = { clause, Line, HeaderParams, [],
-					[{ call, Line, {atom,Line,spawn_link},
+					[{ call, Line, SpawnLinkExpr,
 					   [ {var,Line,'Node'},
 						 {'fun', Line,
 						  { clauses,
@@ -713,6 +730,8 @@ add_v4_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 							  }]
 						  }}]
 					 }]},
+
+	OpNewLinkId = { OpNewLinkName, OpArity },
 
 	OpLinkSpecForm = { attribute, Line, spec, { OpNewLinkId,
 	   [ { type, Line, 'fun',
@@ -743,7 +762,7 @@ add_v4_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 -spec add_v5_operators( wooper:classname(), arity(), ast_base:form_location(),
 			ast_base:form_location(), boolean(), operator_table() ) ->
 							  operator_table().
-add_v5_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
+add_v5_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
 	% Overall arity (with node()):
@@ -781,6 +800,8 @@ add_v5_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 	S1 = { match, Line, {var,Line,'CreatorPid'},
 		   { call, Line, {atom,Line,self}, [] } },
 
+	SpawnExpr = get_spawn_expression_for( IsDebugMode, Line ),
+
 	SyncRunCall = get_sync_run_call( Line ),
 
 	CallParams = [ {atom,Line,Classname},
@@ -788,7 +809,7 @@ add_v5_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 				   {var,Line,'CreatorPid'} ],
 
 	S2 = { match, Line, {var,Line,'SpawnedPid'},
-		   { call, Line, {atom,Line,spawn},
+		   { call, Line, SpawnExpr,
 			 [ {var,Line,'Node'},
 			   {'fun', Line,
 				{ clauses,
@@ -840,10 +861,10 @@ add_v5_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 
 	OpNewLinkName = remote_synchronous_new_link,
 
-	OpNewLinkId = { OpNewLinkName, OpArity },
+	SpawnLinkExpr = get_spawn_link_expression_for( IsDebugMode, Line ),
 
 	S2Link = { match, Line, {var,Line,'SpawnedPid'},
-			   { call, Line, {atom,Line,spawn_link},
+			   { call, Line, SpawnLinkExpr,
 				 [ {var,Line,'Node'},
 				   {'fun', Line,
 					{ clauses,
@@ -853,6 +874,8 @@ add_v5_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 						  ] } ] } } ] } },
 
 	OpNewLinkClause = { clause, Line, HeaderParams, [], [ S1, S2Link, S3 ] },
+
+	OpNewLinkId = { OpNewLinkName, OpArity },
 
 
 	OpLinkSpecForm = { attribute, Line, spec, { OpNewLinkId,
@@ -884,7 +907,7 @@ add_v5_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 -spec add_v6_operators( wooper:classname(), arity(), ast_base:form_location(),
 			ast_base:form_location(), boolean(), operator_table() ) ->
 							  operator_table().
-add_v6_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
+add_v6_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
 	% Overall arity (with node()):
@@ -918,13 +941,15 @@ add_v6_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 	S1 = { match, Line, {var,Line,'CreatorPid'},
 		   { call, Line, {atom,Line,self}, [] } },
 
+	SpawnExpr = get_spawn_expression_for( IsDebugMode, Line ),
+
 	SyncRunCall = get_sync_run_call( Line ),
 
 	CallParams = [ {atom,Line,Classname},
 				   ast_generation:enumerated_variables_to_form( ArgArity ),
 				   {var,Line,'CreatorPid'} ],
 
-	S2 = { call, Line, {atom,Line,spawn},
+	S2 = { call, Line, SpawnExpr,
 			 [ {var,Line,'Node'},
 			   {'fun', Line,
 				{ clauses,
@@ -971,11 +996,11 @@ add_v6_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 
 	% Next, roughly the same but with a link:
 
+	SpawnLinkExpr = get_spawn_link_expression_for( IsDebugMode, Line ),
+
 	OpNewLinkName = remote_synchronisable_new_link,
 
-	OpNewLinkId = { OpNewLinkName, OpArity },
-
-	S2Link = { call, Line, {atom,Line,spawn_link},
+	S2Link = { call, Line, SpawnLinkExpr,
 				 [ {var,Line,'Node'},
 				   {'fun', Line,
 					{ clauses,
@@ -986,6 +1011,7 @@ add_v6_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 
 	OpNewLinkClause = { clause, Line, HeaderParams, [], [ S1, S2Link ] },
 
+	OpNewLinkId = { OpNewLinkName, OpArity },
 
 	OpLinkSpecForm = { attribute, Line, spec, { OpNewLinkId,
 	   [ { type, Line, 'fun',
@@ -1055,6 +1081,8 @@ add_v7_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 	S1 = { match, Line, {var,Line,'CreatorPid'},
 		   { call, Line, {atom,Line,self}, [] } },
 
+	SpawnExpr = get_spawn_expression_for( IsDebugMode, Line ),
+
 	SyncRunCall = get_sync_run_call( Line ),
 
 	CallParams = [ {atom,Line,Classname},
@@ -1062,7 +1090,7 @@ add_v7_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				   {var,Line,'CreatorPid'} ],
 
 	S2 = { match, Line, {var,Line,'SpawnedPid'},
-		   { call, Line, {atom,Line,spawn},
+		   { call, Line, SpawnExpr,
 			 [ {var,Line,'Node'},
 			   {'fun', Line,
 				{ clauses,
@@ -1113,10 +1141,10 @@ add_v7_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 
 	OpNewLinkName = remote_synchronous_timed_new_link,
 
-	OpNewLinkId = { OpNewLinkName, OpArity },
+	SpawnLinkExpr = get_spawn_link_expression_for( IsDebugMode, Line ),
 
 	S2Link = { match, Line, {var,Line,'SpawnedPid'},
-			   { call, Line, {atom,Line,spawn_link},
+			   { call, Line, SpawnLinkExpr,
 				 [ {var,Line,'Node'},
 				   {'fun', Line,
 					{ clauses,
@@ -1127,6 +1155,7 @@ add_v7_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 
 	OpNewLinkClause = { clause, Line, HeaderParams, [], [ S1, S2Link, S3 ] },
 
+	OpNewLinkId = { OpNewLinkName, OpArity },
 
 	OpLinkSpecForm = { attribute, Line, spec, { OpNewLinkId,
 	   [ { type, Line, 'fun',
@@ -1218,13 +1247,11 @@ add_v8_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 
 
 % Returns the form element corresponding to pid().
-%
 forge_pid_type() ->
 	ast_type:forge_pid_type().
 
 
 % Returns the form element corresponding to net_utils:atom_node_name().
-%
 forge_node_type( Line ) ->
 	% Corresponds to node():
 	ast_type:forge_remote_type( _ModuleName=net_utils, _TypeName=atom_node_name,
@@ -1232,7 +1259,6 @@ forge_node_type( Line ) ->
 
 
 % Returns the form element corresponding to wooper:passive_instance().
-%
 forge_passive_instance_type( Line ) ->
 	ast_type:forge_remote_type( _ModuleName=wooper, _TypeName=passive_instance,
 								_TypeVars=[], Line ).
@@ -1240,7 +1266,6 @@ forge_passive_instance_type( Line ) ->
 
 
 % Returns the form element corresponding to wooper:construct_and_run/2.
-%
 -spec get_run_call( line() ) -> form_element().
 get_run_call( Line ) ->
 	{ remote, Line, {atom,Line,wooper}, {atom,Line,construct_and_run} }.
@@ -1347,3 +1372,41 @@ get_construction_types( Count, Line ) ->
 	Type = { remote_type, Line, [ {atom,Line,wooper},
 								  {atom,Line,construction_parameter}, [] ] },
 	lists:duplicate( Count, Type ).
+
+
+
+% Returns the spawn expression corresponding to the execution mode (target is
+% either development or production, resulting in debug mode being activated or
+% not).
+%
+% Corresponds to Myriad's spawn_utils.hrl (the myriad_spawn* macros).
+%
+-spec get_spawn_expression_for( boolean(), line() ) -> form_element().
+get_spawn_expression_for( _IsDebugMode=true, Line ) ->
+
+	% To test:
+	%{ remote, Line, { atom, Line, non_existing }, { atom, Line, spawn } };
+
+	{ remote, Line, { atom, Line, proc_lib }, { atom, Line, spawn } };
+
+get_spawn_expression_for( _IsDebugMode=false, Line ) ->
+	{ atom, Line, spawn }.
+
+
+
+% Returns the spawn_link expression corresponding to the execution mode (target
+% is either development or production, resulting in debug mode being activated
+% or not).
+%
+% Corresponds to Myriad's spawn_utils.hrl (the myriad_spawn* macros).
+%
+-spec get_spawn_link_expression_for( boolean(), line() ) -> form_element().
+get_spawn_link_expression_for( _IsDebugMode=true, Line ) ->
+
+	% To test:
+	%{ remote, Line, { atom, Line, non_existing }, { atom, Line, spawn_link } };
+
+	{ remote, Line, { atom, Line, proc_lib }, { atom, Line, spawn_link } };
+
+get_spawn_link_expression_for( _IsDebugMode=false, Line ) ->
+	{ atom, Line, spawn_link }.

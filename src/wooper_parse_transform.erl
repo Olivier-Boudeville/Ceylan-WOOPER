@@ -369,6 +369,9 @@ create_class_info_from(
 							errors=Errors,
 							unhandled_forms=UnhandledForms } ) ->
 
+	% TO-DO: check for debug_info being defined either in parse_attributes or in
+	% the command-line, and set module_info.debug_mode accordingly.
+
 	BlankClassInfo = wooper_info:init_class_info(),
 
 	% For a starting basis, let's init first all the fields that we do not plan

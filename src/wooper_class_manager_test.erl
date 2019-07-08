@@ -27,7 +27,7 @@
 
 % Unit tests for the WOOPER class manager implementation.
 % See the wooper_class_manager.erl tested module.
-
+%
 -module(wooper_class_manager_test).
 
 
@@ -37,6 +37,9 @@
 % For wooper_class_manager_name:
 -include("wooper_class_manager.hrl").
 
+
+% For myriad_spawn*:
+-include("spawn_utils.hrl").
 
 
 -spec run() -> no_return().
@@ -48,7 +51,8 @@ run() ->
 
 	test_facilities:display( "Spawning module ~s.", [ TestedModule ] ),
 
-	spawn( TestedModule, start, [self()] ),
+	?myriad_spawn_link( TestedModule, start, [ self() ] ),
+
 	receive
 
 		class_manager_registered ->
