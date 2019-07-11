@@ -61,6 +61,9 @@
 -include("wooper_serialisation_exports.hrl").
 
 
+% For myriad_spawn*:
+-include("spawn_utils.hrl").
+
 
 % Instance loading:
 -export([ load/1, load/3, load_link/1, load_link/3,
@@ -168,7 +171,7 @@
 % Creation is asynchronous: this function returns as soon as the creation is
 % triggered, without waiting for it to complete.
 %
--spec load( bin_serialisation() ) -> pid().
+-spec load( bin_serialisation() ) -> instance_pid().
 load( BinSerialisation ) ->
 	load( BinSerialisation, _EntryTransformer=undefined, _UserData=undefined ).
 
@@ -182,13 +185,14 @@ load( BinSerialisation ) ->
 % Creation is asynchronous: this function returns as soon as the creation is
 % triggered, without waiting for it to complete.
 %
--spec load( bin_serialisation(), entry_transformer(), basic_utils:user_data() )
-		  -> pid().
+-spec load( bin_serialisation(), entry_transformer(),
+			basic_utils:user_data() ) -> instance_pid().
 load( BinSerialisation, EntryTransformer, UserData ) ->
 
-	spawn( fun() -> deserialise( BinSerialisation, EntryTransformer,
-								 UserData, _ListenerPid=undefined )
-		   end ).
+	?myriad_spawn( fun() ->
+						   deserialise( BinSerialisation, EntryTransformer,
+										UserData, _ListenerPid=undefined )
+				   end ).
 
 
 
@@ -200,7 +204,7 @@ load( BinSerialisation, EntryTransformer, UserData ) ->
 % Creation is asynchronous: this function returns as soon as the creation is
 % triggered, without waiting for it to complete.
 %
--spec load_link( bin_serialisation() ) -> pid().
+-spec load_link( bin_serialisation() ) -> instance_pid().
 load_link( BinSerialisation ) ->
 	load_link( BinSerialisation, _EntryTransformer=undefined,
 			   _UserData=undefined ).
@@ -217,11 +221,12 @@ load_link( BinSerialisation ) ->
 % triggered, without waiting for it to complete.
 %
 -spec load_link( bin_serialisation(), entry_transformer(),
-				 basic_utils:user_data() ) -> pid().
+				 basic_utils:user_data() ) -> instance_pid().
 load_link( BinSerialisation, EntryTransformer, UserData ) ->
-	spawn_link( fun() -> deserialise( BinSerialisation, EntryTransformer,
-									  UserData, _ListenerPid=undefined )
-				end ).
+	?myriad_spawn_link( fun() ->
+								deserialise( BinSerialisation, EntryTransformer,
+											 UserData, _ListenerPid=undefined )
+						end ).
 
 
 
@@ -233,7 +238,7 @@ load_link( BinSerialisation, EntryTransformer, UserData ) ->
 % Creation is synchronous: the call will return only when the created process
 % reports that it is up and running.
 %
--spec synchronous_load( bin_serialisation() ) -> pid().
+-spec synchronous_load( bin_serialisation() ) -> instance_pid().
 synchronous_load( BinSerialisation ) ->
 	synchronous_load( BinSerialisation, _EntryTransformer=undefined,
 					  _UserData=undefined ).
@@ -249,14 +254,15 @@ synchronous_load( BinSerialisation ) ->
 % reports that it is up and running.
 %
 -spec synchronous_load( bin_serialisation(), entry_transformer(),
-						basic_utils:user_data() ) -> pid().
+						basic_utils:user_data() ) -> instance_pid().
 synchronous_load( BinSerialisation, EntryTransformer, UserData ) ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = spawn( fun() -> deserialise( BinSerialisation,
-						  EntryTransformer, UserData, _ListenerPid=CreatorPid )
-						end ),
+	SpawnedPid = ?myriad_spawn( fun() ->
+					deserialise( BinSerialisation, EntryTransformer, UserData,
+								 _ListenerPid=CreatorPid )
+								end ),
 
 	% Blocks until the spawned process answers:
 	receive
@@ -277,7 +283,7 @@ synchronous_load( BinSerialisation, EntryTransformer, UserData ) ->
 % Creation is synchronous: the call will return only when the created process
 % reports that it is up and running.
 %
--spec synchronous_load_link( bin_serialisation() ) -> pid().
+-spec synchronous_load_link( bin_serialisation() ) -> instance_pid().
 synchronous_load_link( BinSerialisation ) ->
 	synchronous_load_link( BinSerialisation, _EntryTransformer=undefined,
 						   _UserData=undefined ).
@@ -294,14 +300,15 @@ synchronous_load_link( BinSerialisation ) ->
 % reports that it is up and running.
 %
 -spec synchronous_load_link( bin_serialisation(), entry_transformer(),
-				 basic_utils:user_data() ) -> pid().
+				 basic_utils:user_data() ) -> instance_pid().
 synchronous_load_link( BinSerialisation, EntryTransformer, UserData ) ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = spawn_link( fun() -> deserialise( BinSerialisation,
-					   EntryTransformer, UserData, _ListenerPid=CreatorPid )
-							end ),
+	SpawnedPid = ?myriad_spawn_link( fun() ->
+							deserialise( BinSerialisation, EntryTransformer,
+										 UserData, _ListenerPid=CreatorPid )
+									 end ),
 
 	% Blocks until the spawned process answers:
 	receive
@@ -339,7 +346,7 @@ synchronous_load_link( BinSerialisation, EntryTransformer, UserData ) ->
 % creations in parallel, by waiting bulks of creations.
 %
 -spec remote_synchronisable_load_link( net_utils:node_name(),
-									   bin_serialisation() ) -> pid().
+									   bin_serialisation() ) -> instance_pid().
 remote_synchronisable_load_link( Node, BinSerialisation ) ->
 	remote_synchronisable_load_link( Node, BinSerialisation,
 					_EntryTransformer=undefined, _UserData=undefined ).
@@ -357,15 +364,17 @@ remote_synchronisable_load_link( Node, BinSerialisation ) ->
 % creations in parallel, by waiting bulks of creations.
 %
 -spec remote_synchronisable_load_link( net_utils:node_name(),
-   bin_serialisation(), entry_transformer(), basic_utils:user_data() ) -> pid().
+   bin_serialisation(), entry_transformer(), basic_utils:user_data() ) ->
+											 instance_pid().
 remote_synchronisable_load_link( Node, BinSerialisation, EntryTransformer,
 								 UserData ) ->
 
 	CreatorPid = self(),
 
-	spawn_link( Node,
-			fun() -> deserialise( BinSerialisation, EntryTransformer,
-								  UserData, _ListenerPid=CreatorPid )
+	?myriad_spawn_link( Node,
+			fun() ->
+					deserialise( BinSerialisation, EntryTransformer, UserData,
+								 _ListenerPid=CreatorPid )
 			end ).
 
 
@@ -381,7 +390,7 @@ remote_synchronisable_load_link( Node, BinSerialisation, EntryTransformer,
 % reports that it is up and running.
 %
 -spec remote_synchronous_timed_load_link( net_utils:node_name(),
-		   bin_serialisation() ) -> pid().
+							  bin_serialisation() ) -> instance_pid().
 remote_synchronous_timed_load_link( Node, BinSerialisation ) ->
 	remote_synchronous_timed_load_link( Node, BinSerialisation,
 			_EntryTransformer=undefined, _UserData=undefined ).
@@ -399,15 +408,17 @@ remote_synchronous_timed_load_link( Node, BinSerialisation ) ->
 % reports that it is up and running.
 %
 -spec remote_synchronous_timed_load_link( net_utils:node_name(),
-   bin_serialisation(), entry_transformer(), basic_utils:user_data() ) -> pid().
+   bin_serialisation(), entry_transformer(), basic_utils:user_data() ) ->
+												instance_pid().
 remote_synchronous_timed_load_link( Node, BinSerialisation, EntryTransformer,
 									UserData ) ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = spawn_link( Node,
-			fun() -> deserialise( BinSerialisation, EntryTransformer,
-								  UserData, _ListenerPid=CreatorPid )
+	SpawnedPid = ?myriad_spawn_link( Node,
+			fun() ->
+					deserialise( BinSerialisation, EntryTransformer,
+								 UserData, _ListenerPid=CreatorPid )
 			end ),
 
 	% Blocks until the spawned process answers or a time-out occurs:
@@ -452,8 +463,8 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 	{ Classname, SerialisedEntries } = binary_to_term( BinSerialisation ),
 
 	% First we extract the WOOPER extra information:
-	{ RandomState, OtherEntries } = option_list:extract( wooper_random_state,
-														 SerialisedEntries ),
+	{ RandomState, OtherEntries } =
+		option_list:extract( wooper_random_state, SerialisedEntries ),
 
 	HookedEntries =
 		pre_deserialise_hook( { Classname, OtherEntries }, UserData ),
@@ -515,22 +526,16 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 
 	end,
 
-	ForgedState = #state_holder{
-
-		virtual_table=VirtualTable,
-
-		attribute_table=OptimisedAttributeTable,
-
-		actual_class=Classname,
-
-		request_sender=undefined },
+	ForgedState = #state_holder{ virtual_table=VirtualTable,
+								 attribute_table=OptimisedAttributeTable,
+								 actual_class=Classname,
+								 request_sender=undefined },
 
 
 	% We could check here that no serialisation marker remains, with a specific
 	% entry transformer and list_restoration_markers/0.
 
 	FinalState = post_deserialise_hook( ForgedState ),
-
 
 	% That's as simple as that!
 
@@ -562,8 +567,10 @@ handle_private_processes( PrivateAttributeNames, State ) ->
 					undefined;
 
 				Pid when is_pid( Pid ) ->
+
 					% We just hide these PIDs on the serialised form: after
 					% serialisation the live state will still reference them.
+					%
 					?process_restoration_marker
 
 			end,
@@ -571,11 +578,9 @@ handle_private_processes( PrivateAttributeNames, State ) ->
 			setAttribute( AccState, PrivateAttrName, NewValue )
 
 
-				end,
-
-				_Acc0=State,
-
-				_List=PrivateAttributeNames ).
+				 end,
+				 _Acc0=State,
+				 _List=PrivateAttributeNames ).
 
 
 
@@ -615,9 +620,7 @@ mute_attributes( AttributeNameList, State ) ->
 					end
 
 				 end,
-
 				 _Acc0=State,
-
 				_List=AttributeNameList ).
 
 
@@ -629,8 +632,7 @@ mute_attributes( AttributeNameList, State ) ->
 %
 -spec check_attributes_equal( [ attribute_name() ], [ attribute_entry() ],
 							  wooper:state() ) -> void().
-check_attributes_equal( _AttributeNames=[], _AttributeEntries,
-							  _State ) ->
+check_attributes_equal( _AttributeNames=[], _AttributeEntries, _State ) ->
 	ok;
 
 check_attributes_equal( _AttributeNames=[ AttributeName | T ], AttributeEntries,
@@ -665,8 +667,8 @@ replace_attribute( AttributeName, AttributeEntries, State ) ->
 
 		true ->
 
-			{ ToSetValue, RemainingEntries } = option_list:extract(
-								 _K=AttributeName, AttributeEntries ),
+			{ ToSetValue, RemainingEntries } =
+				option_list:extract( _K=AttributeName, AttributeEntries ),
 
 			NewState = setAttribute( State, AttributeName, ToSetValue ),
 
@@ -690,12 +692,10 @@ replace_attribute( AttributeName, AttributeEntries, State ) ->
 replace_attributes( AttributeNames, AttributeEntries, State ) ->
 
 	lists:foldl( fun( AttrName, { AccEntries, AccState } ) ->
-					replace_attribute( AttrName, AccEntries, AccState )
-			end,
-
-			_Acc0={ AttributeEntries, State },
-
-			_List=AttributeNames ).
+						 replace_attribute( AttrName, AccEntries, AccState )
+				 end,
+				 _Acc0={ AttributeEntries, State },
+				 _List=AttributeNames ).
 
 
 
@@ -709,8 +709,8 @@ replace_attributes( AttributeNames, AttributeEntries, State ) ->
 			wooper:state() ) -> { [ attribute_entry() ], wooper:state() }.
 merge_list_for( AttributeName, AttributeEntries, State ) ->
 
-	{ ToMergeValue, RemainingEntries } = option_list:extract( _K=AttributeName,
-										AttributeEntries ),
+	{ ToMergeValue, RemainingEntries } =
+		option_list:extract( _K=AttributeName, AttributeEntries ),
 
 	InitialValue = ?getAttr(AttributeName),
 
@@ -720,7 +720,6 @@ merge_list_for( AttributeName, AttributeEntries, State ) ->
 			InitialValue ++ PlainList;
 
 		% We suppose it is a set (that cannot match a list)
-		%
 		Set ->
 			set_utils:union( InitialValue, Set )
 
@@ -743,13 +742,10 @@ merge_list_for( AttributeName, AttributeEntries, State ) ->
 merge_lists_for( AttributeNames, AttributeEntries, State ) ->
 
 	lists:foldl(
-
 			fun( AttrName, { AccEntries, AccState } ) ->
 					merge_list_for( AttrName, AccEntries, AccState )
 			end,
-
 			_Acc0={ AttributeEntries, State },
-
 			_List=AttributeNames ).
 
 
