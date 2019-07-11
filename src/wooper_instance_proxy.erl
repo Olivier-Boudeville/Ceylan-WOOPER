@@ -26,7 +26,6 @@
 
 
 % Module to create WOOPER instance proxies.
-%
 -module(wooper_instance_proxy).
 
 
@@ -44,23 +43,35 @@
 -export([ start/1, start_link/1 ]).
 
 
--spec start( pid() ) -> pid().
+% Shorthand:
+-type instance_pid() :: wooper:instance_pid().
+
+
+% For myriad_spawn*:
+-include("spawn_utils.hrl").
+
+
+-spec start( instance_pid() ) -> instance_pid().
 start( TargetInstancePid ) ->
 
-	io:format( "Starting proxy for WOOPER instance ~w.~n",
-			   [ TargetInstancePid ] ),
+	trace_utils:info_fmt( "Starting proxy for WOOPER instance ~w.",
+						  [ TargetInstancePid ] ),
 
-	spawn( fun() -> proxy_main_loop( TargetInstancePid ) end ).
+	?myriad_spawn( fun() ->
+						   proxy_main_loop( TargetInstancePid )
+				   end ).
 
 
 
 -spec start_link( pid() ) -> pid().
 start_link( TargetInstancePid ) ->
 
-	io:format( "Starting linked proxy for WOOPER instance ~w.~n",
-			   [ TargetInstancePid ] ),
+	trace_utils:info_fmt( "Starting linked proxy for WOOPER instance ~w.",
+						  [ TargetInstancePid ] ),
 
-	spawn_link( fun() -> proxy_main_loop( TargetInstancePid ) end ).
+	?myriad_spawn_link( fun() ->
+								proxy_main_loop( TargetInstancePid )
+						end ).
 
 
 
@@ -68,26 +79,26 @@ start_link( TargetInstancePid ) ->
 % Starts a proxy for specified WOOPER instance, designated by specified PID.
 proxy_main_loop( TargetInstancePid ) ->
 
-	io:format( "Proxy ~w waiting for a call to WOOPER target instance ~w.~n",
-			   [ self(), TargetInstancePid ] ),
+	trace_utils:debug_fmt(
+	  "Proxy ~w waiting for a call to WOOPER target instance ~w.",
+	  [ self(), TargetInstancePid ] ),
 
 
 	% This proxy is expected to receive either requests or oneways:
-	%
 	receive
 
 		{ RequestName, Args, SenderPid } ->
 
-			io:format( "Proxy ~w processing request ~p.~n",
-					   [ self(), { RequestName, Args, SenderPid } ] ),
+			trace_utils:debug_fmt( "Proxy ~w processing request ~p.",
+						   [ self(), { RequestName, Args, SenderPid } ] ),
 
 			TargetInstancePid ! { RequestName, Args, self() },
 			receive
 
 				R ->
 
-					io:format( "Proxy ~w returning ~p to caller ~w.~n",
-					  [ self(), R, SenderPid ] ),
+					trace_utils:debug_fmt( "Proxy ~w returning ~p to caller ~w.",
+										   [ self(), R, SenderPid ] ),
 
 					SenderPid ! R
 
@@ -97,8 +108,8 @@ proxy_main_loop( TargetInstancePid ) ->
 
 		{ OnewayName, Args } ->
 
-			io:format( "Proxy ~w processing oneway ~p.~n",
-					   [ self(), { OnewayName, Args } ] ),
+			trace_utils:debug_fmt( "Proxy ~w processing oneway ~p.",
+								   [ self(), { OnewayName, Args } ] ),
 
 			TargetInstancePid ! { OnewayName, Args },
 
@@ -107,8 +118,9 @@ proxy_main_loop( TargetInstancePid ) ->
 
 		delete ->
 
-			io:format( "Deleting proxy ~w for WOOPER target instance ~w.~n",
-					   [ self(), TargetInstancePid ] ),
+			trace_utils:debug_fmt(
+			  "Deleting proxy ~w for WOOPER target instance ~w.",
+			  [ self(), TargetInstancePid ] ),
 
 			% No looping here:
 			TargetInstancePid ! delete;
@@ -116,8 +128,8 @@ proxy_main_loop( TargetInstancePid ) ->
 
 		OnewayName when is_atom( OnewayName ) ->
 
-			io:format( "Proxy ~w processing oneway ~p.~n",
-					   [ self(), OnewayName ] ),
+			trace_utils:debug_fmt( "Proxy ~w processing oneway ~p.",
+								   [ self(), OnewayName ] ),
 
 			TargetInstancePid ! OnewayName,
 			proxy_main_loop( TargetInstancePid );
@@ -125,9 +137,9 @@ proxy_main_loop( TargetInstancePid ) ->
 
 		Other ->
 
-			io:format( "Warning: WOOPER instance proxy (~w) for ~w ignored "
-					   "following message: ~p.~n",
-					   [ self(), TargetInstancePid, Other ] ),
+			trace_utils:debug_fmt(
+			  "Warning: WOOPER instance proxy (~w) for ~w ignored "
+			  "following message: ~p.", [ self(), TargetInstancePid, Other ] ),
 
 			proxy_main_loop( TargetInstancePid )
 
