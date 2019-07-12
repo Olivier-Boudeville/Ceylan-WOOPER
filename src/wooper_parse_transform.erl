@@ -128,7 +128,7 @@
 
 
 -export([ run_standalone/1, run_standalone/2,
-		  parse_transform/2, apply_wooper_transform/1,
+		  parse_transform/2, apply_wooper_transform/2,
 		  generate_class_info_from/1, create_class_info_from/1,
 		  check_class_info/1, generate_module_info_from/1 ]).
 
@@ -204,7 +204,7 @@ run_standalone( FileToTransform, PreprocessorOptions ) ->
 	InputAST = ast_utils:erl_to_ast( FileToTransform, PreprocessorOptions ),
 
 	% Returns { WOOPERAST, ClassInfo }:
-	apply_wooper_transform( InputAST ).
+	apply_wooper_transform( InputAST, _Options=[] ).
 
 
 
@@ -212,8 +212,8 @@ run_standalone( FileToTransform, PreprocessorOptions ) ->
 % Format code first into a Myriad-based information being itself converted in
 % turn into an Erlang-compliant Abstract Format code.
 %
--spec parse_transform( ast(), list() ) -> ast().
-parse_transform( InputAST, _Options ) ->
+-spec parse_transform( ast(), meta_utils:parse_transform_options() ) -> ast().
+parse_transform( InputAST, Options ) ->
 
 	%trace_utils:trace_fmt( "WOOPER input AST:~n~p~n", [ InputAST ] ),
 
@@ -224,7 +224,7 @@ parse_transform( InputAST, _Options ) ->
 	% In the context of this direct parse transform, the class_info is of no
 	% use afterwards and thus can be dropped:
 	%
-	{ WOOPERAST, _ClassInfo } = apply_wooper_transform( InputAST ),
+	{ WOOPERAST, _ClassInfo } = apply_wooper_transform( InputAST, Options ),
 
 	%trace_utils:trace_fmt( "WOOPER output AST:~n~p~n", [ WOOPERAST ] ),
 
@@ -235,8 +235,9 @@ parse_transform( InputAST, _Options ) ->
 
 
 % Transforms specified AST for WOOPER.
--spec apply_wooper_transform( ast() ) -> { ast(), class_info() }.
-apply_wooper_transform( InputAST ) ->
+-spec apply_wooper_transform( ast(), meta_utils:parse_transform_options() ) ->
+									{ ast(), class_info() }.
+apply_wooper_transform( InputAST, Options ) ->
 
 	%trace_utils:debug_fmt( "  (applying parse transform '~p')", [ ?MODULE ] ),
 
@@ -257,15 +258,17 @@ apply_wooper_transform( InputAST ) ->
 	%
 	InputModuleInfo = ast_info:extract_module_info_from_ast( InputAST ),
 
+	WithOptsModuleInfo = ast_info:interpret_options( Options, InputModuleInfo ),
+
 	?display_trace( "Module information extracted." ),
 
 	%ast_utils:display_debug( "Module information, directly as obtained "
-	%				"from Myriad (untransformed): ~s",
-	%				[ ast_info:module_info_to_string( InputModuleInfo ) ] ),
+	%				"from Myriad and command-line options: ~s",
+	%				[ ast_info:module_info_to_string( WithOptsModuleInfo ) ] ),
 
 	% Then promote this Myriad-level information into a WOOPER one:
 	% (here is the real WOOPER magic)
-	ClassInfo = generate_class_info_from( InputModuleInfo ),
+	ClassInfo = generate_class_info_from( WithOptsModuleInfo ),
 
 	?display_trace( "Class information generated, transforming it." ),
 
