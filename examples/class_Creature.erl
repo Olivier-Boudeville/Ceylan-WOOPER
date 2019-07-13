@@ -139,7 +139,7 @@ testSingleExecution( State ) ->
 -spec side_effect_function( wooper:state() ) -> wooper:state().
 side_effect_function( State ) ->
 	trace_utils:warning(
-	  "### This message must not be displayed more than once." ),
+	  "### This message must be displayed exactly once." ),
 	State.
 
 

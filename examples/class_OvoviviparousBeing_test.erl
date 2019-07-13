@@ -9,7 +9,7 @@
 
 % Unit tests for the OvoviviparousBeing class implementation.
 % See the class_OvoviviparousBeing.erl tested module.
-
+%
 -module(class_OvoviviparousBeing_test).
 
 
@@ -28,6 +28,9 @@ run() ->
 run( IsDebug ) ->
 
 	test_facilities:start( ?MODULE ),
+
+	% Allows to support both OTP conventions and ad hoc, automatic ones:
+	wooper_utils:start_for_test(),
 
 	test_facilities:display( "Debug mode: ~s.",
 		[ class_OvoviviparousBeing:is_wooper_debug() ] ),

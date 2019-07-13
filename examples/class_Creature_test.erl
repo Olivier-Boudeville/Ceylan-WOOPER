@@ -13,9 +13,7 @@
 -module(class_Creature_test).
 
 
-
 -include("test_facilities.hrl").
-
 
 
 -spec run() -> no_return().
@@ -23,11 +21,14 @@ run() ->
 
 	test_facilities:start( ?MODULE ),
 
+	% Allows to support both OTP conventions and ad hoc, automatic ones:
+	wooper_utils:start_for_test(),
+
 	test_facilities:display( "Debug mode: ~s.",
 							[ class_Creature:is_wooper_debug() ] ),
 
-	test_facilities:display( "Class name is , superclasses are ~w.", [
- class_Creature:get_superclasses() ] ),
+	test_facilities:display( "Class name is , superclasses are ~w.",
+							 [ class_Creature:get_superclasses() ] ),
 
 	MyC = class_Creature:new_link( 30, male ),
 

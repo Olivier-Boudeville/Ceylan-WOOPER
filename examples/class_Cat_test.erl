@@ -31,6 +31,9 @@ run( IsDebug ) ->
 
 	test_facilities:start( ?MODULE ),
 
+	% Allows to support both OTP conventions and ad hoc, automatic ones:
+	wooper_utils:start_for_test(),
+
 	test_facilities:display( "Debug mode: ~s.",
 							 [ class_Cat:is_wooper_debug() ] ),
 
