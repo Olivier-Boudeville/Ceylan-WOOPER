@@ -1,0 +1,30 @@
+{application, wooper,
+ [{description, "Ceylan-WOOPER, a Wrapper for Object-Oriented Programming in Erlang, as an OTP active library here (see http://wooper.esperide.org)"},
+  {vsn, "WOOPER_VERSION"},
+
+  % See wooper_class_manager.hrl:
+  {registered, [wooper_class_manager]},
+
+  % Regarding Myriad, see http://myriad.esperide.org/myriad.html#otp:
+  {applications, [kernel, stdlib, myriad]},
+
+  {env,[]},
+
+  % Flat hierarchy in ebin here:
+  {modules, [WOOPER_MODULES]},
+
+  {licenses, ["Ceylan-WOOPER is licensed by its author (Olivier Boudeville) under a disjunctive tri-license, giving you the choice of one of the three following sets of free software/open source licensing terms:
+	- the Mozilla Public License (MPL), version 1.1 or later (very close to the former Erlang Public License, except aspects regarding Ericsson and/or the Swedish law)
+	- the GNU General Public License (GPL), version 3.0 or later
+	- the GNU Lesser General Public License (LGPL), version 3.0 or later"]},
+
+  % Active application (yet would still work without thanks to automatic launch
+  % of the class manager):
+  %
+  % (no specific relevant startup argument to specify here)
+  %
+  {mod, {wooper_app,[]}}
+
+  {links, []}
+
+ ]}.
