@@ -469,10 +469,7 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 	HookedEntries =
 		pre_deserialise_hook( { Classname, OtherEntries }, UserData ),
 
-	% Slight optimisation compared to using wooper:retrieve_virtual_table/0
-	% upfront later:
-	%
-	wooper:get_class_manager() ! { get_table, Classname, self() },
+	VirtualTable = wooper:retrieve_virtual_table( Classname ),
 
 	{ TransformedEntries, FinalUserData } = case EntryTransformer of
 
@@ -517,14 +514,6 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 
 	end,
 
-
-	% Deferred get_table answer:
-	VirtualTable = receive
-
-		{ wooper_virtual_table, Table } ->
-			Table
-
-	end,
 
 	ForgedState = #state_holder{ virtual_table=VirtualTable,
 								 attribute_table=OptimisedAttributeTable,
