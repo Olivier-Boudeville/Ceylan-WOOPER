@@ -132,7 +132,7 @@
 
 
 % Basics:
--export([ get_class_manager/0, default_exit_handler/3, default_down_handler/5,
+-export([ default_exit_handler/3, default_down_handler/5,
 		  default_node_up_handler/3, default_node_down_handler/3 ]).
 
 
@@ -362,6 +362,7 @@
 %
 % Generally no wooper result expected to be already in the message queue or to
 % be received during these operations.
+
 
 
 % A WOOPER request execution (hence a synchronous call) not yielding a result in
@@ -1278,59 +1279,13 @@ get_blank_state( Classname ) ->
 
 	#state_holder{
 
-		virtual_table   = retrieve_virtual_table( Classname ),
+		virtual_table = retrieve_virtual_table( Classname ),
 
 		attribute_table = ?wooper_table_type:new(
 									?wooper_attribute_count_upper_bound ),
 
-		actual_class    = Classname,
-
-		request_sender  = undefined
-
-	}.
-
-
-
-% Returns the WOOPER Class Manager.
-%
-% If it is already running, finds it and returns its atom, otherwise launches
-% it, and returns that same atom as well.
-%
--spec get_class_manager() -> naming_utils:registration_name().
-get_class_manager() ->
-
-	case lists:member( ?wooper_class_manager_name, registered() ) of
-
-		true ->
-			?wooper_class_manager_name;
-
-		_ ->
-
-			% Not linking, at least for consistency with the previous case:
-			?myriad_spawn( ?wooper_class_manager_name, start, [ self() ] ),
-
-			% Only dealing with registered managers (instead of using directly
-			% their PID) allows to be sure only one instance (singleton) is
-			% being used, to avoid the case of two managers being launched at
-			% the same time (the second will then terminate immediately).
-			%
-			receive
-
-				class_manager_registered ->
-					?wooper_class_manager_name
-
-			% 10-second time-out:
-			after 10000 ->
-
-				log_error( "wooper:get_class_manager: "
-					"unable to find WOOPER class manager after 10 seconds."
-					"Please check that WOOPER has been compiled beforehand." ),
-
-				undefined
-
-			end
-
-	end.
+		actual_class = Classname,
+		request_sender = undefined }.
 
 
 
@@ -1430,7 +1385,7 @@ default_node_up_handler( Node, MonitorNodeInfo, State ) ->
 % onWOOPERDownNotified/5 pair (which is process-related).
 %
 -spec default_node_down_handler( net_utils:atom_node_name(),
-			 monitor_utils:monitor_node_info(), wooper:state() ) -> wooper:state().
+		 monitor_utils:monitor_node_info(), wooper:state() ) -> wooper:state().
 default_node_down_handler( Node, MonitorNodeInfo, State ) ->
 
 	log_warning( "WOOPER default node down handler of the ~w "
@@ -1452,10 +1407,10 @@ default_node_down_handler( Node, MonitorNodeInfo, State ) ->
 retrieve_virtual_table( Classname ) ->
 
 	% For per-instance virtual table: wooper_create_method_table_for(?MODULE).
-	get_class_manager() ! { get_table, Classname, self() },
+	wooper_class_manager:get_manager() ! { get_table, Classname, self() },
 	receive
 
-		{ virtual_table, Table } ->
+		{ wooper_virtual_table, Table } ->
 			%?wooper_table_type:display( Table ),
 			Table
 
