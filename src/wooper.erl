@@ -87,7 +87,7 @@
 
 
 % Extra features:
--export([ declare_beam_dirs_for_wooper/0 ]).
+-export([ declare_beam_dirs_for_wooper/0, retrieve_virtual_table/1 ]).
 
 
 
@@ -1279,13 +1279,13 @@ get_blank_state( Classname ) ->
 
 	#state_holder{
 
-		virtual_table = retrieve_virtual_table( Classname ),
+		virtual_table=retrieve_virtual_table( Classname ),
 
-		attribute_table = ?wooper_table_type:new(
-									?wooper_attribute_count_upper_bound ),
+		attribute_table=
+		   ?wooper_table_type:new( ?wooper_attribute_count_upper_bound ),
 
-		actual_class = Classname,
-		request_sender = undefined }.
+		actual_class=Classname,
+		request_sender=undefined }.
 
 
 
@@ -1404,9 +1404,20 @@ default_node_down_handler( Node, MonitorNodeInfo, State ) ->
 %
 -spec retrieve_virtual_table( classname() ) ->
 				   ?wooper_table_type:?wooper_table_type().
+
+-if( ?wooper_enable_otp_integration =:= true ).
+
+retrieve_virtual_table( Classname ) ->
+	% The OTP way:
+	wooper_class_manager:get_table( Classname ).
+
+-elif( ?wooper_enable_otp_integration =:= false ).
+
 retrieve_virtual_table( Classname ) ->
 
 	% For per-instance virtual table: wooper_create_method_table_for(?MODULE).
+
+	% The non-OTP way:
 	wooper_class_manager:get_manager() ! { get_table, Classname, self() },
 	receive
 
@@ -1415,6 +1426,8 @@ retrieve_virtual_table( Classname ) ->
 			Table
 
 	end.
+
+-endif. % wooper_enable_otp_integration
 
 
 
