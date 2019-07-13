@@ -45,6 +45,12 @@
 -define( wooper_attribute_count_upper_bound, 16 ).
 
 
+% Tells whether the OTP integration of WOOPER (involving supervisor, gen_server,
+% explicit starting, etc.) shall be enabled.
+%
+-define( wooper_enable_otp_integration, true ).
+
+
 % Number of milliseconds to wait for, in order to be reasonably sure that the
 % warning message could be written to the console, knowing that the operation is
 % asynchronous and thus may not be performed should the VM halt immediately:
