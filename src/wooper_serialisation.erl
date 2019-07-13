@@ -521,7 +521,7 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 	% Deferred get_table answer:
 	VirtualTable = receive
 
-		{ virtual_table, Table } ->
+		{ wooper_virtual_table, Table } ->
 			Table
 
 	end,
