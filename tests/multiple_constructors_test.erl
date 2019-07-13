@@ -28,7 +28,6 @@
 
 
 % This module allows to test the support for multiple constructors.
-%
 -module(multiple_constructors_test).
 
 
@@ -39,6 +38,9 @@
 run() ->
 
 	test_facilities:start( ?MODULE ),
+
+	% Allows to support both OTP conventions and ad hoc, automatic ones:
+	wooper_utils:start_for_test(),
 
 	TestedClass = class_MultipleConstructors,
 

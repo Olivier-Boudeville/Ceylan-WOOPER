@@ -23,7 +23,7 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
-% Creation date: Wednesday, October 31, 2018
+% Creation date: Wednesday, October 31, 2018.
 
 
 
@@ -68,6 +68,8 @@ perform_direct_ast_operations( TargetSourceFile ) ->
 -spec run() -> no_return().
 run() ->
 
+	test_facilities:start( ?MODULE ),
+
 	TargetSourceFile = "../examples/class_Cat.erl",
 
 	trace_utils:info_fmt( "Applying the WOOPER parse transform to the "
@@ -87,4 +89,6 @@ run() ->
 	trace_utils:info( "Test successful." ),
 
 	% Otherwise freezes indefinitely:
-	basic_utils:stop().
+	basic_utils:stop(),
+
+	test_facilities:stop().

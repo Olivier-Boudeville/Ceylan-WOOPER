@@ -23,12 +23,11 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
-% Creation date: Wednesday, October 31, 2018
+% Creation date: Wednesday, October 31, 2018.
 
 
 
 % This module allows to test the management of the methods of a class.
-%
 -module(method_management_test).
 
 
@@ -40,6 +39,9 @@
 run() ->
 
 	test_facilities:start( ?MODULE ),
+
+	% Allows to support both OTP conventions and ad hoc, automatic ones:
+	wooper_utils:start_for_test(),
 
 	test_facilities:display( "Running method test." ),
 

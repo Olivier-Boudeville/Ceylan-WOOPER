@@ -53,14 +53,7 @@ test_with_otp() ->
 
 	test_facilities:display( "Testing the OTP-based mode of operation." ),
 
-	wooper_class_manager:start_link( _ClientPid=self() ),
-
-	ManagerPid = receive
-
-			{ wooper_class_manager_pid, Pid } ->
-				Pid
-
-	end,
+	ManagerPid = wooper_class_manager:start_link(),
 
 	wooper_class_manager:display(),
 
@@ -109,6 +102,9 @@ test_without_otp() ->
 run() ->
 
 	test_facilities:start( ?MODULE ),
+
+	% Allows to support both OTP conventions and ad hoc, automatic ones:
+	% Not to be done here: wooper_utils:start_for_test(),
 
 	test_with_otp(),
 

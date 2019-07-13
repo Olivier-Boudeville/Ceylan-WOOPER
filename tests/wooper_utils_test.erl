@@ -26,7 +26,6 @@
 
 
 % Basic testing of the wooper_utils module.
-%
 -module(wooper_utils_test).
 
 
@@ -39,6 +38,9 @@
 run() ->
 
 	test_facilities:start( ?MODULE ),
+
+	% Allows to support both OTP conventions and ad hoc, automatic ones:
+	wooper_utils:start_for_test(),
 
 	FirstWOOPERClassname = 'class_BigPackage__MyPackage__MyExample',
 

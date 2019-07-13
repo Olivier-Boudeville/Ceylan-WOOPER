@@ -23,7 +23,7 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
-% Creation date: Wednesday, October 31, 2018
+% Creation date: Wednesday, October 31, 2018.
 
 
 
@@ -41,6 +41,9 @@
 run() ->
 
 	test_facilities:start( ?MODULE ),
+
+	% Allows to support both OTP conventions and ad hoc, automatic ones:
+	wooper_utils:start_for_test(),
 
 	TestedClass = class_BaseTestClass,
 
@@ -107,8 +110,9 @@ run() ->
 	receive
 
 		{ spawn_successful, V6Pid } ->
-			test_facilities:display( "   (and '~s' (~w) synchronised adequately)",
-									 [ V6Name, V6Pid ] )
+			test_facilities:display(
+			  "   (and '~s' (~w) synchronised adequately)",
+			  [ V6Name, V6Pid ] )
 
 	end,
 
@@ -121,8 +125,9 @@ run() ->
 	receive
 
 		{ spawn_successful, V6LinkPid } ->
-			test_facilities:display( "   (and '~s' (~w) synchronised adequately)",
-									 [ V6LinkName, V6LinkPid ] )
+			test_facilities:display(
+			  "   (and '~s' (~w) synchronised adequately)",
+			  [ V6LinkName, V6LinkPid ] )
 
 	end,
 
@@ -151,7 +156,6 @@ run() ->
 
 
 % Tests whether the specified instance is operational.
-%
 test_instance( Pid, Name ) ->
 
 	Pid ! { getName, [], self() },
@@ -159,7 +163,7 @@ test_instance( Pid, Name ) ->
 	receive
 
 		{ wooper_result, Name } ->
-			test_facilities:display( " - '~s' (~w) alive and answering adequately",
-									 [ Name, Pid ] )
+			test_facilities:display(
+			  " - '~s' (~w) alive and answering adequately", [ Name, Pid ] )
 
 	end.
