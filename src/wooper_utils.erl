@@ -26,7 +26,6 @@
 
 
 % Module containing some extra facilities for WOOPER users.
-%
 -module(wooper_utils).
 
 
@@ -45,6 +44,13 @@
 -export([ java_class_to_wooper_class/1, wooper_class_to_java_class/1,
 		  get_java_package_and_class_for/1 ]).
 
+
+% Test helper.
+-export([ start_for_test/0 ]).
+
+
+% For wooper_enable_otp_integration:
+-include("wooper_defines_exports.hrl").
 
 
 
@@ -175,3 +181,20 @@ get_java_package_and_class_for( WOOPERClassname ) ->
 			{ JavaPackage, JavaClass }
 
 	end.
+
+
+
+% Starts WOOPER for a testing possibly involving an OTP-based startup procedure.
+-spec start_for_test() -> void().
+
+-if( ?wooper_enable_otp_integration =:= true ).
+
+start_for_test() ->
+	wooper_class_manager:start().
+
+-elif( ?wooper_enable_otp_integration =:= false ).
+
+start_for_test() ->
+	ok.
+
+-endif. % wooper_enable_otp_integration
