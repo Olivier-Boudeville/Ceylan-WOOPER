@@ -128,7 +128,6 @@ filter_constructors( _FunIdInfos=[ { { construct, Arity }, FunInfo } | T ],
 	filter_constructors( T, [ { Arity, FunInfo } | AccPairs ], AccFunInfos );
 
 % 'Other' expected to be { { _NonConstructFunName, Arity }, FunInfo }:
-%
 filter_constructors( _FunIdInfos=[ Other | T ], AccPairs, AccFunInfos ) ->
 	filter_constructors( T, AccPairs, [ Other | AccFunInfos ] ).
 
