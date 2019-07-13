@@ -26,6 +26,7 @@
 
 
 % Unit tests for the WOOPER class manager implementation.
+%
 % See the wooper_class_manager.erl tested module.
 %
 -module(wooper_class_manager_test).
@@ -42,33 +43,76 @@
 -include("spawn_utils.hrl").
 
 
+-define( requested_class, class_BaseTestClass ).
+
+
+
+% Testing the OTP-based class manager.
+-spec test_with_otp() -> void().
+test_with_otp() ->
+
+	test_facilities:display( "Testing the OTP-based mode of operation." ),
+
+	wooper_class_manager:start_link( _ClientPid=self() ),
+
+	ManagerPid = receive
+
+			{ wooper_class_manager_pid, Pid } ->
+				Pid
+
+	end,
+
+	wooper_class_manager:display(),
+
+	Table = wooper_class_manager:get_table( ?requested_class ),
+
+	test_facilities:display( "Table obtained from ~w for '~s':~n~s",
+			 [ ManagerPid, ?requested_class, table:toString( Table ) ] ),
+
+	wooper_class_manager:display(),
+
+	wooper_class_manager:stop(),
+
+	test_facilities:display( "End of the OTP-based test." ).
+
+
+
+
+% Testing the non-OTP class manager.
+-spec test_without_otp() -> void().
+test_without_otp() ->
+
+	ManagerPid = wooper_class_manager:get_manager(),
+
+	ManagerPid ! display,
+
+	ManagerPid ! { get_table, ?requested_class, self() },
+
+	receive
+
+		{ wooper_virtual_table, Table } ->
+			test_facilities:display( "Table obtained from ~w for '~s':~n~s",
+				  [ ManagerPid, ?requested_class, table:toString( Table ) ] )
+
+	end,
+
+	ManagerPid ! display,
+
+	ManagerPid ! stop,
+
+	test_facilities:display( "End of the non-OTP test." ).
+
+
+
+
 -spec run() -> no_return().
 run() ->
 
 	test_facilities:start( ?MODULE ),
 
-	TestedModule = wooper_class_manager,
+	test_with_otp(),
 
-	test_facilities:display( "Spawning module ~s.", [ TestedModule ] ),
-
-	?myriad_spawn_link( TestedModule, start, [ self() ] ),
-
-	receive
-
-		class_manager_registered ->
-			test_facilities:display( "Requesting its state display." ),
-			?wooper_class_manager_name ! display
-
-	% 10-second time-out:
-	after 10000 ->
-		test_facilities:fail( "#### wooper_get_class_manager: unable to find "
-			"class manager after 10s, test failed." )
-
-	end,
-
-	test_facilities:display( "Requesting it to stop." ),
-
-	?wooper_class_manager_name ! stop,
+	test_without_otp(),
 
 	% Probably that, if exit_after_test is set (the default), the test will stop
 	% before the manager itself:
