@@ -38,16 +38,53 @@
 % given class just refer to a common virtual table stored by this manager, and
 % each virtual table and the table of virtual tables itself are optimised, with
 % regard to their respective load factor.
+
+% Local registration only of this manager, as we want the WOOPER instances to
+% benefit from a local direct reference to the same method table
+% (theoretically), rather to waste memory with one copy of the table per
+% instance (which is currently still the case in practice).
 %
+% In a distributed context, there should be exactly one class manager per node.
+%
+% The class manager may be launched:
+%
+% - either after an explicit, OTP-compliant initialisation phase (supervisor,
+% gen_server, init/1 callback, etc.)
+%
+% - or implicitly, as done before the OTP integration: then done on-demand (as
+% soon as a first WOOPER instance is created, hence with no a priori explicit
+% initialisation)
+
 -module(wooper_class_manager).
 
 
-
-% See documentation at:
-% http://ceylan.sourceforge.net/main/documentation/wooper/
+% See documentation at http://wooper.esperide.org.
 
 
--export([ start/1, ping/1 ]).
+% We retrofitted the class manager into a gen_server for OTP compliance:
+-behaviour(gen_server).
+
+
+% Service API:
+-export([ start/0, start_link/0, start/1, start_link/1,
+		  get_table/1, display/0, stop/0 ]).
+
+
+% Non-OTP API:
+-export([ get_manager/0, stop_automatic/0, ping/1 ]).
+
+
+
+% gen_server callbacks:
+%
+% (not specifically implemented here: terminate/2, code_change/3)
+%
+-export([ init/1, handle_call/3, handle_cast/2, handle_info/2 ]).
+
+
+-type manager_pid() :: pid().
+
+-export_type([ manager_pid/0 ]).
 
 
 % For wooper_class_manager_name:
@@ -57,6 +94,13 @@
 % For wooper_table_type:
 -include("wooper_defines_exports.hrl").
 
+
+% For myriad_spawn*:
+-include("spawn_utils.hrl").
+
+
+% State kept by the manager (a table of per-class tables):
+-type state() :: ?wooper_table_type:?wooper_table_type().
 
 
 % Approximate average method count for a given class, including inherited ones.
@@ -79,13 +123,18 @@
 %-define(debug,).
 
 
--define(log_prefix, "[WOOPER Class manager] ").
+-define( log_prefix, "[WOOPER class manager] " ).
+
+
+% In seconds:
+-define( registration_time_out, 5 ).
 
 
 % To avoid warnings (note: display/1 is apparently a BIF, renamed to
 % display_msg/1):
 %
--export([ display_state/1, display_table_creation/1, display_msg/1 ]).
+-export([ display_state/1, display_table_creation/1,
+		  display_msg/1, display_msg/2 ]).
 
 
 
@@ -95,7 +144,10 @@
 
 -spec display_state( ?wooper_table_type:?wooper_table_type() ) -> void().
 -spec display_table_creation( basic_utils:module_name() ) -> void().
+
 -spec display_msg( string() ) -> void().
+-spec display_msg( text_utils:format_string(), text_utils:format_values() ) ->
+						 void().
 
 
 -ifdef(wooper_debug_class_manager).
@@ -112,7 +164,12 @@ display_table_creation( Module ) ->
 
 
 display_msg( String ) ->
-	Message = io_lib:format( ?log_prefix "~s.~n", [ String ] ),
+	Message = text_utils:format( ?log_prefix "~s.~n", [ String ] ),
+	wooper:log_info( Message ).
+
+display_msg( FormatString, Values ) ->
+	Message = text_utils:format( ?log_prefix FormatString ++ ".~n",
+								 [ Values ] ),
 	wooper:log_info( Message ).
 
 
@@ -128,77 +185,339 @@ display_table_creation( _Module ) ->
 display_msg( _String ) ->
 	ok.
 
+display_msg( _FormatString, _Values ) ->
+	ok.
 
 -endif. % wooper_debug_class_manager
 
 
 
-% Starts a new, blank, class manager.
--spec start( pid() ) -> void().
-start( ClientPID ) ->
 
-	display_msg( io_lib:format( "Starting WOOPER class manager "
-						"on node ~s (PID: ~w)", [ node(), self() ] ) ),
 
-	% Two first instances being created nearly at the same time might trigger
-	% the creation of two class managers, if the second instance detects no
-	% manager is registered while the first manager is created but not
-	% registered yet. That would result in superflous class managers. Up to one
-	% should exist.
+% OTP-related section: first, the user-level API.
+
+
+%% Explicit, OTP-based initialisation.
+
+
+% Starts a new, blank, class manager, with no listening client, and returns its
+% PID.
+%
+-spec start() -> manager_pid().
+start() ->
+	start( _MaybeClientPid=undefined ).
+
+
+% Starts and links a new, blank, class manager, with no listening client, and
+% returns its PID.
+%
+-spec start_link() -> manager_pid().
+start_link() ->
+	start_link( _MaybeClientPid=undefined ).
+
+
+
+% Starts a new, blank, class manager, with possibly a listening client, and
+% returns its PID.
+%
+-spec start( maybe( pid() ) ) -> manager_pid().
+start( MaybeClientPid ) ->
+
+	% A client might be useful for testing.
+
+	case gen_server:start( { local, ?wooper_class_manager_name },
+						   ?MODULE, _Args=[], _Opts=[] ) of
+
+		{ ok, ManagerPid } ->
+			case MaybeClientPid of
+
+				undefined ->
+					ok;
+
+				ClientPid ->
+					ClientPid ! { wooper_class_manager_pid, ManagerPid }
+
+			end,
+			ManagerPid;
+
+		% Typically {error,Reason} or ignore:
+		Unexpected ->
+			throw( { wooper_class_manager_creation_failed, Unexpected } )
+
+	end.
+
+
+
+% Starts and links a new, blank, class manager, with possibly a listening
+% client, and returns its PID.
+%
+% (same as start/1 except for the link)
+%
+-spec start_link( maybe( pid() ) ) -> manager_pid().
+start_link( MaybeClientPid ) ->
+
+	% A client might be useful for testing.
+
+	case gen_server:start_link( { local, ?wooper_class_manager_name },
+								?MODULE, _Args=[], _Opts=[] ) of
+
+		{ ok, ManagerPid } ->
+			case MaybeClientPid of
+
+				undefined ->
+					ok;
+
+				ClientPid ->
+					ClientPid ! { wooper_class_manager_pid, ManagerPid }
+
+			end,
+			ManagerPid;
+
+		% Typically {error,Reason} or ignore:
+		Unexpected ->
+			throw( { wooper_class_manager_creation_failed, Unexpected } )
+
+	end.
+
+
+
+% Returns the virtual table associated to specified classname.
+-spec get_table( wooper:classname() ) ->
+					   ?wooper_table_type:?wooper_table_type().
+get_table( Classname ) ->
+	{ ok, Table } = gen_server:call( ?wooper_class_manager_name,
+									 { get_table, Classname } ),
+	Table.
+
+
+
+% Displays runtime information about the class manager.
+-spec display() -> void().
+display() ->
+	gen_server:cast( ?wooper_class_manager_name, display ).
+
+
+
+% Stops (the OTP-way) the class manager.
+-spec stop() -> void().
+stop() ->
+	gen_server:cast( ?wooper_class_manager_name, stop ).
+
+
+
+
+
+
+% See loop/1 for the counterpart to gen_server callbacks.
+
+
+% Inits the manager (gen_server callback).
+%
+% (also used by the non-OTP mode of operation)
+%
+-spec init( any() ) -> { 'ok', state() }.
+init( _Args=[] ) ->
+
+	display_msg( "Starting (init) WOOPER class manager on node ~s (PID: ~w).",
+				 [ node(), self() ] ),
+
+	% With this creation procedure, we are supposed to start from scratch
+	% through an initialisation phase (as opposed to uncoordinated creations
+	% from instances that may overlap), so by design no concurrent launch is
+	% expected to happen here.
+
+	% Registering already done by gen_server:start*.
+
+	% Infinite time-out:
+	{ ok, get_initial_state() }.
+
+
+
+% Handling OTP-based requests (gen_server callback):
+handle_call( { get_table, Classname }, _From, _State=Tables ) ->
+
+	 display_msg( "handle_call: get_table for ~s", [ Classname ] ),
+
+	{ NewTables, TargetTable } = get_virtual_table_for( Classname, Tables ),
+
+	{ reply, { ok, TargetTable }, _NewState=NewTables }.
+
+
+
+% Handling OTP-based oneways (gen_server callback):
+handle_cast( stop, State ) ->
+
+	display_msg( "handle_cast: stop" ),
+
+	stop_common(),
+
+	{ stop, normal, State };
+
+
+handle_cast( display, State=Tables ) ->
+
+	wooper:log_info( ?log_prefix "Internal state is: ~s~n",
+					 [ ?wooper_table_type:toString( Tables ) ] ),
+
+	% Const:
+	{ noreply, State }.
+
+
+
+% Handling out-of-bound, direct messages (gen_server callback):
+handle_info( Info, State ) ->
+
+	trace_utils:warning_fmt(
+	  "Received an unexpected, hence ignored, handle_info message: ~w.",
+	  [ Info ] ),
+
+	{ noreply, State }.
+
+
+
+% Non-OTP section: WOOPER's base/historic mode of operation.
+
+
+
+%% Implicit, non-OTP initialisation.
+
+
+% Returns the PID of the WOOPER class manager.
+%
+% If it is already running, finds it and returns its PID, otherwise launches it
+% (in an ad hoc, non-OTP way), and returns the relevant PID as well (even if
+% multiple instances thereof were concurrently spawned).
+%
+-spec get_manager() -> manager_pid().
+get_manager() ->
+
+	% Could have been named start_automatic/0 as well.
+
+	case naming_utils:is_registered( ?wooper_class_manager_name,
+									 _LookUpScope=local ) of
+
+		not_registered ->
+
+			% Not linking, at least for consistency with the case where it is
+			% already launched:
+			%
+			% (init_automatic/0 not exported)
+			%
+			?myriad_spawn( fun() -> init_automatic() end ),
+
+			% We do not return readily the PID of the just-spawned process, as
+			% its launch might be concurrent with other, quasi-simultaneous
+			% launches. We report only the one that is for sure the winner (the
+			% others areto terminate immediately):
+			%
+			naming_utils:wait_for_local_registration_of(
+			  ?wooper_class_manager_name, ?registration_time_out );
+
+
+		ManagerPid ->
+			ManagerPid
+
+	end.
+
+
+
+% Initializes the class manager, when launched in a non-OTP way.
+-spec init_automatic() -> no_return().
+init_automatic() ->
+
+	% Two first WOOPER instances being created nearly at the same time might
+	% trigger the creation of two class managers, should the second instance
+	% detect that no manager is registered, whereas the first manager is created
+	% but not registered yet. That would result in superfluous class
+	% managers. Up to one should exist.
 	%
 	% Note: as the register call cannot be performed at once (not an atomic
 	% operation), there must remain a tiny window for a race condition to
 	% happen).
 	%
-	% Local registration only, as we want the instances to benefit from a local
-	% direct reference to the same method table, rather waste memory with one
-	% copy of the table per instance.
-	%
-	% In a distributed context, there should be exactly one class manager per
-	% node.
-	%
-	case catch register( ?wooper_class_manager_name, self() ) of
+	try naming_utils:register_as( self(), ?wooper_class_manager_name,
+								  local_only ) of
 
-		true ->
-			ClientPID ! class_manager_registered,
+		% Registration success, we are the one, and we use our custom main loop:
+		_ ->
+			{ ok, InitialState } = init( _Args=[] ),
+			loop( InitialState )
 
-			EmptyClassTable = ?wooper_table_type:new(
-								 ?wooper_class_count_upper_bound ),
+	catch
 
-			loop( EmptyClassTable );
+		% Catches only the case where a manager was already registered; let it
+		% be the only one and, stop the current one:
+		%
+		throw:{ local_registration_failed, _Name, already_registered,
+				_OtherPid } ->
 
-
-		% A manager is already registered, let it be the only one and stop:
-		{ 'EXIT', { badarg,_ } } ->
-
-			display_msg( ?log_prefix
-						"Already a manager available, terminating" ),
-
-			% Let's notify the client nevertheless:
-			ClientPID ! class_manager_registered
-			% The instances should use the first manager only.
-			% (no looping performed, terminating this second manager).
+			% The client instances should use the first manager only.
+			%
+			% (no looping performed, hence terminating this second, extraneous
+			% manager)
+			ok
 
 	end.
+
+
+
+% Stops the class manager, when not using the OTP way.
+-spec stop_automatic() -> void().
+stop_automatic() ->
+
+	case naming_utils:is_registered( ?wooper_class_manager_name, local ) of
+
+		not_registered ->
+			trace_utils:warning( "No WOOPER class manager to stop." ),
+			ok;
+
+		ManagerPid ->
+			display_msg( "Stopping WOOPER class manager." ),
+			ManagerPid ! stop,
+			ok
+
+	end.
+
+
+
+% Section common to all kinds of modes of operation (OTP or not).
+
+
+% Returns the initial state of this manager, i.e. an (initially empty) table of
+% per-class tables.
+%
+-spec get_initial_state() -> state().
+get_initial_state() ->
+	% Empty class table:
+	?wooper_table_type:new( ?wooper_class_count_upper_bound ).
+
+
+
+% Stops the class manager.
+%
+% Used by all modes of operation (OTP or not).
+%
+-spec stop_common() -> void().
+stop_common() ->
+	display_msg( "Stopping WOOPER class manager." ).
 
 
 
 % Manager main loop, serves virtual tables on request (mostly on instances
 % creation).
 %
--spec loop( ?wooper_table_type:?wooper_table_type() ) ->
-				  no_return() | 'ok' .
+-spec loop( ?wooper_table_type:?wooper_table_type() ) -> no_return() | 'ok' .
 loop( Tables ) ->
 
 	display_state( Tables ),
 
 	receive
 
-		{ get_table, Module, Pid } ->
-			{ NewTables, TargetTable } = get_virtual_table_for( Module,
-																Tables ),
+		{ get_table, Classname, Pid } ->
+			{ NewTables, TargetTable } =
+				get_virtual_table_for( Classname, Tables ),
 
-			Pid ! { virtual_table, TargetTable },
+			Pid ! { wooper_virtual_table, TargetTable },
 			loop( NewTables );
 
 		display ->
@@ -208,7 +527,13 @@ loop( Tables ) ->
 
 		stop ->
 			unregister( ?wooper_class_manager_name ),
-			display_msg( "Stopped on request" )
+			stop_common();
+
+		Unexpected ->
+			trace_utils:error_fmt( "The WOOPER class manager received an "
+								   "unexpected, thus ignored, message: ~w",
+								   [ Unexpected ] ),
+			loop( Tables )
 
 	end.
 
@@ -244,11 +569,11 @@ get_virtual_table_for( Module, Tables ) ->
 			ModuleTable = create_method_table_for( Module ),
 
 			%trace_utils:debug_fmt( "Virtual table for ~s: ~s",
-			%	   [ Module, ?wooper_table_type:toString( ModuleTable ) ] ),
+			%         [ Module, ?wooper_table_type:toString( ModuleTable ) ] ),
 
 			% Each class had its virtual table optimised:
 			%OptimisedModuleTable =
-			%	?wooper_table_type:optimise( ModuleTable ),
+			%    ?wooper_table_type:optimise( ModuleTable ),
 
 			% Here the table could be patched with destruct/1, if defined.
 			ClassTable =
@@ -435,10 +760,13 @@ create_local_method_table_for( Module ) ->
 
 
 
-% ping specified WOOPER instance, returns pong if it could be successfully
-% pinged, otherwise returns pang.
+% ping specified WOOPER instance, designated by its PID or registered name
+% (locally, otherwise, if not found, globally).
 %
--spec ping( atom() | pid() ) -> 'pang' | 'pong'.
+% Returns pong if it could be successfully ping'ed, otherwise returns pang.
+%
+-spec ping( naming_utils:registration_name() | wooper:instance_pid() ) ->
+				  'pong' | 'pang'.
 ping( Target ) when is_pid( Target ) ->
 
 	Target ! { ping, self() },
@@ -454,16 +782,10 @@ ping( Target ) when is_pid( Target ) ->
 
 ping( Target ) when is_atom( Target ) ->
 
-	case global:whereis_name( Target ) of
+	case naming_utils:is_registered( Target ) of
 
-		undefined ->
-			case whereis( Target ) of
-				undefined ->
-					pang;
-
-				Pid ->
-					ping( Pid )
-			end;
+		not_registered ->
+			pang;
 
 		Pid ->
 			ping( Pid )
