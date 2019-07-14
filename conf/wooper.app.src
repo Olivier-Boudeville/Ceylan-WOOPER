@@ -1,11 +1,22 @@
+% Description of the WOOPER OTP active application, typically used by rebar3.
+
+% Note: if this file is named wooper.app, it is a *generated* file, whose source
+% is conf/wooper.app.src.
+
+% See also:
+% - http://erlang.org/doc/man/app.html
+% - https://learnyousomeerlang.com/building-otp-applications
+
+
 {application, wooper,
- [{description, "Ceylan-WOOPER, a Wrapper for Object-Oriented Programming in Erlang, as an OTP active library here (see http://wooper.esperide.org)"},
+ [{description, "Ceylan-WOOPER, a Wrapper for Object-Oriented Programming in Erlang, as an OTP active application here (see http://wooper.esperide.org)"},
   {vsn, "WOOPER_VERSION"},
 
   % See wooper_class_manager.hrl:
   {registered, [wooper_class_manager]},
 
   % Regarding Myriad, see http://myriad.esperide.org/myriad.html#otp:
+  % (however myriad is a library application, not an active one)
   {applications, [kernel, stdlib, myriad]},
 
   {env,[]},
@@ -23,8 +34,11 @@
   %
   % (no specific relevant startup argument to specify here)
   %
-  {mod, {wooper_app,[]}}
+  {mod, {wooper_app, []}}
 
-  {links, []}
+  { links, [ {"Official website", "http://wooper.esperide.org" },
+			 {"Github", "https://github.com/Olivier-Boudeville/Ceylan-WOOPER"} ]}
+
+  %{exclude_files, []}
 
  ]}.

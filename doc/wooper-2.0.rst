@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2019 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Sunday, March 24, 2019
+:Lastly updated: Sunday, July 14, 2019
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -3074,6 +3074,31 @@ As a result, once a proper Erlang version is available, the `Ceylan-Myriad repos
 
 
 
+Using OTP-Related Build/Runtime Conventions
+-------------------------------------------
+
+
+As discussed for `Myriad <http://myriad.esperide.org/myriad.html#otp>`_, we added the (optional) possibility of generating a WOOPER *OTP application* out of the build tree, ready to be integrated into an *(OTP) release*. For that we rely on `rebar3 <https://www.rebar3.org/>`_, `relx <https://github.com/erlware/relx>`_ and `hex <https://hex.pm/>`_.
+
+Unlike Myriad, which is an OTP *library* application, WOOPER is an OTP *active* application, meaning the reliance on an application that can be started/stopped (``wooper_app``), a root supervisor (``wooper_sup``) and a class manager that is a background server process (``gen_server``).
+
+
+Using Rebar3
+............
+
+The same procedures as `explained for Myriad <http://myriad.esperide.org/myriad.html#otp>` apply, once rebar3 is available::
+
+ $ make rebar3-application
+ $ make rebar3-release
+
+
+
+Using Hex
+---------
+
+To-do!
+
+
 
 :raw-latex:`\pagebreak`
 
@@ -3397,13 +3422,13 @@ Issues & Planned Enhancements
 Licence
 =======
 
-Ceylan-WOOPER is licensed by its author (Olivier Boudeville) under a disjunctive tri-license giving you the choice of one of the three following sets of free software/open source licensing terms:
+Ceylan-WOOPER is licensed by its author (Olivier Boudeville) under a disjunctive tri-license, giving you the choice of one of the three following sets of free software/open source licensing terms:
 
-- `Mozilla Public License <http://www.mozilla.org/MPL/MPL-1.1.html>`_ (MPL), version 1.1 or later (very close to the former `Erlang Public License <http://www.erlang.org/EPLICENSE>`_, except aspects regarding Ericsson and/or the Swedish law)
+- the `Mozilla Public License <http://www.mozilla.org/MPL/MPL-1.1.html>`_ (MPL), version 1.1 or later (very close to the former `Erlang Public License <http://www.erlang.org/EPLICENSE>`_, except aspects regarding Ericsson and/or the Swedish law)
 
-- `GNU General Public License <http://www.gnu.org/licenses/gpl-3.0.html>`_ (GPL), version 3.0 or later
+- the `GNU General Public License <http://www.gnu.org/licenses/gpl-3.0.html>`_ (GPL), version 3.0 or later
 
-- `GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>`_ (LGPL), version 3.0 or later
+- the `GNU Lesser General Public License <http://www.gnu.org/licenses/lgpl.html>`_ (LGPL), version 3.0 or later
 
 
 This allows the use of the WOOPER code in as wide a variety of software projects as possible, while still maintaining copyleft on this code.

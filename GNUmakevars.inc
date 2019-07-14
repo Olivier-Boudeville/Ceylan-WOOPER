@@ -9,7 +9,7 @@ ifndef PROJECT_NAME
 endif
 
 
-WOOPER_VERSION := 1.0
+WOOPER_VERSION := 2.0.1
 
 # PROJECT_VERSION should be defined on a per-project basis.
 ifndef PROJECT_VERSION
