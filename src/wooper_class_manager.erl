@@ -77,9 +77,8 @@
 
 % gen_server callbacks:
 %
-% (not specifically implemented here: terminate/2, code_change/3)
-%
--export([ init/1, handle_call/3, handle_cast/2, handle_info/2 ]).
+-export([ init/1, handle_call/3, handle_cast/2, handle_info/2,
+		  terminate/2, code_change/3 ]).
 
 
 -type manager_pid() :: pid().
@@ -367,11 +366,32 @@ handle_cast( display, State=Tables ) ->
 % Handling out-of-bound, direct messages (gen_server callback):
 handle_info( Info, State ) ->
 
-	trace_utils:warning_fmt(
-	  "Received an unexpected, hence ignored, handle_info message: ~w.",
-	  [ Info ] ),
+	trace_utils:warning_fmt( "The WOOPER class manager received an unexpected, "
+							 "hence ignored, handle_info message: ~w.",
+							 [ Info ] ),
 
 	{ noreply, State }.
+
+
+% Optional callback:
+terminate( Reason, _State ) ->
+
+	trace_utils:trace_fmt( "WOOPER class manager terminated (reason: ~w).",
+						   [ Reason ] ),
+
+	ok.
+
+
+% Optional callback:
+code_change( OldVsn, State, Extra ) ->
+
+	trace_utils:trace_fmt( "Code change for the WOOPER class manager; "
+						   "old version is ~w, and extra information is ~w",
+						   [ OldVsn, Extra ] ),
+
+	{ ok, State }.
+
+
 
 
 
