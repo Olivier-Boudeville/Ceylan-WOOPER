@@ -5,7 +5,13 @@
 
 # PROJECT_NAME should be defined on a per-project basis.
 ifndef PROJECT_NAME
-	PROJECT_NAME = WOOPER
+	PROJECT_NAME = Ceylan-WOOPER
+endif
+
+
+# REBAR3_PROJECT_NAME should be defined on a per-project basis.
+ifndef REBAR3_PROJECT_NAME
+	REBAR3_PROJECT_NAME := wooper
 endif
 
 
