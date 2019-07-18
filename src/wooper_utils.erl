@@ -45,8 +45,8 @@
 		  get_java_package_and_class_for/1 ]).
 
 
-% Test helper.
--export([ start_for_test/0 ]).
+% Various helpers for testing, OTP compliance, etc.
+-export([ start_for_test/0, prepare_otp_context/1 ]).
 
 
 % For wooper_enable_otp_integration:
@@ -198,3 +198,15 @@ start_for_test() ->
 	ok.
 
 -endif. % wooper_enable_otp_integration
+
+
+
+% Prepares a relevant context for the WOOPER OTP application: ensures that the
+% myriad.app and wooper.app files can be found, from the specified parent of
+% their root directory.
+%
+-spec prepare_otp_context( file_utils:directory_path() ) -> void().
+prepare_otp_context( AppParentRootDir ) ->
+	otp_utils:prepare_myriad_context( AppParentRootDir ),
+	otp_utils:prepare_app_context( _AppName=wooper,
+			   file_utils:join( AppParentRootDir, "Ceylan-WOOPER" ) ).
