@@ -75,6 +75,8 @@ test_with_otp() ->
 -spec test_without_otp() -> void().
 test_without_otp() ->
 
+	test_facilities:display( "Testing the base (non-OTP) mode of operation." ),
+
 	ManagerPid = wooper_class_manager:get_manager(),
 
 	ManagerPid ! display,
