@@ -190,11 +190,13 @@ get_java_package_and_class_for( WOOPERClassname ) ->
 -if( ?wooper_enable_otp_integration =:= true ).
 
 start_for_test() ->
+	trace_utils:trace( "Starting WOOPER test OTP environment." ),
 	wooper_class_manager:start().
 
 -elif( ?wooper_enable_otp_integration =:= false ).
 
 start_for_test() ->
+	trace_utils:trace( "Starting WOOPER test non-OTP environment." ),
 	ok.
 
 -endif. % wooper_enable_otp_integration
