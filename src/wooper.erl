@@ -91,14 +91,13 @@
 
 
 
-% Traps to detect any method terminator that would be left untransformed:
+% Traps to detect any method terminator that would be left untransformed.
 %
 % Note: neither exported or even defined anymore, as now WOOPER checks at
-% compile time whether a given wooper:SomeFun(...) call is a terminator
+% compile time whether a given wooper:SomeFun(...) call is a terminator.
 %
 -export([ return_state_result/2, return_state/1, return_static/1,
 		  const_return_result/1, const_return/0 ]).
-
 
 
 
