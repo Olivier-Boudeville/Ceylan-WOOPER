@@ -60,7 +60,7 @@ test_with_otp() ->
 	Table = wooper_class_manager:get_table( ?requested_class ),
 
 	test_facilities:display( "Table obtained from ~w for '~s':~n~s",
-			 [ ManagerPid, ?requested_class, table:toString( Table ) ] ),
+			 [ ManagerPid, ?requested_class, table:to_string( Table ) ] ),
 
 	wooper_class_manager:display(),
 
@@ -87,7 +87,7 @@ test_without_otp() ->
 
 		{ wooper_virtual_table, Table } ->
 			test_facilities:display( "Table obtained from ~w for '~s':~n~s",
-				  [ ManagerPid, ?requested_class, table:toString( Table ) ] )
+				  [ ManagerPid, ?requested_class, table:to_string( Table ) ] )
 
 	end,
 

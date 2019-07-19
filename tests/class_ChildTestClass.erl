@@ -269,4 +269,4 @@ example_fun() ->
 % This looks like a method, but it is not (returning only a string):
 -spec toString( wooper:state() ) -> string().
 toString( State ) ->
-	table:toString( State#state_holder.attribute_table ).
+	table:to_string( State#state_holder.attribute_table ).

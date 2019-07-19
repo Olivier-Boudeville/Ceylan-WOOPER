@@ -301,7 +301,7 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 
 
 
-% Looks-up specified method (Method/Arity, ex: toString/0) to be found in
+% Looks-up specified method (Method/Arity, ex: toString/1) to be found in
 % inheritance tree and returns either { 'value', Module } with Module
 % corresponding to the class that implements that method, or 'key_not_found'.
 %
@@ -312,7 +312,7 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 -spec wooper_lookup_method( wooper:state(), method_name(), arity() ) ->
 								  { 'value', classname() } | 'key_not_found'.
 wooper_lookup_method( State, MethodAtom, Arity ) ->
-	?wooper_table_type:lookupEntry( { MethodAtom, Arity },
+	?wooper_table_type:lookup_entry( { MethodAtom, Arity },
 									State#state_holder.virtual_table ).
 
 
@@ -881,8 +881,6 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 % Section for wooper_handle_local_oneway_execution/3.
 
 % Executes the specified locally-triggered oneway, and returns an updated state.
-%
-%
 -spec wooper_handle_local_oneway_execution( method_name(), wooper:state(),
 								method_arguments() ) -> wooper:state().
 

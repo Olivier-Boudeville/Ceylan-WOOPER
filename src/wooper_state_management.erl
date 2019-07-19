@@ -126,7 +126,7 @@ manage_attributes( ClassInfo=#class_info{ class={ Classname, _LocForm },
 								  _Guards=[], _Body=[ AttrListForm ] } ],
 		 exported=ExportLocs },
 
-	  ShrunkFunTable } = table:extractEntry( AttrTempFunKey, FunctionTable ),
+	  ShrunkFunTable } = table:extract_entry( AttrTempFunKey, FunctionTable ),
 
 	NewFunExportTable = ast_info:ensure_function_not_exported( AttrTempFunKey,
 										ExportLocs, FunExportTable ),
@@ -189,7 +189,7 @@ manage_attributes( ClassInfo=#class_info{ class={ Classname, _LocForm },
 
 	AttrTargetFunKey = { TargetFunName, 0 },
 
-	NewStaticTable = table:addNewEntry( AttrTargetFunKey, NewStaticInfo,
+	NewStaticTable = table:add_new_entry( AttrTargetFunKey, NewStaticInfo,
 										StaticTable ),
 
 	%trace_utils:debug_fmt( "As class-specific attributes, we have ~s",
@@ -316,14 +316,14 @@ register_attribute( AttrNameForm, TypeForm, QualifiersForm, DescriptionForm,
 								qualifiers=Qualifiers,
 								description=Description },
 
-	case table:hasEntry( AttrName, AttributeTable ) of
+	case table:has_entry( AttrName, AttributeTable ) of
 
 		true ->
 			wooper_internals:raise_usage_error( "multiple declarations for "
 				   "class attribute '~s'.", [ AttrName ], Classname );
 
 		false ->
-			table:addEntry( AttrName, AttrInfo, AttributeTable )
+			table:add_entry( AttrName, AttrInfo, AttributeTable )
 
 	end.
 

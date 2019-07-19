@@ -165,7 +165,7 @@ manage_new_operators( _ConstructPairs=[ { Arity, FunInfo } | T ], FunctionTable,
 
 
 	% Registering this (possibly updated) constructor in the dedicated table:
-	NewConstructors = table:addNewEntry( _K=Arity, _V=NewFunInfo,
+	NewConstructors = table:add_new_entry( _K=Arity, _V=NewFunInfo,
 										 Constructors ),
 
 	% Then, for a constructor of arity N, we have to automatically define and
@@ -357,7 +357,7 @@ add_v1_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 									exported=[ ExportLocation ] },
 
 	% Ensure not already defined (ex: by an unwary user):
-	table:addNewEntries( [ { NewId, NewOpInfo }, { NewLinkId, NewLinkOpInfo } ],
+	table:add_new_entries( [ { NewId, NewOpInfo }, { NewLinkId, NewLinkOpInfo } ],
 						 OperatorTable ).
 
 
@@ -488,7 +488,7 @@ add_v2_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 						   exported=[ ExportLocation ] },
 
 	% Ensure not already defined (ex: by an unwary user):
-	table:addNewEntries( [ { SyncNewId, SyncNewOpInfo },
+	table:add_new_entries( [ { SyncNewId, SyncNewOpInfo },
 						   { SyncNewLinkId, SyncNewLinkOpInfo } ],
 						 OperatorTable ).
 
@@ -622,7 +622,7 @@ add_v3_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 									exported=[ ExportLocation ] },
 
 	% Ensure not already defined (ex: by an unwary user):
-	table:addNewEntries( [ { OpNewId, OpNewInfo },
+	table:add_new_entries( [ { OpNewId, OpNewInfo },
 						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
 
 
@@ -748,7 +748,7 @@ add_v4_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 									exported=[ ExportLocation ] },
 
 	% Ensure not already defined (ex: by an unwary user):
-	table:addNewEntries( [ { OpNewId, OpNewInfo },
+	table:add_new_entries( [ { OpNewId, OpNewInfo },
 						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
 
 
@@ -893,7 +893,7 @@ add_v5_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 									exported=[ ExportLocation ] },
 
 	% Ensure not already defined (ex: by an unwary user):
-	table:addNewEntries( [ { OpNewId, OpNewInfo },
+	table:add_new_entries( [ { OpNewId, OpNewInfo },
 						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
 
 
@@ -1028,7 +1028,7 @@ add_v6_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 									exported=[ ExportLocation ] },
 
 	% Ensure not already defined (ex: by an unwary user):
-	table:addNewEntries( [ { OpNewId, OpNewInfo },
+	table:add_new_entries( [ { OpNewId, OpNewInfo },
 						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
 
 
@@ -1172,7 +1172,7 @@ add_v7_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 									exported=[ ExportLocation ] },
 
 	% Ensure not already defined (ex: by an unwary user):
-	table:addNewEntries( [ { OpNewId, OpNewInfo },
+	table:add_new_entries( [ { OpNewId, OpNewInfo },
 						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
 
 
@@ -1241,7 +1241,7 @@ add_v8_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 									   exported=[ ExportLocation ] },
 
 	% Ensure not already defined (ex: by an unwary user):
-	table:addNewEntry(  PassiveNewId, PassiveNewOpInfo, OperatorTable ).
+	table:add_new_entry(  PassiveNewId, PassiveNewOpInfo, OperatorTable ).
 
 
 

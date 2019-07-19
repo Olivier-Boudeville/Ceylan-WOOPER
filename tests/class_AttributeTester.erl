@@ -176,7 +176,7 @@ not_crashing_test_hashtable( State ) ->
 	% Check was registered indeed:
 	ReadTable = getAttribute( EntrySetState, test_hashtable ),
 
-	{ value, my_value } = ?wooper_table_type:lookupEntry( my_key,
+	{ value, my_value } = ?wooper_table_type:lookup_entry( my_key,
 														  ReadTable ),
 
 	test_ok.
