@@ -10,7 +10,7 @@
 
 {application, wooper,
  [{description, "Ceylan-WOOPER, a Wrapper for Object-Oriented Programming in Erlang, as an OTP active application here (see http://wooper.esperide.org)"},
-  {vsn, "WOOPER_VERSION"},
+  {vsn, "VERSION_FOR_REBAR3"},
 
   % See wooper_class_manager.hrl:
   {registered, [wooper_class_manager]},
@@ -22,7 +22,7 @@
   {env,[]},
 
   % Flat hierarchy in ebin here:
-  {modules, [WOOPER_MODULES]},
+  {modules, [MODULES_FOR_REBAR3]},
 
   {licenses, ["Ceylan-WOOPER is licensed by its author (Olivier Boudeville) under a disjunctive tri-license, giving you the choice of one of the three following sets of free software/open source licensing terms:
 	- the Mozilla Public License (MPL), version 1.1 or later (very close to the former Erlang Public License, except aspects regarding Ericsson and/or the Swedish law)
@@ -34,7 +34,7 @@
   %
   % (no specific relevant startup argument to specify here)
   %
-  {mod, {wooper_app, []}}
+  {mod, {wooper_app, []}},
 
   { links, [ {"Official website", "http://wooper.esperide.org" },
 			 {"Github", "https://github.com/Olivier-Boudeville/Ceylan-WOOPER"} ]}
