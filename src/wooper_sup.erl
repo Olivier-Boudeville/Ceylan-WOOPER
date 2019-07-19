@@ -22,8 +22,8 @@
 % If not, see <http://www.gnu.org/licenses/> and
 % <http://www.mozilla.org/MPL/>.
 %
-% Creation date: Sunday, July 14, 2019.
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
+% Creation date: Sunday, July 14, 2019.
 
 
 % Module implementing the root supervisor of WOOPER.
@@ -46,20 +46,24 @@
 -export([ init/1 ]).
 
 
+
 -define( supervisor_name, ?MODULE ).
 
 
 % Starts and links the WOOPER root supervisor.
 start_link() ->
 
-	trace_utils:debug( "Starting WOOPER root supervisor." ),
+	trace_utils:debug( "Starting the WOOPER root supervisor." ),
 
 	supervisor:start_link( { local, ?supervisor_name },
 						   _Module=?MODULE, _Args=[] ).
 
 
 % Callback to initialise this supervisor.
-init( [] ) ->
+init( Args ) ->
+
+	trace_utils:debug_fmt(
+	  "Initializing the WOOPER root supervisor (args: ~p).", [ Args ] ),
 
 	ChildManagerSpec = { wooper_class_manager_id,
 		_Start={ _Mod=wooper_class_manager, _Fun=start_link, _Args=[] },
@@ -67,10 +71,11 @@ init( [] ) ->
 		% 2-second termination allowed:
 		_Shutdown=2000, worker,
 		% Not to mention Myriad ones:
-		_DepMods=[ wooper_class_manager, wooper ] },
+		_DepMods=[ wooper ] },
 
 	ChildrenSpec = [ ChildManagerSpec ],
 
 	% No automatic restarts for a class manager that is never expected to fail:
 	RestartStrategy = { one_for_one, _MaxRestarts=0, _WithinSeconds=1 },
+
 	{ ok, { RestartStrategy, ChildrenSpec } }.
