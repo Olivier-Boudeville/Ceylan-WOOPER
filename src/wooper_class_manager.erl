@@ -255,12 +255,16 @@ start( MaybeClientPid ) ->
 -spec start_link( maybe( pid() ) ) -> manager_pid().
 start_link( MaybeClientPid ) ->
 
+	trace_utils:debug( "Starting and linking the WOOPER class manager." ),
+
 	% A client might be useful for testing.
 
 	case gen_server:start_link( { local, ?wooper_class_manager_name },
 								?MODULE, _Args=[], _Opts=[] ) of
 
-		{ ok, ManagerPid } ->
+		Success={ ok, ManagerPid } ->
+			trace_utils:debug_fmt( "WOOPER class manager created, as ~w.",
+								   [ ManagerPid ] ),
 			case MaybeClientPid of
 
 				undefined ->
@@ -270,10 +274,12 @@ start_link( MaybeClientPid ) ->
 					ClientPid ! { wooper_class_manager_pid, ManagerPid }
 
 			end,
-			ManagerPid;
+			Success;
 
 		% Typically {error,Reason} or ignore:
 		Unexpected ->
+			trace_utils:error_fmt( "The WOOPER class manager could not be "
+								   "created: ~w.", [ Unexpected ] ),
 			throw( { wooper_class_manager_creation_failed, Unexpected } )
 
 	end.
