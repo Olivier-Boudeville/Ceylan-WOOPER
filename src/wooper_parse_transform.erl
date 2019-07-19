@@ -538,7 +538,7 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 
 	% Its spec might have been found before its definition:
 
-	FunInfo = case table:lookupEntry( FunId, FunctionTable ) of
+	FunInfo = case table:lookup_entry( FunId, FunctionTable ) of
 
 		key_not_found ->
 					  % New entry then:
@@ -564,7 +564,7 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 
 	end,
 
-	table:addEntry( _K=FunId, _V=FunInfo, FunctionTable ).
+	table:add_entry( _K=FunId, _V=FunInfo, FunctionTable ).
 
 
 
@@ -577,7 +577,7 @@ add_request( Name, Arity, Form, RequestTable ) ->
 
 	% Its spec might have been found before its definition:
 
-	RequestInfo = case table:lookupEntry( RequestId, RequestTable ) of
+	RequestInfo = case table:lookup_entry( RequestId, RequestTable ) of
 
 		key_not_found ->
 			% New entry then:
@@ -602,7 +602,7 @@ add_request( Name, Arity, Form, RequestTable ) ->
 
 	end,
 
-	table:addEntry( _K=RequestId, _V=RequestInfo, RequestTable ).
+	table:add_entry( _K=RequestId, _V=RequestInfo, RequestTable ).
 
 
 
@@ -615,7 +615,7 @@ add_oneway( Name, Arity, Form, OnewayTable ) ->
 
 	% Its spec might have been found before its definition:
 
-	OnewayInfo = case table:lookupEntry( OnewayId, OnewayTable ) of
+	OnewayInfo = case table:lookup_entry( OnewayId, OnewayTable ) of
 
 		key_not_found ->
 			% New entry then:
@@ -640,7 +640,7 @@ add_oneway( Name, Arity, Form, OnewayTable ) ->
 
 	end,
 
-	table:addEntry( _K=OnewayId, _V=OnewayInfo, OnewayTable ).
+	table:add_entry( _K=OnewayId, _V=OnewayInfo, OnewayTable ).
 
 
 
@@ -653,7 +653,7 @@ add_static_method( Name, Arity, Form, StaticTable ) ->
 
 	% Its spec might have been found before its definition:
 
-	StaticInfo = case table:lookupEntry( StaticId, StaticTable ) of
+	StaticInfo = case table:lookup_entry( StaticId, StaticTable ) of
 
 		key_not_found ->
 			% New entry then:
@@ -675,7 +675,7 @@ add_static_method( Name, Arity, Form, StaticTable ) ->
 
 	end,
 
-	table:addEntry( _K=StaticId, _V=StaticInfo, StaticTable ).
+	table:add_entry( _K=StaticId, _V=StaticInfo, StaticTable ).
 
 
 
@@ -687,7 +687,7 @@ add_static_method( Name, Arity, Form, StaticTable ) ->
 check_class_info( #class_info{ class={ Classname, _LocForm },
 							   constructors=Constructors } ) ->
 
-	case table:isEmpty( Constructors ) of
+	case table:is_empty( Constructors ) of
 
 		true ->
 			wooper_internals:raise_usage_error( "no constructor defined "
@@ -795,7 +795,7 @@ generate_module_info_from( #class_info{
 		fun( { ConstructArity, ConstructFunInfo }, AccFunTable ) ->
 			ConstructId = { construct, ConstructArity },
 			% Expected to have already been appropriately exported.
-			table:addNewEntry( ConstructId, ConstructFunInfo,
+			table:add_new_entry( ConstructId, ConstructFunInfo,
 							   AccFunTable )
 		end,
 		_Acc0=FunctionTable,
@@ -822,7 +822,7 @@ generate_module_info_from( #class_info{
 		DestructFunInfo ->
 			DestructId = { destruct, 1 },
 			% Expected to have already been appropriately exported.
-			table:addNewEntry( DestructId, DestructFunInfo,
+			table:add_new_entry( DestructId, DestructFunInfo,
 							   WithNewOpFunTable )
 
 	end,
@@ -840,7 +840,7 @@ generate_module_info_from( #class_info{
 	AllFunctionTable = WithMthdFunTable,
 
 	%trace_utils:debug_fmt( "Complete function table: ~s",
-	%					   [ table:toString( AllFunctionTable ) ] ),
+	%					   [ table:to_string( AllFunctionTable ) ] ),
 
 	% Directly returned (many fields can be copied verbatim):
 	#module_info{
@@ -880,10 +880,10 @@ register_functions( [], FunctionTable ) ->
 	FunctionTable;
 
 register_functions( [ { FunId, FunInfo } | T ], FunctionTable ) ->
-	case table:lookupEntry( FunId, FunctionTable ) of
+	case table:lookup_entry( FunId, FunctionTable ) of
 
 		key_not_found ->
-			NewFunctionTable = table:addEntry( FunId, FunInfo, FunctionTable ),
+			NewFunctionTable = table:add_entry( FunId, FunInfo, FunctionTable ),
 			register_functions( T, NewFunctionTable );
 
 		{ value, OtherFunInfo } ->

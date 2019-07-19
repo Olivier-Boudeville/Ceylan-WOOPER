@@ -498,7 +498,7 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 
 	% We need to bypass any constructor here.
 
-	AttributeTable = ?wooper_table_type:addEntries( TransformedEntries,
+	AttributeTable = ?wooper_table_type:add_entries( TransformedEntries,
 										?wooper_table_type:new() ),
 
 	OptimisedAttributeTable = ?wooper_table_type:optimise( AttributeTable ),

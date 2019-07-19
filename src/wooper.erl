@@ -1988,8 +1988,8 @@ receive_result() ->
 %
 % (helper)
 %
--spec delete_any_instance_referenced_in( [ attribute_name() ], wooper:state() )
-									   -> wooper:state().
+-spec delete_any_instance_referenced_in( [ attribute_name() ],
+										 wooper:state() ) -> wooper:state().
 delete_any_instance_referenced_in( _Attributes=[], State ) ->
 	State;
 

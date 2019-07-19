@@ -95,7 +95,7 @@ is_wooper_debug() ->
 						wooper:state().
 setAttribute( State, AttributeName, AttributeValue ) ->
    State#state_holder{
-	   attribute_table=?wooper_table_type:addEntry(
+	   attribute_table=?wooper_table_type:add_entry(
 		   AttributeName,
 		   AttributeValue,
 		   State#state_holder.attribute_table ) }.
@@ -119,7 +119,7 @@ setAttribute( State, AttributeName, AttributeValue ) ->
 setAttributes( State, ListOfAttributePairs ) ->
 
    State#state_holder{
-	   attribute_table=?wooper_table_type:addEntries(
+	   attribute_table=?wooper_table_type:add_entries(
 		   ListOfAttributePairs,
 		   State#state_holder.attribute_table ) }.
 
@@ -137,7 +137,7 @@ setAttributes( State, ListOfAttributePairs ) ->
 %
 -spec hasAttribute( wooper:state(), attribute_name() ) -> boolean().
 hasAttribute( State, AttributeName ) ->
-	?wooper_table_type:hasEntry( AttributeName,
+	?wooper_table_type:has_entry( AttributeName,
 								 State#state_holder.attribute_table ).
 
 
@@ -153,7 +153,7 @@ hasAttribute( State, AttributeName ) ->
 %
 -spec getAttribute( wooper:state(), attribute_name() ) -> attribute_value().
 getAttribute( State, AttributeName ) ->
-	?wooper_table_type:getValue( AttributeName,
+	?wooper_table_type:get_value( AttributeName,
 								 State#state_holder.attribute_table ).
 
 
@@ -174,7 +174,7 @@ getAttribute( State, AttributeName ) ->
 -spec getAttributes( wooper:state(), [ attribute_name() ] ) ->
 						   [ attribute_value() ].
 getAttributes( State, AttributeNameList ) ->
-	?wooper_table_type:getValues( AttributeNameList,
+	?wooper_table_type:get_values( AttributeNameList,
 								  State#state_holder.attribute_table ).
 
 
@@ -190,7 +190,7 @@ getAttributes( State, AttributeNameList ) ->
 removeAttribute( State, AttributeName ) ->
 
 	State#state_holder{
-		attribute_table=?wooper_table_type:removeEntry( AttributeName,
+		attribute_table=?wooper_table_type:remove_entry( AttributeName,
 			State#state_holder.attribute_table ) }.
 
 
@@ -207,7 +207,7 @@ removeAttribute( State, AttributeName ) ->
 addToAttribute( State, AttributeName, Value ) ->
 
 	State#state_holder{
-		attribute_table=?wooper_table_type:addToEntry(
+		attribute_table=?wooper_table_type:add_to_entry(
 			AttributeName,
 			Value,
 			State#state_holder.attribute_table ) }.
@@ -226,7 +226,7 @@ addToAttribute( State, AttributeName, Value ) ->
 subtractFromAttribute( State, AttributeName, Value ) ->
 
 	State#state_holder{
-		attribute_table=?wooper_table_type:subtractFromEntry(
+		attribute_table=?wooper_table_type:subtract_from_entry(
 			AttributeName,
 			Value,
 			State#state_holder.attribute_table ) }.
@@ -245,7 +245,7 @@ subtractFromAttribute( State, AttributeName, Value ) ->
 incrementAttribute( State, AttributeName ) ->
 
 	State#state_holder{
-		attribute_table=?wooper_table_type:addToEntry(
+		attribute_table=?wooper_table_type:add_to_entry(
 			AttributeName,
 			_Value=1,
 			State#state_holder.attribute_table ) }.
@@ -264,7 +264,7 @@ incrementAttribute( State, AttributeName ) ->
 decrementAttribute( State, AttributeName ) ->
 
 	State#state_holder{
-		attribute_table=?wooper_table_type:addToEntry(
+		attribute_table=?wooper_table_type:add_to_entry(
 			AttributeName,
 			_Value=-1,
 			State#state_holder.attribute_table ) }.
@@ -281,7 +281,7 @@ decrementAttribute( State, AttributeName ) ->
 toggleAttribute( State, BooleanAttributeName ) ->
 
 	State#state_holder{
-		attribute_table=?wooper_table_type:toggleEntry(
+		attribute_table=?wooper_table_type:toggle_entry(
 			BooleanAttributeName,
 			State#state_holder.attribute_table ) }.
 
@@ -300,7 +300,7 @@ toggleAttribute( State, BooleanAttributeName ) ->
 appendToAttribute( State, AttributeName, Element ) ->
 
 	State#state_holder{
-		attribute_table=?wooper_table_type:appendToEntry(
+		attribute_table=?wooper_table_type:append_to_entry(
 			AttributeName,
 			Element,
 			State#state_holder.attribute_table ) }.
@@ -323,7 +323,7 @@ appendToAttribute( State, AttributeName, Element ) ->
 concatToAttribute( State, AttributeName, List ) ->
 
 	State#state_holder{
-		attribute_table=?wooper_table_type:concatToEntry(
+		attribute_table=?wooper_table_type:concat_to_entry(
 			AttributeName,
 			List,
 			State#state_holder.attribute_table ) }.
@@ -343,7 +343,7 @@ concatToAttribute( State, AttributeName, List ) ->
 deleteFromAttribute( State, AttributeName, Element ) ->
 
 	State#state_holder{
-		attribute_table=?wooper_table_type:deleteFromEntry(
+		attribute_table=?wooper_table_type:delete_from_entry(
 			AttributeName,
 			Element,
 			State#state_holder.attribute_table ) }.
@@ -367,12 +367,12 @@ deleteFromAttribute( State, AttributeName, Element ) ->
 addKeyValueToAttribute( State, AttributeName, Key, Value ) ->
 
 	State#state_holder{
-		attribute_table=?wooper_table_type:addEntry(
+		attribute_table=?wooper_table_type:add_entry(
 
 			AttributeName,
 
-			?wooper_table_type:addEntry( Key, Value,
-				?wooper_table_type:getValue( AttributeName,
+			?wooper_table_type:add_entry( Key, Value,
+				?wooper_table_type:get_value( AttributeName,
 					State#state_holder.attribute_table ) ),
 
 			State#state_holder.attribute_table ) }.
@@ -392,7 +392,7 @@ addKeyValueToAttribute( State, AttributeName, Key, Value ) ->
 							{ wooper:state(), attribute_value() }.
 popFromAttribute( State, AttributeName ) ->
 
-	{ Head, PoppedAttributeTable }=?wooper_table_type:popFromEntry(
+	{ Head, PoppedAttributeTable }=?wooper_table_type:pop_from_entry(
 				  AttributeName, State#state_holder.attribute_table ),
 
 	{ State#state_holder{ attribute_table=PoppedAttributeTable }, Head }.

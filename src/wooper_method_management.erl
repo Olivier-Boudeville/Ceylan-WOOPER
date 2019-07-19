@@ -305,7 +305,7 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 		function ->
 
 			NewFunctionTable =
-				table:addNewEntry( FunId, NewFunInfo, FunctionTable ),
+				table:add_new_entry( FunId, NewFunInfo, FunctionTable ),
 
 			sort_out_functions( T, NewFunctionTable, RequestTable,
 					OnewayTable, StaticTable, Classname, ExportLoc,
@@ -320,7 +320,7 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 			RequestInfo =
 				function_to_request_info( ExportedFunInfo, FinalQualifiers ),
 
-			NewRequestTable = table:addNewEntry( FunId, RequestInfo,
+			NewRequestTable = table:add_new_entry( FunId, RequestInfo,
 												 RequestTable ),
 
 			sort_out_functions( T, FunctionTable, NewRequestTable,
@@ -336,7 +336,7 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 			OnewayInfo =
 				function_to_oneway_info( ExportedFunInfo, FinalQualifiers ),
 
-			NewOnewayTable = table:addNewEntry( FunId, OnewayInfo,
+			NewOnewayTable = table:add_new_entry( FunId, OnewayInfo,
 												OnewayTable ),
 
 			sort_out_functions( T, FunctionTable, RequestTable,
@@ -350,7 +350,7 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 			StaticInfo =
 				function_to_static_info( ExportedFunInfo, FinalQualifiers ),
 
-			NewStaticTable = table:addNewEntry( FunId, StaticInfo,
+			NewStaticTable = table:add_new_entry( FunId, StaticInfo,
 												StaticTable ),
 
 			sort_out_functions( T, FunctionTable, RequestTable,
@@ -1785,7 +1785,7 @@ call_transformer( LineCall, FunctionRef={ remote, _, {atom,_,wooper},
 
 			%?debug_fmt( "Known functions exported by the wooper "
 			%					   "module:~n  ~s",
-			%					   [ table:toString( WOOPERExportSet ) ] ),
+			%					   [ table:to_string( WOOPERExportSet ) ] ),
 
 			wooper_internals:raise_usage_error( "invalid method terminator "
 			  "specified for ~s/~B: wooper:~s/~B is neither a known terminator "
@@ -2305,7 +2305,7 @@ ensure_exported( FunInfo, _MarkerTable ) ->
 -spec ensure_all_exported_in( function_table(), ast_info:location() ) ->
 									function_table().
 ensure_all_exported_in( FunctionTable, ExportLoc ) ->
-	table:mapOnValues( fun( FunInfo ) ->
+	table:map_on_values( fun( FunInfo ) ->
 							ensure_exported_at( FunInfo, ExportLoc )
 					   end,
 					   FunctionTable ).
@@ -2569,7 +2569,7 @@ methods_to_functions( RequestTable, OnewayTable, StaticTable,
 		 { ReqId, request_to_function_info( ReqInfo, ExportLoc ) }
 						 || { ReqId, ReqInfo } <- RequestPairs ],
 
-	WithRequestsFunTable = table:addNewEntries( RequestAsFunPairs,
+	WithRequestsFunTable = table:add_new_entries( RequestAsFunPairs,
 												InitFunctionTable ),
 
 
@@ -2579,7 +2579,7 @@ methods_to_functions( RequestTable, OnewayTable, StaticTable,
 		 { OnwId, oneway_to_function_info( OnwInfo, ExportLoc ) }
 						  || { OnwId, OnwInfo } <- OnewayPairs ],
 
-	WithOnewaysFunTable = table:addNewEntries( OnewayAsFunPairs,
+	WithOnewaysFunTable = table:add_new_entries( OnewayAsFunPairs,
 											   WithRequestsFunTable ),
 
 
@@ -2589,7 +2589,7 @@ methods_to_functions( RequestTable, OnewayTable, StaticTable,
 		 { StId, static_to_function_info( StInfo, ExportLoc ) }
 						  || { StId, StInfo } <- StaticPairs ],
 
-	table:addNewEntries( StaticAsFunPairs, WithOnewaysFunTable ).
+	table:add_new_entries( StaticAsFunPairs, WithOnewaysFunTable ).
 
 
 

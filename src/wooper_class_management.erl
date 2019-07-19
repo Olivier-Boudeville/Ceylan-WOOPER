@@ -125,7 +125,7 @@ manage_superclasses( ClassInfo=#class_info{ class={ Classname, _ClassLocForm },
 
 	%{ Superclasses, RegisteredClassInfo } =
 	%		% Looking first for any '-superclasses(...).' parse attribute:
-	%		case table:lookupEntry( superclasses, ParseAttrTable ) of
+	%		case table:lookup_entry( superclasses, ParseAttrTable ) of
 
 	% The define itself is visible only from the preprocessor (not from the
 	% compiler), so its definition is obtained thanks to an ad hoc, always
@@ -136,7 +136,7 @@ manage_superclasses( ClassInfo=#class_info{ class={ Classname, _ClassLocForm },
 
 	#function_info{ clauses=[ { clause, _Line, _Patterns=[], _Guards=[],
 								_Body=[ ReturnForm ] } ] } =
-		case table:lookupEntry( { get_superclasses, 0 }, FunctionTable ) of
+		case table:lookup_entry( { get_superclasses, 0 }, FunctionTable ) of
 
 			{ value, GetSupFunInfo } ->
 				GetSupFunInfo;

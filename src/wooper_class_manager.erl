@@ -356,7 +356,7 @@ handle_cast( stop, State ) ->
 handle_cast( display, State=Tables ) ->
 
 	wooper:log_info( ?log_prefix "Internal state is: ~s~n",
-					 [ ?wooper_table_type:toString( Tables ) ] ),
+					 [ ?wooper_table_type:to_string( Tables ) ] ),
 
 	% Const:
 	{ noreply, State }.
@@ -542,7 +542,7 @@ loop( Tables ) ->
 
 		display ->
 			wooper:log_info( ?log_prefix "Internal state is: ~s~n",
-							 [ ?wooper_table_type:toString( Tables ) ] ),
+							 [ ?wooper_table_type:to_string( Tables ) ] ),
 			loop( Tables );
 
 		stop ->
@@ -575,7 +575,7 @@ loop( Tables ) ->
 									 ?wooper_table_type:?wooper_table_type() }.
 get_virtual_table_for( Module, Tables ) ->
 
-	case ?wooper_table_type:lookupEntry( Module, Tables ) of
+	case ?wooper_table_type:lookup_entry( Module, Tables ) of
 
 		{ value, Table } ->
 
@@ -589,7 +589,7 @@ get_virtual_table_for( Module, Tables ) ->
 			ModuleTable = create_method_table_for( Module ),
 
 			%trace_utils:debug_fmt( "Virtual table for ~s: ~s",
-			%         [ Module, ?wooper_table_type:toString( ModuleTable ) ] ),
+			%         [ Module, ?wooper_table_type:to_string( ModuleTable ) ] ),
 
 			% Each class had its virtual table optimised:
 			%OptimisedModuleTable =
@@ -597,7 +597,7 @@ get_virtual_table_for( Module, Tables ) ->
 
 			% Here the table could be patched with destruct/1, if defined.
 			ClassTable =
-				?wooper_table_type:addEntry( Module, ModuleTable, Tables ),
+				?wooper_table_type:add_entry( Module, ModuleTable, Tables ),
 
 			% And the table of virtual tables was itself optimised each time a
 			% new class was introduced:
@@ -765,7 +765,7 @@ create_local_method_table_for( Module ) ->
 			case select_function(  Name, Arity ) of
 
 				true ->
-					?wooper_table_type:addEntry( { Name, Arity }, Module,
+					?wooper_table_type:add_entry( { Name, Arity }, Module,
 												 Hashtable );
 
 				false ->
