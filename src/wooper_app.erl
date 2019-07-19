@@ -22,11 +22,11 @@
 % If not, see <http://www.gnu.org/licenses/> and
 % <http://www.mozilla.org/MPL/>.
 %
-% Creation date: Thursday, July 11, 2019.
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
+% Creation date: Thursday, July 11, 2019.
 
 
-% Module implementing the (active) application behaviour.
+% Module implementing the WOOPER (active) application behaviour.
 %
 % Note that, thanks to the automatic creation of the class manager, WOOPER will
 % still work flawlessly even if not specifically started.
