@@ -61,7 +61,9 @@
 % See documentation at http://wooper.esperide.org.
 
 
-% We retrofitted the class manager into a gen_server for OTP compliance:
+% We retrofitted the class manager into a gen_server for (optional) OTP
+% compliance:
+%
 -behaviour(gen_server).
 
 
@@ -76,7 +78,6 @@
 
 
 % gen_server callbacks:
-%
 -export([ init/1, handle_call/3, handle_cast/2, handle_info/2,
 		  terminate/2, code_change/3 ]).
 
@@ -255,7 +256,7 @@ start( MaybeClientPid ) ->
 -spec start_link( maybe( pid() ) ) -> manager_pid().
 start_link( MaybeClientPid ) ->
 
-	trace_utils:debug( "Starting and linking the WOOPER class manager." ),
+	%trace_utils:debug( "Starting and linking the WOOPER class manager." ),
 
 	% A client might be useful for testing.
 
@@ -263,8 +264,8 @@ start_link( MaybeClientPid ) ->
 								?MODULE, _Args=[], _Opts=[] ) of
 
 		Success={ ok, ManagerPid } ->
-			trace_utils:debug_fmt( "WOOPER class manager created, as ~w.",
-								   [ ManagerPid ] ),
+			%trace_utils:debug_fmt( "WOOPER class manager created, as ~w.",
+			%					   [ ManagerPid ] ),
 			case MaybeClientPid of
 
 				undefined ->
