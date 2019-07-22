@@ -29,7 +29,7 @@
 % Module implementing the root supervisor of WOOPER.
 %
 % In practice, it will supervise a single process, the one of the (singleton)
-% WOOPER class manager.
+% WOOPER class manager (which implements the gen_server behaviour).
 %
 -module(wooper_sup).
 
