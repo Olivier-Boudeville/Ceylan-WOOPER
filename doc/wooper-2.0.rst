@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2019 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Sunday, July 14, 2019
+:Lastly updated: Friday, July 19, 2019
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -214,7 +214,7 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
 
 Straightforward, isn't it? We will discuss it in-depth, though.
 
-To test this class (provided that ``GNU make`` and ``Erlang 21.0`` or more recent [#]_ are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on `Ceylan-Myriad <http://myriad.esperide.org>`_, hence is to be installed first:
+To test this class (provided that ``GNU make`` and ``Erlang 22.0`` or more recent [#]_ are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on `Ceylan-Myriad <http://myriad.esperide.org>`_, hence is to be installed first:
 
 .. code:: bash
 
@@ -3008,8 +3008,8 @@ Current Stable Version & Download
 =================================
 
 
-Using Stable Release Archive
-----------------------------
+.. Using Stable Release Archive
+.. ----------------------------
 
 .. WOOPER 2.0 is ready to be used and can be downloaded `here <http://sourceforge.net/project/showfiles.php?group_id=158516&package_id=239574>`_ (FIXME).
 
@@ -3017,25 +3017,24 @@ Using Stable Release Archive
 
 .. One way of building all of WOOPER (base files and examples) is, from UNIX or on Windows from a Cygwin or MSYS shell, once the archive is downloaded and extracted, to execute ``make all`` from the WOOPER directory.
 
-.. comment For example::
+.. For example::
 
 ..  $ tar xvjf wooper-x.y.tar.bz2 && cd wooper-x.y && make all
 
 .. It will build and run all, including the various WOOPER test cases.
 
-Currently no source archive is specifically distributed, please refer to the following section.
-
+.. Currently no source archive is specifically distributed, please refer to the following sections.
 
 
 
 Using Cutting-Edge GIT
 ----------------------
 
-We try to ensure that the main line (in the ``master`` branch) always stays functional (sorry for the pun). Evolutions are to take place in feature branches.
+This is the installation method that we use and recommend; the WOOPER ``master`` branch is meant to stick to the latest stable version: we try to ensure that this main line always stays functional (sorry for the pun). Evolutions are to take place in feature branches and to be merged only when ready.
 
 This OOP layer, ``Ceylan-WOOPER``, relies (only) on:
 
-- `Erlang <http://www.erlang.org/>`_, version 21.0 or higher
+- `Erlang <http://www.erlang.org/>`_, version 22.0 or higher
 - the `Ceylan-Myriad <http://myriad.esperide.org>`_ base layer
 
 
@@ -3073,30 +3072,73 @@ As a result, once a proper Erlang version is available, the `Ceylan-Myriad repos
 .. {ok,wooper_class_manager}
 
 
+:raw-html:`<a name="otp"></a>`
+
+.. _`otp-build`:
 
 Using OTP-Related Build/Runtime Conventions
 -------------------------------------------
 
-
-As discussed for `Myriad <http://myriad.esperide.org/myriad.html#otp>`_, we added the (optional) possibility of generating a WOOPER *OTP application* out of the build tree, ready to be integrated into an *(OTP) release*. For that we rely on `rebar3 <https://www.rebar3.org/>`_, `relx <https://github.com/erlware/relx>`_ and `hex <https://hex.pm/>`_.
+As discussed for `Myriad <http://myriad.esperide.org/myriad.html#otp>`_, we added the (optional) possibility of generating a WOOPER *OTP application* out of the build tree (obtained thanks to the method described in the previous section), ready to be integrated into an *(OTP) release*. For that we rely on `rebar3 <https://www.rebar3.org/>`_, `relx <https://github.com/erlware/relx>`_ and `hex <https://hex.pm/>`_.
 
 Unlike Myriad, which is an OTP *library* application, WOOPER is an OTP *active* application, meaning the reliance on an application that can be started/stopped (``wooper_app``), a root supervisor (``wooper_sup``) and a class manager that is a background server process (``gen_server``).
+
+:raw-html:`<a name="otp_for_instances"></a>`
+
+.. Note:: By the way, why WOOPER instances are not more tightly integrated within the OTP framework? The most natural match would be to have them as well implement the ``gen_server`` behaviour, yet this would involve non-negligible overhead in terms of additional messages exchanges and function calls, and the API would not as pleasant as the current form (requests would have to be aggregated in ``handle_call/3``, oneways in ``handle_cast/2``, etc.).
 
 
 Using Rebar3
 ............
 
-The same procedures as `explained for Myriad <http://myriad.esperide.org/myriad.html#otp>` apply, once rebar3 is available::
+The same procedures as `explained for Myriad <http://myriad.esperide.org/myriad.html#otp>`_ apply, once rebar3 is available:
+
+.. code:: bash
 
  $ make rebar3-application
  $ make rebar3-release
+
+More precisely, to test the WOOPER OTP application support, and provided that ``make rebar3-compile`` was issued beforehand from the root of the WOOPER source tree:
+
+.. code:: bash
+
+ $ cd tests
+ $ make wooper_otp_application_run
+		Running unitary test wooper_otp_application_run (third form)
+			 from wooper_otp_application_test
+
+ --> Testing module wooper_otp_application_test.
+
+ Starting the WOOPER application.
+ [debug] Starting WOOPER application (type: normal, start arguments: []).
+ [debug] Starting the WOOPER root supervisor.
+ [debug] Initializing the WOOPER root supervisor (args: []).
+ [debug] Starting and linking the WOOPER class manager.
+ [debug] WOOPER class manager created, as <0.87.0>.
+ WOOPER version: {2,0,1}.
+ Class filename corresponding to 'class_Tiger': 'class_Tiger.erl'.
+ Stopping the WOOPER application.
+ [debug] Stopping WOOPER application (state: []).
+ Successful end of test of the WOOPER application.
+ =INFO REPORT==== 19-Jul-2019::22:53:28.243821 ===
+	application: wooper
+	exited: stopped
+	type: temporary
+ =INFO REPORT==== 19-Jul-2019::22:53:28.260437 ===
+	application: myriad
+	exited: stopped
+	type: temporary
+
+ --> Successful end of test.
+
+ (test finished, interpreter halted)
 
 
 
 Using Hex
 ---------
 
-To-do!
+Still to be done, once the bug in the hex plugin of rebar3 that we encountered with Myriad will have been fixed.
 
 
 
