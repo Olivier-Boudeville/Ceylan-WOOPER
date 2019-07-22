@@ -1386,7 +1386,13 @@ get_spawn_expression_for( _IsDebugMode=true, Line ) ->
 	% To test:
 	%{ remote, Line, { atom, Line, non_existing }, { atom, Line, spawn } };
 
-	{ remote, Line, { atom, Line, proc_lib }, { atom, Line, spawn } };
+	%{ remote, Line, { atom, Line, proc_lib }, { atom, Line, spawn } };
+
+	% We switched back to a basic spawn (see Myriad's spawn_utils.hrl), as we
+	% felt the extra information in error messages was counter-productive:
+	%
+	{ atom, Line, spawn };
+
 
 get_spawn_expression_for( _IsDebugMode=false, Line ) ->
 	{ atom, Line, spawn }.
@@ -1405,7 +1411,13 @@ get_spawn_link_expression_for( _IsDebugMode=true, Line ) ->
 	% To test:
 	%{ remote, Line, { atom, Line, non_existing }, { atom, Line, spawn_link } };
 
-	{ remote, Line, { atom, Line, proc_lib }, { atom, Line, spawn_link } };
+	%{ remote, Line, { atom, Line, proc_lib }, { atom, Line, spawn_link } };
+
+	% We switched back to a basic spawn (see Myriad's spawn_utils.hrl), as we
+	% felt the extra information in error messages was counter-productive:
+	%
+	{ atom, Line, spawn };
+
 
 get_spawn_link_expression_for( _IsDebugMode=false, Line ) ->
 	{ atom, Line, spawn_link }.
