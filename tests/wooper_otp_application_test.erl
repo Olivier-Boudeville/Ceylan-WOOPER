@@ -41,10 +41,12 @@ test_wooper_application( WOOPEREBinPath, MyriadEBinPath ) ->
 
 	test_facilities:display( "Starting the WOOPER application." ),
 
-	% Was expecting it would be automatic, unclear if it is the case, moreover
-	% it visibly should be done before entering wooper_app:start/2, so:
+	% Was expecting starting dependencies would be automatic, apparently it is
+	% not the case; moreover it visibly should be done before entering
+	% wooper_app:start/2, so:
 	%
 	ok = application:start( myriad ),
+
 	ok = application:start( wooper ),
 
 	test_facilities:display( "WOOPER version: ~p.",
