@@ -15,7 +15,7 @@ ifndef REBAR3_PROJECT_NAME
 endif
 
 
-WOOPER_VERSION := 2.0.0
+WOOPER_VERSION := 2.0.2
 
 # PROJECT_VERSION should be defined on a per-project basis.
 ifndef PROJECT_VERSION
@@ -59,9 +59,29 @@ MYRIAD_OTP_INC := -I$(WOOPER_TOP)/../myriad/include/
 INC += $(WOOPER_INC) $(MYRIAD_OTP_INC)
 
 
+
+# So that they can be fetched from outside
+# (see the 'list-beam-dirs' target)
+#
+WOOPER_BEAM_DIRS = $(WOOPER_BEAM)/src      \
+				   $(WOOPER_BEAM)/examples
+
+
+# In an OTP/rebar3-style application layout, at compilation time, modules
+# compiled (directly or not) by the Myriad parse transform will expect its
+# module to be located in:
+#
+MYRIAD_OTP_BEAM_DIR := $(WOOPER_TOP)/../myriad/ebin/
+
+
+# We rely on Myriad as well:
+BEAM_DIRS += $(WOOPER_BEAM_DIRS) $(MYRIAD_OTP_BEAM_DIR)
+
+
+
+
 DOC_ROOT       = $(WOOPER_TOP)/../../../doc
 WOOPER_DOC_DIR = $(DOC_ROOT)/web/main/documentation/wooper
-
 
 
 ifndef VM_TEST_NAME
@@ -76,19 +96,6 @@ ifndef VM_TEST_NAME
 VM_TEST_NAME := wooper_test
 
 endif
-
-
-
-
-# So that they can be fetched from outside
-# (see the 'list-beam-dirs' target)
-#
-WOOPER_BEAM_DIRS = $(WOOPER_BEAM)/src      \
-				   $(WOOPER_BEAM)/examples
-
-
-# We rely on Myriad as well:
-BEAM_DIRS += $(WOOPER_BEAM_DIRS)
 
 
 # Overall settings section.
