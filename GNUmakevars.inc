@@ -15,7 +15,7 @@ ifndef REBAR3_PROJECT_NAME
 endif
 
 
-WOOPER_VERSION := 2.0.1
+WOOPER_VERSION := 2.0.0
 
 # PROJECT_VERSION should be defined on a per-project basis.
 ifndef PROJECT_VERSION
@@ -50,11 +50,17 @@ WOOPER_BEAM := $(WOOPER_TOP)
 WOOPER_INC = -I$(WOOPER_SRC)
 
 
+# In an OTP/rebar3-style application layout, at compilation time, libraries
+# making use of Myriad will expect its includes to be located in:
+#
+MYRIAD_OTP_INC := -I$(WOOPER_TOP)/../myriad/include/
+
+
+INC += $(WOOPER_INC) $(MYRIAD_OTP_INC)
+
+
 DOC_ROOT       = $(WOOPER_TOP)/../../../doc
 WOOPER_DOC_DIR = $(DOC_ROOT)/web/main/documentation/wooper
-
-
-INC += $(WOOPER_INC)
 
 
 
