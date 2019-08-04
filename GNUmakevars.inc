@@ -15,11 +15,20 @@ ifndef REBAR3_PROJECT_NAME
 endif
 
 
-WOOPER_VERSION := 2.0.2
+# For all uses, including rebar:
+WOOPER_VERSION := 2.0.3
 
 # PROJECT_VERSION should be defined on a per-project basis.
 ifndef PROJECT_VERSION
 	PROJECT_VERSION = $(WOOPER_VERSION)
+endif
+
+
+# Variable name intentionally not including the current layer, for more generic
+# rules:
+
+ifndef VERSION_FOR_REBAR3
+	VERSION_FOR_REBAR3 := $(PROJECT_VERSION)
 endif
 
 

@@ -9,7 +9,7 @@ WOOPER_TOP = .
 		info-paths info-compile info-parse-transform
 
 
-MODULES_DIRS = src doc tests examples
+MODULES_DIRS = src doc conf tests examples
 
 
 # To override the 'all' default target with a parallel version:

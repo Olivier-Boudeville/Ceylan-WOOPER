@@ -6,13 +6,14 @@
 % This is also a template, so that version numbers can be updated from a
 % centralized place (namely GNUmakevars.inc).
 
-% To be run from the 'conf' directory, using the 'test-myriad-otp' target.
+% To be run from the 'conf' directory, using the 'test-hex-package' target.
 
 
 
 % Settings for the 'default' profile follow.
 %
-{deps, [ {myriad, "MYRIAD_VERSION_FOR_REBAR"} ] }.
+% Implied: {myriad, "MYRIAD_VERSION_FOR_REBAR"}
+{deps, [ {wooper, "VERSION_FOR_REBAR3" } ] }.
 
 
 % We need to rely on our dedicated build procedure (ex: for the parse transforms
