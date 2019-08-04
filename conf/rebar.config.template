@@ -38,7 +38,7 @@
 % hex-compile-hook-script.sh, to compensate for the GNUmake* root files that the
 % package archive will not include at their location)
 %
-{deps, [ {myriad, "1.0.5"} ] }.
+{deps, [ {myriad, "MYRIAD_VERSION_FOR_REBAR"} ] }.
 
 
 % We need to rely on our dedicated build procedure (ex: for the parse transforms
