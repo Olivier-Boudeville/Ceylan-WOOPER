@@ -1,6 +1,9 @@
 % This is a (manually crafted) configuration file of rebar3, so that
 % Ceylan-WOOPER can better integrate in the current OTP ecosystem, despite its
 % (more complex) build based on GNU make.
+%
+% This is also a template, so that version numbers can be updated from a
+% centralized place (namely GNUmakevars.inc).
 
 
 % Base layout was obtained thanks to: 'rebar3 new app wooper', as WOOPER is an
@@ -13,6 +16,7 @@
 % - http://erlang.org/doc/design_principles/release_structure.html
 % - https://www.rebar3.org/docs/releases
 % - https://learnyousomeerlang.com/release-is-the-word
+
 
 
 
@@ -44,6 +48,9 @@
 % We need to rely on our dedicated build procedure (ex: for the parse transforms
 % involved):
 %
+% Could not set REBAR_PROFILE=$(REBAR_PROFILE):
+%
+%{pre_hooks, [ {compile, "make -s rebar3-info"} ]}.
 {pre_hooks, [ {compile, "make -s rebar3-compile"} ]}.
 
 %{post_hooks, [
@@ -61,8 +68,8 @@
 {relx, [
 
   {release, {wooper_release, {cmd, "cat GNUmakevars.inc | grep 'WOOPER_VERSION := '| sed 's|^WOOPER_VERSION := ||1' | tr -d '\n'"}},
-		 % myriad thus implied:
-		 [sasl, wooper]},
+			% myriad thus implied:
+			[sasl, wooper]},
 
   %{sys_config, "./config/sys.config"},
   %{vm_args, "./config/vm.args"},
@@ -83,8 +90,8 @@
 
 	% Same as default profile:
 	{release, {wooper_release, {cmd, "cat GNUmakevars.inc | grep 'WOOPER_VERSION := '| sed 's|^WOOPER_VERSION := ||1' | tr -d '\n'"}},
-		 % myriad thus implied:
-		 [sasl, wooper]},
+			  % myriad thus implied:
+			  [sasl, wooper]},
 
 	% For the build makefiles:
 	{env, [ { 'REBAR_PROFILE', "prod" } ] },
