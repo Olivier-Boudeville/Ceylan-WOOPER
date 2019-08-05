@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2019 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Friday, July 19, 2019
+:Lastly updated: Monday, August 5, 2019
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -3085,7 +3085,7 @@ Unlike Myriad, which is an OTP *library* application, WOOPER is an OTP *active* 
 
 :raw-html:`<a name="otp_for_instances"></a>`
 
-.. Note:: By the way, why WOOPER instances are not more tightly integrated within the OTP framework? The most natural match would be to have them as well implement the ``gen_server`` behaviour, yet this would involve non-negligible overhead in terms of additional messages exchanges and function calls, and the API would not as pleasant as the current form (requests would have to be aggregated in ``handle_call/3``, oneways in ``handle_cast/2``, etc.).
+.. Note:: By the way, why are the WOOPER instances not more tightly integrated within the OTP framework? The most natural match would be to have them implement as well the ``gen_server`` behaviour - yet this would involve non-negligible overhead in terms of additional messages exchanges and function calls, and the API would not as pleasant as the current form (requests would have to be aggregated in ``handle_call/3``, oneways in ``handle_cast/2``, etc.).
 
 
 Using Rebar3
@@ -3098,7 +3098,7 @@ The same procedures as `explained for Myriad <http://myriad.esperide.org/myriad.
  $ make rebar3-application
  $ make rebar3-release
 
-More precisely, to test the WOOPER OTP application support, and provided that ``make rebar3-compile`` was issued beforehand from the root of the WOOPER source tree:
+More precisely, to test the WOOPER OTP application support, provided that ``make rebar3-compile`` was issued beforehand, one can run from the root of the WOOPER source tree:
 
 .. code:: bash
 
@@ -3115,7 +3115,7 @@ More precisely, to test the WOOPER OTP application support, and provided that ``
  [debug] Initializing the WOOPER root supervisor (args: []).
  [debug] Starting and linking the WOOPER class manager.
  [debug] WOOPER class manager created, as <0.87.0>.
- WOOPER version: {2,0,1}.
+ WOOPER version: {2,0,5}.
  Class filename corresponding to 'class_Tiger': 'class_Tiger.erl'.
  Stopping the WOOPER application.
  [debug] Stopping WOOPER application (state: []).
@@ -3138,8 +3138,13 @@ More precisely, to test the WOOPER OTP application support, and provided that ``
 Using Hex
 ---------
 
-Still to be done, once the bug in the hex plugin of rebar3 that we encountered with Myriad will have been fixed.
+`Hex packages for WOOPER <https://hex.pm/packages/wooper>`_ are published for most versions.
 
+For more details, one may have a look at:
+
+- `rebar.config.template <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/conf/rebar.config.template>`_, the general rebar configuration file used when generating the WOOPER OTP application and release (implying the automatic management of Myriad)
+- `rebar-for-hex.config.template <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/conf/rebar-for-hex.config.template>`_, to generate a corresponding Hex package for WOOPER (whose structure and conventions is quite different from the previous OTP elements)
+- `rebar-for-testing.config.template <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/conf/rebar-for-testing.config.template>`_, the simplest test of the previous Hex package: an empty rebar project having for sole dependency that Hex package
 
 
 :raw-latex:`\pagebreak`

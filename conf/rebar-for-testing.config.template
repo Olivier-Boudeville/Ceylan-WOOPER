@@ -1,13 +1,12 @@
 % This is a (manually crafted) configuration file of rebar3, so that
-% Ceylan-Myriad can be directly tested separately (i.e. without needing to
+% Ceylan-WOOPER can be directly tested separately (i.e. without needing to
 % install upper layers, i.e. software depending on it): emulates a user of the
-% Myriad library.
+% WOOPER library.
 %
 % This is also a template, so that version numbers can be updated from a
 % centralized place (namely GNUmakevars.inc).
 
 % To be run through the 'test-hex-package' make target.
-%
 
 % Note that this testing relates just to the ability of bringing up the
 % specified WOOPER version as a dependency (and its own dependencies); there is
@@ -21,13 +20,9 @@
 {deps, [ {wooper, "VERSION_FOR_REBAR3" } ] }.
 
 
+% This testing just targets to trigger the build of WOOPER (and its Myriad
+% dependency), not of specific tests making use of it.
 
-% Nothing below applies, as this testing just targets to trigger the build of
-% WOOPER, not of specific tests making use of it:
-%
-%{pre_hooks, [ {compile, "make -s rebar3-info"} ]}.
-%{pre_hooks, [ {compile, "make -s rebar3-compile"} ]}.
-%{pre_hooks, [ {compile, "priv/hex-packaging/hex-compile-hook-script.sh"} ]}.
 {pre_hooks, [ {compile, "echo 'WOOPER testing pre-compile hook!'"} ]}.
 
 {post_hooks, [
