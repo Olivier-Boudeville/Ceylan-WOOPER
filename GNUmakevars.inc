@@ -1,6 +1,14 @@
 # Prerequisite: WOOPER_TOP must be set.
 
 
+# Useful to target for example the root of the current layer (ex: to locate the
+# relevant, layer-local '_build' directory):
+#
+ifndef LAYER_TOP
+	   LAYER_TOP := $(WOOPER_TOP)
+endif
+
+
 # Project section.
 
 # PROJECT_NAME should be defined on a per-project basis.
@@ -15,8 +23,9 @@ ifndef REBAR3_PROJECT_NAME
 endif
 
 
-# For all uses, including rebar:
-WOOPER_VERSION := 2.0.3
+# The uniquely-defined version of this layer, for all uses including rebar:
+WOOPER_VERSION := 2.0.5
+
 
 # PROJECT_VERSION should be defined on a per-project basis.
 ifndef PROJECT_VERSION
@@ -76,17 +85,38 @@ WOOPER_BEAM_DIRS = $(WOOPER_BEAM)/src      \
 				   $(WOOPER_BEAM)/examples
 
 
-# In an OTP/rebar3-style application layout, at compilation time, modules
-# compiled (directly or not) by the Myriad parse transform will expect its
-# module to be located in:
+# For OTP releases and all:
+
+WOOPER_REBAR_BUILD_BASE = $(REBAR_BUILD_DIR)/lib/wooper
+
+
+# When building WOOPER in an OTP context from its usual, GIT root (ex: with 'make
+# rebar3-application'), the BEAMs of Myriad are to be found in
+# the OTP build tree - rather than in a supposedly fully-built usual root for
+# Myriad:
 #
-MYRIAD_OTP_BEAM_DIR := $(WOOPER_TOP)/../myriad/ebin/
+# (these information are useful only at compilation-time, in order to locate the
+# needed parse transforms and their dependencies; at runtime, the OTP rules
+# ensure that the relevant ebin directories are in the code path)
+#
+MYRIAD_OTP_BEAM_DIR_FROM_USUAL = $(LAYER_TOP)/$(MYRIAD_REBAR_BUILD_BASE)/ebin
+
+
+# In an OTP/rebar3-style application layout, at compilation time as well,
+# modules compiled (directly or not) by the Myriad parse transform will expect
+# its module to be located in:
+#
+MYRIAD_OTP_BEAM_DIR_FROM_OTP = $(LAYER_TOP)/../myriad/ebin/
+
+
+# To locate Myriad modules from all OTP contexts:
+MYRIAD_PARSE_TRANSFORMS_PZ_OPT = \
+	-pz $(MYRIAD_OTP_BEAM_DIR_FROM_USUAL) \
+	-pz $(MYRIAD_OTP_BEAM_DIR_FROM_OTP)
 
 
 # We rely on Myriad as well:
-BEAM_DIRS += $(WOOPER_BEAM_DIRS) $(MYRIAD_OTP_BEAM_DIR)
-
-
+BEAM_DIRS += $(WOOPER_BEAM_DIRS)
 
 
 DOC_ROOT       = $(WOOPER_TOP)/../../../doc
@@ -203,7 +233,8 @@ ifndef ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_STANDARD_MODULES
 	   #  WOOPER parse-transform, but with the Myriad one:
 	   #
 	   ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_STANDARD_MODULES = \
-				$(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD)
+				$(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD) \
+				$(MYRIAD_PARSE_TRANSFORMS_PZ_OPT)
 
 endif
 
@@ -248,6 +279,7 @@ ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD) \
 ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER =                 \
 					$(OVERALL_PZ_OPT)                            \
 					-pz $(WOOPER_TOP)/src                        \
+					$(MYRIAD_PARSE_TRANSFORMS_PZ_OPT)            \
 					'+{parse_transform,wooper_parse_transform}'
 
 
