@@ -22,8 +22,8 @@
 % If not, see <http://www.gnu.org/licenses/> and
 % <http://www.mozilla.org/MPL/>.
 %
-% Creation date: Friday, July 12, 2007.
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
+% Creation date: Friday, July 12, 2007.
 
 
 
@@ -54,15 +54,30 @@
 % - or implicitly, as done before the OTP integration: then done on-demand (as
 % soon as a first WOOPER instance is created, hence with no a priori explicit
 % initialisation)
-
+%
 -module(wooper_class_manager).
 
 
 % See documentation at http://wooper.esperide.org.
 
 
-% We retrofitted the class manager into a gen_server for (optional) OTP
+% Implementation notes:
+
+% Each WOOPER instance is expected to request (through a get_table "request")
+% this class manager for its virtual table.
+%
+% When integrating OTP, this class manager became a gen_server (of course it
+% could not be a WOOPER instance itself), rather than as a supervisor_bridge.
+%
+% As such, a get_table inquiry could have been implemented as an handle_call or
+% an handle_info. We preferred the former, so that it could be trigger thanks to
+% our get_table/1 function below in a classical OTP way.
+
+
+% So we retrofitted the class manager into a gen_server for (optional) OTP
 % compliance:
+%
+% (see wooper_enable_otp_integration in wooper_defines_exports.hrl)
 %
 -behaviour(gen_server).
 
@@ -142,6 +157,7 @@
 % Uncomment to activate debug mode:
 %-define(wooper_debug_class_manager,).
 
+
 -spec display_state( ?wooper_table_type:?wooper_table_type() ) -> void().
 -spec display_table_creation( basic_utils:module_name() ) -> void().
 
@@ -164,12 +180,13 @@ display_table_creation( Module ) ->
 
 
 display_msg( String ) ->
-	Message = text_utils:format( ?log_prefix "~s.~n", [ String ] ),
+	Message = text_utils:format( ?log_prefix "~s~n", [ String ] ),
 	wooper:log_info( Message ).
 
+
 display_msg( FormatString, Values ) ->
-	Message = text_utils:format( ?log_prefix FormatString ++ ".~n",
-								 [ Values ] ),
+	Message = text_utils:format( ?log_prefix ++ FormatString ++ "~n",
+								 Values ),
 	wooper:log_info( Message ).
 
 
@@ -223,7 +240,7 @@ start_link() ->
 -spec start( maybe( pid() ) ) -> manager_pid().
 start( MaybeClientPid ) ->
 
-	% A client might be useful for testing.
+	% A client process might be useful for testing.
 
 	case gen_server:start( { local, ?wooper_class_manager_name },
 						   ?MODULE, _Args=[], _Opts=[] ) of
@@ -258,7 +275,7 @@ start_link( MaybeClientPid ) ->
 
 	%trace_utils:debug( "Starting and linking the WOOPER class manager." ),
 
-	% A client might be useful for testing.
+	% A client process might be useful for testing.
 
 	case gen_server:start_link( { local, ?wooper_class_manager_name },
 								?MODULE, _Args=[], _Opts=[] ) of
@@ -339,10 +356,13 @@ init( _Args=[] ) ->
 
 
 
-% Handling OTP-based requests (gen_server callback):
+% Handling OTP-based requests (gen_server callback, trigger by get_table/1 in
+% this module):
+%
+
 handle_call( { get_table, Classname }, _From, _State=Tables ) ->
 
-	 display_msg( "handle_call: get_table for ~s", [ Classname ] ),
+	display_msg( "handle_call: get_table for ~s.", [ Classname ] ),
 
 	{ NewTables, TargetTable } = get_virtual_table_for( Classname, Tables ),
 
@@ -353,7 +373,7 @@ handle_call( { get_table, Classname }, _From, _State=Tables ) ->
 % Handling OTP-based oneways (gen_server callback):
 handle_cast( stop, State ) ->
 
-	display_msg( "handle_cast: stop" ),
+	display_msg( "handle_cast: stop." ),
 
 	stop_common(),
 
@@ -370,11 +390,23 @@ handle_cast( display, State=Tables ) ->
 
 
 
-% Handling out-of-bound, direct messages (gen_server callback):
+% Handling OTP-based requests (gen_server callback):
+handle_info( { get_table, _Classname, _FromPid }, _State=_Tables ) ->
+
+	trace_utils:error( "WOOPER class manager called according to the "
+					   "non-OTP conventions, whereas is running as "
+					   "an (OTP) gen_server." ),
+
+	% (for the caller, see wooper:retrieve_virtual_table/1)
+
+	throw( otp_integration_mismatch );
+
+
+% Handling out-of-bound, direct messages :
 handle_info( Info, State ) ->
 
 	trace_utils:warning_fmt( "The WOOPER class manager received an unexpected, "
-							 "hence ignored, handle_info message: ~w.",
+							 "hence ignored, handle_info message:~n  ~p.",
 							 [ Info ] ),
 
 	{ noreply, State }.
@@ -425,6 +457,9 @@ get_manager() ->
 
 		not_registered ->
 
+			%trace_utils:debug(
+			%  "WOOPER class manager not available, starting it." ),
+
 			% Not linking, at least for consistency with the case where it is
 			% already launched:
 			%
@@ -442,6 +477,10 @@ get_manager() ->
 
 
 		ManagerPid ->
+
+			%trace_utils:debug(
+			%  "WOOPER class manager available, returning it." ),
+
 			ManagerPid
 
 	end.

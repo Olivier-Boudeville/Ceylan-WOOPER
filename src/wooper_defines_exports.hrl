@@ -48,8 +48,8 @@
 % Tells whether the OTP integration of WOOPER (involving supervisor, gen_server,
 % explicit starting, etc.) shall be enabled.
 %
-%-define( wooper_enable_otp_integration, true ).
--define( wooper_enable_otp_integration, false ).
+-define( wooper_enable_otp_integration, true ).
+%-define( wooper_enable_otp_integration, false ).
 
 
 % Number of milliseconds to wait for, in order to be reasonably sure that the

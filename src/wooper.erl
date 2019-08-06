@@ -1407,12 +1407,21 @@ default_node_down_handler( Node, MonitorNodeInfo, State ) ->
 -if( ?wooper_enable_otp_integration =:= true ).
 
 retrieve_virtual_table( Classname ) ->
+
+	trace_utils:debug_fmt( "Retrieving the OTP-way the virtual table for '~s'.",
+						   [ Classname ] ),
+
 	% The OTP way:
 	wooper_class_manager:get_table( Classname ).
+
 
 -elif( ?wooper_enable_otp_integration =:= false ).
 
 retrieve_virtual_table( Classname ) ->
+
+	trace_utils:debug_fmt(
+	  "Retrieving classically (non-OTP way) the virtual table for '~s'.",
+	  [ Classname ] ),
 
 	% For per-instance virtual table: wooper_create_method_table_for(?MODULE).
 

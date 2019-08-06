@@ -189,15 +189,23 @@ get_java_package_and_class_for( WOOPERClassname ) ->
 
 -if( ?wooper_enable_otp_integration =:= true ).
 
+
 start_for_test() ->
 	trace_utils:trace( "Starting WOOPER test OTP environment." ),
 	wooper_class_manager:start().
 
+
 -elif( ?wooper_enable_otp_integration =:= false ).
 
+
+% Here we intentionally do not start the WOOPER class manager, as an a priori
+% creation shall remain optional:
+%
 start_for_test() ->
-	trace_utils:trace( "Starting WOOPER test non-OTP environment." ),
+	trace_utils:trace( "Starting WOOPER test non-OTP environment "
+					   "(thus not creating the WOOPER class manager)." ),
 	ok.
+
 
 -endif. % wooper_enable_otp_integration
 
