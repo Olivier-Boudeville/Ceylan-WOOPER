@@ -308,9 +308,63 @@ start_link( MaybeClientPid ) ->
 -spec get_table( wooper:classname() ) ->
 					   ?wooper_table_type:?wooper_table_type().
 get_table( Classname ) ->
-	{ ok, Table } = gen_server:call( ?wooper_class_manager_name,
+
+	% Rather than specifying the registered name of the class manager
+	% (?wooper_class_manager_name) in the call, we attempt to fetch directly its
+	% PID: this will not change anything for the OTP case (where this manager
+	% shall be already available, as being launched as soon as WOOPER is
+	% started), but it allows to support the non-OTP case (where this manager
+	% may be spawned automatically, only the first time it becomes necessary)
+
+	% Not done, as would create and put the manager in its non-OTP loop:
+	%ClassManagerPid = get_manager(),
+
+	ClassManagerPid = get_manager_through_otp(),
+
+	% Still respect the OTP conventions:
+	{ ok, Table } = gen_server:call( ClassManagerPid,
 									 { get_table, Classname } ),
 	Table.
+
+
+% Returns the PID of the WOOPER class manager.
+%
+% We do the same as get_manager/0 (including w.r.t. to multiple, simultaneous
+% launches), but with a gen_server-based procedure:
+%
+% (note that performing, if possible, an explicit start is better, as it
+% prevents simultaneous, clashing launches)
+%
+-spec get_manager_through_otp() -> manager_pid().
+get_manager_through_otp() ->
+
+	case naming_utils:is_registered( ?wooper_class_manager_name,
+									 _LookUpScope=local ) of
+
+		not_registered ->
+			% We have to launch, hopefully with no clash with other launchings:
+			try
+
+				trace_utils:debug( "OTP start of the WOOPER class manager." ),
+
+				start( _MaybeClientPid=undefined )
+
+			catch _:E ->
+
+				trace_utils:debug_fmt( "OTP start of the WOOPER class "
+					"manager failed (~p), assuming simultaneous launches, "
+					"waiting for one to succeed.", [ E ] ),
+
+				% Returning the PID of the winne, whichever it is:
+				naming_utils:wait_for_local_registration_of(
+				  ?wooper_class_manager_name, ?registration_time_out )
+
+			end;
+
+		ManagerPid ->
+			ManagerPid
+
+	end.
 
 
 

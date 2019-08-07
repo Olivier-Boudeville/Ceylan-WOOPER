@@ -98,8 +98,8 @@ run() ->
 					trace_utils:warning_fmt(
 					  "No build directory found for the Myriad parent "
 					  "application (searched for '~s'), stopping this test "
-					  "(run beforehand 'make rebar3-compile' at the root "
-					  "of the Myriad source tree for a more relevant testing).",
+					  "(run beforehand 'make rebar3-application' at the root "
+					  "of this source tree for a more relevant testing).",
 					  [ MyriadEBinPath ] )
 
 			end;
@@ -109,7 +109,8 @@ run() ->
 			trace_utils:warning_fmt( "No build directory found for the WOOPER "
 				"application (searched for '~s'), stopping this test "
 				"(run beforehand 'make rebar3-compile' at the root of the "
-				"source tree for a more relevant testing).", [ WOOPEREBinPath ] )
+				"source tree for a more relevant testing).",
+				[ WOOPEREBinPath ] )
 
 	end,
 

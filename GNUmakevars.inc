@@ -51,6 +51,19 @@ ifndef PACKAGE_TOP
 endif
 
 
+
+# For any quick, local, non-packaged update thereof:
+MYRIAD_SIBLING_BUILD = $(LAYER_TOP)/../Ceylan-Myriad
+
+
+# The OTP tree of the Myriad application within a local OTP _build tree:
+MYRIAD_LOCAL_APP := $(LAYER_TOP)/_build/default/lib/myriad
+
+# Where Myriad BEAMs are to lie when used as an OTP application:
+MYRIAD_LOCAL_EBIN := $(MYRIAD_LOCAL_APP)/ebin/
+
+
+
 WOOPER_RELEASE_BASE := wooper-$(PROJECT_VERSION)
 
 WOOPER_RELEASE_ARCHIVE_ZIP := $(WOOPER_RELEASE_BASE).zip
@@ -90,10 +103,9 @@ WOOPER_BEAM_DIRS = $(WOOPER_BEAM)/src      \
 WOOPER_REBAR_BUILD_BASE = $(REBAR_BUILD_DIR)/lib/wooper
 
 
-# When building WOOPER in an OTP context from its usual, GIT root (ex: with 'make
-# rebar3-application'), the BEAMs of Myriad are to be found in
-# the OTP build tree - rather than in a supposedly fully-built usual root for
-# Myriad:
+# When building WOOPER in an OTP context from its usual, GIT root (ex: with
+# 'make rebar3-application'), the BEAMs of Myriad are to be found in the OTP
+# build tree - rather than in a supposedly fully-built usual root for Myriad:
 #
 # (these information are useful only at compilation-time, in order to locate the
 # needed parse transforms and their dependencies; at runtime, the OTP rules
@@ -289,7 +301,7 @@ ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER =                 \
 #
 ifndef ERLANG_COMPILER_PARSE_TRANSFORM_OPT
 
-	   ERLANG_COMPILER_PARSE_TRANSFORM_OPT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER)
+	ERLANG_COMPILER_PARSE_TRANSFORM_OPT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER)
 
 endif
 
