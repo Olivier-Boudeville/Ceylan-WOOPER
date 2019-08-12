@@ -97,6 +97,7 @@ release-xz: prepare-release
 
 # The '-L' option with cp is used so that symbolic links are replaced by their
 # actual target file, otherwise tar would include dead links in releases.
+#
 prepare-release: clean clean-release
 	@echo "     Preparing release archive for WOOPER $(WOOPER_VERSION)"
 	@cd .. && mkdir -p $(WOOPER_RELEASE_BASE) && /bin/cp -L -r myriad wooper $(WOOPER_RELEASE_BASE)
