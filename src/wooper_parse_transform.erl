@@ -229,7 +229,7 @@ parse_transform( InputAST, Options ) ->
 	% In the context of this direct parse transform, the class_info is of no
 	% use afterwards and thus can be dropped:
 	%
-	{ WOOPERAST, _ClassInfo } = apply_wooper_transform( InputAST, Options ),
+	{ WOOPERAST, _ClassModInfo } = apply_wooper_transform( InputAST, Options ),
 
 	%trace_utils:trace_fmt( "WOOPER output AST:~n~p~n", [ WOOPERAST ] ),
 
@@ -240,8 +240,12 @@ parse_transform( InputAST, Options ) ->
 
 
 % Transforms specified AST for WOOPER.
+%
+% Depending on the nature of the AST (WOOPER class or mere module), returns a
+% class information or a module information.
+%
 -spec apply_wooper_transform( ast(), meta_utils:parse_transform_options() ) ->
-									{ ast(), class_info() }.
+									{ ast(), class_info() | module_info() }.
 apply_wooper_transform( InputAST, Options ) ->
 
 	%trace_utils:debug_fmt( "  (applying parse transform '~p')", [ ?MODULE ] ),
@@ -271,26 +275,39 @@ apply_wooper_transform( InputAST, Options ) ->
 	%				"from Myriad and command-line options: ~s",
 	%				[ ast_info:module_info_to_string( WithOptsModuleInfo ) ] ),
 
-	% Then promote this Myriad-level information into a WOOPER one:
-	% (here is the real WOOPER magic)
-	ClassInfo = generate_class_info_from( WithOptsModuleInfo ),
+	{ ModInfo, MaybeClassInfo } = case is_wooper_class( WithOptsModuleInfo ) of
 
-	?display_trace( "Class information generated, transforming it." ),
+		true ->
+			% Then promote this Myriad-level information into a WOOPER one:
+			% (here is the real WOOPER magic, if any)
+			%
+			ClassInfo = generate_class_info_from( WithOptsModuleInfo ),
 
-	% Finally perform WOOPER-specific transformation:
-	NewClassInfo = transform_class_info( ClassInfo ),
+			?display_trace( "Class information generated, transforming it." ),
 
-	%trace_utils:debug_fmt( "Transformed class information: ~s",
-	%			   [ wooper_info:class_info_to_string( NewClassInfo ) ] ),
+			% Finally perform WOOPER-specific transformation:
+			NewClassInfo = transform_class_info( ClassInfo ),
 
-	?display_trace( "Generating back module information." ),
+			%trace_utils:debug_fmt( "Transformed class information: ~s",
+			% [ wooper_info:class_info_to_string( NewClassInfo ) ] ),
 
-	% Then translates back this class information in module information:
-	NewModuleInfo = generate_module_info_from( NewClassInfo ),
+			?display_trace( "Generating back module information." ),
+
+			% Then translates back this class information in module information:
+			{ generate_module_info_from( NewClassInfo ), NewClassInfo };
+
+		false ->
+			% Not a WOOPER class, hence only the Myriad module-level
+			% transformations will apply:
+			%
+			trace_utils:debug( "Standard module detected (not a class)." ),
+			{ WithOptsModuleInfo, undefined }
+
+	end,
 
 	%trace_utils:debug_fmt(
 	%  "Module information just prior to Myriad transformation: ~s",
-	%  [ ast_info:module_info_to_string( NewModuleInfo ) ] ),
+	%  [ ast_info:module_info_to_string( ModInfo ) ] ),
 
 	% And finally obtain the corresponding updated AST thanks to Myriad:
 	%
@@ -300,7 +317,7 @@ apply_wooper_transform( InputAST, Options ) ->
 	?display_trace( "Performing Myriad-level transformation." ),
 
 	{ TransformedModuleInfo, _MyriadTransforms } =
-		myriad_parse_transform:transform_module_info( NewModuleInfo ),
+		myriad_parse_transform:transform_module_info( ModInfo ),
 
 	%trace_utils:debug_fmt(
 	%  "Module information after Myriad transformation: ~s",
@@ -314,16 +331,44 @@ apply_wooper_transform( InputAST, Options ) ->
 	%trace_utils:debug_fmt( "WOOPER output AST:~n~p", [ OutputAST ] ),
 
 	%OutputASTFilename = text_utils:format(
-	%           "WOOPER-output-AST-for-module-~s.txt",
-	%			[ element( 1, TransformedModuleInfo#module_info.module ) ] ),
+	%   "WOOPER-output-AST-for-module-~s.txt",
+	%	[ element( 1, TransformedModuleInfo#module_info.module ) ] ),
 
 	%ast_utils:write_ast_to_file( OutputAST, OutputASTFilename ),
 
 	%ast_utils:write_ast_to_file( lists:sort( OutputAST ),
 	%							 "WOOPER-output-AST-sorted.txt" ),
 
-	{ OutputAST, NewClassInfo }.
+	case MaybeClassInfo of
 
+		undefined ->
+			% Preferring, at least for the moment, returning the untransformed
+			% module_info:
+			%
+			{ OutputAST, WithOptsModuleInfo };
+
+		SomeClassInfo ->
+			{ OutputAST, SomeClassInfo }
+
+	end.
+
+
+
+% Tells whether the specified module_info corresponds to a WOOPER class or to a
+% standard module.
+%
+-spec is_wooper_class( module_info() ) -> boolean().
+is_wooper_class( #module_info{  module={ ModuleName, _LocForm } } ) ->
+
+	case text_utils:atom_to_string( ModuleName ) of
+
+		"class_" ++ _ ->
+			true;
+
+		_ ->
+			false
+
+	end.
 
 
 
