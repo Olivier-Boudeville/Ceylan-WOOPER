@@ -1,17 +1,17 @@
-% This is a (manually crafted) configuration file of rebar3, so that
-% Ceylan-WOOPER can be directly tested separately (i.e. without needing to
-% install upper layers, i.e. software depending on it): emulates a user of the
-% WOOPER library.
-%
-% This is also a template, so that version numbers can be updated from a
-% centralized place (namely GNUmakevars.inc).
+% This is a configuration file of rebar3, so that Ceylan-WOOPER can be directly
+% tested separately (i.e. without needing to install upper layers, i.e. software
+% depending on it): emulates a user of the WOOPER library.
+
+% If the name of this file is 'rebar.config', then it is a generated file,
+% otherwise it is a template (in conf/rebar-for-testing.config.template), meant
+% to be filled by information coming from GNUmakevars.inc.
 
 % To be run through the 'test-hex-package' make target.
 
 % Note that this testing relates just to the ability of bringing up the
-% specified WOOPER version as a dependency (and its own dependencies); there is
-% no actual test involved, i.e. no depending sources that would make use here of
-% WOOPER.
+% specified WOOPER version as a dependency; there is no actual test involved,
+% i.e. no depending sources that would make use here of WOOPER.
+
 
 
 % Settings for the 'default' profile follow.
@@ -29,6 +29,7 @@
 	{compile, "echo 'WOOPER testing post-compile hook!'"} ]}.
 
 
+
 % For release generation:
 %
 % (defaults are for the development mode)
@@ -38,7 +39,8 @@
 %
 {relx, [
 
-  {release, {myriad_release, {cmd, "cat GNUmakevars.inc | grep 'MYRIAD_VERSION := '| sed 's|^MYRIAD_VERSION := ||1' | tr -d '\n'"}}, [sasl, myriad]},
+  {release, {wooper_release, "VERSION_FOR_REBAR3"},
+            [sasl, wooper]},
 
   %{sys_config, "./config/sys.config"},
   %{vm_args, "./config/vm.args"},
@@ -58,7 +60,8 @@
   {prod, [ {relx, [
 
 	% Same as default profile:
-	{release, {myriad_release, {cmd, "cat GNUmakevars.inc | grep 'MYRIAD_VERSION := '|sed 's|^MYRIAD_VERSION := ||1' | tr -d '\n'"}}, [sasl, myriad]},
+	{release, {wooper_release, "VERSION_FOR_REBAR3"}},
+			  [sasl, wooper]},
 
 	% For the build makefiles:
 	{env, [ { 'REBAR_PROFILE', "prod" } ] },
