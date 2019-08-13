@@ -108,7 +108,7 @@
 		  on_failed_request/7, on_failed_oneway/6 ]).
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 
 % State-related helpers (only available in debug mode):
@@ -119,14 +119,14 @@
 		  display_instance/1 ]).
 
 
--else. % wooper_debug
+-else. % wooper_debug_mode
 
 
 % Exported as otherwise reported as unused:
 -export([ check_classname_and_arity/2 ]).
 
 
--endif. % wooper_debug
+-endif. % wooper_debug_mode
 
 
 
@@ -369,15 +369,15 @@
 % displayed on the console (yet the result will still be waited for
 % indefinitively)
 %
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 -define( notify_long_wait_after, 2500 ).
 
--else. % wooper_debug
+-else. % wooper_debug_mode
 
 -define( notify_long_wait_after, 60000 ).
 
--endif. % wooper_debug
+-endif. % wooper_debug_mode
 
 
 
@@ -962,7 +962,7 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 							   no_return().
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 construct_and_run( Classname, ConstructionParameters ) ->
 
@@ -1018,7 +1018,7 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 
 
--else. % wooper_debug
+-else. % wooper_debug_mode
 
 
 construct_and_run( Classname, ConstructionParameters ) ->
@@ -1052,7 +1052,7 @@ construct_and_run( Classname, ConstructionParameters ) ->
 	Classname:wooper_main_loop( ConstructState ).
 
 
--endif. % wooper_debug
+-endif. % wooper_debug_mode
 
 
 
@@ -1068,7 +1068,7 @@ construct_and_run( Classname, ConstructionParameters ) ->
 									 pid() ) -> no_return().
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 construct_and_run_synchronous( Classname, ConstructionParameters,
 							   SpawnerPid ) ->
@@ -1127,7 +1127,7 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 
 
 
--else. % not in wooper_debug:
+-else. % not in wooper_debug_mode:
 
 
 construct_and_run_synchronous( Classname, ConstructionParameters,
@@ -1169,7 +1169,7 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 	Classname:wooper_main_loop( ReadyState ).
 
 
--endif. % not wooper_debug.
+-endif. % not wooper_debug_mode.
 
 
 
@@ -1185,7 +1185,7 @@ construct_passive( Classname, ConstructionParameters ) ->
 	%					   "and parameters ~p.",
 	%					   [ Classname, ConstructionParameters ] ),
 
-	cond_utils:if_defined( wooper_debug,
+	cond_utils:if_defined( wooper_debug_mode,
 		   check_classname_and_arity( Classname, ConstructionParameters ) ),
 
 	BlankState = get_blank_state( Classname ),
@@ -1611,7 +1611,7 @@ get_synchronous_time_out( _IsDebugMode=false ) ->
 
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 
 % Returns a textual representation of the virtual table corresponding to the
@@ -1678,7 +1678,7 @@ display_instance( State ) ->
 	error_logger:info_msg( "~s~n", [ instance_to_string( State ) ] ).
 
 
--endif. % wooper_debug
+-endif. % wooper_debug_mode
 
 
 

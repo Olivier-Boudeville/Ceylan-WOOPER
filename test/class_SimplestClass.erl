@@ -44,10 +44,8 @@
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
 
-
-% Import common types without module prefix:
--include("ecosystem_types.hrl").
-
+-type age() :: integer().
+-type gender() :: 'male' | 'female'.
 
 
 % Constructs a new Creature.

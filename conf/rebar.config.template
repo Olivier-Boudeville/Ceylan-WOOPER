@@ -26,9 +26,7 @@
 % (not working properly, as the hex plugin expects a flat source tree
 % apparently, so the build of the dependency fails)
 %
-%{deps, [ {myriad, "1.*.*", {git,
-%   "https://github.com/Olivier-Boudeville/Ceylan-Myriad",
-%   {branch, "master"} } } ] }.
+{deps, [ {myriad, {git, "git://github.com/Olivier-Boudeville/Ceylan-Myriad", {branch, "master"}}} ] }.
 
 
 % As an hex-package dependency:
@@ -37,19 +35,20 @@
 % hex-compile-hook-script.sh, to compensate for the GNUmake* root files that the
 % package archive will not include at their location)
 %
-{deps, [ {myriad, "MYRIAD_VERSION_FOR_REBAR"} ] }.
+%{deps, [ {myriad, "MYRIAD_VERSION_FOR_REBAR"} ] }.
 
 
-% We need to rely on our dedicated build procedure (ex: for the parse transforms
-% involved):
-%
+
+% Include directories found in INC:
+{erl_opts, [ {d,myriad_debug_mode}, {d,wooper_debug_mode}, debug_info, {debug_info_key,"DEBUG_KEY_FOR_REBAR"}, report_warnings, warn_export_all, warn_export_vars, warn_shadow_vars, warn_obsolete_guards, warn_unused_import, warnings_as_errors, {parse_transform,wooper_parse_transform}, INCS_FOR_REBAR ]}.
+
+
+% Bootstrapped modules (from BOOTSTRAP_MODULES):
+{erl_first_files, [ FIRST_FILES_FOR_REBAR ]}.
+
 % Could not set REBAR_PROFILE=$(REBAR_PROFILE):
-%
-%{pre_hooks, [ {compile, "make -s rebar3-info"} ]}.
-{pre_hooks, [ {compile, "make -s rebar3-compile"} ]}.
-
-%{post_hooks, [
-%	{compile, "echo 'WOOPER post-compile hook!'"} ]}.
+{pre_hooks,  [ {compile, "make -s rebar3-compile-pre-hook"} ]}.
+{post_hooks, [ {compile, "make -s rebar3-compile-post-hook"} ]}.
 
 
 

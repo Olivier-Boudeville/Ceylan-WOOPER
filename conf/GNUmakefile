@@ -12,7 +12,12 @@ WOOPER_TOP = ..
 #
 %: %.template
 	@echo "  Generating $@ from $< (VERSION_FOR_REBAR3 being $(VERSION_FOR_REBAR3), MYRIAD_VERSION_FOR_REBAR being $(MYRIAD_VERSION))"
-	@cat $< | sed "s|\"MYRIAD_VERSION_FOR_REBAR\"|\"$(MYRIAD_VERSION)\"|g" | sed "s|\"VERSION_FOR_REBAR3\"|\"$(VERSION_FOR_REBAR3)\"|g" > $@
+	@cat $< | sed "s|\"MYRIAD_VERSION_FOR_REBAR\"|\"$(MYRIAD_VERSION)\"|g" | sed "s|\"VERSION_FOR_REBAR3\"|\"$(VERSION_FOR_REBAR3)\"|g" | sed "s|FIRST_FILES_FOR_REBAR|$(REBAR_FIRST_FILES)|g" | sed "s|DEBUG_KEY_FOR_REBAR|$(DEBUG_INFO_KEY)|g"| sed "s|INCS_FOR_REBAR|$(REBAR_INCS)|g" > $@
+
+
+info-rebar:
+	@echo "REBAR_FIRST_FILES = $(REBAR_FIRST_FILES)"
+	@echo "REBAR_INCS = $(REBAR_INCS)"
 
 
 clean: clean-local

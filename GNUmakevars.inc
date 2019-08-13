@@ -194,7 +194,7 @@ endif
 # be built (maximum performance versus extended checkings).
 ifeq ($(ENABLE_DEBUG),true)
 
-	ENABLE_WOOPER_DEBUG_OPT = -Dwooper_debug
+	ENABLE_WOOPER_DEBUG_OPT = -Dwooper_debug_mode
 
 else
 

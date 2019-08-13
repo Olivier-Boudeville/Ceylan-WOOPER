@@ -2922,7 +2922,7 @@ Runtime Errors
 
 Most errors while using WOOPER should result in relatively clear messages (ex: ``wooper_method_failed`` or ``wooper_method_faulty_return``), associated with all relevant runtime information that was available to WOOPER, including context and stacktrace.
 
-Another way of overcoming WOOPER issues is to activate the debug mode for all WOOPER-enabled compiled modules (ex: uncomment ``-define(wooper_debug,).`` in ``wooper.hrl`` or, preferably, ensure in ``GNUmakevars.inc`` that ``ENABLE_DEBUG`` has been set to true), and recompile your classes.
+Another way of overcoming WOOPER issues is to activate the debug mode for all WOOPER-enabled compiled modules (ex: uncomment ``-define(wooper_debug_mode,).`` in ``wooper.hrl`` or, preferably, ensure in ``GNUmakevars.inc`` that ``ENABLE_DEBUG`` has been set to true), and recompile your classes.
 
 The debug mode tries to perform extensive checking on all WOOPER entry points, from incoming messages to the user class itself, catching mistakes from the class developer as well as from the class user.
 

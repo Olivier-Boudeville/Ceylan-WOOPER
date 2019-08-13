@@ -26,6 +26,11 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
 
+% Defined now here, as the rebar-based build system would not allow us to define
+% per-module rules (ex: this module shall itself be compiled by the Myriad parse transform).
+%
+ -compile({parse_transform, myriad_parse_transform}).
+
 
 % Centralisation of class-level information.
 -module(wooper_info).

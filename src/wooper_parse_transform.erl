@@ -23,8 +23,13 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
-% Creation date: Wednesday, December 24, 2014
+% Creation date: Wednesday, December 24, 2014.
 
+
+% Defined now here, as the rebar-based build system would not allow us to define
+% per-module rules (ex: this module shall itself be compiled by the Myriad parse transform).
+%
+ -compile({parse_transform, myriad_parse_transform}).
 
 
 % Overall parse transform for the WOOPER layer.

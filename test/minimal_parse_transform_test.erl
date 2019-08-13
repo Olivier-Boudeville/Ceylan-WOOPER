@@ -70,7 +70,7 @@ run() ->
 
 	test_facilities:start( ?MODULE ),
 
-	TargetSourceFile = "../examples/class_Cat.erl",
+	TargetSourceFile = "../priv/examples/class_Cat.erl",
 
 	trace_utils:info_fmt( "Applying the WOOPER parse transform to the "
 						  "'~s' source file.", [ TargetSourceFile ] ),
