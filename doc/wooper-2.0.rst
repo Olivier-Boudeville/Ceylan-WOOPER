@@ -218,14 +218,17 @@ To test this class (provided that ``GNU make`` and ``Erlang 22.0`` or more recen
 
 .. code:: bash
 
- $ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad.git
- $ cd Ceylan-Myriad && make all && cd ..
+ $ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad.git myriad
+ $ cd myriad && make all && cd ..
 
 
 .. code:: bash
 
- $ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git
- $ cd Ceylan-WOOPER && make all
+ $ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git wooper
+ $ cd wooper && make all
+
+
+(for OTP compliance, using short names (such as ``myriad`` or ``wooper``) for clones rather than long ones (such as ``Ceylan-Myriad`` or ``Ceylan-WOOPER``) is recommended)
 
 
 .. [#] Note that, in the Ceylan-Myriad repository, we have a script to streamline the installation of Erlang, see `install-erlang.sh <https://github.com/Olivier-Boudeville/Ceylan-Myriad/blob/master/conf/install-erlang.sh>`_; use ``install-erlang.sh --help`` for guidance.
