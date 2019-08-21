@@ -19,7 +19,7 @@
   % (however myriad is a library application, not an active one)
   {applications, [kernel, stdlib, myriad]},
 
-  {env,[]},
+  %{env,[]},
 
   % Flat hierarchy in ebin here:
   {modules, [MODULES_FOR_REBAR3]},
