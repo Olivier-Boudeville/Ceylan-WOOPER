@@ -23,7 +23,8 @@
 % Depends on the Ceylan-Myriad OTP library application (Erlang implied):
 
 % As a GIT-based dependency:
-{deps, [ {myriad, {git, "git://github.com/Olivier-Boudeville/Ceylan-Myriad", {branch, "master"}}} ] }.
+{deps, [ {myriad, {git, "git://github.com/Olivier-Boudeville/Ceylan-Myriad",
+                    {branch, "master"}}} ] }.
 
 
 % As an hex-package dependency:
@@ -33,7 +34,6 @@
 % package archive will not include at their location)
 %
 %{deps, [ {myriad, "MYRIAD_VERSION_FOR_REBAR"} ] }.
-
 
 
 % Include directories found in INC:
