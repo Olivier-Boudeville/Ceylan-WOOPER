@@ -37,7 +37,7 @@
 
 
 % For the function_info record:
--include("ast_info.hrl").
+-include_lib("myriad/include/ast_info.hrl").
 
 % For the class_info record:
 -include("wooper_info.hrl").

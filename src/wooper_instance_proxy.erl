@@ -48,7 +48,7 @@
 
 
 % For myriad_spawn*:
--include("spawn_utils.hrl").
+-include_lib("myriad/include/spawn_utils.hrl").
 
 
 -spec start( instance_pid() ) -> instance_pid().

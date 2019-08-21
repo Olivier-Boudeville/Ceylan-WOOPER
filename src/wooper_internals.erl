@@ -22,9 +22,8 @@
 % If not, see <http://www.gnu.org/licenses/> and
 % <http://www.mozilla.org/MPL/>.
 %
-% Creation date: Friday, April 13, 2018
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
-
+% Creation date: Friday, April 13, 2018.
 
 
 % Gathering of internal helpers.
@@ -38,7 +37,7 @@
 
 
 % For the ast_transforms record:
--include("ast_transform.hrl").
+-include_lib("myriad/include/ast_transform.hrl").
 
 
 % Shorthand:

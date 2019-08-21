@@ -23,7 +23,7 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
-% Creation date: Wednesday, December 24, 2014
+% Creation date: Wednesday, December 24, 2014.
 
 
 % Centralizes, on behalf of the WOOPER parse transform, the support for method
@@ -57,13 +57,13 @@
 
 
 % For the function_info record:
--include("ast_info.hrl").
+-include_lib("myriad/include/ast_info.hrl").
 
 % For the ast_transforms record:
--include("ast_transform.hrl").
+-include_lib("myriad/include/ast_transform.hrl").
 
 % for the rec_guard macro:
--include("ast_utils.hrl").
+-include_lib("myriad/include/ast_utils.hrl").
 
 
 % For the class_info record:

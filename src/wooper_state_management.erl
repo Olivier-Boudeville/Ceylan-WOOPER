@@ -50,7 +50,7 @@
 
 
 % For the function_info record:
--include("ast_info.hrl").
+-include_lib("myriad/include/ast_info.hrl").
 
 
 % Implementation notes:

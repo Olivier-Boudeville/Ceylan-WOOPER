@@ -23,7 +23,7 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
-% Creation date: Wednesday, December 24, 2014
+% Creation date: Wednesday, December 24, 2014.
 
 
 % Centralizes, on behalf of the WOOPER parse transform, the support for instance
@@ -36,7 +36,7 @@
 
 
 % For the function_info record:
--include("ast_info.hrl").
+-include_lib("myriad/include/ast_info.hrl").
 
 % For the class_info record:
 -include("wooper_info.hrl").
@@ -51,7 +51,7 @@
 
 
 % For myriad_spawn*:
--include("spawn_utils.hrl").
+-include_lib("myriad/include/spawn_utils.hrl").
 
 
 

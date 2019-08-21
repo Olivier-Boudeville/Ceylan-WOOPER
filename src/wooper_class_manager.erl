@@ -111,7 +111,7 @@
 
 
 % For myriad_spawn*:
--include("spawn_utils.hrl").
+-include_lib("myriad/include/spawn_utils.hrl").
 
 
 % State kept by the manager (a table of per-class tables):
