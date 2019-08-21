@@ -31,7 +31,7 @@
 </tr>
 <tr class="field"><th class="field-name">Creation date:</th><td class="field-body">Sunday, August 17, 2008</td>
 </tr>
-<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Monday, August 5, 2019</td>
+<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Wednesday, August 21, 2019</td>
 </tr>
 <tr class="field"><th class="field-name">Dedication:</th><td class="field-body">Users and maintainers of the <tt class="docutils literal">WOOPER</tt> layer, version 2.0.</td>
 </tr>
@@ -269,13 +269,14 @@
 <p>Straightforward, isn't it? We will discuss it in-depth, though.</p>
 <p>To test this class (provided that <tt class="docutils literal">GNU make</tt> and <tt class="docutils literal">Erlang 22.0</tt> or more recent <a class="footnote-reference" href="#id4" id="id3">[1]</a> are available in one's environment), one can easily install <tt class="docutils literal"><span class="pre">Ceylan-WOOPER</span></tt>, which depends on <a class="reference external" href="http://myriad.esperide.org">Ceylan-Myriad</a>, hence is to be installed first:</p>
 <pre class="code bash literal-block">
-$ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad.git
-$ <span class="nb">cd</span> Ceylan-Myriad <span class="o">&amp;&amp;</span> make all <span class="o">&amp;&amp;</span> <span class="nb">cd</span> ..
+$ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad.git myriad
+$ <span class="nb">cd</span> myriad <span class="o">&amp;&amp;</span> make all <span class="o">&amp;&amp;</span> <span class="nb">cd</span> ..
 </pre>
 <pre class="code bash literal-block">
-$ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git
-$ <span class="nb">cd</span> Ceylan-WOOPER <span class="o">&amp;&amp;</span> make all
+$ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git wooper
+$ <span class="nb">cd</span> wooper <span class="o">&amp;&amp;</span> make all
 </pre>
+<p>(for OTP compliance, using short names, such as <tt class="docutils literal">myriad</tt> or <tt class="docutils literal">wooper</tt>, for clones rather than long ones, such as <tt class="docutils literal"><span class="pre">Ceylan-Myriad</span></tt> or <tt class="docutils literal"><span class="pre">Ceylan-WOOPER</span></tt>, is recommended)</p>
 <table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
@@ -2073,7 +2074,7 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <div class="section" id="runtime-errors">
 <h4>Runtime Errors</h4>
 <p>Most errors while using WOOPER should result in relatively clear messages (ex: <tt class="docutils literal">wooper_method_failed</tt> or <tt class="docutils literal">wooper_method_faulty_return</tt>), associated with all relevant runtime information that was available to WOOPER, including context and stacktrace.</p>
-<p>Another way of overcoming WOOPER issues is to activate the debug mode for all WOOPER-enabled compiled modules (ex: uncomment <tt class="docutils literal"><span class="pre">-define(wooper_debug,).</span></tt> in <tt class="docutils literal">wooper.hrl</tt> or, preferably, ensure in <tt class="docutils literal">GNUmakevars.inc</tt> that <tt class="docutils literal">ENABLE_DEBUG</tt> has been set to true), and recompile your classes.</p>
+<p>Another way of overcoming WOOPER issues is to activate the debug mode for all WOOPER-enabled compiled modules (ex: uncomment <tt class="docutils literal"><span class="pre">-define(wooper_debug_mode,).</span></tt> in <tt class="docutils literal">wooper.hrl</tt> or, preferably, ensure in <tt class="docutils literal">GNUmakevars.inc</tt> that <tt class="docutils literal">ENABLE_DEBUG</tt> has been set to true), and recompile your classes.</p>
 <p>The debug mode tries to perform extensive checking on all WOOPER entry points, from incoming messages to the user class itself, catching mistakes from the class developer as well as from the class user.</p>
 <p>For example, the validity of states returned by a constructor, by each method and by the destructor is checked, as the one of states specified to the <tt class="docutils literal">execute*</tt> constructs.</p>
 <p>If it is not enough to clear things up, an additional step can be to add, on a per-class basis (ex: in <tt class="docutils literal">class_Cat.erl</tt>), before the WOOPER include, <tt class="docutils literal"><span class="pre">-define(wooper_log_wanted,).</span></tt>.</p>
@@ -2137,10 +2138,10 @@ $ ./install-erlang.sh --doc-install --generate-plt
 <p>One may execute <tt class="docutils literal"><span class="pre">./install-erlang.sh</span> <span class="pre">--help</span></tt> for more details about how to configure it, notably in order to enable all modules of interest (<tt class="docutils literal">crypto</tt>, <tt class="docutils literal">wx</tt>, etc.) even if they are optional in the context of WOOPER.</p>
 <p>As a result, once a proper Erlang version is available, the <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-Myriad">Ceylan-Myriad repository</a> should be cloned and built, before doing the same with the <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">Ceylan-WOOPER repository</a>, like in:</p>
 <pre class="code bash literal-block">
-$ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad
-$ <span class="nb">cd</span> Ceylan-Myriad <span class="o">&amp;&amp;</span> make all <span class="o">&amp;&amp;</span> <span class="nb">cd</span> ..
-$ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER
-$ <span class="nb">cd</span> Ceylan-WOOPER <span class="o">&amp;&amp;</span> make all
+$ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad myriad
+$ <span class="nb">cd</span> myriad <span class="o">&amp;&amp;</span> make all <span class="o">&amp;&amp;</span> <span class="nb">cd</span> ..
+$ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER wooper
+$ <span class="nb">cd</span> wooper <span class="o">&amp;&amp;</span> make all
 </pre>
 <p><span class="raw-html"><a name="otp"></a></span></p>
 </div>
