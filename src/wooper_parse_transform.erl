@@ -300,7 +300,7 @@ apply_wooper_transform( InputAST, Options ) ->
 			% Not a WOOPER class, hence only the Myriad module-level
 			% transformations will apply:
 			%
-			trace_utils:debug( "Standard module detected (not a class)." ),
+			%trace_utils:debug( "Standard module detected (not a class)." ),
 			{ WithOptsModuleInfo, undefined }
 
 	end,

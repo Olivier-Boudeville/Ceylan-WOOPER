@@ -22,7 +22,7 @@
   {env,[]},
 
   % Flat hierarchy in ebin here:
-  {modules, [wooper_class_manager, wooper_instance_proxy, wooper_info, wooper_app, wooper_parse_utils, wooper, wooper_sup, wooper_utils, wooper_introspection, wooper_class_management, wooper_instance_destruction, wooper_parse_transform, wooper_internals, wooper_method_management, wooper_state_management, wooper_instance_construction, wooper_serialisation]},
+  {modules, [wooper_method_management, wooper_class_manager, wooper_sup, wooper_instance_destruction, wooper, wooper_instance_construction, wooper_class_management, wooper_introspection, wooper_parse_utils, wooper_parse_transform, wooper_serialisation, wooper_app, wooper_state_management, wooper_info, wooper_internals, wooper_instance_proxy, wooper_utils]},
 
   {licenses, ["Ceylan-WOOPER is licensed by its author (Olivier Boudeville) under a disjunctive tri-license, giving you the choice of one of the three following sets of free software/open source licensing terms:
 	- the Mozilla Public License (MPL), version 1.1 or later (very close to the former Erlang Public License, except aspects regarding Ericsson and/or the Swedish law)
