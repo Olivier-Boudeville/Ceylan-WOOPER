@@ -24,7 +24,7 @@
 
 % As a GIT-based dependency:
 {deps, [ {myriad, {git, "git://github.com/Olivier-Boudeville/Ceylan-Myriad",
-                    {branch, "master"}}} ] }.
+					{branch, "master"}}} ] }.
 
 
 % As an hex-package dependency:
