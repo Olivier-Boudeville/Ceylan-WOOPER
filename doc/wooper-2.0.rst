@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2019 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Monday, August 5, 2019
+:Lastly updated: Wednesday, August 21, 2019
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -228,7 +228,7 @@ To test this class (provided that ``GNU make`` and ``Erlang 22.0`` or more recen
  $ cd wooper && make all
 
 
-(for OTP compliance, using short names (such as ``myriad`` or ``wooper``) for clones rather than long ones (such as ``Ceylan-Myriad`` or ``Ceylan-WOOPER``) is recommended)
+(for OTP compliance, using short names, such as ``myriad`` or ``wooper``, for clones rather than long ones, such as ``Ceylan-Myriad`` or ``Ceylan-WOOPER``, is recommended)
 
 
 .. [#] Note that, in the Ceylan-Myriad repository, we have a script to streamline the installation of Erlang, see `install-erlang.sh <https://github.com/Olivier-Boudeville/Ceylan-Myriad/blob/master/conf/install-erlang.sh>`_; use ``install-erlang.sh --help`` for guidance.
@@ -3058,10 +3058,10 @@ As a result, once a proper Erlang version is available, the `Ceylan-Myriad repos
 
 .. code:: bash
 
- $ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad
- $ cd Ceylan-Myriad && make all && cd ..
- $ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER
- $ cd Ceylan-WOOPER && make all
+ $ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad myriad
+ $ cd myriad && make all && cd ..
+ $ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER wooper
+ $ cd wooper && make all
 
 
 ..  On UNIX-like platforms, using the Makefiles included in the WOOPER archive is recommended.
