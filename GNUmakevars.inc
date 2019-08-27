@@ -314,7 +314,7 @@ COMPILER_PARSE_TRANSFORM_FOR_WOOPER_CLASSES_OPT = \
 
 
 # For later reuse in the next layer of the software stack:
-WOOPER_PLT_FILE := $(WOOPER_TOP)/wooper.plt
+WOOPER_PLT_FILE := $(WOOPER_TOP)/Ceylan-WOOPER.plt
 
 
 # This is the merged PLT of the level just below in the software stack.

@@ -1408,8 +1408,8 @@ default_node_down_handler( Node, MonitorNodeInfo, State ) ->
 
 retrieve_virtual_table( Classname ) ->
 
-	trace_utils:debug_fmt( "Retrieving the OTP-way the virtual table for '~s'.",
-						   [ Classname ] ),
+	%trace_utils:debug_fmt( "Retrieving the OTP-way the virtual table "
+	%						"for '~s'.", [ Classname ] ),
 
 	% The OTP way, through a gen_server:call/2:
 	wooper_class_manager:get_table( Classname ).
@@ -1419,9 +1419,9 @@ retrieve_virtual_table( Classname ) ->
 
 retrieve_virtual_table( Classname ) ->
 
-	trace_utils:debug_fmt(
-	  "Retrieving classically (non-OTP way) the virtual table for '~s'.",
-	  [ Classname ] ),
+	%trace_utils:debug_fmt(
+	%  "Retrieving classically (non-OTP way) the virtual table for '~s'.",
+	%  [ Classname ] ),
 
 	% For per-instance virtual table: wooper_create_method_table_for(?MODULE).
 

@@ -1,5 +1,5 @@
 WOOPER_TOP = ..
 
-# Just defined so that the 'priv' directory exists in GIT.
+# Mostly so that ebin is known of GIT.
 
 include $(WOOPER_TOP)/GNUmakesettings.inc

@@ -75,7 +75,7 @@ run() ->
 	trace_utils:info_fmt( "Applying the WOOPER parse transform to the "
 						  "'~s' source file.", [ TargetSourceFile ] ),
 
-	PreprocessorOptions = [ { includes, [ "../src" ] } ],
+	PreprocessorOptions = [ { includes, [ "../include" ] } ],
 
 	_TransformedAST = wooper_parse_transform:run_standalone( TargetSourceFile,
 													PreprocessorOptions ),
