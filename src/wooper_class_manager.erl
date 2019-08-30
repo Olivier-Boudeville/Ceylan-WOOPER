@@ -345,7 +345,7 @@ get_manager_through_otp() ->
 			% We have to launch, hopefully with no clash with other launchings:
 			try
 
-				trace_utils:debug( "OTP start of the WOOPER class manager." ),
+				%trace_utils:debug( "OTP start of the WOOPER class manager." ),
 
 				start( _MaybeClientPid=undefined )
 
