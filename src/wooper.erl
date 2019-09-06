@@ -914,7 +914,7 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 					ExtraCount  = FoundArity - ArgCount,
 
-					trace_utils:error( "Error, no ~s:construct/~B found, "
+					trace_utils:error_fmt( "Error, no ~s:construct/~B found, "
 						"whereas construct/~B is exported; ~B extra "
 						"construction parameter(s) specified.",
 						[ Classname, ArgCount, FoundArity, ExtraCount ] ),
@@ -928,7 +928,7 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 					LackingCount  = ArgCount - FoundArity,
 
-					trace_utils:error( "Error, no ~s:construct/~B found, "
+					trace_utils:error_fmt( "Error, no ~s:construct/~B found, "
 						"whereas construct/~B is exported; ~B lacking "
 						"construction parameter(s) specified.",
 						[ Classname, ArgCount, FoundArity, LackingCount ] ),
@@ -939,7 +939,7 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 				ConstructArities ->
 
-					trace_utils:error( "Error, no ~s:construct/~B found, "
+					trace_utils:error_fmt( "Error, no ~s:construct/~B found, "
 						"whereas this function is exported for following "
 						"arities: ~w.",
 						[ Classname, ArgCount, ConstructArities ] ),

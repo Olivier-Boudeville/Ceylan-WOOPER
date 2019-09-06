@@ -27,9 +27,10 @@
 
 
 % Defined now here, as the rebar-based build system would not allow us to define
-% per-module rules (ex: this module shall itself be compiled by the Myriad parse transform).
+% per-module rules (ex: this module shall itself be compiled by the Myriad parse
+% transform).
 %
- -compile({parse_transform, myriad_parse_transform}).
+ -compile( {parse_transform, myriad_parse_transform } ).
 
 
 % Centralisation of class-level information.
@@ -82,7 +83,7 @@
 % Stores all class-level information (i.e. metadata) regarding attributes (class
 % ones, not parse ones).
 %
--type attribute_table() :: table:table( attribute_name(), attribute_info() ).
+-type attribute_table() :: table( attribute_name(), attribute_info() ).
 
 
 % The form corresponding to a method specification:
@@ -107,7 +108,7 @@
 %
 % Quite similar to ast_info:function_export_table().
 %
--type oneway_export_table() :: table:table( ast_info:location(),
+-type oneway_export_table() :: table( ast_info:location(),
 						   { ast_base:line(), [ wooper:oneway_id() ] } ).
 
 
@@ -116,7 +117,7 @@
 %
 % Quite similar to ast_info:function_export_table().
 %
--type request_export_table() :: table:table( ast_info:location(),
+-type request_export_table() :: table( ast_info:location(),
 						   { ast_base:line(), [ wooper:request_id() ] } ).
 
 
@@ -125,7 +126,7 @@
 %
 % Quite similar to ast_info:function_export_table().
 %
--type static_export_table() :: table:table( ast_info:location(),
+-type static_export_table() :: table( ast_info:location(),
 						   { ast_base:line(), [ wooper:static_id() ] } ).
 
 
@@ -134,7 +135,7 @@
 % A table storing information about the constructors involved, regarding a
 % class:
 %
--type constructor_table() :: table:table( arity(), ast_info:function_info() ).
+-type constructor_table() :: table( arity(), ast_info:function_info() ).
 
 
 
@@ -147,7 +148,7 @@
 %
 % Quite similar to ast_info:function_table().
 %
--type oneway_table() :: table:table( wooper:oneway_id(), oneway_info() ).
+-type oneway_table() :: table( wooper:oneway_id(), oneway_info() ).
 
 
 
@@ -155,7 +156,7 @@
 %
 % Quite similar to ast_info:function_table().
 %
--type request_table() :: table:table( wooper:request_id(), request_info() ).
+-type request_table() :: table( wooper:request_id(), request_info() ).
 
 
 
@@ -163,7 +164,7 @@
 %
 % Quite similar to ast_info:function_table().
 %
--type static_table() :: table:table( wooper:static_id(), static_info() ).
+-type static_table() :: table( wooper:static_id(), static_info() ).
 
 
 

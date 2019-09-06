@@ -79,6 +79,9 @@
 			 | 'request' | 'oneway' | 'static' | 'function' | 'throw'.
 
 
+-export_type([ function_nature/0 ]).
+
+
 % Shorthands:
 
 -type function_info() :: ast_info:function_info().
