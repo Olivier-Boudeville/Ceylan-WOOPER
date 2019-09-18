@@ -1599,8 +1599,10 @@ get_class_filename( Classname ) ->
 %
 -spec get_synchronous_time_out( boolean() ) -> time_utils:time_out().
 get_synchronous_time_out( _IsDebugMode=true ) ->
+
 	% Suitable for most applications (5 seconds, to benefit from earlier
 	% reports):
+	%
 	5000;
 
 get_synchronous_time_out( _IsDebugMode=false ) ->
@@ -2055,14 +2057,14 @@ delete_synchronously_any_instance_referenced_in( Attributes, State ) ->
 % Deletes safely (pre-testing whether the specified process still exists before
 % attempting to delete it, in order to avoid having to wait for a synchronous
 % time-out) and synchronously, in a parallel yet blocking manner, the WOOPER
-% instance(s) potentially stored in specified attribute list (a standalone
-% attribute may be specified as well).
+% instance(s) potentially stored in the specified attribute list (a standalone
+% attribute may be specified as well instead).
 %
 % Sets the corresponding attribute(s) to 'undefined', returns an updated state.
 %
 % Ex: in a destructor: NewState =
-% safe_delete_synchronously_any_instance_referenced_in( [ first_pid_attr,
-% second_pid_attr ], State ) or
+% delete_synchronously_any_instance_referenced_in( [ first_pid_attr,
+% second_pid_attr ], SomeState ) or
 % safe_delete_synchronously_any_instance_referenced_in( my_pid_attr, State ).
 %
 -spec safe_delete_synchronously_any_instance_referenced_in(
@@ -2073,9 +2075,23 @@ safe_delete_synchronously_any_instance_referenced_in( Attributes, State ) ->
 
 
 
+% Deletes safely (if requested, pre-testing whether the specified process still
+% exists before attempting to delete it, in order to avoid having to wait for a
+% synchronous time-out) and synchronously, in a parallel yet blocking manner,
+% the WOOPER instance(s) potentially stored in the specified attribute list (a
+% standalone attribute may be specified as well instead).
+%
+% Sets the corresponding attribute(s) to 'undefined', returns an updated state.
+%
+% Ex: in a destructor: NewState =
+% delete_synchronously_any_instance_referenced_in( [ first_pid_attr,
+% second_pid_attr ], SomeState ) or
+% delete_synchronously_any_instance_referenced_in( my_pid_attr, State ).
+%
 delete_synchronously_any_instance_referenced_in( _Attributes=[],
 												 _PreTestLiveliness, State ) ->
 	State;
+
 
 delete_synchronously_any_instance_referenced_in( Attributes, PreTestLiveliness,
 								 State ) when is_list( Attributes ) ->
@@ -2085,9 +2101,11 @@ delete_synchronously_any_instance_referenced_in( Attributes, PreTestLiveliness,
 												PreTestLiveliness, State ),
 
 	%trace_utils:debug_fmt(
-	%       "delete_synchronously_any_instance_referenced_in:~n"
-	%		" - attributes are: ~p~n"
-	%		" - PIDs are: ~p~n", [ TargetAttributes, TargetPids ] ),
+	%  "delete_synchronously_any_instance_referenced_in:~n"
+	%  " - attributes are: ~p~n"
+	%  " - PIDs are: ~p~n"
+	%  " - time-out is ~p (ms)",
+	%  [ TargetAttributes, TargetPids, ?synchronous_time_out ] ),
 
 	% Waits for their completion:
 	wait_for_deletion_ack( TargetPids ),
@@ -2104,42 +2122,8 @@ delete_synchronously_any_instance_referenced_in( Attributes, PreTestLiveliness,
 
 delete_synchronously_any_instance_referenced_in( Attribute, PreTestLiveliness,
 												 State ) ->
-
-	case ?getAttr( Attribute ) of
-
-		undefined ->
-			State;
-
-		Pid when is_pid( Pid ) ->
-			case PreTestLiveliness andalso not basic_utils:is_alive( Pid ) of
-
-				% Only case where no actual deletion is needed:
-				true ->
-					%trace_utils:debug_fmt(
-					%  "(PID ~w was already dead, nothing done)", [ Pid ] ),
-					ok;
-
-				false ->
-
-					%trace_utils:debug_fmt( "Sending sync delete to ~w.",
-					%					   [ Pid ] ),
-
-					Pid ! { synchronous_delete, self() },
-
-					receive
-
-						{ deleted, Pid } ->
-							%trace_utils:debug_fmt( "Deletion of ~w confirmed.",
-							%					   [ Pid ] ),
-							ok
-
-					end
-
-			end,
-
-			setAttribute( State, Attribute, undefined )
-
-	end.
+	delete_synchronously_any_instance_referenced_in( [ Attribute ],
+									   PreTestLiveliness, State ).
 
 
 
@@ -2177,12 +2161,14 @@ delete_pid_from( [ Attr | T ], DeleteMessage, PreTestLiveliness, State,
 
 				% Only case where no deletion oneway shall be sent:
 				true ->
+					%trace_utils:debug_fmt(
+					%  "(PID ~w was already dead, nothing done)", [ Pid ] ),
 					delete_pid_from( T, DeleteMessage, PreTestLiveliness,
 									 State, [ Attr | AccAttr ], AccPid );
 
 				false ->
-					%trace_utils:debug_fmt( "Deleting now ~s (PID: ~w).",
-					%                        [ Attr, Pid ] ),
+					%trace_utils:debug_fmt( "Sending sync delete now ~s "
+					%                       "(PID: ~w).", [ Attr, Pid ] ),
 					Pid ! DeleteMessage,
 					delete_pid_from( T, DeleteMessage, PreTestLiveliness,
 							 State, [ Attr | AccAttr ], [ Pid | AccPid ] )
@@ -2208,6 +2194,8 @@ delete_synchronously_instance( InstancePid ) ->
 	receive
 
 		{ deleted, InstancePid } ->
+			%trace_utils:debug_fmt( "Synchronous deletion of ~w confirmed.",
+			%						[ Pid ] ),
 			ok
 
 	end.
