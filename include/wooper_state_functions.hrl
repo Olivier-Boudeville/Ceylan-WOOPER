@@ -42,21 +42,21 @@
 %
 % (put in an header, as different settings might apply to different classes)
 %
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 
 is_wooper_debug() ->
 	true.
 
 
--else. % wooper_debug
+-else. % wooper_debug_mode
 
 
 is_wooper_debug() ->
 	false.
 
 
--endif. % wooper_debug
+-endif. % wooper_debug_mode
 
 
 

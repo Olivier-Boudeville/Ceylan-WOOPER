@@ -142,7 +142,7 @@
 
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 
 	% Uncomment to have all WOOPER recompiled classes output verbosely their
@@ -164,14 +164,14 @@
 -endif. % wooper_log_wanted
 
 
--else. % wooper_debug
+-else. % wooper_debug_mode
 
 
 	-define( wooper_log( Msg ), no_wooper_log ).
 	-define( wooper_log_format( Msg, Format ), no_wooper_log ).
 
 
--endif. % wooper_debug
+-endif. % wooper_debug_mode
 
 
 
@@ -187,14 +187,14 @@
 -ifndef(synchronous_time_out).
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 
 % Suitable for most applications (5 seconds):
 -define(synchronous_time_out,5000).
 
 
--else. % wooper_debug
+-else. % wooper_debug_mode
 
 
 % Better for applications in production (30 minutes):
@@ -203,7 +203,7 @@
 % Also possible:
 %-define(synchronous_time_out,infinity).
 
--endif. % wooper_debug
+-endif. % wooper_debug_mode
 
 
 -endif. % ifndef(synchronous_time_out)

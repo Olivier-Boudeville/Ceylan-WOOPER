@@ -32,7 +32,7 @@
 -spec wooper_destruct( wooper:state() ) -> wooper:state().
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 
 % Calls recursively the destructors through the inheritance tree.
@@ -113,7 +113,7 @@ wooper_destruct( State ) ->
 
 
 
--else. % if wooper_debug
+-else. % if wooper_debug_mode
 
 
 
@@ -166,7 +166,7 @@ wooper_destruct( State ) ->
 	chain_parent_destructors( DestructedState ).
 
 
--endif. % wooper_debug
+-endif. % wooper_debug_mode
 
 
 

@@ -46,7 +46,8 @@ construct( State, Age, Gender, FurColor, NozzleColor ) ->
 	OvoviviparousMammalState =
 		class_OvoviviparousBeing:construct( MammalState ),
 
-	io:format( "Synchronous time-out is ~p.~n", [ ?synchronous_time_out ] ),
+	io:format( "Synchronous time-out is ~s.~n",
+			   [ text_utils:duration_to_string( ?synchronous_time_out ) ] ),
 
 	% Then the class-specific attributes:
 	setAttributes( OvoviviparousMammalState, [
@@ -143,10 +144,11 @@ testCreationDeletion( State ) ->
 
 	io:format( "Deleting cat ~p created from platypus.~n", [ CatPid ] ),
 
-	trace_utils:warning( "Deletion time-out triggered on purpose" ),
+	trace_utils:warning( "Deletion time-out and crash triggered on purpose "
+		 "(see the very next intentional error report, and wait a bit)." ),
 
-	DeleteState = wooper:delete_synchronously_any_instance_referenced_in(
-						   [ cat_pid ], CatState ),
+	DeleteState =
+		wooper:delete_synchronously_any_instance_referenced_in( cat_pid, CatState ),
 
 	undefined = getAttribute( DeleteState, cat_pid ),
 

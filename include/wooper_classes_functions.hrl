@@ -59,13 +59,14 @@ getSuperclasses( State ) ->
 
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 
 % Returns a full textual description of this instance, including its state and
 % virtual table.
 %
-% This is a method for debug purpose, only activated if wooper_debug is defined.
+% This is a method for debug purpose, only activated if wooper_debug_mode is
+% defined.
 %
 -spec wooper_get_instance_description( wooper:state() ) ->
 							 const_request_return( text_utils:ustring() ).
@@ -73,4 +74,4 @@ wooper_get_instance_description( State ) ->
 	wooper:const_return_result( wooper:instance_to_string( State ) ).
 
 
--endif. % wooper_debug
+-endif. % wooper_debug_mode

@@ -154,7 +154,7 @@
 % Note that Parameters must be already a list (no promotion of single elements).
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 
 wooper_execute_method( MethodAtom, Parameters, State )
@@ -228,7 +228,7 @@ wooper_execute_method( MethodAtom, Parameters, State )
 
 
 
--else. % not in wooper_debug:
+-else. % not in wooper_debug_mode:
 
 
 
@@ -297,7 +297,7 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 	end.
 
 
--endif. % not wooper_debug.
+-endif. % not wooper_debug_mode.
 
 
 
@@ -358,7 +358,7 @@ wooper_execute_method_as( Classname, MethodAtom, Parameters, State )
 
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 
 wooper_effective_method_execution( SelectedModule, MethodAtom, State,
@@ -424,7 +424,7 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 
 
 
--else. % not in wooper_debug:
+-else. % not in wooper_debug_mode:
 
 
 
@@ -450,7 +450,7 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 	end.
 
 
--endif. % not wooper_debug.
+-endif. % not wooper_debug_mode.
 
 
 
@@ -478,7 +478,7 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 -compile( { inline, [ wooper_handle_remote_request_execution/4 ] } ).
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 
 % In debug mode, we perform additional checkings:
@@ -545,7 +545,7 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 	RequestState#state_holder{ request_sender=undefined }.
 
 
--else. % wooper_debug
+-else. % wooper_debug_mode
 
 
 % Not in debug mode, hence minimum checking:
@@ -580,7 +580,7 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 	RequestState#state_holder{ request_sender=undefined }.
 
 
--endif. % wooper_debug
+-endif. % wooper_debug_mode
 
 
 
@@ -602,7 +602,7 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 -compile( { inline, [ wooper_handle_local_request_execution/3 ] } ).
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 
 % In debug mode, we perform additional checkings:
@@ -642,7 +642,7 @@ wooper_handle_local_request_execution( RequestAtom, State, ArgumentList ) ->
 	{ ReturnedState, ActualResult }.
 
 
--else. % wooper_debug
+-else. % wooper_debug_mode
 
 
 % Not in debug mode, hence minimum checking:
@@ -663,7 +663,7 @@ wooper_handle_local_request_execution( RequestAtom, State, ArgumentList ) ->
 	{ ReturnedState, ActualResult }.
 
 
--endif. % wooper_debug
+-endif. % wooper_debug_mode
 
 
 
@@ -686,7 +686,7 @@ wooper_handle_local_request_execution( RequestAtom, State, ArgumentList ) ->
 -compile( { inline, [ wooper_handle_local_request_execution_as/4 ] } ).
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 
 % In debug mode, we perform additional checkings:
@@ -726,7 +726,7 @@ wooper_handle_local_request_execution_as( RequestAtom, State, ArgumentList,
 	{ ReturnedState, ActualResult }.
 
 
--else. % wooper_debug
+-else. % wooper_debug_mode
 
 
 % Not in debug mode, hence minimum checking:
@@ -748,7 +748,7 @@ wooper_handle_local_request_execution_as( RequestAtom, State, ArgumentList,
 	{ ReturnedState, ActualResult }.
 
 
--endif. % wooper_debug
+-endif. % wooper_debug_mode
 
 
 
@@ -774,7 +774,7 @@ wooper_handle_local_request_execution_as( RequestAtom, State, ArgumentList,
 -compile( { inline, [ wooper_handle_remote_oneway_execution/3 ] } ).
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 
 % In debug mode, we perform additional checkings:
@@ -841,7 +841,7 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 
 
 
--else. % wooper_debug
+-else. % wooper_debug_mode
 
 
 % Not in debug mode, hence minimum checking:
@@ -871,7 +871,7 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 
 	OnewayState.
 
--endif. % wooper_debug
+-endif. % wooper_debug_mode
 
 
 
@@ -888,7 +888,7 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 -compile( { inline, [ wooper_handle_local_oneway_execution/3 ] } ).
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 
 % In debug mode, we perform additional checkings:
@@ -928,7 +928,7 @@ wooper_handle_local_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 
 
 
--else. % wooper_debug
+-else. % wooper_debug_mode
 
 
 % Not in debug mode, hence minimum checking:
@@ -946,7 +946,7 @@ wooper_handle_local_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 	OnewayState#state_holder{ request_sender=PreviousRequestSender }.
 
 
--endif. % wooper_debug
+-endif. % wooper_debug_mode
 
 
 
@@ -970,7 +970,7 @@ wooper_handle_local_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 -compile( { inline, [ wooper_handle_local_oneway_execution_as/4 ] } ).
 
 
--ifdef(wooper_debug).
+-ifdef(wooper_debug_mode).
 
 
 % In debug mode, we perform additional checkings:
@@ -1011,7 +1011,7 @@ wooper_handle_local_oneway_execution_as( OnewayAtom, State, ArgumentList,
 	end.
 
 
--else. % wooper_debug
+-else. % wooper_debug_mode
 
 
 % Not in debug mode, hence minimum checking:
@@ -1030,4 +1030,4 @@ wooper_handle_local_oneway_execution_as( OnewayAtom, State, ArgumentList,
 	OnewayState#state_holder{ request_sender=PreviousRequestSender }.
 
 
--endif. % wooper_debug
+-endif. % wooper_debug_mode
