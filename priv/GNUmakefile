@@ -1,5 +1,5 @@
 WOOPER_TOP = ..
 
-# Just defined so that the 'priv' directory exists in GIT.
+MODULES_DIRS = examples
 
 include $(WOOPER_TOP)/GNUmakesettings.inc
