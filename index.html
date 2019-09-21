@@ -31,7 +31,7 @@
 </tr>
 <tr class="field"><th class="field-name">Creation date:</th><td class="field-body">Sunday, August 17, 2008</td>
 </tr>
-<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Wednesday, August 21, 2019</td>
+<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Saturday, September 21, 2019</td>
 </tr>
 <tr class="field"><th class="field-name">Dedication:</th><td class="field-body">Users and maintainers of the <tt class="docutils literal">WOOPER</tt> layer, version 2.0.</td>
 </tr>
@@ -753,7 +753,7 @@ Therefore one could make use of that information, as in:</p>
 <table class="docutils footnote" frame="void" id="id20" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id19">[9]</a></td><td>In which case, should a failure happen, the method call will become blocking; linking instances can alleviate this potential problem.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id19">[9]</a></td><td>In which case, should a failure happen, the method call will become blocking; linking or monitoring instances can then be done.</td></tr>
 </tbody>
 </table>
 </div>
@@ -771,20 +771,20 @@ Therefore one could make use of that information, as in:</p>
 </tbody>
 </table>
 <p>A method must always return at least the newer instance state, so that WOOPER can rely on it from now onward.</p>
-<p>Note that when a method &quot;returns&quot; the state of the (active) instance, it returns it to the (local, process-wise) private WOOPER-based main loop of that instance: in other words, the state variable is <em>never</em> exported/sent/visible outside of its process (unless of course a developer writes specific methods for that).</p>
-<p>Encapsulation is ensured, as the instance is the only process able to access its own state. On method ending, the instance then just loops again, with its updated state: that new state will be the base one for the next call, and so on.</p>
+<p>Note that when a method &quot;returns&quot; the state of the (active) instance, it returns it to the (local, process-wise) private WOOPER-based main loop of that instance: in other words, the state variable is <em>never</em> exported/sent as a message/visible from outside of its process (unless of course a developer writes specific methods for that).</p>
+<p>Encapsulation is ensured, as the instance is the only process able to access its own state. On method termination, the instance then just loops again, on its updated state: that new state will be the base one for the next call, and so on.</p>
 <p>One should therefore see each WOOPER instance as primarily a process executing a main loop that keeps the current state of that instance:</p>
 <ul class="simple">
 <li>it is waiting idle for any incoming (WOOPER) message</li>
 <li>when such a message is received, based on the actual class of the instance and on the method name specified in the call, the appropriate function defined in the appropriate module is selected by WOOPER, taking into account the inheritance graph (actually a direct per-class mapping, somewhat akin to the C++ virtual table, has already been determined at start-up, for better performances)</li>
 <li>then this function is called with the appropriate parameters (those of the call, in addition to the internally kept current state)</li>
-<li>if the method is a request, the specified result is sent back to the caller</li>
+<li>if the method is a request, its specified result is sent back to the caller</li>
 <li>then the instance loops again, on the state possibly updated by this method call</li>
 </ul>
-<p>Thus the caller will only receive the <strong>result</strong> of a method, if it is a request. Otherwise, i.e. with oneways, nothing is sent back (nothing can be, anyway).</p>
+<p>Thus the caller will only receive the <strong>result</strong> of a method, if it is a request. Otherwise, i.e. with oneways, nothing is sent back (nothing can be, anyway, short of knowing the calling PID).</p>
 <p>More precisely, depending on its returning a specific result, the method signature will correspond either to the one of a request or of a oneway, and will use in its body a corresponding method terminator (typically either, respectively, <tt class="docutils literal">wooper:return_state_result/2</tt> or <tt class="docutils literal">wooper:return_state/1</tt>) to ensure that a new state <em>and</em> a result are returned, or just a new state.</p>
 <p>Note that all clauses of a given method must end directly with such a method terminator; this is so not only to be clearer for the reader, but also for WOOPER itself, so that it can determine the type of method at hand.</p>
-<p>Finally, a recommended good practice is to add a type specification (see <a class="reference external" href="http://erlang.org/doc/man/dialyzer.html">Dialyzer</a>) to each method definition, which allows to indicate even more clearly whether it is a request or a oneway, whether it is a <tt class="docutils literal">const</tt> method, etc. Comments are welcome additions as well.</p>
+<p>Finally, a recommended good practice is to add a type specification (see <a class="reference external" href="http://erlang.org/doc/man/dialyzer.html">Dialyzer</a>) to each method definition, which allows to indicate even more clearly whether it is a request or a oneway, whether it is a <tt class="docutils literal">const</tt> method, etc. Comments are surely welcome additions as well.</p>
 <div class="section" id="for-requests">
 <h5>For Requests</h5>
 </div>
@@ -801,7 +801,7 @@ Therefore one could make use of that information, as in:</p>
 <p>Two remarks there:</p>
 <ul class="simple">
 <li><tt class="docutils literal">register_settings/2</tt> is an helper function here; the <tt class="docutils literal">State</tt> parameter is intentionally put in last position to help the reader distinguishing it from methods (see <a class="reference internal" href="#helper-vs-static">Helper vs Static</a> for more information on this topic)</li>
-<li>returning a constant atom (<tt class="docutils literal">settings_declared</tt>) has actually an interest: it allows to make that operation synchronous (i.e. the caller is to wait for that result atom; it is only when the caller will have received it that it will know for sure that the operation was performed; otherwise a oneway shall be used)</li>
+<li>returning a constant atom (<tt class="docutils literal">settings_declared</tt>) has actually an interest: it allows to make that operation synchronous (i.e. the caller is to wait for that result atom; it is only when the caller receives it that it will know for sure that the operation was performed; otherwise a oneway shall be used)</li>
 </ul>
 <p>All methods are of course called with the parameters that were specified in their call tuple.</p>
 <p>For example, if we declare following request:</p>
@@ -828,7 +828,7 @@ Therefore one could make use of that information, as in:</p>
 <span class="nf">getWhiskerColor</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
    <span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">whisker_color</span><span class="p">)).</span>
 </pre>
-<p>Note that <tt class="docutils literal">State</tt> can be used as always, and that even here it is not reported as unused (so one should not attempt to mute it, for example as <tt class="docutils literal">_State</tt>).</p>
+<p>Note that <tt class="docutils literal">State</tt> can be used as always, and that even there it is not reported as unused (so one should not attempt to mute it, for example as <tt class="docutils literal">_State</tt>).</p>
 </div>
 <div class="section" id="sender-pid">
 <h4><a class="toc-backref" href="#id133">Sender PID</a></h4>
