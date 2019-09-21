@@ -136,7 +136,7 @@
 </div>
 <div class="section" id="understanding-wooper-in-two-steps">
 <h2><a class="toc-backref" href="#id58">Understanding WOOPER in Two Steps</a></h2>
-<p>Here is a <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat.erl">class definition</a>, and here is an example of <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat_test.erl">code using it</a>. That's it!</p>
+<p>Here is a <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Cat.erl">class definition</a>, and here is an example of <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Cat_test.erl">code using it</a>. That's it!</p>
 <p>Now, let's discuss these subjects a bit more in-depth.</p>
 <div class="section" id="motivations-purpose">
 <h3><a class="toc-backref" href="#id59">Motivations &amp; Purpose</a></h3>
@@ -195,13 +195,13 @@
 </tr>
 </tbody>
 </table>
-<p>In practice, developing a class with WOOPER mostly involves including the <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl">wooper.hrl</a> header file and respecting the WOOPER conventions detailed below.</p>
+<p>In practice, developing a class with WOOPER mostly involves including the <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/include/wooper.hrl">wooper.hrl</a> header file and respecting the WOOPER conventions detailed below.</p>
 </div>
 <div class="section" id="id2">
 <span id="example"></span><h3><a class="toc-backref" href="#id61">Example</a></h3>
 <p>Here is a simple example of how a WOOPER class can be defined and used.</p>
 <p>It shows <tt class="docutils literal">new/delete</tt> operators, method calling (both request and oneway), and inheritance.</p>
-<p>A cat is here a viviparous mammal, as defined below (this is a variation of our more complete <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat.erl">class_Cat.erl</a> example):</p>
+<p>A cat is here a viviparous mammal, as defined below (this is a variation of our more complete <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Cat.erl">class_Cat.erl</a> example):</p>
 <pre class="code erlang literal-block">
 <span class="p">-</span><span class="ni">module</span><span class="p">(</span><span class="n">class_Cat</span><span class="p">).</span>
 
@@ -287,7 +287,7 @@ $ <span class="nb">cd</span> wooper <span class="o">&amp;&amp;</span> make all
 <pre class="code bash literal-block">
 $ <span class="nb">cd</span> examples <span class="o">&amp;&amp;</span> make class_Cat_run
 </pre>
-<p>In the <tt class="docutils literal">examples</tt> directory, the test defined in <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat_test.erl">class_Cat_test.erl</a> should run against the class defined in <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat.erl">class_Cat.erl</a>, and no error should be detected:</p>
+<p>In the <tt class="docutils literal">examples</tt> directory, the test defined in <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Cat_test.erl">class_Cat_test.erl</a> should run against the class defined in <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Cat.erl">class_Cat.erl</a>, and no error should be detected:</p>
 <pre class="code bash literal-block">
 Running unitary <span class="nb">test</span> class_Cat_run <span class="o">(</span>second form<span class="o">)</span>
 
@@ -1213,7 +1213,7 @@ setFurColor(State,FurColor) -&gt;
 <p>As seen in the various examples, method implementations will access (read/write) attributes stored in the instance state, whose original version (i.e. the state of the instance at the method beginning) is always specified as their first parameter, conventionally named <tt class="docutils literal">State</tt>.</p>
 <p>This current state can be then modified in the method, and a final state (usually an updated version of the initial one) will be returned locally to WOOPER, thanks to a method terminator.</p>
 <p>Then the code (automatically instantiated by the WOOPER header in the class implementation) will loop again for this instance with this updated state, waiting for the next method call, which will possibly change again the state (and trigger side-effects), and so on.</p>
-<p>One may refer to <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl">wooper.hrl</a> for the actual definition of most of these WOOPER constructs.</p>
+<p>One may refer to <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/include/wooper.hrl">wooper.hrl</a> for the actual definition of most of these WOOPER constructs.</p>
 <div class="section" id="modifying-state">
 <h5>Modifying State</h5>
 <div class="section" id="the-setattribute-3-function">
@@ -1925,7 +1925,7 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 </div>
 <div class="section" id="guidelines">
 <h3><a class="toc-backref" href="#id81">Guidelines</a></h3>
-<p>All WOOPER classes must include <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl">wooper.hrl</a>:</p>
+<p>All WOOPER classes must include <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/include/wooper.hrl">wooper.hrl</a>:</p>
 <pre class="code erlang literal-block">
 <span class="p">-</span><span class="ni">include</span><span class="p">(</span><span class="s">&quot;wooper.hrl&quot;</span><span class="p">).</span>
 </pre>
@@ -1933,8 +1933,8 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <p class="first admonition-title">Note</p>
 <p class="last">This include should come, in the source file of a class, <em>after</em> all WOOPER-related defines (such as <tt class="docutils literal">superclasses</tt>, <tt class="docutils literal">class_attributes</tt>, etc.).</p>
 </div>
-<p>To help declaring the right defines in the right order, using the WOOPER <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_WOOPERTemplate.erl.sample">template</a> is recommended.</p>
-<p>One may also have a look at the full <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples">test examples</a>, as a source of inspiration.</p>
+<p>To help declaring the right defines in the right order, using the WOOPER <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_WOOPERTemplate.erl.sample">template</a> is recommended.</p>
+<p>One may also have a look at the full <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples">test examples</a>, as a source of inspiration.</p>
 <p>For examples of re-use of WOOPER by upper layers, one may refer to <a class="reference external" href="http://traces.esperide.org">Ceylan-Traces</a> or to the <a class="reference external" href="http://sim-diasca.com">Sim-Diasca</a> simulation engine.</p>
 </div>
 <div class="section" id="class-developer-cheat-sheet">
@@ -1993,25 +1993,25 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <div class="section" id="class-implementations">
 <h3><a class="toc-backref" href="#id86">Class implementations</a></h3>
 <ul class="simple">
-<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Creature.erl">class_Creature.erl</a></li>
-<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_ViviparousBeing.erl">class_ViviparousBeing.erl</a></li>
-<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_OvoviviparousBeing.erl">class_OvoviviparousBeing.erl</a></li>
-<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Mammal.erl">class_Mammal.erl</a></li>
-<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Reptile.erl">class_Reptile.erl</a></li>
-<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Cat.erl">class_Cat.erl</a></li>
-<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Platypus.erl">class_Platypus.erl</a></li>
+<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Creature.erl">class_Creature.erl</a></li>
+<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_ViviparousBeing.erl">class_ViviparousBeing.erl</a></li>
+<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_OvoviviparousBeing.erl">class_OvoviviparousBeing.erl</a></li>
+<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Mammal.erl">class_Mammal.erl</a></li>
+<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Reptile.erl">class_Reptile.erl</a></li>
+<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Cat.erl">class_Cat.erl</a></li>
+<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Platypus.erl">class_Platypus.erl</a></li>
 </ul>
 </div>
 <div class="section" id="tests">
 <h3><a class="toc-backref" href="#id87">Tests</a></h3>
 <ul class="simple">
-<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Creature_test.erl">class_Creature_test.erl</a></li>
-<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_ViviparousBeing_test.erl">class_ViviparousBeing_test.erl</a></li>
-<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_OvoviviparousBeing_test.erl">class_OvoviviparousBeing_test.erl</a></li>
-<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Mammal_test.erl">class_Mammal_test.erl</a></li>
-<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Reptile_test.erl">class_Reptile_test.erl</a></li>
-<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Cat_test.erl">class_Cat_test.erl</a></li>
-<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Platypus_test.erl">class_Platypus_test.erl</a></li>
+<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Creature_test.erl">class_Creature_test.erl</a></li>
+<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_ViviparousBeing_test.erl">class_ViviparousBeing_test.erl</a></li>
+<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_OvoviviparousBeing_test.erl">class_OvoviviparousBeing_test.erl</a></li>
+<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Mammal_test.erl">class_Mammal_test.erl</a></li>
+<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Reptile_test.erl">class_Reptile_test.erl</a></li>
+<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Cat_test.erl">class_Cat_test.erl</a></li>
+<li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Platypus_test.erl">class_Platypus_test.erl</a></li>
 </ul>
 <p>To run a test (ex: <tt class="docutils literal">class_Cat_test.erl</tt>), when WOOPER has already been compiled, one just has to enter: <tt class="docutils literal">make class_Cat_run</tt>.</p>
 <p></p>
@@ -2112,7 +2112,7 @@ if a method takes only one parameter and if this parameter is a list, then in a 
 </div>
 <div class="section" id="error-with-exit-value-undef-map-hashtable-new">
 <h5>Error With Exit Value: <tt class="docutils literal"><span class="pre">{undef,[{map_hashtable,new,[..]}..</span></tt></h5>
-<p>You most probably forgot to build the <tt class="docutils literal"><span class="pre">Ceylan-Myriad</span></tt> directory that contains, among other modules, the <tt class="docutils literal">map_hashtable.erl</tt> source file.</p>
+<p>You most probably forgot to build the <tt class="docutils literal">myriad</tt> directory that contains, among other modules, the <tt class="docutils literal">map_hashtable.erl</tt> source file.</p>
 <p>Check that you have a <tt class="docutils literal">map_hashtable.beam</tt> file indeed, and that it can be found from the paths specified to the virtual machine.</p>
 <p>Note that the WOOPER code designates this module as the <tt class="docutils literal">table</tt> one (ex: <tt class="docutils literal">table:new()</tt>), for a better substituability (this is obtained thanks to a parse-transform provided by <tt class="docutils literal"><span class="pre">Ceylan-Myriad</span></tt>) .</p>
 <p></p>
@@ -2127,7 +2127,7 @@ if a method takes only one parameter and if this parameter is a list, then in a 
 <p>This is the installation method that we use and recommend; the WOOPER <tt class="docutils literal">master</tt> branch is meant to stick to the latest stable version: we try to ensure that this main line always stays functional (sorry for the pun). Evolutions are to take place in feature branches and to be merged only when ready.</p>
 <p>This OOP layer, <tt class="docutils literal"><span class="pre">Ceylan-WOOPER</span></tt>, relies (only) on:</p>
 <ul class="simple">
-<li><a class="reference external" href="http://www.erlang.org/">Erlang</a>, version 22.0 or higher</li>
+<li><a class="reference external" href="http://www.erlang.org/">Erlang</a>, version 22.1 or higher</li>
 <li>the <a class="reference external" href="http://myriad.esperide.org">Ceylan-Myriad</a> base layer</li>
 </ul>
 <p>We prefer using GNU/Linux, sticking to the latest stable release of Erlang, and building it from sources, thanks to GNU <tt class="docutils literal">make</tt>.</p>
@@ -2163,7 +2163,7 @@ $ make rebar3-release
 </pre>
 <p>More precisely, to test the WOOPER OTP application support, provided that <tt class="docutils literal">make <span class="pre">rebar3-compile</span></tt> was issued beforehand, one can run from the root of the WOOPER source tree:</p>
 <pre class="code bash literal-block">
-$ <span class="nb">cd</span> tests
+$ <span class="nb">cd</span> <span class="nb">test</span>
 $ make wooper_otp_application_run
        Running unitary <span class="nb">test</span> wooper_otp_application_run <span class="o">(</span>third form<span class="o">)</span>
             from wooper_otp_application_test
@@ -2297,7 +2297,7 @@ Successful end of <span class="nb">test</span> of the WOOPER application.
 </div>
 <div class="section" id="understanding-the-mode-of-operation-of-a-wooper-instance">
 <h4>Understanding the Mode of Operation of a WOOPER Instance</h4>
-<p>Each instance runs a main loop (<tt class="docutils literal">wooper_main_loop/1</tt>, defined in <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl">wooper.hrl</a>) that keeps its internal state and, through a blocking <tt class="docutils literal">receive</tt>, serves the methods as specified by incoming messages, quite similarly to a classical server that loops on an updated state, like in:</p>
+<p>Each instance runs a main loop (<tt class="docutils literal">wooper_main_loop/1</tt>, defined in <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/include/wooper.hrl">wooper.hrl</a>) that keeps its internal state and, through a blocking <tt class="docutils literal">receive</tt>, serves the methods as specified by incoming messages, quite similarly to a classical server that loops on an updated state, like in:</p>
 <pre class="code erlang literal-block">
 <span class="nf">my_server</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
   <span class="k">receive</span>
