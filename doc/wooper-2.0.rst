@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2019 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Wednesday, August 21, 2019
+:Lastly updated: Saturday, September 21, 2019
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -94,7 +94,7 @@ At least a basic knowledge of Erlang is expected in order to use WOOPER.
 Understanding WOOPER in Two Steps
 =================================
 
-Here is a `class definition <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat.erl>`_, and here is an example of `code using it <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat_test.erl>`_. That's it!
+Here is a `class definition <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Cat.erl>`_, and here is an example of `code using it <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Cat_test.erl>`_. That's it!
 
 
 Now, let's discuss these subjects a bit more in-depth.
@@ -132,7 +132,7 @@ instance attributes        key/value pairs stored in the instance state
 class (static) method      module function that respects some conventions
 =========================  =================================================================
 
-In practice, developing a class with WOOPER mostly involves including the `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl>`_ header file and respecting the WOOPER conventions detailed below.
+In practice, developing a class with WOOPER mostly involves including the `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/include/wooper.hrl>`_ header file and respecting the WOOPER conventions detailed below.
 
 
 .. _example:
@@ -144,7 +144,7 @@ Here is a simple example of how a WOOPER class can be defined and used.
 
 It shows ``new/delete`` operators, method calling (both request and oneway), and inheritance.
 
-A cat is here a viviparous mammal, as defined below (this is a variation of our more complete `class_Cat.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat.erl>`__ example):
+A cat is here a viviparous mammal, as defined below (this is a variation of our more complete `class_Cat.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Cat.erl>`__ example):
 
 .. code:: erlang
 
@@ -240,7 +240,7 @@ Running the cat-related example just then boils down to:
 
  $ cd examples && make class_Cat_run
 
-In the ``examples`` directory, the test defined in `class_Cat_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat_test.erl>`__ should run against the class defined in `class_Cat.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_Cat.erl>`_, and no error should be detected:
+In the ``examples`` directory, the test defined in `class_Cat_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Cat_test.erl>`__ should run against the class defined in `class_Cat.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Cat.erl>`_, and no error should be detected:
 
 .. code:: bash
 
@@ -840,7 +840,7 @@ However defensive development is not really favoured in Erlang, one may let the 
  end,
  [..]
 
-.. [#] In which case, should a failure happen, the method call will become blocking; linking instances can alleviate this potential problem.
+.. [#] In which case, should a failure happen, the method call will become blocking; linking or monitoring instances can then be done.
 
 
 
@@ -860,25 +860,25 @@ For the sake of clarity, this variable should always be named ``State`` exactly 
 
 A method must always return at least the newer instance state, so that WOOPER can rely on it from now onward.
 
-Note that when a method "returns" the state of the (active) instance, it returns it to the (local, process-wise) private WOOPER-based main loop of that instance: in other words, the state variable is *never* exported/sent/visible outside of its process (unless of course a developer writes specific methods for that).
+Note that when a method "returns" the state of the (active) instance, it returns it to the (local, process-wise) private WOOPER-based main loop of that instance: in other words, the state variable is *never* exported/sent as a message/visible from outside of its process (unless of course a developer writes specific methods for that).
 
-Encapsulation is ensured, as the instance is the only process able to access its own state. On method ending, the instance then just loops again, with its updated state: that new state will be the base one for the next call, and so on.
+Encapsulation is ensured, as the instance is the only process able to access its own state. On method termination, the instance then just loops again, on its updated state: that new state will be the base one for the next call, and so on.
 
 One should therefore see each WOOPER instance as primarily a process executing a main loop that keeps the current state of that instance:
 
 - it is waiting idle for any incoming (WOOPER) message
 - when such a message is received, based on the actual class of the instance and on the method name specified in the call, the appropriate function defined in the appropriate module is selected by WOOPER, taking into account the inheritance graph (actually a direct per-class mapping, somewhat akin to the C++ virtual table, has already been determined at start-up, for better performances)
 - then this function is called with the appropriate parameters (those of the call, in addition to the internally kept current state)
-- if the method is a request, the specified result is sent back to the caller
+- if the method is a request, its specified result is sent back to the caller
 - then the instance loops again, on the state possibly updated by this method call
 
-Thus the caller will only receive the **result** of a method, if it is a request. Otherwise, i.e. with oneways, nothing is sent back (nothing can be, anyway).
+Thus the caller will only receive the **result** of a method, if it is a request. Otherwise, i.e. with oneways, nothing is sent back (nothing can be, anyway, short of knowing the calling PID).
 
 More precisely, depending on its returning a specific result, the method signature will correspond either to the one of a request or of a oneway, and will use in its body a corresponding method terminator (typically either, respectively, ``wooper:return_state_result/2`` or ``wooper:return_state/1``) to ensure that a new state *and* a result are returned, or just a new state.
 
 Note that all clauses of a given method must end directly with such a method terminator; this is so not only to be clearer for the reader, but also for WOOPER itself, so that it can determine the type of method at hand.
 
-Finally, a recommended good practice is to add a type specification (see `Dialyzer <http://erlang.org/doc/man/dialyzer.html>`_) to each method definition, which allows to indicate even more clearly whether it is a request or a oneway, whether it is a ``const`` method, etc. Comments are welcome additions as well.
+Finally, a recommended good practice is to add a type specification (see `Dialyzer <http://erlang.org/doc/man/dialyzer.html>`_) to each method definition, which allows to indicate even more clearly whether it is a request or a oneway, whether it is a ``const`` method, etc. Comments are surely welcome additions as well.
 
 
 
@@ -904,7 +904,7 @@ For example:
 Two remarks there:
 
 - ``register_settings/2`` is an helper function here; the ``State`` parameter is intentionally put in last position to help the reader distinguishing it from methods (see `Helper vs Static`_ for more information on this topic)
-- returning a constant atom (``settings_declared``) has actually an interest: it allows to make that operation synchronous (i.e. the caller is to wait for that result atom; it is only when the caller will have received it that it will know for sure that the operation was performed; otherwise a oneway shall be used)
+- returning a constant atom (``settings_declared``) has actually an interest: it allows to make that operation synchronous (i.e. the caller is to wait for that result atom; it is only when the caller receives it that it will know for sure that the operation was performed; otherwise a oneway shall be used)
 
 
 All methods are of course called with the parameters that were specified in their call tuple.
@@ -947,7 +947,7 @@ one should prefer writing this const request as (and WOOPER will enforce it):
 	wooper:const_return_result(?getAttr(whisker_color)).
 
 
-Note that ``State`` can be used as always, and that even here it is not reported as unused (so one should not attempt to mute it, for example as ``_State``).
+Note that ``State`` can be used as always, and that even there it is not reported as unused (so one should not attempt to mute it, for example as ``_State``).
 
 
 
@@ -1603,9 +1603,9 @@ This current state can be then modified in the method, and a final state (usuall
 
 Then the code (automatically instantiated by the WOOPER header in the class implementation) will loop again for this instance with this updated state, waiting for the next method call, which will possibly change again the state (and trigger side-effects), and so on.
 
-One may refer to `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl>`_ for the actual definition of most of these WOOPER constructs.
+One may refer to `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/include/wooper.hrl>`_ for the actual definition of most of these WOOPER constructs.
 
-.. comment See `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/src/wooper.hrl>`_ for the actual definition of most of these WOOPER constructs.
+.. comment See `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/include/wooper.hrl>`_ for the actual definition of most of these WOOPER constructs.
 
 .. comment These state-management constructs look like functions but, thanks to parse transforms, they are actually inlined for increased performances.
 
@@ -2676,7 +2676,7 @@ For example:
 Guidelines
 ----------
 
-All WOOPER classes must include `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl>`_:
+All WOOPER classes must include `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/include/wooper.hrl>`_:
 
 .. code:: erlang
 
@@ -2686,9 +2686,9 @@ All WOOPER classes must include `wooper.hrl <https://github.com/Olivier-Boudevil
 .. Note:: This include should come, in the source file of a class, *after* all WOOPER-related defines (such as ``superclasses``, ``class_attributes``, etc.).
 
 
-To help declaring the right defines in the right order, using the WOOPER `template <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/examples/class_WOOPERTemplate.erl.sample>`_ is recommended.
+To help declaring the right defines in the right order, using the WOOPER `template <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_WOOPERTemplate.erl.sample>`_ is recommended.
 
-One may also have a look at the full `test examples <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples>`_, as a source of inspiration.
+One may also have a look at the full `test examples <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples>`_, as a source of inspiration.
 
 For examples of re-use of WOOPER by upper layers, one may refer to `Ceylan-Traces <http://traces.esperide.org>`_ or to the `Sim-Diasca <http://sim-diasca.com>`_ simulation engine.
 
@@ -2783,19 +2783,19 @@ We defined a small set of classes in order to serve as an example and demonstrat
 Class implementations
 ---------------------
 
-- `class_Creature.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Creature.erl>`__
+- `class_Creature.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Creature.erl>`__
 
-- `class_ViviparousBeing.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_ViviparousBeing.erl>`__
+- `class_ViviparousBeing.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_ViviparousBeing.erl>`__
 
-- `class_OvoviviparousBeing.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_OvoviviparousBeing.erl>`__
+- `class_OvoviviparousBeing.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_OvoviviparousBeing.erl>`__
 
-- `class_Mammal.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Mammal.erl>`__
+- `class_Mammal.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Mammal.erl>`__
 
-- `class_Reptile.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Reptile.erl>`__
+- `class_Reptile.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Reptile.erl>`__
 
-- `class_Cat.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Cat.erl>`__
+- `class_Cat.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Cat.erl>`__
 
-- `class_Platypus.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Platypus.erl>`__
+- `class_Platypus.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Platypus.erl>`__
 
 
 
@@ -2803,19 +2803,19 @@ Class implementations
 Tests
 -----
 
-- `class_Creature_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Creature_test.erl>`__
+- `class_Creature_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Creature_test.erl>`__
 
-- `class_ViviparousBeing_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_ViviparousBeing_test.erl>`__
+- `class_ViviparousBeing_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_ViviparousBeing_test.erl>`__
 
-- `class_OvoviviparousBeing_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_OvoviviparousBeing_test.erl>`__
+- `class_OvoviviparousBeing_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_OvoviviparousBeing_test.erl>`__
 
-- `class_Mammal_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Mammal_test.erl>`__
+- `class_Mammal_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Mammal_test.erl>`__
 
-- `class_Reptile_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Reptile_test.erl>`__
+- `class_Reptile_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Reptile_test.erl>`__
 
-- `class_Cat_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Cat_test.erl>`__
+- `class_Cat_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Cat_test.erl>`__
 
-- `class_Platypus_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/examples/class_Platypus_test.erl>`__
+- `class_Platypus_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Platypus_test.erl>`__
 
 
 To run a test (ex: ``class_Cat_test.erl``), when WOOPER has already been compiled, one just has to enter: ``make class_Cat_run``.
@@ -2996,7 +2996,7 @@ _____________________________________________________________
 .. You most probably forgot to build the ``myriad`` directory (a.k.a. ``Ceylan-Myriad``) that contains, among other modules, the ``map_hashtable.erl`` source file.
 
 
-You most probably forgot to build the ``Ceylan-Myriad`` directory that contains, among other modules, the ``map_hashtable.erl`` source file.
+You most probably forgot to build the ``myriad`` directory that contains, among other modules, the ``map_hashtable.erl`` source file.
 
 Check that you have a ``map_hashtable.beam`` file indeed, and that it can be found from the paths specified to the virtual machine.
 
@@ -3037,7 +3037,7 @@ This is the installation method that we use and recommend; the WOOPER ``master``
 
 This OOP layer, ``Ceylan-WOOPER``, relies (only) on:
 
-- `Erlang <http://www.erlang.org/>`_, version 22.0 or higher
+- `Erlang <http://www.erlang.org/>`_, version 22.1 or higher
 - the `Ceylan-Myriad <http://myriad.esperide.org>`_ base layer
 
 
@@ -3105,7 +3105,7 @@ More precisely, to test the WOOPER OTP application support, provided that ``make
 
 .. code:: bash
 
- $ cd tests
+ $ cd test
  $ make wooper_otp_application_run
 		Running unitary test wooper_otp_application_run (third form)
 			 from wooper_otp_application_test
@@ -3329,7 +3329,7 @@ More precisely, the sources of a user-defined class are transformed by the stand
 Understanding the Mode of Operation of a WOOPER Instance
 ........................................................
 
-Each instance runs a main loop (``wooper_main_loop/1``, defined in `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/wooper.hrl>`_) that keeps its internal state and, through a blocking ``receive``, serves the methods as specified by incoming messages, quite similarly to a classical server that loops on an updated state, like in:
+Each instance runs a main loop (``wooper_main_loop/1``, defined in `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/include/wooper.hrl>`_) that keeps its internal state and, through a blocking ``receive``, serves the methods as specified by incoming messages, quite similarly to a classical server that loops on an updated state, like in:
 
 .. code:: erlang
 
@@ -3547,6 +3547,7 @@ Please React!
 =============
 
 If you have information more detailed or more recent than those presented in this document, if you noticed errors, neglects or points insufficiently discussed, drop us a line! (for that, follow the Support_ guidelines).
+
 
 
 Ending Word

@@ -69,12 +69,12 @@ clone-mirror:
 export-doc: clean-doc full-doc export-to-official export-to-mirror
 
 
-export-to-official:
+export-to-official: full-doc
 	@echo "   Exporting WOOPER documentation to official website ($(WEB_SRV))"
 	@/bin/scp $(SP) $(WEB_CONTENT) $(WEB_SRV):$(WEB_ROOT)/WOOPER/
 
 
-export-to-mirror:
+export-to-mirror: full-doc
 	@echo "   Exporting WOOPER documentation to mirror website in $(WOOPER_WEB_MIRROR_BRANCH)"
 	@/bin/cp -f $(WEB_CONTENT) $(WOOPER_WEB_MIRROR_BRANCH) && cd $(WOOPER_WEB_MIRROR_BRANCH) && git add . && git merge -s ours && git commit -m "WOOPER doc updated." && git push && git pull --ff-only
 
