@@ -214,7 +214,7 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
 
 Straightforward, isn't it? We will discuss it in-depth, though.
 
-To test this class (provided that ``GNU make`` and ``Erlang 22.0`` or more recent [#]_ are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on `Ceylan-Myriad <http://myriad.esperide.org>`_, hence is to be installed first:
+To test this class (provided that ``GNU make`` and ``Erlang 22.1`` or more recent [#]_ are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on `Ceylan-Myriad <http://myriad.esperide.org>`_, hence is to be installed first:
 
 .. code:: bash
 
@@ -3083,6 +3083,15 @@ Using OTP-Related Build/Runtime Conventions
 -------------------------------------------
 
 As discussed for `Myriad <http://myriad.esperide.org/myriad.html#otp>`_, we added the (optional) possibility of generating a WOOPER *OTP application* out of the build tree (obtained thanks to the method described in the previous section), ready to be integrated into an *(OTP) release*. For that we rely on `rebar3 <https://www.rebar3.org/>`_, `relx <https://github.com/erlware/relx>`_ and `hex <https://hex.pm/>`_.
+
+OTP conventions mandate using::
+
+ -include_lib("wooper/include/wooper.hrl").
+
+rather than::
+
+ -include("wooper.hrl").
+
 
 Unlike Myriad, which is an OTP *library* application, WOOPER is an OTP *active* application, meaning the reliance on an application that can be started/stopped (``wooper_app``), a root supervisor (``wooper_sup``) and a class manager that is a background server process (``gen_server``).
 
