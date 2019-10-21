@@ -119,6 +119,9 @@ wooper_get_class_specific_attributes() ->
 	% Note: if your compiler points to these lines, you must have introduced a
 	% parse (syntax) error in your 'class_attributes' define.
 	%
+	% Check that your brackets are balanced, that commas are at their expected
+	% places (and only them), etc.
+	%
 	?class_attributes.
 
 
