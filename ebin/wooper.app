@@ -10,7 +10,7 @@
 
 {application, wooper,
  [{description, "Ceylan-WOOPER, a Wrapper for Object-Oriented Programming in Erlang, as an OTP active application here (see http://wooper.esperide.org)"},
-  {vsn, "2.0.6"},
+  {vsn, "2.0.9"},
 
   % See wooper_class_manager.hrl:
   {registered, [wooper_class_manager]},
@@ -19,7 +19,7 @@
   % (however myriad is a library application, not an active one)
   {applications, [kernel, stdlib, myriad]},
 
-  {env,[]},
+  %{env,[]},
 
   % Flat hierarchy in ebin here:
   {modules, [wooper_method_management, wooper_class_manager, wooper_sup, wooper_instance_destruction, wooper, wooper_instance_construction, wooper_class_management, wooper_introspection, wooper_parse_utils, wooper_parse_transform, wooper_serialisation, wooper_app, wooper_state_management, wooper_info, wooper_internals, wooper_instance_proxy, wooper_utils]},
