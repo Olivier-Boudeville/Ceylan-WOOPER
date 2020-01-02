@@ -25,13 +25,13 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Organisation:</th><td class="field-body">Copyright (C) 2008-2019 Olivier Boudeville</td>
+<tr class="field"><th class="field-name">Organisation:</th><td class="field-body">Copyright (C) 2008-2020 Olivier Boudeville</td>
 </tr>
 <tr class="field"><th class="field-name">Contact:</th><td class="field-body">about (dash) wooper (at) esperide (dot) com</td>
 </tr>
 <tr class="field"><th class="field-name">Creation date:</th><td class="field-body">Sunday, August 17, 2008</td>
 </tr>
-<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Saturday, September 21, 2019</td>
+<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Thursday, January 2, 2020</td>
 </tr>
 <tr class="field"><th class="field-name">Dedication:</th><td class="field-body">Users and maintainers of the <tt class="docutils literal">WOOPER</tt> layer, version 2.0.</td>
 </tr>
@@ -267,7 +267,7 @@
    <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_static</span><span class="p">(</span><span class="n">white</span><span class="p">).</span>
 </pre>
 <p>Straightforward, isn't it? We will discuss it in-depth, though.</p>
-<p>To test this class (provided that <tt class="docutils literal">GNU make</tt> and <tt class="docutils literal">Erlang 22.0</tt> or more recent <a class="footnote-reference" href="#id4" id="id3">[1]</a> are available in one's environment), one can easily install <tt class="docutils literal"><span class="pre">Ceylan-WOOPER</span></tt>, which depends on <a class="reference external" href="http://myriad.esperide.org">Ceylan-Myriad</a>, hence is to be installed first:</p>
+<p>To test this class (provided that <tt class="docutils literal">GNU make</tt> and <tt class="docutils literal">Erlang 22.1</tt> or more recent <a class="footnote-reference" href="#id4" id="id3">[1]</a> are available in one's environment), one can easily install <tt class="docutils literal"><span class="pre">Ceylan-WOOPER</span></tt>, which depends on <a class="reference external" href="http://myriad.esperide.org">Ceylan-Myriad</a>, hence is to be installed first:</p>
 <pre class="code bash literal-block">
 $ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad.git myriad
 $ <span class="nb">cd</span> myriad <span class="o">&amp;&amp;</span> make all <span class="o">&amp;&amp;</span> <span class="nb">cd</span> ..
@@ -2148,6 +2148,14 @@ $ <span class="nb">cd</span> wooper <span class="o">&amp;&amp;</span> make all
 <div class="section" id="using-otp-related-build-runtime-conventions">
 <span id="otp-build"></span><h3><a class="toc-backref" href="#id96">Using OTP-Related Build/Runtime Conventions</a></h3>
 <p>As discussed for <a class="reference external" href="http://myriad.esperide.org/myriad.html#otp">Myriad</a>, we added the (optional) possibility of generating a WOOPER <em>OTP application</em> out of the build tree (obtained thanks to the method described in the previous section), ready to be integrated into an <em>(OTP) release</em>. For that we rely on <a class="reference external" href="https://www.rebar3.org/">rebar3</a>, <a class="reference external" href="https://github.com/erlware/relx">relx</a> and <a class="reference external" href="https://hex.pm/">hex</a>.</p>
+<p>OTP conventions mandate using:</p>
+<pre class="literal-block">
+-include_lib(&quot;wooper/include/wooper.hrl&quot;).
+</pre>
+<p>rather than:</p>
+<pre class="literal-block">
+-include(&quot;wooper.hrl&quot;).
+</pre>
 <p>Unlike Myriad, which is an OTP <em>library</em> application, WOOPER is an OTP <em>active</em> application, meaning the reliance on an application that can be started/stopped (<tt class="docutils literal">wooper_app</tt>), a root supervisor (<tt class="docutils literal">wooper_sup</tt>) and a class manager that is a background server process (<tt class="docutils literal">gen_server</tt>).</p>
 <p><span class="raw-html"><a name="otp_for_instances"></a></span></p>
 <div class="admonition note">
