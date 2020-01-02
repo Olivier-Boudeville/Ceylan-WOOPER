@@ -34,7 +34,7 @@ PROJECT_ICON := wooper-icon.png
 WEB_CONTENT = *.html *.css *.png tmp-rst/*.pdf
 
 # Read from the user's environment:
-GITHUB_PAGES_BASE := $(shell basename "(WOOPER_WEB_MIRROR_BRANCH)")
+GITHUB_PAGES_BASE := $(shell basename "$(WOOPER_WEB_MIRROR_BRANCH)")
 
 
 
@@ -97,7 +97,11 @@ info-doc:
 
 
 info-web:
+	@echo "HTML_TARGET = $(HTML_TARGET)"
+	@echo "SP = $(SP)"
 	@echo "WEB_CONTENT = $(WEB_CONTENT)"
+	@echo "WEB_SRV = $(WEB_SRV)"
+	@echo "WEB_ROOT = $(WEB_ROOT)"
 	@echo "WOOPER_WEB_MIRROR_BRANCH = $(WOOPER_WEB_MIRROR_BRANCH)"
 	@echo "GITHUB_PAGES_BASE = $(GITHUB_PAGES_BASE)"
 
