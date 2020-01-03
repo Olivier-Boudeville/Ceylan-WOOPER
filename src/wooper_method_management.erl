@@ -796,7 +796,41 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 		pair:to_list( FunId ), Classname, Line );
 
 
-%% For functions, nothing special to check:
+
+%% For functions, nothing special to check, except that they are not actually
+%% faulty static methods:
+
+check_clause_spec( { type, Line, 'fun',
+					 _Seqs=[ _TypeProductForArgs,
+					 _ResultType={remote_type,_,[ {atom,_,wooper},
+												  {atom,_,static_return}, _ ] } ] },
+				   _FunNature=function, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "~s/~B is detected as a plain function "
+		"whereas its spec uses a WOOPER static terminator type. "
+		"Maybe it is actually a static method whose clause lacks a proper "
+		"wooper:return_static/1 last call?", pair:to_list( FunId ), Classname,
+		Line );
+
+% Monomorphic types are licit (typically: wooper:state()):
+check_clause_spec( { type, _Line, 'fun',
+					 _Seqs=[ _TypeProductForArgs,
+					 _ResultType={remote_type,_,[ {atom,_,wooper}, _, [] ] } ] },
+				   _FunNature=function, _Qualifiers, _FunId, _Classname ) ->
+	ok;
+
+
+% Polymorphic types are probably a faulty WOOPER terminator (typically akin to
+% wooper:return_static( term() )):
+%
+check_clause_spec( { type, Line, 'fun',
+					 _Seqs=[ _TypeProductForArgs,
+					 _ResultType={remote_type,_,[ {atom,_,wooper}, _, _ ] } ] },
+				   _FunNature=function, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "the type specification of ~s/~B "
+		"is not expected to rely on a terminator type prefixed with the wooper "
+		"module (applying it in the context of a plain function is even "
+		"more irrelevant).", pair:to_list( FunId ), Classname,
+		Line );
 
 check_clause_spec( { type, _, 'fun',
 					 _Seqs=[ _TypeProductForArgs, _ResultType ] },
