@@ -708,7 +708,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "~s/~B uses oneway_return/~B, "
 		"which does not exist; its correct arity is 0.",
-		[ length( Types ) | pair:to_list( FunId ) ], Classname, Line );
+		pair:to_list( FunId ) ++ [ length( Types ) ], Classname, Line );
 
 
 % Wrong arity for const_oneway_return/0:
@@ -717,7 +717,7 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "~s/~B uses const_oneway_return/~B, "
 		"which does not exist; its correct arity is 0.",
-		[ length( Types ) | pair:to_list( FunId ) ], Classname, Line );
+		pair:to_list( FunId ) ++ [ length( Types ) ], Classname, Line );
 
 
 % *_result used instead of *_return:
