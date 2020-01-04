@@ -1446,8 +1446,10 @@ retrieve_virtual_table( Classname ) ->
 -spec trigger_error( basic_utils:exception_class(), term(), classname(),
 		 [ method_arguments() ], code_utils:stack_trace() ) -> no_return().
 trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
-	   _Stacktrace=[
-			 _UndefCall={ ModuleName, FunctionName, UndefArgs, _Loc } | _ ] ) ->
+	   _Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
+					 | NextCalls ] ) ->
+
+	%trace_utils:debug_fmt( "NextCalls: ~p", [ NextCalls ] ),
 
 	% An undef error is difficult to investigate (multiple possible reasons
 	% behind), let's be nice to the developer:
@@ -1459,11 +1461,29 @@ trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
 
 	Arity = length( ConstructionParameters ) + 1,
 
+	LocString = case Loc of
+
+		[] ->
+			case NextCalls of
+
+				[] ->
+					"";
+
+				[ { _M, _F, _A, NextLoc } | _ ] ->
+					text_utils:format( " (location: ~p)", [ NextLoc ] )
+
+			end;
+
+		_ ->
+			text_utils:format( " (location: ~p)", [ Loc ] )
+
+	end,
+
 	log_error( "~nWOOPER error for PID ~w, "
 			   "constructor (~s:construct/~B) failed due to an 'undef' "
-			   "call to ~s:~s/~B; diagnosis: ~s.",
+			   "call to ~s:~s/~B; diagnosis: ~s~s.",
 			   [ self(), Classname, Arity, ModuleName, FunctionName,
-				 UndefArity, Diagnosis ] ),
+				 UndefArity, Diagnosis, LocString ] ),
 
 	throw( { wooper_constructor_failed, self(), Classname, Arity,
 			 { undef, { ModuleName, FunctionName, UndefArity } } } );
