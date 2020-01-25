@@ -46,7 +46,7 @@
 
 
 % Various helpers for testing, OTP compliance, etc.
--export([ start_for_test/0, prepare_otp_context/1 ]).
+-export([ start_for_test/0, start_for_app/0, prepare_otp_context/1 ]).
 
 
 % For wooper_enable_otp_integration:
@@ -203,6 +203,36 @@ start_for_test() ->
 %
 start_for_test() ->
 	trace_utils:trace( "Starting WOOPER test non-OTP environment "
+					   "(thus not creating the WOOPER class manager)." ),
+	ok.
+
+
+-endif. % wooper_enable_otp_integration
+
+
+
+
+% Starts WOOPER for an application launch possibly involving an OTP-based
+% startup procedure.
+%
+-spec start_for_app() -> void().
+
+-if( ?wooper_enable_otp_integration =:= true ).
+
+
+start_for_app() ->
+	trace_utils:trace( "Starting WOOPER application OTP environment." ),
+	%wooper_class_manager:start().
+	ok.
+
+-elif( ?wooper_enable_otp_integration =:= false ).
+
+
+% Here we intentionally do not start the WOOPER class manager, as an a priori
+% creation shall remain optional:
+%
+start_for_app() ->
+	trace_utils:trace( "Starting WOOPER application non-OTP environment "
 					   "(thus not creating the WOOPER class manager)." ),
 	ok.
 
