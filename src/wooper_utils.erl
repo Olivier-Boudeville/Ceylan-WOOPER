@@ -221,7 +221,7 @@ start_for_test() ->
 
 
 start_for_app() ->
-	trace_utils:trace( "Starting WOOPER application OTP environment." ),
+	%trace_utils:trace( "Starting WOOPER application OTP environment." ),
 	%wooper_class_manager:start().
 	ok.
 
