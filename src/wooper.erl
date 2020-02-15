@@ -1449,6 +1449,9 @@ trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
 	   _Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
 					 | NextCalls ] ) ->
 
+	%trace_utils:trace_fmt( "undef exception for ~s:~s/~B", [ ModuleName,
+	%							FunctionName, length( UndefArgs ) ] ),
+
 	%trace_utils:debug_fmt( "NextCalls: ~p", [ NextCalls ] ),
 
 	% An undef error is difficult to investigate (multiple possible reasons
