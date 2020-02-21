@@ -851,11 +851,11 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 			  % We might need to notify another process than the caller:
 			  { embody, [ Class, ConstructionParameters ], ToNotifyPid } ->
 
-				%trace_utils:debug_fmt(
-				%   "Process ~w becoming synchronously an instance "
-				%	"of class '~s', constructed from following "
-				%	"parameters:~n~p.",
-				%	[ self(), Class, ConstructionParameters ] ),
+				trace_utils:debug_fmt(
+				   "Process ~w becoming synchronously an instance "
+					"of class '~s', constructed from following "
+					"parameters:~n~p.",
+					[ self(), Class, ConstructionParameters ] ),
 
 				% Never returns:
 				construct_and_run_synchronous( Class, ConstructionParameters,
@@ -966,11 +966,11 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 construct_and_run( Classname, ConstructionParameters ) ->
 
-	%trace_utils:debug_fmt( "wooper:construct_and_run for class ~p "
-	%                       "and parameters ~p.",
-	%						[ Classname, ConstructionParameters ] ),
+	trace_utils:debug_fmt( "wooper:construct_and_run for class ~p "
+						   "and following parameters:~n ~p",
+						   [ Classname, ConstructionParameters ] ),
 
-	%check_classname_and_arity( Classname, ConstructionParameters ),
+	check_classname_and_arity( Classname, ConstructionParameters ),
 
 	BlankState = get_blank_state( Classname ),
 
@@ -1449,20 +1449,23 @@ trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
 	   _Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
 					 | NextCalls ] ) ->
 
-	%trace_utils:trace_fmt( "undef exception for ~s:~s/~B", [ ModuleName,
-	%							FunctionName, length( UndefArgs ) ] ),
 
 	%trace_utils:debug_fmt( "NextCalls: ~p", [ NextCalls ] ),
 
 	% An undef error is difficult to investigate (multiple possible reasons
 	% behind), let's be nice to the developer:
 
+	Arity = length( ConstructionParameters ) + 1,
+
 	UndefArity = length( UndefArgs ),
+
+	trace_utils:trace_fmt( "Construction failed (undef) in ~s:construct/~B, for "
+				"~s:~s/~B.",
+				[ Classname, Arity, ModuleName, FunctionName, UndefArity ] ),
 
 	Diagnosis = code_utils:interpret_undef_exception( ModuleName, FunctionName,
 													  UndefArity ),
 
-	Arity = length( ConstructionParameters ) + 1,
 
 	LocString = case Loc of
 
@@ -1499,6 +1502,9 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
 	% (error term would often be unreadable with ~p)
 
 	Arity = length( ConstructionParameters ) + 1,
+
+	trace_utils:trace_fmt( "Construction failed for ~s:construct/~B.",
+						   [ Classname, Arity ] ),
 
 	log_error( "~nWOOPER error for PID ~w, "
 			   "constructor (~s:construct/~B) failed (cause: ~p):~n~n"
