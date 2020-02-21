@@ -851,11 +851,11 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 			  % We might need to notify another process than the caller:
 			  { embody, [ Class, ConstructionParameters ], ToNotifyPid } ->
 
-				trace_utils:debug_fmt(
-				   "Process ~w becoming synchronously an instance "
-					"of class '~s', constructed from following "
-					"parameters:~n~p.",
-					[ self(), Class, ConstructionParameters ] ),
+				%trace_utils:debug_fmt(
+				%   "Process ~w becoming synchronously an instance "
+				%	"of class '~s', constructed from following "
+				%	"parameters:~n~p.",
+				%	[ self(), Class, ConstructionParameters ] ),
 
 				% Never returns:
 				construct_and_run_synchronous( Class, ConstructionParameters,
@@ -966,11 +966,11 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 construct_and_run( Classname, ConstructionParameters ) ->
 
-	trace_utils:debug_fmt( "wooper:construct_and_run for class ~p "
-						   "and following parameters:~n ~p",
-						   [ Classname, ConstructionParameters ] ),
+	%trace_utils:debug_fmt( "wooper:construct_and_run for class ~p "
+	%					   "and following parameters:~n ~p",
+	%					   [ Classname, ConstructionParameters ] ),
 
-	check_classname_and_arity( Classname, ConstructionParameters ),
+	%check_classname_and_arity( Classname, ConstructionParameters ),
 
 	BlankState = get_blank_state( Classname ),
 
