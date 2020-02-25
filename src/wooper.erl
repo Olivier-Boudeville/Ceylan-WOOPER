@@ -1459,9 +1459,9 @@ trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
 
 	UndefArity = length( UndefArgs ),
 
-	trace_utils:trace_fmt( "Construction failed (undef) in ~s:construct/~B, for "
-				"~s:~s/~B.",
-				[ Classname, Arity, ModuleName, FunctionName, UndefArity ] ),
+	%trace_utils:trace_fmt( "Construction failed (undef) in ~s:construct/~B, for "
+	%			"~s:~s/~B.",
+	%			[ Classname, Arity, ModuleName, FunctionName, UndefArity ] ),
 
 	Diagnosis = code_utils:interpret_undef_exception( ModuleName, FunctionName,
 													  UndefArity ),
@@ -1503,8 +1503,8 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
 
 	Arity = length( ConstructionParameters ) + 1,
 
-	trace_utils:trace_fmt( "Construction failed for ~s:construct/~B.",
-						   [ Classname, Arity ] ),
+	%trace_utils:trace_fmt( "Construction failed for ~s:construct/~B.",
+	%					   [ Classname, Arity ] ),
 
 	log_error( "~nWOOPER error for PID ~w, "
 			   "constructor (~s:construct/~B) failed (cause: ~p):~n~n"
