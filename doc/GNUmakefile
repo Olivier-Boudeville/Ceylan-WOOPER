@@ -53,6 +53,9 @@ all:
 
 
 full-doc: $(CURRENT_WOOPER_HTML)
+	@/bin/ln -s $(HTML_TARGET) wooper.html
+	@/bin/ln -s wooper.html index.html
+	@/bin/ln -s $(CURRENT_WOOPER_PDF) wooper.pdf
 
 
 html: clean-doc $(HTML_TARGET)
@@ -85,6 +88,10 @@ clean-doc:
 	-@/bin/rm -f *.aux *.log *.maf *.mtc* *.stc* *.tex *.toc \
 	$(CURRENT_WOOPER_PDF) $(DOC_GENERATED_FILES)
 
+
+# These three elements are symbolic links:
+real-clean: clean
+	-@/bin/rm -f index.html wooper.html wooper.pdf
 
 
 info: info-doc info-web
