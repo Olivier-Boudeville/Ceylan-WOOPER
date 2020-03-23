@@ -1592,7 +1592,8 @@ call_transformer( LineCall, _FunctionRef={ remote, _, {atom,_,wooper},
 								transformed_function_identifier=FunId } )
   when Params =/= [] ->
 	wooper_internals:raise_usage_error( "wrong arity (~B) specified "
-		"for wooper:const_return/0, for oneway ~s/~B.",
+		"for wooper:const_return/0, for oneway ~s/~B. Note: if it is actually "
+		"a request, use wooper:const_return_result/1 instead.",
 		[ length( Params ) | pair:to_list( FunId ) ], Transforms, LineCall );
 
 
