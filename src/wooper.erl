@@ -284,6 +284,17 @@
 -type ack_atom() :: atom().
 
 
+% PID of a process (not necessarily a WOOPER instance) interacting with such an
+% instance:
+%
+% (clearer that just pid())
+%
+-type caller_pid() :: pid().
+
+-type request_call() :: { request_name(), method_arguments(), caller_pid() }.
+-type oneway_call()  :: { oneway_name(), method_arguments() } | oneway_name().
+
+
 % Otherwise wooper_execute_method_as/4 is unused:
 -include("wooper_execute_internal_exports.hrl").
 
@@ -318,8 +329,9 @@
 
 			   attribute_name/0, attribute_value/0, attribute_entry/0,
 			   attribute_type/0, attribute_qualifier/0,
-			   instance_pid/0, passive_instance/0, state/0,
-			   function_export_set/0 ]).
+			   instance_pid/0, passive_instance/0,
+			   caller_pid/0, request_call/0, oneway_call/0,
+			   state/0, function_export_set/0 ]).
 
 
 % Note: the {attribute, request, oneway, static, class}_info/0 types are
