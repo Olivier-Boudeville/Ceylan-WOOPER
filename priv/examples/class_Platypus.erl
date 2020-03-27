@@ -47,7 +47,7 @@ construct( State, Age, Gender, FurColor, NozzleColor ) ->
 		class_OvoviviparousBeing:construct( MammalState ),
 
 	io:format( "Synchronous time-out is ~s.~n",
-			   [ text_utils:duration_to_string( ?synchronous_time_out ) ] ),
+			   [ time_utils:duration_to_string( ?synchronous_time_out ) ] ),
 
 	% Then the class-specific attributes:
 	setAttributes( OvoviviparousMammalState, [
