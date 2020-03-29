@@ -260,15 +260,46 @@ sort_out_functions( _FunEntries=[], FunctionTable, RequestTable, OnewayTable,
 	{ FunctionTable, RequestTable, OnewayTable, StaticTable };
 
 % Checks that all sorted functions have an actual implementation:
-sort_out_functions( _FunEntries=[ { FunId, #function_info{
-											  clauses=[],
-											  spec=Spec } } | _T ],
-					_FunctionTable, _RequestTable, _OnewayTable, _StaticTable,
+sort_out_functions( _FunEntries=[ { FunId={ FName, _Arity },
+									#function_info{ clauses=[],
+													spec=Spec } } | T ],
+					FunctionTable, RequestTable, OnewayTable, StaticTable,
 					Classname, _ExportLoc, _WOOPERExportSet )
   when Spec =/= undefined ->
-	wooper_internals:raise_usage_error(
-	  "function ~s/~B has a type specification, yet has never been defined.",
-	  pair:to_list( FunId ), Classname );
+
+	BaseMsg =
+		"function ~s/~B has a type specification, yet has never been defined",
+
+	% Scans all known functions (hopefully does not include FArity):
+	KnownArities = [ A || { { F, A }, _FI } <- T, F =:= FName ]
+		++ [ A || { F, A } <- table:keys( FunctionTable ), F =:=  FName ]
+		++ [ A || { F, A } <- table:keys( RequestTable ), F =:=  FName ]
+		++ [ A || { F, A } <- table:keys( OnewayTable ), F =:=  FName ]
+		++ [ A || { F, A } <- table:keys(  StaticTable), F =:=  FName ],
+
+	%trace_utils:debug_fmt( "Keys = ~p", [ table:keys( FunctionTable ) ] ),
+
+	FullMsg = BaseMsg ++ case KnownArities of
+
+		[] ->
+			text_utils:format( " (no function '~s' defined, for any arity)",
+							   [ FName ] );
+
+		[ SingleArity ] ->
+			text_utils:format( ". Maybe this spec should correspond to "
+				"function ~s/~B instead? ", [ FName, SingleArity ] );
+
+		Arities ->
+			text_utils:format( ". Maybe this spec should correspond to the "
+				"function ~s for one of the possible arities, ~s? ", [ FName,
+				text_utils:strings_to_listed_string( Arities ) ] )
+
+	end,
+
+	%FullMsg = BaseMsg,
+	wooper_internals:raise_usage_error( FullMsg, pair:to_list( FunId ),
+										Classname );
+
 
 sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 											clauses=OriginalClauses,
