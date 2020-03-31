@@ -45,13 +45,26 @@
 		  get_java_package_and_class_for/1 ]).
 
 
+% Section related to the conversion between types in CamelCase and WOOPER
+% classnames.
+%
+-export([ camelcase_type_to_wooper_class/1, wooper_class_to_camelcase_type/1 ]).
+
+
+
 % Various helpers for testing, OTP compliance, etc.
 -export([ start_for_test/0, start_for_app/0, prepare_otp_context/1 ]).
 
 
+% Ex: 'apple' or 'travelling_salesman'.
+-type camelcase_type() :: atom().
+
+-export_type([ camelcase_type/0 ]).
+
+
+
 % For wooper_enable_otp_integration:
 -include("wooper_defines_exports.hrl").
-
 
 
 % Deduces the Erlang equivalent name, according to the WOOPER conventions, of a
@@ -179,6 +192,55 @@ get_java_package_and_class_for( WOOPERClassname ) ->
 		_ ->
 			JavaPackage = text_utils:string_to_atom( JavaPackageString ),
 			{ JavaPackage, JavaClass }
+
+	end.
+
+
+
+% Converts a simple type specified in CamelCase (ex: 'apple' or
+% 'travelling_salesman') into its corresponding WOOPER classname (ex:
+% 'class_Apple' of 'class_TravellingSalesman').
+%
+-spec camelcase_type_to_wooper_class( camelcase_type() ) -> wooper:classname().
+camelcase_type_to_wooper_class( CamelcaseType ) ->
+
+	% For example CamelcaseType = travelling_salesman:
+	TypeString = case text_utils:atom_to_string( CamelcaseType ) of
+
+		Invalid="class_" ++ _ ->
+			throw( { invalid_camelcase_type, already_prefixed, Invalid } );
+
+		Other ->
+			Other
+
+	end,
+
+	% Underscores removed:
+	CamelCapElems = [ text_utils:uppercase_initial_letter( E )
+			   || E <- text_utils:split( TypeString, _Delimiters=[ $_ ] ) ],
+
+	ClassString = "class_" ++ lists:flatten( CamelCapElems ),
+
+	text_utils:string_to_atom( ClassString ).
+
+
+
+% Converts a WOOPER classname (ex: 'class_Apple') into its corresponding simple type
+% in CamelCase (ex: 'apple').
+%
+-spec wooper_class_to_camelcase_type( wooper:classname() ) -> camelcase_type().
+wooper_class_to_camelcase_type( WOOPERClassname ) ->
+
+	% For example Classname = class_TravellingSalesman:
+	case text_utils:atom_to_string( WOOPERClassname ) of
+
+		"class_" ++ Suffix ->
+			Elems = [ text_utils:to_lowercase( E )
+					  || E <- text_utils:split_camel_case( Suffix ) ],
+			text_utils:join( _Sep="_", Elems );
+
+		Invalid ->
+			throw( { invalid_wooper_classname, Invalid } )
 
 	end.
 

@@ -45,6 +45,7 @@
 		  get_blank_transformation_state/0, get_blank_transformation_state/1,
 		  ensure_exported/2, ensure_exported_at/2, ensure_all_exported_in/2,
 		  methods_to_functions/5,
+		  raise_no_implementation_error/5,
 		  take_spec_into_account/5, get_info_from_clause_spec/3,
 		  check_clause_spec/5, check_state_argument/3,
 		  function_nature_to_string/1,
@@ -260,45 +261,15 @@ sort_out_functions( _FunEntries=[], FunctionTable, RequestTable, OnewayTable,
 	{ FunctionTable, RequestTable, OnewayTable, StaticTable };
 
 % Checks that all sorted functions have an actual implementation:
-sort_out_functions( _FunEntries=[ { FunId={ FName, _Arity },
-									#function_info{ clauses=[],
-													spec=Spec } } | T ],
-					FunctionTable, RequestTable, OnewayTable, StaticTable,
-					Classname, _ExportLoc, _WOOPERExportSet )
-  when Spec =/= undefined ->
+sort_out_functions( _FunEntries=[ { _FunId={ FName, Arity },
+								#function_info{ clauses=[], spec=Spec } } | T ],
+	FunctionTable, RequestTable, OnewayTable, StaticTable, Classname,
+	_ExportLoc, _WOOPERExportSet ) when Spec =/= undefined ->
 
-	BaseMsg =
-		"function ~s/~B has a type specification, yet has never been defined",
+	AllTables = [ FunctionTable, RequestTable, OnewayTable, StaticTable ],
 
-	% Scans all known functions (hopefully does not include FArity):
-	KnownArities = [ A || { { F, A }, _FI } <- T, F =:= FName ]
-		++ [ A || { F, A } <- table:keys( FunctionTable ), F =:=  FName ]
-		++ [ A || { F, A } <- table:keys( RequestTable ), F =:=  FName ]
-		++ [ A || { F, A } <- table:keys( OnewayTable ), F =:=  FName ]
-		++ [ A || { F, A } <- table:keys(  StaticTable), F =:=  FName ],
-
-	%trace_utils:debug_fmt( "Keys = ~p", [ table:keys( FunctionTable ) ] ),
-
-	FullMsg = BaseMsg ++ case KnownArities of
-
-		[] ->
-			text_utils:format( " (no function '~s' defined, for any arity)",
-							   [ FName ] );
-
-		[ SingleArity ] ->
-			text_utils:format( ". Maybe this spec should correspond to "
-				"function ~s/~B instead? ", [ FName, SingleArity ] );
-
-		Arities ->
-			text_utils:format( ". Maybe this spec should correspond to the "
-				"function ~s for one of the possible arities, ~s? ", [ FName,
-				text_utils:strings_to_listed_string( Arities ) ] )
-
-	end,
-
-	%FullMsg = BaseMsg,
-	wooper_internals:raise_usage_error( FullMsg, pair:to_list( FunId ),
-										Classname );
+	raise_no_implementation_error( Classname, FName, Arity,
+								   _RemainingFunEntries=T, AllTables );
 
 
 sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
@@ -402,6 +373,48 @@ sort_out_functions( _Functions=[ #function_info{ name=FunName,
 	wooper_internals:raise_usage_error( "no clause found for ~s/~B; "
 			"function exported yet not defined?",
 			[ FunName, Arity ], Classname ).
+
+
+
+% Tries to locate among specified function entries and tables any implementation
+% of the specified function with any (different) arity, and raise an appropriate
+% exception.
+%
+% (helper, defined for reuse by upper layers)
+%
+raise_no_implementation_error( Classname, FName, FArity, FunctionEntries,
+							   Tables ) ->
+
+	BaseMsg =
+		"function ~s/~B has a type specification, yet has never been defined",
+
+	% Scans all known functions (hopefully does not include FArity):
+	KnownArities = [ A || { { F, A }, _FI } <- FunctionEntries, F =:=  FName ]
+	  ++ list_utils:flatten_once(
+		[ [ A || { F, A } <- table:keys( T ), F =:= FName ] || T <- Tables ] ),
+
+	%trace_utils:debug_fmt( "KnownArities = ~w", [ KnownArities ] ),
+
+	FullMsg = BaseMsg ++ case KnownArities of
+
+		[] ->
+			text_utils:format( " (no function '~s' defined, for any arity)",
+							   [ FName ] );
+
+		[ SingleArity ] ->
+			text_utils:format( ". Maybe this spec should correspond to "
+				"~s/~B instead? ", [ FName, SingleArity ] );
+
+		Arities ->
+			ArStrs = [ text_utils:integer_to_string( A )
+					   || A <- lists:sort( Arities ) ],
+			text_utils:format( ". Maybe this spec should correspond to the "
+			  "function ~s for one of its implemented arities, which are ~s? ",
+			  [ FName, text_utils:strings_to_listed_string( ArStrs ) ] )
+
+	end,
+
+	wooper_internals:raise_usage_error( FullMsg, [ FName, FArity ],	Classname ).
 
 
 
