@@ -225,8 +225,8 @@ camelcase_type_to_wooper_class( CamelcaseType ) ->
 
 
 
-% Converts a WOOPER classname (ex: 'class_Apple') into its corresponding simple type
-% in CamelCase (ex: 'apple').
+% Converts a WOOPER classname (ex: 'class_Apple') into its corresponding simple
+% type in CamelCase (ex: 'apple').
 %
 -spec wooper_class_to_camelcase_type( wooper:classname() ) -> camelcase_type().
 wooper_class_to_camelcase_type( WOOPERClassname ) ->
@@ -237,7 +237,7 @@ wooper_class_to_camelcase_type( WOOPERClassname ) ->
 		"class_" ++ Suffix ->
 			Elems = [ text_utils:to_lowercase( E )
 					  || E <- text_utils:split_camel_case( Suffix ) ],
-			text_utils:join( _Sep="_", Elems );
+			text_utils:string_to_atom( text_utils:join( _Sep="_", Elems ) );
 
 		Invalid ->
 			throw( { invalid_wooper_classname, Invalid } )

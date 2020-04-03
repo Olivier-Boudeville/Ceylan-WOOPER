@@ -113,6 +113,11 @@ WOOPER_REBAR_BUILD_BASE = $(REBAR_BUILD_DIR)/lib/wooper
 # needed parse transforms and their dependencies; at runtime, the OTP rules
 # ensure that the relevant ebin directories are in the code path)
 #
+# Note that this implies that the BEAM files in all ebin directories should be
+# up to date with the ones in the build trees, otherwise hard-to-debug
+# discrepancies may happen (these OTP/rebar-related directories act as default
+# catch-alls should no prior directory correspond among in the BEAM paths).
+#
 MYRIAD_OTP_BEAM_DIR_FROM_USUAL = $(LAYER_TOP)/$(MYRIAD_REBAR_BUILD_BASE)/ebin
 
 
