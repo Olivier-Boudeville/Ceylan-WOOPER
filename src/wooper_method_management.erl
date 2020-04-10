@@ -414,7 +414,7 @@ raise_no_implementation_error( Classname, FName, FArity, FunctionEntries,
 
 	end,
 
-	wooper_internals:raise_usage_error( FullMsg, [ FName, FArity ],	Classname ).
+	wooper_internals:raise_usage_error( FullMsg, [ FName, FArity ], Classname ).
 
 
 
@@ -1310,7 +1310,7 @@ body_transformer( BodyExprs, Transforms, Line ) ->
 			%  "of atom '~s'.", [ PlaceholderAtom ] ),
 
 			% We return this, as something have to be returned:
-			[ {atom,Line,PlaceholderAtom} ];
+			[ { atom, Line, PlaceholderAtom } ];
 
 		NonEmptyExprs ->
 			NonEmptyExprs
@@ -1349,7 +1349,7 @@ call_transformer( LineCall, FunctionRef={atom,_,throw}, Params,
 		  transformation_state={ _Nature, _Qualifiers, WOOPERExportSet } } ) ->
 
 	?trace_fmt( "Transforming for WOOPER throw call, params: ~p.",
-						   [ Params ] ),
+				[ Params ] ),
 
 	%?trace( "throw expression intercepted" ),
 
@@ -1774,8 +1774,7 @@ call_transformer( _LineCall,
 				transformation_state={ throw, _Qualifiers,
 									   _WOOPERExportSet } } ) ->
 
-	?debug_fmt( "~s/~B confirmed as a throw method.",
-				pair:to_list( FunId ) ),
+	?debug_fmt( "~s/~B confirmed as a throw method.", pair:to_list( FunId ) ),
 
 	% So that wooper:throwing( R ) becomes simply R:
 	NewExpr = ResultExpr,
@@ -1987,8 +1986,8 @@ simple_receive_transformer( Line, ReceiveClauses, Transforms ) ?rec_guard ->
 -spec receive_with_after_transformer( line(), [ ast_case_clause() ],
 		ast_expression(), ast_body(), ast_transforms() ) ->
 								{ [ ast_expression() ], ast_transforms() }.
-receive_with_after_transformer( Line, ReceiveClauses, AfterTest,
-								AfterBody, Transforms ) ?rec_guard ->
+receive_with_after_transformer( Line, ReceiveClauses, AfterTest, AfterBody,
+								Transforms ) ?rec_guard ->
 
 	% Receive clauses are actually case clauses:
 	{ NewReceiveClauses, ReceiveTransforms } =
@@ -2257,8 +2256,8 @@ update_transformation_state(
 						InitialQualifiers, _WOOPERExportSet } },
   NewTransforms=#ast_transforms{
 				   transformed_function_identifier=FunId,
-				   transformation_state={ NewRawNature,
-										  NewQualifiers, WOOPERExportSet } },
+				   transformation_state={ NewRawNature, NewQualifiers,
+										  WOOPERExportSet } },
   Line ) ->
 
 	% As soon as we return from the transformation whereas the nature is still
@@ -2340,8 +2339,7 @@ update_transformation_state(
 					  "the ~s/~B function was "
 					  "detected as a ~s, yet the clause at line #~B indicates "
 					  "it is a ~s.", pair:to_list( FunId ) ++ [
-						  function_nature_to_string( InitialNature ),
-						  Line,
+						  function_nature_to_string( InitialNature ), Line,
 						  function_nature_to_string( NewActualNature ) ],
 					  NewTransforms, Line )
 
@@ -2389,8 +2387,8 @@ ensure_exported( FunInfo, _MarkerTable ) ->
 ensure_all_exported_in( FunctionTable, ExportLoc ) ->
 	table:map_on_values( fun( FunInfo ) ->
 							ensure_exported_at( FunInfo, ExportLoc )
-					   end,
-					   FunctionTable ).
+						 end,
+						 FunctionTable ).
 
 
 % (helper)
@@ -2635,8 +2633,7 @@ static_to_function_info( Other, _Location ) ->
 % in specified function table.
 %
 -spec methods_to_functions( request_table(), oneway_table(), static_table(),
-							function_table(), marker_table() ) ->
-								  function_table().
+						function_table(), marker_table() ) -> function_table().
 methods_to_functions( RequestTable, OnewayTable, StaticTable,
 					  InitFunctionTable, MarkerTable ) ->
 
@@ -2652,24 +2649,24 @@ methods_to_functions( RequestTable, OnewayTable, StaticTable,
 						 || { ReqId, ReqInfo } <- RequestPairs ],
 
 	WithRequestsFunTable = table:add_new_entries( RequestAsFunPairs,
-												InitFunctionTable ),
+												  InitFunctionTable ),
 
 
 	OnewayPairs = table:enumerate( OnewayTable ),
 
 	OnewayAsFunPairs = [
 		 { OnwId, oneway_to_function_info( OnwInfo, ExportLoc ) }
-						  || { OnwId, OnwInfo } <- OnewayPairs ],
+						|| { OnwId, OnwInfo } <- OnewayPairs ],
 
 	WithOnewaysFunTable = table:add_new_entries( OnewayAsFunPairs,
-											   WithRequestsFunTable ),
+												 WithRequestsFunTable ),
 
 
 	StaticPairs = table:enumerate( StaticTable ),
 
 	StaticAsFunPairs = [
 		 { StId, static_to_function_info( StInfo, ExportLoc ) }
-						  || { StId, StInfo } <- StaticPairs ],
+						|| { StId, StInfo } <- StaticPairs ],
 
 	table:add_new_entries( StaticAsFunPairs, WithOnewaysFunTable ).
 
