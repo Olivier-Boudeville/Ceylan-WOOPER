@@ -87,7 +87,8 @@
 
 
 % Extra features:
--export([ declare_beam_dirs_for_wooper/0, retrieve_virtual_table/1 ]).
+-export([ declare_beam_dirs_for_wooper/0, retrieve_virtual_table/1,
+		  get_execution_target/0 ]).
 
 
 
@@ -142,6 +143,7 @@
 % The record defining the state of a passive instance:
 -define( passive_record, state_holder ).
 
+-define( ellipse_length, 1500 ).
 
 
 % For the name of the registered process that keeps the per-class method
@@ -416,6 +418,7 @@ execute_request( TargetInstancePID, RequestName )
 
 	execute_request_waiter( TargetInstancePID, RequestName, RequestArgs );
 
+
 execute_request( PassiveInstance, RequestName )
   when is_record( PassiveInstance, ?passive_record )
 	   andalso is_atom( RequestName ) ->
@@ -424,6 +427,7 @@ execute_request( PassiveInstance, RequestName )
 		wooper_execute_method( RequestName, _RequestArgs=[], PassiveInstance ),
 
 	{ NewPassiveInstance, R }.
+
 
 
 % Sends specified request to specified (active or passive) instance, if active
@@ -511,11 +515,9 @@ execute_request_waiter( ExpectedResult, TargetInstancePID, RequestName,
 	after ?notify_long_wait_after ->
 
 		trace_utils:warning_fmt( "Still awaiting the expected answer '~p' "
-								 "from WOOPER instance ~p, after having called "
-								 "request '~s' on it with following "
-								 "parameters:~n~p",
-								 [ ExpectedResult, TargetInstancePID,
-								   RequestName, RequestArgs ] ),
+			"from WOOPER instance ~p, after having called request '~s' on it "
+			"with following parameters:~n~p",
+			[ ExpectedResult, TargetInstancePID, RequestName, RequestArgs ] ),
 
 		execute_request_waiter( ExpectedResult, TargetInstancePID,
 								RequestName, RequestArgs )
@@ -918,8 +920,7 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 				[] ->
 					trace_utils:error_fmt( "Error, no 'construct' exported "
-										   "in '~s' (regardless of arity).",
-										   [ Classname ] ),
+						"in '~s' (regardless of arity).", [ Classname ] ),
 					throw( { no_exported_construct, Classname } );
 
 				[ FoundArity ] when FoundArity > ArgCount ->
@@ -1241,8 +1242,7 @@ execute_oneway( PassiveInstance, OnewayName )
 		andalso is_atom( OnewayName ) ->
 
 	{ NewPassiveInstance, { wooper_method_returns_void, R } } =
-		wooper_execute_method( OnewayName, _OnewayArgs=[],
-							   PassiveInstance ),
+		wooper_execute_method( OnewayName, _OnewayArgs=[], PassiveInstance ),
 
 	{ NewPassiveInstance, R }.
 
@@ -1351,11 +1351,11 @@ default_down_handler( MonitorReference, MonitoredType, MonitoredElement,
 					  ExitReason, State ) ->
 
 	log_warning( "WOOPER default DOWN handler of the ~w "
-						"instance ~w ignored the following down notification "
-						"'~s' for monitored element ~p of type '~p' "
-						"(monitor reference: ~w).",
-						[ State#state_holder.actual_class, self(), ExitReason,
-						  MonitoredElement, MonitoredType, MonitorReference ] ),
+				 "instance ~w ignored the following down notification "
+				 "'~s' for monitored element ~p of type '~p' "
+				 "(monitor reference: ~w).",
+				 [ State#state_holder.actual_class, self(), ExitReason,
+				   MonitoredElement, MonitoredType, MonitorReference ] ),
 
 	State.
 
@@ -1400,10 +1400,10 @@ default_node_up_handler( Node, MonitorNodeInfo, State ) ->
 default_node_down_handler( Node, MonitorNodeInfo, State ) ->
 
 	log_warning( "WOOPER default node down handler of the ~w "
-						"instance ~w ignored the disconnection notification "
-						"for node '~s' (information: ~p).",
-						[ State#state_holder.actual_class, self(), Node,
-						  MonitorNodeInfo ] ),
+				 "instance ~w ignored the disconnection notification "
+				 "for node '~s' (information: ~p).",
+				 [ State#state_holder.actual_class, self(), Node,
+				   MonitorNodeInfo ] ),
 
 	State.
 
@@ -1530,6 +1530,29 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
 	throw( { wooper_constructor_failed, self(), Classname, Arity,
 			 ConstructionParameters, ErrorTerm } ).
 
+
+
+% Returns the execution target this module (hence, probably, that layer as a
+% whole) was compiled with, i.e. either the atom 'development' or 'production'.
+
+% Dispatched in actual clauses, otherwise Dialyzer will detect an
+% underspecification:
+%
+% -spec get_execution_target() -> execution_target().
+
+-ifdef(exec_target_is_production).
+
+-spec get_execution_target() -> 'production'.
+get_execution_target() ->
+	production.
+
+-else. % exec_target_is_production
+
+-spec get_execution_target() -> 'development'.
+get_execution_target() ->
+	development.
+
+-endif. % exec_target_is_production
 
 
 
@@ -1763,7 +1786,8 @@ declare_beam_dirs_for_wooper() ->
 %
 -spec log_info( string() ) -> void().
 log_info( String ) ->
-	error_logger:info_msg( String ++ "\n" ).
+	error_logger:info_msg(
+	  text_utils:ellipse( String, ?ellipse_length ) ++ "\n" ).
 
 
 % Reports (on a best-effort basis) the specified information to the user,
@@ -1771,7 +1795,8 @@ log_info( String ) ->
 %
 -spec log_info( text_utils:format_string(), [ term() ] ) -> void().
 log_info( FormatString, ValueList ) ->
-	error_logger:info_msg( FormatString ++ "\n", ValueList ).
+	Str = text_utils:format( FormatString, ValueList ),
+	error_logger:info_msg( text_utils:ellipse( Str, ?ellipse_length ) ++ "\n" ).
 
 
 
@@ -1781,7 +1806,8 @@ log_info( FormatString, ValueList ) ->
 -spec log_warning( string() ) -> void().
 log_warning( String ) ->
 
-	error_logger:warning_msg( String ++ "\n" ),
+	error_logger:warning_msg( text_utils:ellipse( String, ?ellipse_length )
+							  ++ "\n" ),
 
 	% Wait a bit, as error_msg seems asynchronous:
 	system_utils:await_output_completion( ?wooper_warning_display_waiting ).
@@ -1792,7 +1818,11 @@ log_warning( String ) ->
 %
 -spec log_warning( text_utils:format_string(), [ term() ] ) -> void().
 log_warning( FormatString, ValueList ) ->
-	error_logger:warning_msg( FormatString ++ "\n", ValueList ),
+
+	Str = text_utils:format( FormatString, ValueList ),
+
+	error_logger:warning_msg( text_utils:ellipse( Str, ?ellipse_length )
+							  ++ "\n" ),
 
 	% Wait a bit, as error_msg seems asynchronous:
 	system_utils:await_output_completion( ?wooper_warning_display_waiting ).
@@ -1806,7 +1836,8 @@ log_warning( FormatString, ValueList ) ->
 -spec log_error( string() ) -> void().
 log_error( Message ) ->
 
-	error_logger:error_msg( Message ++ "\n" ),
+	error_logger:error_msg( text_utils:ellipse( Message, ?ellipse_length )
+							++ "\n" ),
 
 	% Wait a bit, as error_msg seems asynchronous:
 	system_utils:await_output_completion( ?wooper_error_display_waiting ).
@@ -1820,9 +1851,11 @@ log_error( Message ) ->
 -spec log_error( text_utils:format_string(), [ term() ] ) -> void().
 log_error( FormatString, ValueList ) ->
 
-	error_logger:error_msg( FormatString
-							++ "~n=END OF WOOPER ERROR REPORT FOR ~w ===~n~n~n",
-							ValueList ++ [ self() ] ),
+	Str = text_utils:format( FormatString
+			++ "~n=END OF WOOPER ERROR REPORT FOR ~w ===~n~n~n",
+			ValueList ++ [ self() ] ),
+
+	error_logger:error_msg( text_utils:ellipse( Str, ?ellipse_length ) ),
 
 	% Wait a bit, as error_msg seems asynchronous:
 	system_utils:await_output_completion( ?wooper_error_display_waiting ).
@@ -1839,6 +1872,7 @@ log_error( FormatString, ValueList ) ->
 				 wooper:state() | basic_utils:module_name() ) -> void().
 log_error( FormatString, ValueList, State )
   when is_record( State, state_holder ) ->
+
 	io:format( "~n", [] ),
 
 	% Node information would be uselessly distracting:
@@ -1846,12 +1880,13 @@ log_error( FormatString, ValueList, State )
 	%		   ++ FormatString,
 	%		   [ State#state_holder.actual_class, self(),
 	%            node() | ValueList ] );
-	log_error( "WOOPER error for ~s instance of PID ~w: "
-			   ++ FormatString,
+	log_error( "WOOPER error for ~s instance of PID ~w: " ++ FormatString,
 			   [ State#state_holder.actual_class, self() | ValueList ] );
 
 log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
+
 	io:format( "~n", [] ),
+
 	% Node information would be uselessly distracting:
 	%log_error( "WOOPER error for instance of PID ~w on node ~s triggered "
 	%		   "in module ~s: " ++ FormatString,
@@ -1909,9 +1944,8 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType, ErrorTerm,
 % the caller, and have the process instance exit.
 %
 -spec on_failed_oneway( oneway_name(), method_arguments(),
-						basic_utils:error_type(), basic_utils:error_term(),
-						code_utils:stack_trace(), wooper:state() ) ->
-							  no_return().
+		basic_utils:error_type(), basic_utils:error_term(),
+		code_utils:stack_trace(), wooper:state() ) -> no_return().
 on_failed_oneway( OnewayAtom, ArgumentList, ErrorType, ErrorTerm, Stacktrace,
 				  State ) ->
 
@@ -1975,7 +2009,7 @@ lookup_method_prefix( MethodAtom, Arity, State ) ->
 % Available even when debug mode is off.
 %
 -spec send_and_listen( instance_pid(), request_name(), method_arguments() ) ->
-							 term().
+							term().
 send_and_listen( InstancePid, RequestName, Arguments ) ->
 
 	InstancePid ! { RequestName, Arguments, self() },
@@ -2138,8 +2172,8 @@ delete_synchronously_any_instance_referenced_in( Attributes, PreTestLiveliness,
 								 State ) when is_list( Attributes ) ->
 
 	% Triggers the deletion of selected instances:
-	{ TargetAttributes, TargetPids } = delete_pid_from( Attributes,
-												PreTestLiveliness, State ),
+	{ TargetAttributes, TargetPids } =
+		delete_pid_from( Attributes, PreTestLiveliness, State ),
 
 	%trace_utils:debug_fmt(
 	%  "delete_synchronously_any_instance_referenced_in:~n"
@@ -2155,8 +2189,8 @@ delete_synchronously_any_instance_referenced_in( Attributes, PreTestLiveliness,
 	%                       [ TargetAttributes ] ),
 
 	% Erases deleted PIDs:
-	UndefinedAttributes = [ { AttrName, undefined } ||
-							  AttrName <- TargetAttributes ],
+	UndefinedAttributes = [ { AttrName, undefined }
+								|| AttrName <- TargetAttributes ],
 
 	setAttributes( State, UndefinedAttributes );
 
@@ -2348,8 +2382,8 @@ examine_waited_deletions( _WaitedPids=[ Pid | T ], Acc ) ->
 safe_delete_synchronously_instances( InstanceList ) ->
 
 	% Testing for liveliness allows to avoid synchronous time-outs:
-	FilteredInstanceList = [ InstancePid ||
-			InstancePid <- list_utils:uniquify( InstanceList ),
+	FilteredInstanceList = [ InstancePid
+					 ||	InstancePid <- list_utils:uniquify( InstanceList ),
 			basic_utils:is_alive( InstancePid ) ],
 
 	delete_synchronously_instances( FilteredInstanceList ).
