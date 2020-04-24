@@ -51,6 +51,7 @@
 		  send_requests_and_wait_acks/4, send_requests_and_wait_acks/5,
 		  wait_for_request_answers/2, wait_for_request_answers/3,
 		  wait_for_request_acknowledgements/2,
+		  wait_for_request_acknowledgements/3,
 
 		  obtain_results_for_requests/3,
 
@@ -692,7 +693,17 @@ wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
 %
 -spec wait_for_request_acknowledgements( basic_utils:count(), ack_atom() ) ->
 											   void().
-wait_for_request_acknowledgements( _Count=0, _AckAtom ) ->
+wait_for_request_acknowledgements( Count, AckAtom ) ->
+	wait_for_request_acknowledgements( Count, AckAtom, _Timeout=infinity ).
+
+
+
+% Waits, with the specified time-out, that the specified number of requests
+% returned as result the specified acknowledgement atom.
+%
+-spec wait_for_request_acknowledgements( basic_utils:count(), ack_atom(),
+										 time_utils:time_out() ) -> void().
+wait_for_request_acknowledgements( _Count=0, _AckAtom, _Timeout ) ->
 
 	%trace_utils:debug_fmt(
 	%  "[~w] No more waiting of the '~s' acknowledgement atom.",
@@ -701,7 +712,7 @@ wait_for_request_acknowledgements( _Count=0, _AckAtom ) ->
 	ok;
 
 
-wait_for_request_acknowledgements( Count, AckAtom ) ->
+wait_for_request_acknowledgements( Count, AckAtom, Timeout ) ->
 
 	%trace_utils:debug_fmt( "[~w] Waiting for ~B '~s' acknowledgement atom(s).",
 	%						[ self(), Count, AckAtom ] ),
@@ -715,6 +726,14 @@ wait_for_request_acknowledgements( Count, AckAtom ) ->
 			%  [ self(), AckAtom ] ),
 
 			wait_for_request_acknowledgements( Count-1, AckAtom )
+
+	after Timeout ->
+
+		trace_utils:error_fmt( "Time-out after ~s, while still waiting for ~B "
+			"'~s' request acknowledgements.",
+			[ time_utils:duration_to_string( Timeout ), Count, AckAtom ] ),
+
+		throw( { wooper_request_ack_time_out, Count, AckAtom, Timeout } )
 
 	end.
 
