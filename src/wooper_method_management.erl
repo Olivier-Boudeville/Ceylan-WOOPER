@@ -902,8 +902,8 @@ check_clause_spec( { type, Line, 'fun',
 				   _FunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "the type specification of ~s/~B "
 		"is not expected to rely on a terminator prefixed with the wooper "
-		"module (just remove 'wooper:').", pair:to_list( FunId ), Classname,
-		Line );
+		"module (hint: just remove 'wooper:').", pair:to_list( FunId ),
+		Classname, Line );
 
 % Presumably a rogue request (not using the right return type):
 check_clause_spec( { type, Line, 'fun',
@@ -911,7 +911,9 @@ check_clause_spec( { type, Line, 'fun',
 				   _FunNature=request, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "the clauses of ~s/~B indicate "
 		"that this is a request, yet in the type specification no known "
-		"request terminator is used.", pair:to_list( FunId ), Classname, Line );
+		"request terminator is used (hint: request_return/1 or "
+		"const_request_return/1 would be expected in this context).",
+		pair:to_list( FunId ), Classname, Line );
 
 % Rogue oneway:
 check_clause_spec( { type, Line, 'fun',
@@ -919,8 +921,9 @@ check_clause_spec( { type, Line, 'fun',
 				   _FunNature=oneway, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "the clauses of ~s/~B indicate "
 		"that this is a oneway, yet in the type specification no known "
-		"oneway terminator is used.", pair:to_list( FunId ), Classname,
-		Line );
+		"oneway terminator is used (hint: oneway_return/0 or "
+		"const_oneway_return/0 would be expected in this context).",
+		pair:to_list( FunId ), Classname, Line );
 
 
 % Rogue static method:
@@ -929,7 +932,8 @@ check_clause_spec( { type, Line, 'fun',
 				   _FunNature=static, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "the clauses of ~s/~B indicate "
 		"that this is a static method, yet in the type specification no known "
-		"static method terminator is used.", pair:to_list( FunId ), Classname,
+		"static method terminator is used (hint: static_return/1 would be "
+		"expected in this context).", pair:to_list( FunId ), Classname,
 		Line );
 
 
