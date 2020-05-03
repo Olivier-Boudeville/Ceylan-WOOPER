@@ -5,3 +5,16 @@
 *.plt
 *erlang.log.*
 declared-types-in-*.txt
+.eunit
+erl_crash.dump
+
+# For Emacs temporary files:
+*.#*
+
+*~
+
+# Added in relation to rebar3:
+.rebar
+rebar3.crashdump
+.rebar3
+_*
