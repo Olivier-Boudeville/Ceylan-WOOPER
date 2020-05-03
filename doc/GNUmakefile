@@ -3,17 +3,18 @@ WOOPER_TOP = ..
 
 DOC_BASE_NAME := Ceylan-WOOPER-Layer-technical-manual-english
 
+
 OVERALL_DOCUMENT_SOURCE := $(DOC_BASE_NAME).rst
 
 
 CURRENT_WOOPER_HTML := $(DOC_BASE_NAME).html
 
-HTML_TARGET = $(CURRENT_WOOPER_HTML)
+HTML_TARGET := $(CURRENT_WOOPER_HTML)
 
 
 CURRENT_WOOPER_PDF := $(DOC_BASE_NAME).pdf
 
-PDF_TARGET = $(CURRENT_WOOPER_PDF)
+PDF_TARGET := $(CURRENT_WOOPER_PDF)
 
 
 DOC_GENERATED_FILES := $(HTML_TARGET) $(PDF_TARGET)
@@ -33,7 +34,7 @@ GITHUB_PAGES_BASE := $(shell basename "$(WOOPER_WEB_MIRROR_BRANCH)")
 
 .PHONY: doc all full-doc html pdf clone-mirror           \
 		export-doc export-to-official export-to-mirror   \
-		clean clean-doc real-clean info-web
+		clean clean-doc info info-web
 
 
 # Default do-nothing target:
@@ -87,10 +88,6 @@ clean-doc:
 	@echo "     Cleaning documentation"
 	-@/bin/rm -f *.aux *.log *.maf *.mtc* *.stc* *.tex *.toc $(DOC_GENERATED_FILES)
 
-
-# These three elements are symbolic links:
-real-clean: clean
-	-@/bin/rm -f index.html wooper.html wooper.pdf
 
 
 info: info-doc info-web
