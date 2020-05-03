@@ -1,35 +1,28 @@
 WOOPER_TOP = ..
 
 
-DOCUTILS_TOP = $(WOOPER_TOP)
+DOC_BASE_NAME := Ceylan-WOOPER-Layer-technical-manual-english
 
-DOC_BASE_NAME := wooper
-
-# The current, operational version of WOOPER:
-CURRENT_VERSION := 2.0
-
-DOC_NAME := $(DOC_BASE_NAME)-$(CURRENT_VERSION)
-
-OVERALL_DOCUMENT_SOURCE := $(DOC_NAME).rst
+OVERALL_DOCUMENT_SOURCE := $(DOC_BASE_NAME).rst
 
 
-
-CURRENT_WOOPER_PDF := $(DOC_NAME).pdf
-CURRENT_WOOPER_HTML := $(DOC_NAME).html
+CURRENT_WOOPER_HTML := $(DOC_BASE_NAME).html
 
 HTML_TARGET = $(CURRENT_WOOPER_HTML)
 
 
-DOC_GENERATED_FILES := $(CURRENT_WOOPER_PDF) $(CURRENT_WOOPER_HTML)
+CURRENT_WOOPER_PDF := $(DOC_BASE_NAME).pdf
 
-DOC_FILES := $(DOC_GENERATED_FILES) wooper-example.png
+PDF_TARGET = $(CURRENT_WOOPER_PDF)
+
+
+DOC_GENERATED_FILES := $(HTML_TARGET) $(PDF_TARGET)
 
 
 
 PROJECT_CSS := pygments-default.css,wooper.css
 
 PROJECT_ICON := wooper-icon.png
-
 
 WEB_CONTENT = *.html *.css *.png tmp-rst/*.pdf
 
@@ -38,28 +31,27 @@ GITHUB_PAGES_BASE := $(shell basename "$(WOOPER_WEB_MIRROR_BRANCH)")
 
 
 
-.PHONY: all doc full-doc track clone-mirror              \
+.PHONY: doc all full-doc html pdf clone-mirror           \
 		export-doc export-to-official export-to-mirror   \
-		info-web clean clean-doc
+		clean clean-doc real-clean info-web
 
 
 # Default do-nothing target:
 doc:
 
-
 all:
-	@echo "  Run 'make full-doc' to generate the manual of the WOOPER-$(CURRENT_VERSION) layer."
+	@echo "  Run 'make full-doc' to generate the manual of the 'WOOPER' layer."
 
 
-
-full-doc: $(CURRENT_WOOPER_HTML)
-	@/bin/ln -s $(HTML_TARGET) wooper.html
-	@/bin/ln -s wooper.html index.html
-	@/bin/ln -s $(CURRENT_WOOPER_PDF) wooper.pdf
+full-doc: $(DOC_GENERATED_FILES)
+	@/bin/ln -sf $(CURRENT_WOOPER_HTML) wooper.html
+	@/bin/ln -sf wooper.html index.html
+	@/bin/ln -sf $(CURRENT_WOOPER_PDF) wooper.pdf
 
 
 html: clean-doc $(HTML_TARGET)
 
+pdf: clean-doc $(PDF_TARGET)
 
 
 # Creates a separate repository for the GitHub pages branch:
@@ -72,6 +64,12 @@ clone-mirror:
 export-doc: clean-doc full-doc export-to-official export-to-mirror
 
 
+# Drawback: scp will not preserve symlinks, it will duplicate files instead.
+#
+# rsync would not, but requires a different source layout (copies a full tree,
+# not a set of files), so currently not used:
+# rsync -avze "ssh $(SP)" $(SOME_WEB_TREE) $(WEB_SRV):$(WEB_ROOT)/WOOPER/
+#
 export-to-official: $(DOC_GENERATED_FILES)
 	@echo "   Exporting WOOPER documentation to official website ($(WEB_SRV))"
 	@/bin/scp $(SP) $(WEB_CONTENT) $(WEB_SRV):$(WEB_ROOT)/WOOPER/
@@ -82,11 +80,12 @@ export-to-mirror: $(DOC_GENERATED_FILES)
 	@/bin/cp -f $(WEB_CONTENT) $(WOOPER_WEB_MIRROR_BRANCH) && cd $(WOOPER_WEB_MIRROR_BRANCH) && git add . && git merge -s ours && git commit -m "WOOPER doc updated." && git push && git pull --ff-only
 
 
+
 clean: clean-doc
 
 clean-doc:
-	-@/bin/rm -f *.aux *.log *.maf *.mtc* *.stc* *.tex *.toc \
-	$(CURRENT_WOOPER_PDF) $(DOC_GENERATED_FILES)
+	@echo "     Cleaning documentation"
+	-@/bin/rm -f *.aux *.log *.maf *.mtc* *.stc* *.tex *.toc $(DOC_GENERATED_FILES)
 
 
 # These three elements are symbolic links:
@@ -99,7 +98,6 @@ info: info-doc info-web
 
 info-doc:
 	@echo "OVERALL_DOCUMENT_SOURCE = $(OVERALL_DOCUMENT_SOURCE)"
-	@echo "DOC_FILES = $(DOC_FILES)"
 	@echo "DOC_TRACKER = $(DOC_TRACKER)"
 
 

@@ -21,7 +21,7 @@
 
 :raw-html:`<a name="wooper_top"></a>`
 
-:raw-html:`<div class="banner"><p><em>WOOPER 2.0 documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/index.html">browse mirror</a> <a href="wooper-2.0.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER 2.0]%20Remark">email us</a></p></div>`
+:raw-html:`<div class="banner"><p><em>WOOPER 2.0 documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/index.html">browse mirror</a> <a href="wooper-2.0.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER%202.0]%20Remark">email us</a></p></div>`
 
 
 
@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2020 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Thursday, January 2, 2020
+:Lastly updated: Sunday, May 3, 2020
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -2673,8 +2673,12 @@ For example:
 
 
 
-Guidelines
-----------
+Developer Guidelines
+--------------------
+
+
+General Guidelines
+..................
 
 All WOOPER classes must include `wooper.hrl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/include/wooper.hrl>`_:
 
@@ -2693,6 +2697,20 @@ One may also have a look at the full `test examples <https://github.com/Olivier-
 For examples of re-use of WOOPER by upper layers, one may refer to `Ceylan-Traces <http://traces.esperide.org>`_ or to the `Sim-Diasca <http://sim-diasca.com>`_ simulation engine.
 
 .. comment Note:: To be updated, notably with respect to parse transforms.
+
+
+
+OTP Guidelines
+..............
+
+For server-like activities, it may be useful to have an instance of a WOOPER class (ex: ``class_Foobar``) behave like an OTP worker in a supervision tree.
+
+A `supervisor bridge <https://erlang.org/doc/man/supervisor_bridge.html>`_ (i.e. a process in charge of connecting such a non-OTP process to an OTP supervisor) is the tool of choice here.
+
+Rather than introducing a specific module [#]_ for that, we recommend declaring the corresponding behaviour and its implemented API directly in the target class (in ``class_Foobar``). See `class_TraceAggregator.erl <https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/class_TraceAggregator.erl>`_ for an example thereof.
+
+.. [#] For example named ``foobar_bridge_sup``, to denote it is itself a (non-root) supervisor connected to a "real" supervisor.
+
 
 
 
