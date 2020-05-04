@@ -3111,7 +3111,7 @@ rather than::
  -include("wooper.hrl").
 
 
-Unlike Myriad, which is an OTP *library* application, WOOPER is an OTP *active* application, meaning the reliance on an application that can be started/stopped (``wooper_app``), a root supervisor (``wooper_sup``) and a class manager that is a background server process (``gen_server``).
+Unlike Myriad, which is an OTP *library* application, WOOPER is an OTP *active* application, meaning the reliance on an application that can be started/stopped (``wooper_app``), a root supervisor (``wooper_sup``) and a class manager that is a background server process (``gen_server``) in a supervision tree.
 
 :raw-html:`<a name="otp_for_instances"></a>`
 

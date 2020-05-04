@@ -357,7 +357,7 @@ get_manager_through_otp() ->
 
 				% Returning the PID of the winne, whichever it is:
 				naming_utils:wait_for_local_registration_of(
-				  ?wooper_class_manager_name, ?registration_time_out )
+					?wooper_class_manager_name, ?registration_time_out )
 
 			end;
 
@@ -448,8 +448,7 @@ handle_cast( display, State=Tables ) ->
 handle_info( { get_table, _Classname, _FromPid }, _State=_Tables ) ->
 
 	trace_utils:error( "WOOPER class manager called according to the "
-					   "non-OTP conventions, whereas is running as "
-					   "an (OTP) gen_server." ),
+		"non-OTP conventions, whereas is running as an (OTP) gen_server." ),
 
 	% (for the caller, see wooper:retrieve_virtual_table/1)
 
@@ -460,8 +459,7 @@ handle_info( { get_table, _Classname, _FromPid }, _State=_Tables ) ->
 handle_info( Info, State ) ->
 
 	trace_utils:warning_fmt( "The WOOPER class manager received an unexpected, "
-							 "hence ignored, handle_info message:~n  ~p.",
-							 [ Info ] ),
+		"hence ignored, handle_info message:~n  ~p.", [ Info ] ),
 
 	{ noreply, State }.
 
@@ -479,8 +477,7 @@ terminate( Reason, _State ) ->
 code_change( OldVsn, State, Extra ) ->
 
 	trace_utils:trace_fmt( "Code change for the WOOPER class manager; "
-						   "old version is ~w, and extra information is ~w",
-						   [ OldVsn, Extra ] ),
+		"old version is ~w, and extra information is ~w", [ OldVsn, Extra ] ),
 
 	{ ok, State }.
 
@@ -651,8 +648,7 @@ loop( Tables ) ->
 
 		Unexpected ->
 			trace_utils:error_fmt( "The WOOPER class manager received an "
-								   "unexpected, thus ignored, message: ~w",
-								   [ Unexpected ] ),
+				"unexpected, thus ignored, message: ~w", [ Unexpected ] ),
 			loop( Tables )
 
 	end.

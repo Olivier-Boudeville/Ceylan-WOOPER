@@ -65,17 +65,21 @@ init( Args ) ->
 	trace_utils:debug_fmt(
 	  "Initializing the WOOPER root supervisor (args: ~p).", [ Args ] ),
 
-	ChildManagerSpec = { wooper_class_manager_id,
+	ChildManagerSpec = { _Id=wooper_class_manager_id,
 		_Start={ _Mod=wooper_class_manager, _Fun=start_link, _Args=[] },
+		% Always restarted:
 		_Restart=permanent,
-		% 2-second termination allowed:
-		_Shutdown=2000, worker,
+		% 2-second termination allowed before brutal killing:
+		_Shutdown=2000,
+		_Type=worker,
 		% Not to mention Myriad ones:
 		_DepMods=[ wooper ] },
 
 	ChildrenSpec = [ ChildManagerSpec ],
 
-	% No automatic restarts for a class manager that is never expected to fail:
-	RestartStrategy = { one_for_one, _MaxRestarts=0, _WithinSeconds=1 },
+	% No automatic restarts for a class manager that is never expected to fail
+	% (we want to detect such event should it happen):
+	%
+	RestartStrategy = { _Strategy=one_for_one, _MaxRestarts=0, _WithinSeconds=1 },
 
 	{ ok, { RestartStrategy, ChildrenSpec } }.
