@@ -65,6 +65,7 @@ init( Args ) ->
 	trace_utils:debug_fmt(
 	  "Initializing the WOOPER root supervisor (args: ~p).", [ Args ] ),
 
+	% The WOOPER class manager is a rather basic gen_server:
 	ChildManagerSpec = { _Id=wooper_class_manager_id,
 		_Start={ _Mod=wooper_class_manager, _Fun=start_link, _Args=[] },
 		% Always restarted:
