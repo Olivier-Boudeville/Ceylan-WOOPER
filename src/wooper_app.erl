@@ -36,6 +36,9 @@
 
 
 % Implementing the (active, OTP) application behaviour:
+%
+% (see https://erlang.org/doc/design_principles/applications.html)
+%
 -behaviour(application).
 
 
@@ -45,6 +48,8 @@
 
 
 % Starts the WOOPER services.
+-spec start( application:start_type(), StartArgs :: term() ) -> { 'ok', pid() }
+		| { 'ok', pid(), State :: term() } | { 'error', Reason :: term() }.
 start( Type, StartArgs ) ->
 
 	trace_utils:debug_fmt( "Starting WOOPER application (type: ~w, "
@@ -60,7 +65,7 @@ start( Type, StartArgs ) ->
 
 		Other ->
 			trace_utils:error_fmt( "The WOOPER root supervisor did not start "
-								   "properly: ~w.", [ Other ] ),
+								   "properly:~n  ~p.", [ Other ] ),
 			{ error, Other }
 
 	end.
@@ -68,6 +73,7 @@ start( Type, StartArgs ) ->
 
 
 % Stops the WOOPER services.
+-spec stop( State :: term() ) -> void().
 stop( State ) ->
 
 	trace_utils:debug_fmt( "Stopping WOOPER application (state: ~w).",
