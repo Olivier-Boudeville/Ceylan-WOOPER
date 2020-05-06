@@ -4,7 +4,7 @@ WOOPER_TOP = .
 .PHONY: help help-intro help-wooper                                   \
 		all register-version-in-header register-wooper list-beam-dirs \
 		add-prerequisite-plts link-plt                                \
-		send-release release release-zip release-bz2 release-xz       \
+		release release-zip release-bz2 release-xz                    \
 		prepare-release clean-release clean-archive stats             \
 		info-paths info-compile info-parse-transform
 
@@ -20,9 +20,6 @@ WOOPER_RELEASES = $(WOOPER_RELEASE_ARCHIVE_BZ2) \
 				  $(WOOPER_RELEASE_ARCHIVE_ZIP) \
 				  $(WOOPER_RELEASE_ARCHIVE_XZ)
 
-
-# Sourceforge is mostly obsolete now:
-SF_USER = wondersye
 
 
 # First target for default:
@@ -63,14 +60,6 @@ link-plt:
 # Note: the source archives are not produced in this directory, but in its
 # parent, so that everything related to WOOPER (including these rules) remains
 # self-contained.
-
-send-release: send-release-sourceforge
-
-
-send-release-sourceforge: release
-	@echo "     Sending WOOPER releases $(WOOPER_RELEASES) to Sourceforge"
-	@cd .. && rsync -avP -e ssh $(WOOPER_RELEASES) \
-	$(SF_USER)@frs.sourceforge.net:uploads/
 
 
 release: release-zip release-bz2 release-xz
