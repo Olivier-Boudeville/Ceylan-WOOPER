@@ -46,21 +46,25 @@
 -export([ init/1 ]).
 
 
-
--define( supervisor_name, ?MODULE ).
+-define( wooper_supervisor_name, ?MODULE ).
 
 
 % Starts and links the WOOPER root supervisor.
+-spec start_link() -> supervisor:startlink_ret().
 start_link() ->
 
 	trace_utils:debug( "Starting the WOOPER root supervisor." ),
 
-	supervisor:start_link( { local, ?supervisor_name },
-						   _Module=?MODULE, _Args=[] ).
+	% Local better, in order to avoid clashes:
+	supervisor:start_link( _Reg={ local, ?wooper_supervisor_name },
+						   _Module=?MODULE, _Args=undefined ).
+
 
 
 % Callback to initialise this supervisor.
-init( Args ) ->
+-spec init( boolean() ) -> { 'ok',
+	   { supervisor:sup_flags(), [ supervisor:child_spec() ] } } | 'ignore'.
+init( Args=undefined ) ->
 
 	trace_utils:debug_fmt(
 	  "Initializing the WOOPER root supervisor (args: ~p).", [ Args ] ),
