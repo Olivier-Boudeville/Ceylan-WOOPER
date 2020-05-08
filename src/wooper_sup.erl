@@ -55,7 +55,7 @@ start_link() ->
 
 	trace_utils:debug( "Starting the WOOPER root supervisor." ),
 
-	% Local better, in order to avoid clashes:
+	% A local registration is better in order to avoid inter-node clashes:
 	supervisor:start_link( _Reg={ local, ?wooper_supervisor_name },
 						   _Module=?MODULE, _Args=undefined ).
 
