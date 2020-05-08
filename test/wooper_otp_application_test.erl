@@ -43,7 +43,6 @@ test_wooper_application( OrderedAppNames ) ->
 	test_facilities:display( "Starting the WOOPER OTP active application." ),
 	otp_utils:start_applications( OrderedAppNames ),
 
-	% Was expecting starting dependencies would be automatic, apparently it is
 
 	test_facilities:display( "WOOPER version: ~p.",
 				 [ system_utils:get_application_version( wooper ) ] ),
