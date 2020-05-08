@@ -2705,14 +2705,9 @@ OTP Guidelines
 
 For server-like activities, it may be useful to have an instance of a WOOPER class (ex: ``class_Foobar``) behave like an OTP worker in a supervision tree.
 
-A `supervisor bridge <https://erlang.org/doc/man/supervisor_bridge.html>`_ (i.e. a process in charge of connecting such a non-OTP process to an OTP supervisor) is the tool of choice here.
+A `supervisor bridge <https://erlang.org/doc/man/supervisor_bridge.html>`_ (i.e. a process in charge of integrating properly such a non-OTP process into an OTP supervision tree) is the tool of choice here.
 
-Rather than introducing a specific module [#]_ for that, we recommend declaring the corresponding behaviour and its implemented API directly in the target class (in ``class_Foobar``).
-
-.. comment untrue: See `class_TraceAggregator.erl <https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/class_TraceAggregator.erl>`_ for an example thereof.
-
-.. [#] For example named ``foobar_bridge_sup``, to denote it is itself a (non-root) supervisor connected to a "real" supervisor.
-
+Rather than declaring the corresponding behaviour and its implemented API directly in the target class (ex: in ``class_Foobar``), we recommend for clarity and separation of concerns to introduce a specific module for that, like done with `traces_bridge_sup <https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/traces_bridge_sup.erl>`_ for `class_TraceAggregator.erl <https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/class_TraceAggregator.erl>`_ or `us_common_config_bridge_sup <https://github.com/Olivier-Boudeville/us-common/blob/master/src/us_common_config_bridge_sup.erl>`_ for `class_USConfigServer.erl <https://github.com/Olivier-Boudeville/us-common/blob/master/src/class_USConfigServer.erl>`_.
 
 
 
