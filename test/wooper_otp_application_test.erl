@@ -26,7 +26,10 @@
 % Creation date: Friday, July 19, 2019.
 
 
-% Testing of WOOPER as an OTP active application.
+% Testing of WOOPER as an OTP active application, directly from within its code
+% base (hence without needing to create a separate, mock-up test release for
+% that).
+%
 -module(wooper_otp_application_test).
 
 
@@ -35,19 +38,12 @@
 
 
 % Actual test:
-test_wooper_application( WOOPEREBinPath, MyriadEBinPath ) ->
+test_wooper_application( OrderedAppNames ) ->
 
-	code_utils:declare_beam_directories( [ WOOPEREBinPath, MyriadEBinPath ] ),
-
-	test_facilities:display( "Starting the WOOPER application." ),
+	test_facilities:display( "Starting the WOOPER OTP active application." ),
+	otp_utils:start_applications( OrderedAppNames ),
 
 	% Was expecting starting dependencies would be automatic, apparently it is
-	% not the case; moreover it visibly should be done before entering
-	% wooper_app:start/2, so:
-	%
-	ok = application:start( myriad ),
-
-	ok = application:start( wooper ),
 
 	test_facilities:display( "WOOPER version: ~p.",
 				 [ system_utils:get_application_version( wooper ) ] ),
@@ -61,56 +57,37 @@ test_wooper_application( WOOPEREBinPath, MyriadEBinPath ) ->
 
 
 	test_facilities:display( "Stopping the WOOPER application." ),
-	ok = application:stop( wooper ),
-	ok = application:stop( myriad ),
+	otp_utils:stop_applications( OrderedAppNames ),
 
 	test_facilities:display(
-	  "Successful end of test of the WOOPER application." ).
+	  "Successful end of test of the WOOPER OTP application." ).
 
 
 
-% Note that the ebin application directory must be in the code path for the
-% wooper.app file to be found and used, and for this test to succeed.
+% Note that the wooper.app and myriad.app files will have to be found and used
+% for this test to succeed: WOOPER and Myriad must be already available as
+% prerequisite, fully-built OTP applications.
 %
 -spec run() -> no_return().
 run() ->
 
 	test_facilities:start( ?MODULE ),
 
-	% Supposing here that the application is built, in the usual _build
-	% directory, with the default rebar3 profile:
-	%
-	WOOPEREBinPath = "../_build/default/lib/wooper/ebin/",
+	% Build root directory from which prerequisite applications may be found:
+	BuildRootDir = "..",
 
-	case file_utils:is_existing_directory_or_link( WOOPEREBinPath ) of
+	OrderedAppNames = [ myriad, wooper ],
 
-		true ->
+	case otp_utils:prepare_for_test( OrderedAppNames, BuildRootDir ) of
 
-			MyriadEBinPath =
-				"../../Ceylan-Myriad/_build/default/lib/myriad/ebin/",
+		ready ->
+			test_wooper_application( OrderedAppNames ) ;
 
-			case file_utils:is_existing_directory_or_link( WOOPEREBinPath ) of
-
-				true ->
-					test_wooper_application( WOOPEREBinPath, MyriadEBinPath ) ;
-
-				false ->
-					trace_utils:warning_fmt(
-					  "No build directory found for the Myriad parent "
-					  "application (searched for '~s'), stopping this test "
-					  "(run beforehand 'make rebar3-application' at the root "
-					  "of this source tree for a more relevant testing).",
-					  [ MyriadEBinPath ] )
-
-			end;
-
-
-		false ->
-			trace_utils:warning_fmt( "No build directory found for the WOOPER "
-				"application (searched for '~s'), stopping this test "
-				"(run beforehand 'make rebar3-compile' at the root of the "
-				"source tree for a more relevant testing).",
-				[ WOOPEREBinPath ] )
+		{ lacking_app, _App } ->
+			% (a detailed warning message has been issued by
+			% otp_utils:prepare_for_test/2)
+			%
+			ok
 
 	end,
 
