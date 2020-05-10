@@ -8,7 +8,8 @@
 
 
 .PHONY: default-wooper-rule clean-ast-debug clean-ast-debug-wooper    \
-		rebar3-local-update rebar3-local-update-for-wooper
+		rebar3-local-update rebar3-local-checkout-update-for-wooper   \
+		rebar3-local-sibling-update-for-wooper
 
 
 # The first non-generic, therefore default, rule:
@@ -24,16 +25,34 @@ clean-ast-debug-wooper:
 
 
 # Allows to update in the current OTP _build tree Myriad files from a supposedly
-# built usual tree (hence not packaged; obtained thanks to a 'make
-# rebar3-compile' there) alongside its one.
+# local built tree (hence not packaged; obtained thanks to a 'make
+# rebar3-compile' there) alongside the current one (through a checkout directory
+# or a sibling one).
 #
 # Allows to rely on a local, updated Myriad without having to publish yet an Hex
-#  package for it.
+# package for it.
 #
-rebar3-local-update: rebar3-local-update-for-wooper
+# Was depending beforehand on the rebar3-local-sibling-update-for-wooper target:
+rebar3-local-update: rebar3-local-checkout-update-for-wooper
 
 
-rebar3-local-update-for-wooper:
+# Supposing typically that a _checkouts/myriad symlinks exists, pointing to an
+# actual Myriad clone:
+#
+rebar3-local-checkout-update-for-wooper:
+	@echo "  Updating Myriad from local checkout build tree $(MYRIAD_CHECKOUT_BUILD)"
+	@cd $(MYRIAD_CHECKOUT_BUILD) && $(MAKE) -s rebar3-compile
+	@mkdir -p $(MYRIAD_LOCAL_EBIN)
+	@/bin/cp -f $(MYRIAD_CHECKOUT_BUILD)/_build/default/lib/myriad/ebin/* $(MYRIAD_LOCAL_EBIN)
+
+
+# Supposing a myriad symlink exists at the same level (sibling) of the wooper
+# root one.
+#
+# Mostly superseded by a more convenient solution based on a _checkouts
+# directory (see rebar3-local-checkout-update-for-wooper above).
+#
+rebar3-local-sibling-update-for-wooper:
 	@echo "  Updating Myriad from local sibling build tree $(MYRIAD_SIBLING_BUILD)"
 	@cd $(MYRIAD_SIBLING_BUILD) && $(MAKE) -s rebar3-compile
 	@mkdir -p $(MYRIAD_LOCAL_EBIN)
