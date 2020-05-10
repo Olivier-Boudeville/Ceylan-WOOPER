@@ -53,9 +53,10 @@ ifndef PACKAGE_TOP
 endif
 
 
+# For any quick, local, non release-packaged update thereof:
 
-# For any quick, local, non-packaged update thereof:
-MYRIAD_SIBLING_BUILD = $(LAYER_TOP)/../Ceylan-Myriad
+MYRIAD_CHECKOUT_BUILD = $(LAYER_TOP)/_checkouts/myriad
+MYRIAD_SIBLING_BUILD = $(LAYER_TOP)/../myriad
 
 
 # The OTP tree of the Myriad application within a local OTP _build tree:
@@ -105,7 +106,7 @@ WOOPER_BEAM_DIRS = $(WOOPER_BEAM)/src      \
 WOOPER_REBAR_BUILD_BASE = $(REBAR_BUILD_DIR)/lib/wooper
 
 
-# When building WOOPER in an OTP context from its usual, GIT root (ex: with
+# When building WOOPER in an OTP context from its usual (GIT) root (ex: with
 # 'make rebar3-application'), the BEAMs of Myriad are to be found in the OTP
 # build tree - rather than in a supposedly fully-built usual root for Myriad:
 #
@@ -116,22 +117,24 @@ WOOPER_REBAR_BUILD_BASE = $(REBAR_BUILD_DIR)/lib/wooper
 # Note that this implies that the BEAM files in all ebin directories should be
 # up to date with the ones in the build trees, otherwise hard-to-debug
 # discrepancies may happen (these OTP/rebar-related directories act as default
-# catch-alls should no prior directory correspond among in the BEAM paths).
+# catch-alls, should no prior directory correspond in the BEAM paths).
 #
 MYRIAD_OTP_BEAM_DIR_FROM_USUAL = $(LAYER_TOP)/$(MYRIAD_REBAR_BUILD_BASE)/ebin
 
 
-# In an OTP/rebar3-style application layout, at compilation time as well,
-# modules compiled (directly or not) by the Myriad parse transform will expect
-# its module to be located in:
+# In an OTP/rebar3-style application layout (not speaking of sibling base
+# directories here), at compilation time as well, modules compiled (directly or
+# not) by the Myriad parse transform will expect its modules to be located in:
+#
+# (a third place could be considered, in the _build tree of Myriad itself, yet
+# it would not provide any additional chance)
 #
 MYRIAD_OTP_BEAM_DIR_FROM_OTP = $(LAYER_TOP)/../myriad/ebin/
 
 
 # To locate Myriad modules from all OTP contexts:
-MYRIAD_PARSE_TRANSFORMS_PZ_OPT = \
-	-pz $(MYRIAD_OTP_BEAM_DIR_FROM_USUAL) \
-	-pz $(MYRIAD_OTP_BEAM_DIR_FROM_OTP)
+MYRIAD_PARSE_TRANSFORMS_PZ_OPT = -pz $(MYRIAD_OTP_BEAM_DIR_FROM_USUAL) \
+								 -pz $(MYRIAD_OTP_BEAM_DIR_FROM_OTP)
 
 
 # We rely on Myriad as well:
@@ -210,6 +213,7 @@ else
 endif
 
 
+
 # Compiler section.
 
 
@@ -238,22 +242,22 @@ endif
 
 ifndef COMPILER_OPT_FOR_WOOPER_CLASSES
 
-	   COMPILER_OPT_FOR_WOOPER_CLASSES =                      \
-			$(ERLANG_COMPILER_OPT_BASE)                       \
-			$(ENABLE_WOOPER_DEBUG_OPT)                        \
-			$(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER)
+	COMPILER_OPT_FOR_WOOPER_CLASSES =                     \
+		$(ERLANG_COMPILER_OPT_BASE)                       \
+		$(ENABLE_WOOPER_DEBUG_OPT)                        \
+		$(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER)
 
 endif
 
 
 ifndef ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_STANDARD_MODULES
 
-	   # Standard (non-class) modules in WOOPER shall not be compiled with the
-	   #  WOOPER parse-transform, but with the Myriad one:
-	   #
-	   ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_STANDARD_MODULES = \
-				$(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD) \
-				$(MYRIAD_PARSE_TRANSFORMS_PZ_OPT)
+	# Standard (non-class) modules in WOOPER shall not be compiled with the
+	# WOOPER parse-transform, but with the Myriad one:
+	#
+	ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_STANDARD_MODULES = \
+		$(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD)      \
+		$(MYRIAD_PARSE_TRANSFORMS_PZ_OPT)
 
 endif
 
@@ -263,10 +267,10 @@ endif
 #
 ifndef ERLANG_COMPILER_OPT_FOR_STANDARD_MODULES
 
-	ERLANG_COMPILER_OPT_FOR_STANDARD_MODULES =                          \
-			$(ERLANG_COMPILER_OPT_BASE)                                 \
-			$(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_STANDARD_MODULES) \
-			$(ENABLE_WOOPER_DEBUG_OPT)
+	ERLANG_COMPILER_OPT_FOR_STANDARD_MODULES =                      \
+		$(ERLANG_COMPILER_OPT_BASE)                                 \
+		$(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_STANDARD_MODULES) \
+		$(ENABLE_WOOPER_DEBUG_OPT)
 
 endif
 
@@ -295,11 +299,11 @@ ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD) \
 # Variable defined to be re-usable by upper layers, so that compiling their own
 # parse transforms can take advantage of the WOOPER one:
 #
-ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER =                 \
-					$(OVERALL_PZ_OPT)                            \
-					-pz $(WOOPER_TOP)/src                        \
-					$(MYRIAD_PARSE_TRANSFORMS_PZ_OPT)            \
-					'+{parse_transform,wooper_parse_transform}'
+ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER = \
+	$(OVERALL_PZ_OPT)                            \
+	-pz $(WOOPER_TOP)/src                        \
+	$(MYRIAD_PARSE_TRANSFORMS_PZ_OPT)            \
+	'+{parse_transform,wooper_parse_transform}'
 
 
 # We conditionally defined this option, as upper layers may want to trigger
@@ -317,7 +321,7 @@ endif
 # parse transforms can take advantage of the WOOPER one:
 #
 COMPILER_PARSE_TRANSFORM_FOR_WOOPER_CLASSES_OPT = \
-					'+{parse_transform,wooper_parse_transform}'
+	'+{parse_transform,wooper_parse_transform}'
 
 
 # For later reuse in the next layer of the software stack:
@@ -327,7 +331,7 @@ WOOPER_PLT_FILE := $(WOOPER_TOP)/Ceylan-WOOPER.plt
 # This is the merged PLT of the level just below in the software stack.
 # For 'WOOPER', it is the PLT of 'Myriad':
 ifndef PREDECESSOR_PLT
-	   PREDECESSOR_PLT = $(MYRIAD_PLT_FILE)
+	PREDECESSOR_PLT = $(MYRIAD_PLT_FILE)
 endif
 
 
