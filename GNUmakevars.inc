@@ -79,9 +79,6 @@ WOOPER_SRC := $(WOOPER_TOP)/src
 # BEAM path section.
 WOOPER_BEAM := $(WOOPER_TOP)
 
-# Include path section.
-WOOPER_INC = -I$(WOOPER_SRC)
-
 
 # In an OTP/rebar3-style application layout, at compilation time, libraries
 # making use of Myriad will expect its includes to be located in:
@@ -89,7 +86,7 @@ WOOPER_INC = -I$(WOOPER_SRC)
 MYRIAD_OTP_INC := -I$(WOOPER_TOP)/../myriad/include/
 
 
-INC += $(WOOPER_INC) $(MYRIAD_OTP_INC)
+INC += $(MYRIAD_OTP_INC)
 
 
 # So that they can be fetched from outside
@@ -137,9 +134,6 @@ MYRIAD_PARSE_TRANSFORMS_PZ_OPT = -pz $(MYRIAD_OTP_BEAM_DIR_FROM_USUAL) \
 
 # We rely on Myriad as well:
 BEAM_DIRS += $(WOOPER_BEAM_DIRS)
-
-
-DOC_ROOT = $(WOOPER_TOP)/../../../doc
 
 
 ifndef VM_TEST_NAME
