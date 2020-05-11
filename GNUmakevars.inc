@@ -54,7 +54,6 @@ endif
 
 
 # For any quick, local, non release-packaged update thereof:
-
 MYRIAD_CHECKOUT_BUILD = $(LAYER_TOP)/_checkouts/myriad
 MYRIAD_SIBLING_BUILD = $(LAYER_TOP)/../myriad
 
