@@ -13,7 +13,7 @@ endif
 
 # PROJECT_NAME should be defined on a per-project basis.
 ifndef PROJECT_NAME
-	PROJECT_NAME = Ceylan-WOOPER
+	PROJECT_NAME := Ceylan-WOOPER
 endif
 
 
@@ -31,7 +31,7 @@ WOOPER_VERSION := 2.0.9
 
 # PROJECT_VERSION should be defined on a per-project basis.
 ifndef PROJECT_VERSION
-	PROJECT_VERSION = $(WOOPER_VERSION)
+	PROJECT_VERSION := $(WOOPER_VERSION)
 endif
 
 
@@ -44,12 +44,12 @@ endif
 
 
 ifndef PACKAGE_NAME
-	PACKAGE_NAME = $(PROJECT_NAME)
+	PACKAGE_NAME := $(PROJECT_NAME)
 endif
 
 
 ifndef PACKAGE_TOP
-	PACKAGE_TOP = $(WOOPER_TOP)
+	PACKAGE_TOP := $(WOOPER_TOP)
 endif
 
 
@@ -92,12 +92,11 @@ MYRIAD_OTP_INC := -I$(WOOPER_TOP)/../myriad/include/
 INC += $(WOOPER_INC) $(MYRIAD_OTP_INC)
 
 
-
 # So that they can be fetched from outside
 # (see the 'list-beam-dirs' target)
 #
-WOOPER_BEAM_DIRS = $(WOOPER_BEAM)/src      \
-				   $(WOOPER_BEAM)/examples
+WOOPER_BEAM_DIRS = $(WOOPER_BEAM)/src           \
+				   $(WOOPER_BEAM)/priv/examples
 
 
 # For OTP releases and all:
@@ -140,22 +139,18 @@ MYRIAD_PARSE_TRANSFORMS_PZ_OPT = -pz $(MYRIAD_OTP_BEAM_DIR_FROM_USUAL) \
 BEAM_DIRS += $(WOOPER_BEAM_DIRS)
 
 
-DOC_ROOT       = $(WOOPER_TOP)/../../../doc
-WOOPER_DOC_DIR = $(DOC_ROOT)/web/main/documentation/wooper
+DOC_ROOT = $(WOOPER_TOP)/../../../doc
 
 
 ifndef VM_TEST_NAME
-
-VM_NAME := wooper_debug
-
+	VM_NAME := wooper_debug
 endif
 
 
 ifndef VM_TEST_NAME
-
-VM_TEST_NAME := wooper_test
-
+	VM_TEST_NAME := wooper_test
 endif
+
 
 
 # Overall settings section.
@@ -163,28 +158,28 @@ endif
 
 ifndef EXECUTION_TARGET
 
-  # Other possible value: production
-  EXECUTION_TARGET=development
+	# Other possible value: production
+	EXECUTION_TARGET := development
 
 endif
 
 
 ifeq ($(EXECUTION_TARGET),development)
 
-  #$(info Execution target is development)
+	#$(info Execution target is development)
 
-  ENABLE_DEBUG=true
+	ENABLE_DEBUG := true
 
 
 else ifeq ($(EXECUTION_TARGET),production)
 
-  #$(info Execution target is production)
+	#$(info Execution target is production)
 
-  ENABLE_DEBUG=false
+	ENABLE_DEBUG := false
 
 else
 
-  $(error Invalid execution target '$(EXECUTION_TARGET)'; expecting either 'development' or 'production')
+	$(error Invalid execution target '$(EXECUTION_TARGET)'; expecting either 'development' or 'production')
 
 endif
 
@@ -192,23 +187,18 @@ endif
 
 # By default, this debug mode is enabled:
 ifndef ENABLE_DEBUG
-
-	ENABLE_DEBUG = true
-
+	ENABLE_DEBUG := true
 endif
 
 
 
 # Tells whether the debug mode will be activated for the next WOOPER classes to
 # be built (maximum performance versus extended checkings).
+#
 ifeq ($(ENABLE_DEBUG),true)
-
-	ENABLE_WOOPER_DEBUG_OPT = -Dwooper_debug_mode
-
+	ENABLE_WOOPER_DEBUG_OPT := -Dwooper_debug_mode
 else
-
-	ENABLE_WOOPER_DEBUG_OPT =
-
+	ENABLE_WOOPER_DEBUG_OPT :=
 endif
 
 
@@ -283,7 +273,7 @@ endif
 #
 ifndef PARSE_TRANSFORM_DIRS
 
-	   PARSE_TRANSFORM_DIRS = $(WOOPER_TOP)/src
+	PARSE_TRANSFORM_DIRS = $(WOOPER_TOP)/src
 
 endif
 
@@ -310,9 +300,7 @@ ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER = \
 # themselves, at the Erlang level, this 'WOOPER' parse transform):
 #
 ifndef ERLANG_COMPILER_PARSE_TRANSFORM_OPT
-
 	ERLANG_COMPILER_PARSE_TRANSFORM_OPT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER)
-
 endif
 
 
@@ -329,6 +317,7 @@ WOOPER_PLT_FILE := $(WOOPER_TOP)/Ceylan-WOOPER.plt
 
 # This is the merged PLT of the level just below in the software stack.
 # For 'WOOPER', it is the PLT of 'Myriad':
+#
 ifndef PREDECESSOR_PLT
 	PREDECESSOR_PLT = $(MYRIAD_PLT_FILE)
 endif
@@ -341,11 +330,11 @@ endif
 #
 ifneq ($(wildcard $(WOOPER_TOP)/../myriad),)
 
+	# Default:
 	MYRIAD_TOP = $(WOOPER_TOP)/../myriad
 
 else
 
-	# Default:
 	MYRIAD_TOP = $(WOOPER_TOP)/../Ceylan-Myriad
 
 endif
