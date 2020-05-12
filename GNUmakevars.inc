@@ -77,7 +77,7 @@ WOOPER_RELEASE_ARCHIVE_XZ  := $(WOOPER_RELEASE_BASE).tar.xz
 WOOPER_SRC := $(WOOPER_TOP)/src
 
 # BEAM path section.
-WOOPER_BEAM := $(WOOPER_TOP)
+WOOPER_BEAM := $(WOOPER_TOP)/src
 
 
 # In an OTP/rebar3-style application layout, at compilation time, libraries
@@ -89,11 +89,8 @@ MYRIAD_OTP_INC := -I$(WOOPER_TOP)/../myriad/include/
 INC += $(MYRIAD_OTP_INC)
 
 
-# So that they can be fetched from outside
-# (see the 'list-beam-dirs' target)
-#
-WOOPER_BEAM_DIRS = $(WOOPER_BEAM)/src           \
-				   $(WOOPER_BEAM)/priv/examples
+# See Myriad counterpart variable (MYRIAD_BEAM_DIRS) for explanations:
+WOOPER_BEAM_DIRS := $(WOOPER_BEAM)
 
 
 # For OTP releases and all:
