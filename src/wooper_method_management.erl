@@ -46,7 +46,7 @@
 		  ensure_exported/2, ensure_exported_at/2, ensure_all_exported_in/2,
 		  methods_to_functions/5,
 		  raise_no_implementation_error/5,
-		  take_spec_into_account/5, get_info_from_clause_spec/3,
+		  take_spec_into_account/6, get_info_from_clause_spec/3,
 		  check_clause_spec/5, check_state_argument/3,
 		  function_nature_to_string/1,
 
@@ -278,8 +278,7 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 					FunctionTable, RequestTable, OnewayTable, StaticTable,
 					Classname, ExportLoc, WOOPERExportSet ) ->
 
-	%?debug_fmt( "Examining Erlang function ~s/~B",
-	%                       pair:to_list( FunId ) ),
+	%?debug_fmt( "Examining Erlang function ~s/~B", pair:to_list( FunId ) ),
 
 	% We used to infer the function nature based on its first clause, and then
 	% to make a custom full traversal to transform method terminators.
@@ -298,11 +297,11 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 	NewFunInfo = FunInfo#function_info{ clauses=NewClauses },
 
 	% Last chance to determine the actual nature of a function reported as
-	% 'throw': it may have a type spec to remove ambiguity; any spec used also
-	% to check consistency with the guessed elements:
+	% 'throw': it may have a type spec to remove ambiguity; any spec is used
+	% also to check consistency with the guessed elements:
 	%
 	{ FinalNature, FinalQualifiers } = take_spec_into_account( Spec, FunId,
-										  FunNature, Qualifiers, Classname ),
+									  FunNature, Qualifiers, Classname, FunInfo ),
 
 	% Stores the result in the right category and recurses:
 	case FinalNature of
@@ -312,9 +311,8 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 			NewFunctionTable =
 				table:add_new_entry( FunId, NewFunInfo, FunctionTable ),
 
-			sort_out_functions( T, NewFunctionTable, RequestTable,
-					OnewayTable, StaticTable, Classname, ExportLoc,
-					WOOPERExportSet );
+			sort_out_functions( T, NewFunctionTable, RequestTable, OnewayTable,
+				StaticTable, Classname, ExportLoc, WOOPERExportSet );
 
 		request ->
 
@@ -326,11 +324,10 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 				function_to_request_info( ExportedFunInfo, FinalQualifiers ),
 
 			NewRequestTable = table:add_new_entry( FunId, RequestInfo,
-												 RequestTable ),
+												   RequestTable ),
 
-			sort_out_functions( T, FunctionTable, NewRequestTable,
-					OnewayTable, StaticTable, Classname, ExportLoc,
-					WOOPERExportSet );
+			sort_out_functions( T, FunctionTable, NewRequestTable, OnewayTable,
+				StaticTable, Classname, ExportLoc, WOOPERExportSet );
 
 		oneway ->
 
@@ -342,11 +339,10 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 				function_to_oneway_info( ExportedFunInfo, FinalQualifiers ),
 
 			NewOnewayTable = table:add_new_entry( FunId, OnewayInfo,
-												OnewayTable ),
+												  OnewayTable ),
 
-			sort_out_functions( T, FunctionTable, RequestTable,
-					NewOnewayTable, StaticTable, Classname, ExportLoc,
-					WOOPERExportSet );
+			sort_out_functions( T, FunctionTable, RequestTable, NewOnewayTable,
+				StaticTable, Classname, ExportLoc, WOOPERExportSet );
 
 		static ->
 
@@ -356,11 +352,10 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 				function_to_static_info( ExportedFunInfo, FinalQualifiers ),
 
 			NewStaticTable = table:add_new_entry( FunId, StaticInfo,
-												StaticTable ),
+												  StaticTable ),
 
-			sort_out_functions( T, FunctionTable, RequestTable,
-					OnewayTable, NewStaticTable, Classname, ExportLoc,
-					WOOPERExportSet )
+			sort_out_functions( T, FunctionTable, RequestTable, OnewayTable,
+				NewStaticTable, Classname, ExportLoc, WOOPERExportSet )
 
 	end;
 
@@ -370,9 +365,8 @@ sort_out_functions( _Functions=[ #function_info{ name=FunName,
 					_StaticTable, Classname, _ExportLoc, _WOOPERExportSet ) ->
 
 	% Error raised directly, could be appended to the class_info.errors:
-	wooper_internals:raise_usage_error( "no clause found for ~s/~B; "
-			"function exported yet not defined?",
-			[ FunName, Arity ], Classname ).
+	wooper_internals:raise_usage_error( "no clause found for ~s/~B; function "
+		"exported yet not defined?", [ FunName, Arity ], Classname ).
 
 
 
@@ -426,20 +420,31 @@ raise_no_implementation_error( Classname, FName, FArity, FunctionEntries,
 % (helper)
 %
 -spec take_spec_into_account( maybe( ast_info:located_form() ), function_id(),
-	   function_nature(), method_qualifiers(), wooper:classname() ) ->
-						{ function_nature(), method_qualifiers() }.
+		function_nature(), method_qualifiers(), wooper:classname(),
+		function_info() ) -> { function_nature(), method_qualifiers() }.
 % Function specs are generally optional, yet are useful in all cases, and even
 % needed in some ones (ex: what is the actual nature of a function whose all
 % clauses throw?)
 %
 take_spec_into_account( _LocSpec=undefined, FunId, _FunNature=throw,
-						_Qualifiers, Classname ) ->
+						_Qualifiers, Classname, FunInfo ) ->
+
+	Line = case FunInfo#function_info.line of
+
+		undefined ->
+			0;
+
+		L ->
+			L
+
+	end,
+
 	wooper_internals:raise_usage_error(
-	  "all clauses of ~s/~B throw an exception; as a result this "
+	  "all clauses of ~s/~B throw an exception; as a result, this "
 	  "function can be of any nature. Please define a type specification for "
 	  "that function in order to remove this ambiguity "
 	  "(ex: use request_return/1 to mark it as a request).",
-	  pair:to_list( FunId ), Classname );
+	  pair:to_list( FunId ), Classname, Line );
 
 
 % Special case for a function nature detected as 'throw': any information
@@ -447,16 +452,29 @@ take_spec_into_account( _LocSpec=undefined, FunId, _FunNature=throw,
 %
 take_spec_into_account( _LocSpec={ _Loc,
 		   { attribute, _, spec, { FunId, [ ClauseSpec ] } } },
-					   FunId, _FunNature=throw, _Qualifiers, Classname ) ->
+						FunId, _FunNature=throw, _Qualifiers, Classname,
+						_FunInfo ) ->
 	get_info_from_clause_spec( ClauseSpec, FunId, Classname );
 
 
 % Throw function with a spec comprising multiple clauses is not supported:
 take_spec_into_account( _LocSpec={ _Loc,
 		   { attribute, Line, spec, { FunId, _ClauseSpecs } } },
-					   _FunId, _FunNature=throw, _Qualifiers, Classname ) ->
+						_FunId, _FunNature=throw, _Qualifiers, Classname,
+						FunInfo ) ->
+
+	Line = case FunInfo#function_info.line of
+
+		undefined ->
+			0;
+
+		L ->
+			L
+
+	end,
+
 	wooper_internals:raise_usage_error(
-	  "all clauses of the function ~s/~B throw an exception; as a result this "
+	  "all clauses of the function ~s/~B throw an exception; as a result, this "
 	  "function can be of any nature. Its type specification shall however "
 	  "comprise a single clause to remove this ambiguity.",
 	  pair:to_list( FunId ), Classname, Line );
@@ -464,14 +482,14 @@ take_spec_into_account( _LocSpec={ _Loc,
 
 % No spec defined, non-throw, so input elements are accepted as such:
 take_spec_into_account( _LocSpec=undefined, _FunId, FunNature, Qualifiers,
-						_Classname ) ->
+						_Classname, _FunInfo ) ->
 	{ FunNature, Qualifiers };
 
 
 % Spec available for a non-throw:
 take_spec_into_account( _LocSpec={ _Loc,
 					   { attribute, _, spec, { FunId, ClauseSpecs } } },
-			_FunId, FunNature, Qualifiers, Classname ) ->
+			_FunId, FunNature, Qualifiers, Classname, _FunInfo ) ->
 	[ check_clause_spec( C, FunNature, Qualifiers, FunId, Classname )
 	  || C <- ClauseSpecs ],
 	% If check not failed, approved, so:
