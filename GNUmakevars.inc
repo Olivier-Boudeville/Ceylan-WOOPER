@@ -35,18 +35,6 @@ ifndef PROJECT_VERSION
 endif
 
 
-# Variable name intentionally not including the current layer, for more generic
-# rules:
-
-ifndef VERSION_FOR_REBAR3
-	VERSION_FOR_REBAR3 := $(PROJECT_VERSION)
-endif
-
-
-ifndef PACKAGE_NAME
-	PACKAGE_NAME := $(PROJECT_NAME)
-endif
-
 
 ifndef PACKAGE_TOP
 	PACKAGE_TOP := $(WOOPER_TOP)
@@ -62,7 +50,7 @@ MYRIAD_SIBLING_BUILD = $(LAYER_TOP)/../myriad
 MYRIAD_LOCAL_APP := $(LAYER_TOP)/_build/default/lib/myriad
 
 # Where Myriad BEAMs are to lie when used as an OTP application:
-MYRIAD_LOCAL_EBIN := $(MYRIAD_LOCAL_APP)/ebin/
+MYRIAD_LOCAL_EBIN := $(MYRIAD_LOCAL_APP)/ebin
 
 
 
@@ -146,41 +134,9 @@ endif
 
 # Overall settings section.
 
-
-ifndef EXECUTION_TARGET
-
-	# Other possible value: production
-	EXECUTION_TARGET := development
-
-endif
-
-
-ifeq ($(EXECUTION_TARGET),development)
-
-	#$(info Execution target is development)
-
-	ENABLE_DEBUG := true
-
-
-else ifeq ($(EXECUTION_TARGET),production)
-
-	#$(info Execution target is production)
-
-	ENABLE_DEBUG := false
-
-else
-
-	$(error Invalid execution target '$(EXECUTION_TARGET)'; expecting either 'development' or 'production')
-
-endif
-
-
-
-# By default, this debug mode is enabled:
-ifndef ENABLE_DEBUG
-	ENABLE_DEBUG := true
-endif
-
+# One may define here:
+# EXECUTION_TARGET := production / development [the default]
+# ENABLE_DEBUG := false / true [the default]
 
 
 # Tells whether the debug mode will be activated for the next WOOPER classes to
