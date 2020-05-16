@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2020 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Monday, May 4, 2020
+:Lastly updated: Friday, May 15, 2020
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -214,7 +214,7 @@ A cat is here a viviparous mammal, as defined below (this is a variation of our 
 
 Straightforward, isn't it? We will discuss it in-depth, though.
 
-To test this class (provided that ``GNU make`` and ``Erlang 22.1`` or more recent [#]_ are available in one's environment), one can easily install ``Ceylan-WOOPER``, which depends on `Ceylan-Myriad <http://myriad.esperide.org>`_, hence is to be installed first:
+To test this class (provided that ``GNU make`` and the latest stable version of ``Erlang`` are available in one's environment, see Prerequisites_ for more information), one can easily install ``Ceylan-WOOPER``, which depends on `Ceylan-Myriad <http://myriad.esperide.org>`_, hence is to be installed first:
 
 .. code:: bash
 
@@ -231,7 +231,6 @@ To test this class (provided that ``GNU make`` and ``Erlang 22.1`` or more recen
 (for OTP compliance, using short names, such as ``myriad`` or ``wooper``, for clones rather than long ones, such as ``Ceylan-Myriad`` or ``Ceylan-WOOPER``, is recommended)
 
 
-.. [#] Note that, in the Ceylan-Myriad repository, we have a script to streamline the installation of Erlang, see `install-erlang.sh <https://github.com/Olivier-Boudeville/Ceylan-Myriad/blob/master/conf/install-erlang.sh>`_; use ``install-erlang.sh --help`` for guidance.
 
 
 Running the cat-related example just then boils down to:
@@ -3045,28 +3044,25 @@ Current Stable Version & Download
 
 
 
-Using Cutting-Edge GIT
-----------------------
-
-This is the installation method that we use and recommend; the WOOPER ``master`` branch is meant to stick to the latest stable version: we try to ensure that this main line always stays functional (sorry for the pun). Evolutions are to take place in feature branches and to be merged only when ready.
+Prerequisites
+-------------
 
 This OOP layer, ``Ceylan-WOOPER``, relies (only) on:
 
-- `Erlang <http://www.erlang.org/>`_, version 22.1 or higher
+- `Erlang <http://www.erlang.org/>`_
 - the `Ceylan-Myriad <http://myriad.esperide.org>`_ base layer
 
 
 We prefer using GNU/Linux, sticking to the latest stable release of Erlang, and building it from sources, thanks to GNU ``make``.
 
-For that we devised the `install-erlang.sh <https://github.com/Olivier-Boudeville/Ceylan-Myriad/blob/master/conf/install-erlang.sh>`_ script; a simple use of it is:
-
-.. code:: bash
-
- $ ./install-erlang.sh --doc-install --generate-plt
+Refer to the corresponding `Myriad prerequisite section <http://myriad.esperide.org#prerequisites>`_  for more precise guidelines, knowing that Ceylan-WOOPER does not need modules with conditional support such as ``crypto`` or ``wx``.
 
 
-One may execute ``./install-erlang.sh --help`` for more details about how to configure it, notably in order to enable all modules of interest (``crypto``, ``wx``, etc.) even if they are optional in the context of WOOPER.
 
+Using Cutting-Edge GIT
+----------------------
+
+This is the installation method that we use and recommend; the WOOPER ``master`` branch is meant to stick to the latest stable version: we try to ensure that this main line always stays functional (sorry for the pun). Evolutions are to take place in feature branches and to be merged only when ready.
 
 As a result, once a proper Erlang version is available, the `Ceylan-Myriad repository <https://github.com/Olivier-Boudeville/Ceylan-Myriad>`_ should be cloned and built, before doing the same with the `Ceylan-WOOPER repository <https://github.com/Olivier-Boudeville/Ceylan-WOOPER>`_, like in:
 
