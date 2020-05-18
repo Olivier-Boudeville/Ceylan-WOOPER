@@ -45,7 +45,7 @@
 		  get_blank_transformation_state/0, get_blank_transformation_state/1,
 		  ensure_exported/2, ensure_exported_at/2, ensure_all_exported_in/2,
 		  methods_to_functions/5,
-		  raise_no_implementation_error/5,
+		  raise_no_implementation_error/6,
 		  take_spec_into_account/6, get_info_from_clause_spec/3,
 		  check_clause_spec/5, check_state_argument/3,
 		  function_nature_to_string/1,
@@ -262,13 +262,25 @@ sort_out_functions( _FunEntries=[], FunctionTable, RequestTable, OnewayTable,
 
 % Checks that all sorted functions have an actual implementation:
 sort_out_functions( _FunEntries=[ { _FunId={ FName, Arity },
-								#function_info{ clauses=[], spec=Spec } } | T ],
+								#function_info{ %line=undefined,
+												clauses=[],
+												spec=Spec } } | T ],
 	FunctionTable, RequestTable, OnewayTable, StaticTable, Classname,
 	_ExportLoc, _WOOPERExportSet ) when Spec =/= undefined ->
 
 	AllTables = [ FunctionTable, RequestTable, OnewayTable, StaticTable ],
 
-	raise_no_implementation_error( Classname, FName, Arity,
+	SpecLine = case Spec of
+
+		{ _Loc, { attribute, Line, spec, _Tuple } } ->
+			Line;
+
+		_ ->
+			undefined
+
+	end,
+
+	raise_no_implementation_error( Classname, FName, Arity, SpecLine,
 								   _RemainingFunEntries=T, AllTables );
 
 
@@ -371,33 +383,39 @@ sort_out_functions( _Functions=[ #function_info{ name=FunName,
 
 
 % Tries to locate among specified function entries and tables any implementation
-% of the specified function with any (different) arity, and raise an appropriate
-% exception.
+% of the specified function with any (different) arity, and raises an
+% appropriate exception.
 %
 % (helper, defined for reuse by upper layers)
 %
-raise_no_implementation_error( Classname, FName, FArity, FunctionEntries,
-							   Tables ) ->
+raise_no_implementation_error( Classname, FName, FArity, MaybeLine,
+							   FunctionEntries, Tables ) ->
 
 	BaseMsg =
 		"function ~s/~B has a type specification, yet has never been defined",
 
 	% Scans all known functions (hopefully does not include FArity):
-	KnownArities = [ A || { { F, A }, _FI } <- FunctionEntries, F =:=  FName ]
+	KnownArities = [ A || { { F, A }, _FI } <- FunctionEntries, F =:= FName ]
 	  ++ list_utils:flatten_once(
 		[ [ A || { F, A } <- table:keys( T ), F =:= FName ] || T <- Tables ] ),
 
 	%trace_utils:debug_fmt( "KnownArities = ~w", [ KnownArities ] ),
 
+	% As by design (on purpose) the type of the values held by the specified
+	% tables is not known (and most probably is heterogeneous), there is no
+	% simple way to extract the line number of, for example, a function
+	% definition to point the error cursor to it.
+	%
 	FullMsg = BaseMsg ++ case KnownArities of
 
 		[] ->
 			text_utils:format( " (no function '~s' defined, for any arity)",
-							   [ FName ] );
+								 [ FName ] );
 
 		[ SingleArity ] ->
+			% No function definition line easily obtainable:
 			text_utils:format( ". Maybe this spec should correspond to "
-				"~s/~B instead? ", [ FName, SingleArity ] );
+							   "~s/~B instead? ", [ FName, SingleArity ] );
 
 		Arities ->
 			ArStrs = [ text_utils:integer_to_string( A )
@@ -408,7 +426,18 @@ raise_no_implementation_error( Classname, FName, FArity, FunctionEntries,
 
 	end,
 
-	wooper_internals:raise_usage_error( FullMsg, [ FName, FArity ], Classname ).
+	ActualLine = case MaybeLine of
+
+		undefined ->
+			0;
+
+		_ ->
+			MaybeLine
+
+	end,
+
+	wooper_internals:raise_usage_error( FullMsg, [ FName, FArity ], Classname,
+										ActualLine ).
 
 
 
