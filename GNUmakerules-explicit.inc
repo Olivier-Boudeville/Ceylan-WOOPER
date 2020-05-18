@@ -8,7 +8,8 @@
 
 
 .PHONY: default-wooper-rule clean-ast-debug clean-ast-debug-wooper    \
-		rebar3-local-update rebar3-local-checkout-update-for-wooper   \
+		rebar3-local-update rebar3-local-update-for-wooper            \
+		rebar3-local-checkout-update-for-wooper                       \
 		rebar3-local-sibling-update-for-wooper
 
 
@@ -32,8 +33,15 @@ clean-ast-debug-wooper:
 # Allows to rely on a local, updated Myriad without having to publish yet an Hex
 # package for it.
 #
-# Was depending beforehand on the rebar3-local-sibling-update-for-wooper target:
-rebar3-local-update: rebar3-local-checkout-update-for-wooper
+rebar3-local-update: rebar3-local-update-for-wooper
+
+
+# As called by upper layers:
+#
+# (used to depend beforehand on the rebar3-local-sibling-update-for-wooper
+#  target):
+#
+rebar3-local-update-for-wooper: rebar3-local-checkout-update-for-wooper
 
 
 # Supposing typically that a _checkouts/myriad symlinks exists, pointing to an
