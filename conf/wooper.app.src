@@ -1,7 +1,18 @@
 % Description of the WOOPER OTP active application, typically used by rebar3.
 
-% Note: if this file is named wooper.app, it is a *generated* file, whose source
-% is conf/wooper.app.src.
+% Note: if this file is named wooper.app, it is a *generated* file, whose real
+% source is conf/wooper.app.src, from which _build/lib/wooper/ebin/wooper.app is
+% obtained and copied to ebin/wooper.app; finally src/wooper.app.src is a mere
+% symlink to this last file, so we have:
+%
+% ./conf/wooper.app.src [only real source]
+% ./_build/lib/wooper/ebin/wooper.app
+% ./ebin/wooper.app
+% ./src/wooper.app.src -> ../ebin/wooper.app
+%
+% For more information see the Ceylan-Myriad 'rebar3-create-app-file' make
+% target and its associated comments.
+
 
 % See also:
 % - http://erlang.org/doc/man/app.html

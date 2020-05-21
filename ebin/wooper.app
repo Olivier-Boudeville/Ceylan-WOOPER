@@ -1,7 +1,18 @@
 % Description of the WOOPER OTP active application, typically used by rebar3.
 
-% Note: if this file is named wooper.app, it is a *generated* file, whose source
-% is conf/wooper.app.src.
+% Note: if this file is named wooper.app, it is a *generated* file, whose real
+% source is conf/wooper.app.src, from which _build/lib/wooper/ebin/wooper.app is
+% obtained and copied to ebin/wooper.app; finally src/wooper.app.src is a mere
+% symlink to this last file, so we have:
+%
+% ./conf/wooper.app.src [only real source]
+% ./_build/lib/wooper/ebin/wooper.app
+% ./ebin/wooper.app
+% ./src/wooper.app.src -> ../ebin/wooper.app
+%
+% For more information see the Ceylan-Myriad 'rebar3-create-app-file' make
+% target and its associated comments.
+
 
 % See also:
 % - http://erlang.org/doc/man/app.html
@@ -22,7 +33,7 @@
   %{env,[]},
 
   % Flat hierarchy in ebin here:
-  {modules, [wooper_method_management, wooper_class_manager, wooper_sup, wooper_instance_destruction, wooper, wooper_instance_construction, wooper_class_management, wooper_introspection, wooper_parse_utils, wooper_parse_transform, wooper_serialisation, wooper_app, wooper_state_management, wooper_info, wooper_internals, wooper_instance_proxy, wooper_utils]},
+  {modules, [wooper, wooper_app, wooper_class_management, wooper_class_manager, wooper_info, wooper_instance_construction, wooper_instance_destruction, wooper_instance_proxy, wooper_internals, wooper_introspection, wooper_method_management, wooper_parse_transform, wooper_parse_utils, wooper_serialisation, wooper_state_management, wooper_sup, wooper_utils]},
 
   {licenses, ["Ceylan-WOOPER is licensed by its author (Olivier Boudeville) under a disjunctive tri-license, giving you the choice of one of the three following sets of free software/open source licensing terms:
 	- the Mozilla Public License (MPL), version 1.1 or later (very close to the former Erlang Public License, except aspects regarding Ericsson and/or the Swedish law)
