@@ -69,10 +69,12 @@ init( Args=undefined ) ->
 	trace_utils:debug_fmt(
 	  "Initializing the WOOPER root supervisor (args: ~p).", [ Args ] ),
 
+	% Restart only children that terminate.
 	% Never expected to fail, though:
-	RestartStrategy = #{ strategy  => one_for_one,
-						 intensity => _MaxRestarts=4,
-						 period    => _WithinSeconds=3600 },
+	%
+	SupSettings = otp_utils:get_supervisor_settings(
+					_RestartStrategy=one_for_one,
+					wooper:get_execution_target() ),
 
 	% The WOOPER class manager is a rather basic gen_server:
 	ClassManagerChildSpec = #{
@@ -94,4 +96,4 @@ init( Args=undefined ) ->
 	ChildrenSpec = [ ClassManagerChildSpec ],
 
 
-	{ ok, { RestartStrategy, ChildrenSpec } }.
+	{ ok, { SupSettings, ChildrenSpec } }.
