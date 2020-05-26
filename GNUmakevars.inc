@@ -1,6 +1,53 @@
 # Prerequisite: WOOPER_TOP must be set.
 
 
+# To understand why taking into account such conditionals requires to specify
+# them first, and in each layer, rather than at the end of the last one, refer
+# to the section about conditionals at the top of the GNUmakevars.inc of Myriad.
+
+
+# Overall settings section.
+
+#EXECUTION_TARGET = production
+
+ifndef EXECUTION_TARGET
+
+	# Other possible value: production
+	EXECUTION_TARGET = development
+
+endif
+
+
+ifeq ($(EXECUTION_TARGET),development)
+
+	#$(info Execution target is development)
+
+	ENABLE_DEBUG = true
+
+else ifeq ($(EXECUTION_TARGET),production)
+
+	#$(info Execution target is production)
+
+	ENABLE_DEBUG = false
+
+else
+
+	$(error Invalid WOOPER execution target '$(EXECUTION_TARGET)'; expecting either 'development' or 'production')
+
+endif
+
+
+# Tells whether the debug mode will be activated for the next WOOPER classes to
+# be built (maximum performance versus extended checkings).
+#
+ifeq ($(ENABLE_DEBUG),true)
+	ENABLE_WOOPER_DEBUG_OPT = -Dwooper_debug_mode
+else
+	ENABLE_WOOPER_DEBUG_OPT =
+endif
+
+
+
 # Useful to target for example the root of the current layer (ex: to locate the
 # relevant, layer-local '_build' directory):
 #
@@ -132,23 +179,6 @@ endif
 
 
 
-# Overall settings section.
-
-# One may define here:
-# EXECUTION_TARGET := production / development [the default]
-# ENABLE_DEBUG := false / true [the default]
-
-
-# Tells whether the debug mode will be activated for the next WOOPER classes to
-# be built (maximum performance versus extended checkings).
-#
-ifeq ($(ENABLE_DEBUG),true)
-	ENABLE_WOOPER_DEBUG_OPT := -Dwooper_debug_mode
-else
-	ENABLE_WOOPER_DEBUG_OPT :=
-endif
-
-
 
 # Compiler section.
 
@@ -164,7 +194,6 @@ ifndef BOOTSTRAP_MODULES
 
 	# We want to bootstrap all relevant WOOPER modules (Myriad expected to be
 	# already fully built)
-
 
 	# We list here all the WOOPER-level prerequisites of the WOOPER
 	# parse-transform:
