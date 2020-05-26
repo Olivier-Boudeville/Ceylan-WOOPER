@@ -1099,6 +1099,10 @@ check_clause_for_state( _Clause, FunId, Classname ) ->
 		{ meta_utils:clause_def(), function_nature(), method_qualifiers(),
 		  wooper:function_export_set() }.
 manage_method_terminators( _Clauses=[], FunId, Classname, _WOOPERExportSet ) ->
+
+	% No easy way to search for other arities or to determine the line of the
+	% corresponding export attribute:
+	%
 	wooper_internals:raise_usage_error(
 	  "the function ~s/~B is exported yet not defined.", pair:to_list( FunId ),
 	  Classname );
