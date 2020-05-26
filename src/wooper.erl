@@ -2177,8 +2177,9 @@ delete_synchronously_any_instance_referenced_in( Attributes, PreTestLiveliness,
 	%  "delete_synchronously_any_instance_referenced_in:~n"
 	%  " - attributes are: ~p~n"
 	%  " - PIDs are: ~p~n"
-	%  " - time-out is ~p (ms)",
-	%  [ TargetAttributes, TargetPids, ?synchronous_time_out ] ),
+	%  " - time-out is ~p (ms), i.e. ~s",
+	%  [ TargetAttributes, TargetPids, ?synchronous_time_out,
+	%	time_utils:duration_to_string( ?synchronous_time_out ) ] ),
 
 	% Waits for their completion:
 	wait_for_deletion_ack( TargetPids ),
