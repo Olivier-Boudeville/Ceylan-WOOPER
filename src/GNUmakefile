@@ -1,5 +1,10 @@
 WOOPER_TOP = ..
 
+.PHONY: real-clean
+
+real-clean:
+	-@/bin/rm -f wooper.app.src
+
 
 include $(WOOPER_TOP)/GNUmakesettings.inc
 
