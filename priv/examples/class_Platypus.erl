@@ -145,7 +145,9 @@ testCreationDeletion( State ) ->
 	io:format( "Deleting cat ~p created from platypus.~n", [ CatPid ] ),
 
 	trace_utils:warning( "Deletion time-out and crash triggered on purpose "
-		 "(see the very next intentional error report, and wait a bit)." ),
+		"(see the very next intentional error report, and wait a bit; note "
+		"though that the 5-second time-out in debug mode is a 30-minute one in "
+		"normal mode)." ),
 
 	DeleteState =
 		wooper:delete_synchronously_any_instance_referenced_in( cat_pid, CatState ),
