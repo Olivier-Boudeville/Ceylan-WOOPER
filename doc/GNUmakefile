@@ -34,7 +34,7 @@ GITHUB_PAGES_BASE := $(shell basename "$(WOOPER_WEB_MIRROR_BRANCH)")
 
 .PHONY: doc all full-doc html pdf clone-mirror           \
 		export-doc export-to-official export-to-mirror   \
-		clean clean-doc info info-web
+		clean clean-doc clean-links info info-web
 
 
 # Default do-nothing target:
@@ -84,10 +84,14 @@ export-to-mirror: $(DOC_GENERATED_FILES)
 
 clean: clean-doc
 
-clean-doc:
+
+clean-doc: clean-links
 	@echo "     Cleaning documentation"
 	-@/bin/rm -f *.aux *.log *.maf *.mtc* *.stc* *.tex *.toc $(DOC_GENERATED_FILES)
 
+
+clean-links:
+	-@/bin/rm -f index.html wooper.html wooper.pdf
 
 
 info: info-doc info-web
