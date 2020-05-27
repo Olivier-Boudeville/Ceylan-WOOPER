@@ -8,6 +8,7 @@
 
 
 .PHONY: default-wooper-rule clean-ast-debug clean-ast-debug-wooper    \
+		create-wooper-checkout                                        \
 		rebar3-local-update rebar3-local-update-for-wooper            \
 		rebar3-local-checkout-update-for-wooper                       \
 		rebar3-local-sibling-update-for-wooper
@@ -23,6 +24,14 @@ clean-ast-debug: clean-ast-debug-wooper
 clean-ast-debug-wooper:
 	@find . -name 'WOOPER-*put-AST*.txt' -exec /bin/rm '{}' ';' 2>/dev/null || true
 
+
+# Create a _checkouts directory in which all Ceylan dependencies for the current
+# layer are referenced through a symlink.
+#
+create-wooper-checkout:
+	@echo "  Creating a checkout directory for WOOPER"
+	@$(MAKE) -s create-myriad-checkout
+	@cd _checkouts && ln -sf ../$(MYRIAD_TOP)
 
 
 # Allows to update in the current OTP _build tree Myriad files from a supposedly
