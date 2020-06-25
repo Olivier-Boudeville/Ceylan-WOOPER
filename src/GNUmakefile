@@ -1,6 +1,9 @@
 WOOPER_TOP = ..
 
-.PHONY: real-clean
+.PHONY: all real-clean
+
+# As shall be the default rule:
+all:
 
 real-clean:
 	-@/bin/rm -f wooper.app.src
