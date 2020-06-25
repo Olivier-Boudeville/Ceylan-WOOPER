@@ -939,28 +939,28 @@
 %% -spec remote_synchronous_timed_new( net_utils:node_name() ) -> pid().
 %% remote_synchronous_timed_new( Node ) ->
 
-%% 	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-%% 	SpawnedPid = spawn( Node, fun() ->
-%% 									  wooper_construct_and_run_synchronous(
-%% 										_ConstructParams=[], CreatorPid )
-%% 							  end ),
+%%	SpawnedPid = spawn( Node, fun() ->
+%%									  wooper_construct_and_run_synchronous(
+%%										_ConstructParams=[], CreatorPid )
+%%							  end ),
 
-%% 	% Blocks until the spawned process answers or a time-out occurs:
-%% 	%
-%% 	% (no risk of synchronous spawns mismatch, as each synchronous call is
-%% 	% waited for)
-%% 	%
-%% 	receive
+%%	% Blocks until the spawned process answers or a time-out occurs:
+%%	%
+%%	% (no risk of synchronous spawns mismatch, as each synchronous call is
+%%	% waited for)
+%%	%
+%%	receive
 
-%% 		{ spawn_successful, SpawnedPid } ->
-%% 			SpawnedPid
+%%		{ spawn_successful, SpawnedPid } ->
+%%			SpawnedPid
 
-%% 	after ?synchronous_time_out ->
+%%	after ?synchronous_time_out ->
 
-%% 		throw( { remote_synchronous_time_out, Node, ?MODULE } )
+%%		throw( { remote_synchronous_time_out, Node, ?MODULE } )
 
-%% 	end.
+%%	end.
 
 
 
@@ -976,28 +976,28 @@
 %% -spec remote_synchronous_timed_new_link( net_utils:node_name() ) -> pid().
 %% remote_synchronous_timed_new_link( Node ) ->
 
-%% 	CreatorPid = self(),
+%%	CreatorPid = self(),
 
-%% 	SpawnedPid = spawn_link( Node, fun() ->
-%% 										   wooper_construct_and_run_synchronous(
-%% 											 _ConstructParams=[], CreatorPid )
-%% 								   end ),
+%%	SpawnedPid = spawn_link( Node, fun() ->
+%%										   wooper_construct_and_run_synchronous(
+%%											 _ConstructParams=[], CreatorPid )
+%%								   end ),
 
-%% 	% Blocks until the spawned process answers or a time-out occurs:
-%% 	%
-%% 	% (no risk of synchronous spawns mismatch, as each synchronous call is
-%% 	% waited for)
-%% 	%
-%% 	receive
+%%	% Blocks until the spawned process answers or a time-out occurs:
+%%	%
+%%	% (no risk of synchronous spawns mismatch, as each synchronous call is
+%%	% waited for)
+%%	%
+%%	receive
 
-%% 		{ spawn_successful, SpawnedPid } ->
-%% 			SpawnedPid
+%%		{ spawn_successful, SpawnedPid } ->
+%%			SpawnedPid
 
-%% 	after ?synchronous_time_out ->
+%%	after ?synchronous_time_out ->
 
-%% 		throw( { remote_synchronous_linked_time_out, Node, ?MODULE } )
+%%		throw( { remote_synchronous_linked_time_out, Node, ?MODULE } )
 
-%% 	end.
+%%	end.
 
 
 
