@@ -1720,7 +1720,7 @@ instance_to_string( State ) ->
 %
 -spec display_state( wooper:state() ) -> void().
 display_state( State ) ->
-	error_logger:info_msg( "~s~n", [ state_to_string( State ) ] ).
+	logger:info( "~s~n", [ state_to_string( State ) ] ).
 
 
 
@@ -1730,7 +1730,7 @@ display_state( State ) ->
 %
 -spec display_virtual_table( wooper:state() ) -> void().
 display_virtual_table( State ) ->
-	error_logger:info_msg( "~s~n", [ virtual_table_to_string( State ) ] ).
+	logger:info( "~s~n", [ virtual_table_to_string( State ) ] ).
 
 
 % Displays information about this instance.
@@ -1739,7 +1739,7 @@ display_virtual_table( State ) ->
 %
 -spec display_instance( wooper:state() ) -> void().
 display_instance( State ) ->
-	error_logger:info_msg( "~s~n", [ instance_to_string( State ) ] ).
+	logger:info( "~s~n", [ instance_to_string( State ) ] ).
 
 
 -endif. % wooper_debug_mode
@@ -1784,7 +1784,7 @@ declare_beam_dirs_for_wooper() ->
 %
 -spec log_info( string() ) -> void().
 log_info( String ) ->
-	error_logger:info_msg(
+	logger:info(
 	  text_utils:ellipse( String, ?ellipse_length ) ++ "\n" ).
 
 
@@ -1794,7 +1794,7 @@ log_info( String ) ->
 -spec log_info( text_utils:format_string(), [ term() ] ) -> void().
 log_info( FormatString, ValueList ) ->
 	Str = text_utils:format( FormatString, ValueList ),
-	error_logger:info_msg( text_utils:ellipse( Str, ?ellipse_length ) ++ "\n" ).
+	logger:info( text_utils:ellipse( Str, ?ellipse_length ) ++ "\n" ).
 
 
 
@@ -1804,10 +1804,10 @@ log_info( FormatString, ValueList ) ->
 -spec log_warning( string() ) -> void().
 log_warning( String ) ->
 
-	error_logger:warning_msg( text_utils:ellipse( String, ?ellipse_length )
+	logger:warning( text_utils:ellipse( String, ?ellipse_length )
 							  ++ "\n" ),
 
-	% Wait a bit, as error_msg seems asynchronous:
+	% Wait a bit, as logger (at least former error_logger) seems asynchronous:
 	system_utils:await_output_completion( ?wooper_warning_display_waiting ).
 
 
@@ -1819,10 +1819,10 @@ log_warning( FormatString, ValueList ) ->
 
 	Str = text_utils:format( FormatString, ValueList ),
 
-	error_logger:warning_msg( text_utils:ellipse( Str, ?ellipse_length )
+	logger:warning( text_utils:ellipse( Str, ?ellipse_length )
 							  ++ "\n" ),
 
-	% Wait a bit, as error_msg seems asynchronous:
+	% Wait a bit, as logger (at least former error_logger) seems asynchronous:
 	system_utils:await_output_completion( ?wooper_warning_display_waiting ).
 
 
@@ -1834,10 +1834,10 @@ log_warning( FormatString, ValueList ) ->
 -spec log_error( string() ) -> void().
 log_error( Message ) ->
 
-	error_logger:error_msg( text_utils:ellipse( Message, ?ellipse_length )
+	logger:error( text_utils:ellipse( Message, ?ellipse_length )
 							++ "\n" ),
 
-	% Wait a bit, as error_msg seems asynchronous:
+	% Wait a bit, as logger (at least former error_logger) seems asynchronous:
 	system_utils:await_output_completion( ?wooper_error_display_waiting ).
 
 
@@ -1853,9 +1853,11 @@ log_error( FormatString, ValueList ) ->
 			++ "~n=END OF WOOPER ERROR REPORT FOR ~w ===~n~n~n",
 			ValueList ++ [ self() ] ),
 
-	error_logger:error_msg( text_utils:ellipse( Str, ?ellipse_length ) ),
+	%trace_utils:debug_fmt( "Error message: ~p.", [ Str ] ),
 
-	% Wait a bit, as error_msg seems asynchronous:
+	logger:error( text_utils:ellipse( Str, ?ellipse_length ) ),
+
+	% Wait a bit, as logger (at least former error_logger) seems asynchronous:
 	system_utils:await_output_completion( ?wooper_error_display_waiting ).
 
 
@@ -1890,8 +1892,8 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 	%		   "in module ~s: " ++ FormatString,
 	%		   [ self(), ModuleName, node() | ValueList ] ).
 	log_error( "WOOPER error for instance of PID ~w triggered "
-			   "in module ~s: " ++ FormatString,
-			   [ self(), ModuleName | ValueList ] ).
+		"in module ~s: " ++ FormatString,
+		[ self(), ModuleName | ValueList ] ).
 
 
 
@@ -1900,9 +1902,8 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 % the caller, and have the process instance exit.
 %
 -spec on_failed_request( request_name(), method_arguments(), pid(),
-						 basic_utils:error_type(), basic_utils:error_term(),
-						 code_utils:stack_trace(), wooper:state() ) ->
-							   no_return().
+	basic_utils:error_type(), basic_utils:error_term(),
+	code_utils:stack_trace(), wooper:state() ) -> no_return().
 on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType, ErrorTerm,
 				   Stacktrace, State ) ->
 
@@ -1911,13 +1912,13 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType, ErrorTerm,
 	ModulePrefix = lookup_method_prefix( RequestName, Arity, State ),
 
 	log_error( "request ~s~s/~B failed (cause: ~s):~n~n"
-			   " - with error term:~n  ~p~n~n"
-			   " - stack trace was (latest calls first):~n~s~n"
-			   " - caller being process ~w~n~n"
-			   " - for request parameters:~n  ~p~n",
-			   [ ModulePrefix, RequestName, Arity, ErrorType, ErrorTerm,
-				 code_utils:interpret_stacktrace( Stacktrace ), CallerPid,
-				 ArgumentList ],
+		" - with error term:~n  ~p~n~n"
+		" - stack trace was (latest calls first):~n~s~n"
+		" - caller being process ~w~n~n"
+		" - for request parameters:~n  ~p~n",
+		[ ModulePrefix, RequestName, Arity, ErrorType, ErrorTerm,
+		  code_utils:interpret_stacktrace( Stacktrace ), CallerPid,
+		  ArgumentList ],
 			   State ),
 
 	% ArgumentList and actual method module not propagated back to the caller:
@@ -1952,19 +1953,19 @@ on_failed_oneway( OnewayAtom, ArgumentList, ErrorType, ErrorTerm, Stacktrace,
 	ModulePrefix = lookup_method_prefix( OnewayAtom, Arity, State ),
 
 	log_error( "oneway ~s~s/~B failed (cause: ~s):~n~n"
-			   " - with error term:~n  ~p~n~n"
-			   " - stack trace was (latest calls first):~n~s~n"
-			   " - for oneway parameters:~n  ~p~n",
-			   [ ModulePrefix, OnewayAtom, Arity, ErrorType, ErrorTerm,
-				 code_utils:interpret_stacktrace( Stacktrace ),
-				 ArgumentList ], State ),
+		" - with error term:~n  ~p~n~n"
+		" - stack trace was (latest calls first):~n~s~n"
+		" - for oneway parameters:~n  ~p~n",
+		[ ModulePrefix, OnewayAtom, Arity, ErrorType, ErrorTerm,
+		  code_utils:interpret_stacktrace( Stacktrace ),
+		  ArgumentList ], State ),
 
-			% No caller to notify, for oneways.
+	% No caller to notify, for oneways.
 
-			% We do not want a duplicate error message, yet we cannot use
-			% 'normal' as linked processes would not be triggered:
-			%
-			exit( oneway_failed ).
+	% We do not want a duplicate error message, yet we cannot use 'normal' as
+	% linked processes would not be triggered:
+	%
+	exit( oneway_failed ).
 
 
 
