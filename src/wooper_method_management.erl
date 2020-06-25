@@ -841,9 +841,11 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	ok;
 
 
-% Void return:
+% Void return; correct arity for static_void_return/0, and it is a static method
+% indeed:
+%
 check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
-	 _ResultType={ user_type, _, static_void_return, [] } ] },
+	 _ResultType={ user_type, _, static_void_return, _Types=[] } ] },
 	 _FunNature=static, _Qualifiers, _FunId, _Classname ) ->
 	ok;
 
@@ -868,13 +870,26 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 		[ length( Types ) | pair:to_list( FunId ) ], Classname, Line );
 
 
-% Wrong arity for static_void_return/1:
+% Correct arity for static_void_return/0 - however it is not a static method
+% here:
+%
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+	 _ResultType={ user_type, Line, static_void_return, _Types=[] } ] },
+	 FunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "~s/~B uses static_void_return/0, "
+		"whereas it is not detected as a static method (detected as ~s). "
+		"Maybe a call to the wooper:return_static_void() method terminator "
+		"is lacking?",
+		pair:to_list( FunId ) ++ [ FunNature ], Classname, Line );
+
+
+% Wrong arity for static_void_return:
 check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 	 _ResultType={ user_type, Line, static_void_return, Types } ] },
 	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "~s/~B uses static_void_return/~B, "
 		"which does not exist; its correct arity is 0.",
-		[ length( Types ) | pair:to_list( FunId ) ], Classname, Line );
+		pair:to_list( FunId ) ++ [ length( Types ) ], Classname, Line );
 
 
 % *_result used instead of *_return:
