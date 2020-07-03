@@ -63,13 +63,18 @@
 -spec manage_constructors( compose_pair() ) -> compose_pair().
 manage_constructors( { FunctionTable, ClassInfo } ) ->
 
+	% To better report errors:
+	ClassEntry = ClassInfo#class_info.class,
+
+	Classname = pair:first( ClassEntry ),
+
 	% First element is a list of { arity(), function_info() } pairs
 	% corresponding to the defined constructors (construct/N) , while the second
 	% element is the input function table obtained once these corresponding
 	% entries have been removed:
 	%
 	{ ConstructPairs, ShrunkFunctionTable } =
-		extract_constructors_from( FunctionTable ),
+		extract_constructors_from( FunctionTable, Classname ),
 
 	case ConstructPairs of
 
@@ -94,42 +99,43 @@ manage_constructors( { FunctionTable, ClassInfo } ) ->
 
 
 
-% Returns a list of { arity(), function_info() } pairs and the shrunk function
+% Returns a list of {arity(), function_info()} pairs and the shrunk function
 % table from which they were extracted.
 %
 % (helper)
 %
-extract_constructors_from( FunctionTable ) ->
+extract_constructors_from( FunctionTable, Classname ) ->
 
 	% We are looking, among the keys (i.e. function ids), for those matching
 	% {construct,N}, knowing that the associated values are function_info():
 
 	FunIdInfos = table:enumerate( FunctionTable ),
 
-	filter_constructors( FunIdInfos, _AccPairs=[], _AccFunInfos=[] ).
+	filter_constructors( FunIdInfos, Classname, _AccPairs=[], _AccFunInfos=[] ).
 
 
 
-filter_constructors( _FunIdInfos=[], AccPairs, AccFunInfos ) ->
+% (helper)
+filter_constructors( _FunIdInfos=[], _Classname, AccPairs, AccFunInfos ) ->
 	{ AccPairs, table:new( AccFunInfos ) };
-
 
 % Should a constructor have a spec yet not actually being defined:
 filter_constructors( _FunIdInfos=[ { { construct, Arity },
-									 #function_info{ clauses=[],
-													 spec=S } } | _T ],
-					 _AccPairs, _AccFunInfos ) when S =/= undefined ->
-	wooper_internals:raise_usage_error( "constructor construct/~B has a spec, "
-			"yet it has never been defined.", [ Arity ] );
+		#function_info{
+		   clauses=[],
+		   spec={ _Loc, _FunSpec={ attribute, SpecLine, spec, _SpecElems } }
+		  } } | _T ], Classname, _AccPairs, _AccFunInfos ) ->
+	wooper_internals:raise_usage_error( "the constructor construct/~B has a spec, "
+			"yet it has never been defined.", [ Arity ], Classname, SpecLine );
 
 % Legit constructor:
 filter_constructors( _FunIdInfos=[ { { construct, Arity }, FunInfo } | T ],
-					 AccPairs, AccFunInfos ) ->
-	filter_constructors( T, [ { Arity, FunInfo } | AccPairs ], AccFunInfos );
+					 Classname, AccPairs, AccFunInfos ) ->
+	filter_constructors( T, Classname, [ { Arity, FunInfo } | AccPairs ], AccFunInfos );
 
 % 'Other' expected to be { { _NonConstructFunName, Arity }, FunInfo }:
-filter_constructors( _FunIdInfos=[ Other | T ], AccPairs, AccFunInfos ) ->
-	filter_constructors( T, AccPairs, [ Other | AccFunInfos ] ).
+filter_constructors( _FunIdInfos=[ Other | T ], Classname, AccPairs, AccFunInfos ) ->
+	filter_constructors( T, Classname, AccPairs, [ Other | AccFunInfos ] ).
 
 
 
