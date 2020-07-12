@@ -122,8 +122,8 @@ manage_attributes( ClassInfo=#class_info{ class={ Classname, _LocForm },
 	%
 	{ #function_info{
 
-		 clauses=[ { clause, _Line, _Patterns=[],
-								  _Guards=[], _Body=[ AttrListForm ] } ],
+		 clauses=[ { clause, _Line, _Patterns=[], _Guards=[],
+					 _Body=[ AttrListForm ] } ],
 		 exported=ExportLocs },
 
 	  ShrunkFunTable } = table:extract_entry( AttrTempFunKey, FunctionTable ),
@@ -132,8 +132,8 @@ manage_attributes( ClassInfo=#class_info{ class={ Classname, _LocForm },
 										ExportLocs, FunExportTable ),
 
 	% First, register the corresponding attributes:
-	NewAttributeTable = register_attributes_from_form( AttrListForm,
-												AttributeTable, Classname ),
+	NewAttributeTable =
+	  register_attributes_from_form( AttrListForm, AttributeTable, Classname ),
 
 	% Then fix the AST of the temporary function, for the final getter one:
 	NewAttrListForm = transform_attribute_getter_form( AttrListForm ),
@@ -190,7 +190,7 @@ manage_attributes( ClassInfo=#class_info{ class={ Classname, _LocForm },
 	AttrTargetFunKey = { TargetFunName, 0 },
 
 	NewStaticTable = table:add_new_entry( AttrTargetFunKey, NewStaticInfo,
-										StaticTable ),
+										  StaticTable ),
 
 	%trace_utils:debug_fmt( "As class-specific attributes, we have ~s",
 	%					   [ attributes_to_string( NewAttributeTable ) ] ),
@@ -209,18 +209,17 @@ register_attributes_from_form( AttrListForm, AttributeTable, Classname ) ->
 
 	AttrFormList = try
 
-						ast_generation:form_to_list( AttrListForm )
+		ast_generation:form_to_list( AttrListForm )
 
-				   catch _:_ ->
+		catch _:_ ->
+			wooper_internals:raise_usage_error( "invalid 'class_attributes' "
+				"define: expecting a list (of attribute declarations).",
+				[], Classname )
 
-						wooper_internals:raise_usage_error(
-						  "invalid 'class_attributes' define: expecting a list "
-						  "(of attribute declarations).", [], Classname )
-
-				   end,
+	end,
 
 	%trace_utils:debug_fmt( "Attribute declaration forms:~n  ~p",
-	%					   [ AttrFormList ] ),
+	%						[ AttrFormList ] ),
 
 	register_helper( AttrFormList, AttributeTable, Classname ).
 
@@ -284,11 +283,9 @@ register_helper( _AttrFormList=[ _AttrForm={ tuple,_,
 % Errors:
 register_helper( _AttrForm=[ { tuple,_, Forms } | _T ], _AttributeTable,
 				 Classname ) ->
-	wooper_internals:raise_usage_error(
-	  "invalid attribute declaration tuple in "
-	  "the 'class_attributes' define (expecting a size of 2, 3 or 4; "
-	  "got ~B elements).",
-	  [ length( Forms ) ], Classname );
+	wooper_internals:raise_usage_error( "invalid attribute declaration "
+		"tuple in the 'class_attributes' define (expecting a size of 2, "
+		"3 or 4; got ~B elements).", [ length( Forms ) ], Classname );
 
 register_helper( _OtherAttrForm, _AttributeTable, Classname ) ->
 	wooper_internals:raise_usage_error( "invalid attribute declaration in "
@@ -483,8 +480,7 @@ filter_qualifier( _Qualifier ) ->
 % Filters the specified form corresponding to an attribute description.
 filter_description( AttrDescription={ string, Line, _DescString } ) ->
 	% Returning a binary version thereof:
-	{ bin, Line, [ { bin_element, Line, AttrDescription,
-					   default, default } ] };
+	{ bin, Line, [ { bin_element, Line, AttrDescription, default, default } ] };
 
 filter_description( UnexpectedAttrDescription ) ->
 	throw( { unexpected_attribute_description, UnexpectedAttrDescription } ).
@@ -692,6 +688,6 @@ attribute_to_string( #attribute_info{ name=Name,
 
 	end,
 
-	text_utils:format( "attribute named '~s' of ~s, with "
-					   "qualifiers ~w, and ~s",
-					   [ Name, TypeString, Qualifiers, DescString ] ).
+	text_utils:format(
+	  "attribute named '~s' of ~s, with qualifiers ~w, and ~s",
+	  [ Name, TypeString, Qualifiers, DescString ] ).

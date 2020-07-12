@@ -155,8 +155,8 @@ wooper_main_loop( State ) ->
 		{ MethodAtom, Argument } ->
 
 			?wooper_log_format( "Main loop (case E) for ~w: "
-								"oneway '~s' with argument ~w.~n",
-								[ self(), MethodAtom, Argument ] ),
+				"oneway '~s' with argument ~w.~n",
+				[ self(), MethodAtom, Argument ] ),
 
 			NewState = wooper_handle_remote_oneway_execution( MethodAtom, State,
 															  [ Argument ] ),
@@ -204,8 +204,9 @@ wooper_main_loop( State ) ->
 								[ self(), { PidOrPort, ExitType } ] ),
 
 			case ?wooper_table_type:lookup_entry(
-					{ _Name=onWOOPERExitReceived, _Arity=3 },
-					State#state_holder.virtual_table ) of
+				  { _Name=onWOOPERExitReceived, _Arity=3 },
+				  persistent_term:get( State#state_holder.virtual_table_key ) )
+					of
 
 				{ value, _Key } ->
 
@@ -241,8 +242,9 @@ wooper_main_loop( State ) ->
 											MonitoredElement, ExitReason } ] ),
 
 			case ?wooper_table_type:lookup_entry(
-					{ _Name=onWOOPERDownNotified, _Arity=5 },
-					State#state_holder.virtual_table ) of
+				  { _Name=onWOOPERDownNotified, _Arity=5 },
+				  persistent_term:get( State#state_holder.virtual_table_key ) )
+					of
 
 				{ value, _Key } ->
 
@@ -276,12 +278,12 @@ wooper_main_loop( State ) ->
 		{ nodeup, Node, MonitorNodeInfo } ->
 
 			?wooper_log_format( "Main loop (case I) for ~w: node up message "
-								"for '~s' with ~p.~n",
-								[ self(), Node, MonitorNodeInfo ] ),
+				"for '~s' with ~p.~n", [ self(), Node, MonitorNodeInfo ] ),
 
 			case ?wooper_table_type:lookup_entry(
-					{ _Name=onWOOPERNodeConnection, _Arity=3 },
-					State#state_holder.virtual_table ) of
+				  { _Name=onWOOPERNodeConnection, _Arity=3 },
+				  persistent_term:get( State#state_holder.virtual_table_key ) )
+					of
 
 				{ value, _Key } ->
 
@@ -314,12 +316,12 @@ wooper_main_loop( State ) ->
 		{ nodedown, Node, MonitorNodeInfo } ->
 
 			?wooper_log_format( "Main loop (case J) for ~w: node down message "
-								"for '~s' with ~p.~n",
-								[ self(), Node, MonitorNodeInfo ] ),
+				"for '~s' with ~p.~n", [ self(), Node, MonitorNodeInfo ] ),
 
 			case ?wooper_table_type:lookup_entry(
-					{ _Name=onWOOPERNodeDisconnection, _Arity=3 },
-					State#state_holder.virtual_table ) of
+				  { _Name=onWOOPERNodeDisconnection, _Arity=3 },
+				  persistent_term:get( State#state_holder.virtual_table_key ) )
+					  of
 
 				{ value, _Key } ->
 

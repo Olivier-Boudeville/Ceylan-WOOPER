@@ -57,10 +57,12 @@ test_with_otp() ->
 
 	wooper_class_manager:display(),
 
-	Table = wooper_class_manager:get_table( ?requested_class ),
+	TableKey = wooper_class_manager:get_table_key( ?requested_class ),
 
-	test_facilities:display( "Table obtained from ~w for '~s':~n~s",
-			 [ ManagerPid, ?requested_class, table:to_string( Table ) ] ),
+	test_facilities:display( "Table obtained from ~w for '~s' "
+		"(key: '~p'):~n~s",
+		[ ManagerPid, ?requested_class, TableKey,
+		  table:to_string( persistent_term:get( TableKey ) ) ] ),
 
 	wooper_class_manager:display(),
 
@@ -81,13 +83,15 @@ test_without_otp() ->
 
 	ManagerPid ! display,
 
-	ManagerPid ! { get_table, ?requested_class, self() },
+	ManagerPid ! { get_table_key, ?requested_class, self() },
 
 	receive
 
-		{ wooper_virtual_table, Table } ->
-			test_facilities:display( "Table obtained from ~w for '~s':~n~s",
-				  [ ManagerPid, ?requested_class, table:to_string( Table ) ] )
+		{ wooper_virtual_table_key, TableKey } ->
+			test_facilities:display( "Table obtained from ~w for '~s' "
+				"(key: '~p'):~n~s",
+				[ ManagerPid, ?requested_class, TableKey,
+				  table:to_string( persistent_term:get( TableKey ) ) ] )
 
 	end,
 

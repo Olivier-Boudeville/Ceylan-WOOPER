@@ -68,10 +68,10 @@ manage_constructors( { FunctionTable, ClassInfo } ) ->
 
 	Classname = pair:first( ClassEntry ),
 
-	% First element is a list of { arity(), function_info() } pairs
-	% corresponding to the defined constructors (construct/N) , while the second
-	% element is the input function table obtained once these corresponding
-	% entries have been removed:
+	% First element is a list of {arity(), function_info()} pairs corresponding
+	% to the defined constructors (construct/N) , while the second element is
+	% the input function table obtained once these corresponding entries have
+	% been removed:
 	%
 	{ ConstructPairs, ShrunkFunctionTable } =
 		extract_constructors_from( FunctionTable, Classname ),

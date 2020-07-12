@@ -56,6 +56,10 @@
 -export([ start_for_test/0, start_for_app/0 ]).
 
 
+% To determine the key assigned to a given classname as persistent_term:
+-export([ get_persistent_key_for/1 ]).
+
+
 % Ex: 'apple' or 'travelling_salesman'.
 -type camelcase_type() :: atom().
 
@@ -65,6 +69,7 @@
 
 % For wooper_enable_otp_integration:
 -include("wooper_defines_exports.hrl").
+
 
 
 % Deduces the Erlang equivalent name, according to the WOOPER conventions, of a
@@ -300,3 +305,13 @@ start_for_app() ->
 
 
 -endif. % wooper_enable_otp_integration
+
+
+
+% Returns the key (as a term) associated to specified classname in the
+% persistent_term registry.
+%
+-spec get_persistent_key_for( wooper:classname() ) -> term().
+get_persistent_key_for( Classname ) ->
+	% Could be instead {wooper, Classname} should clashes be feared:
+	Classname.

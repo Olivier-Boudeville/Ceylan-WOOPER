@@ -63,15 +63,15 @@
 
 % Implementation notes:
 
-% Each WOOPER instance is expected to request (through a get_table "request")
-% this class manager for its virtual table.
+% Each WOOPER instance is expected to request (through a get_table_key
+% "request") this class manager for its virtual table key.
 %
 % When integrating OTP, this class manager became a gen_server (of course it
 % could not be a WOOPER instance itself), rather than as a supervisor_bridge.
 %
-% As such, a get_table inquiry could have been implemented as an handle_call or
-% an handle_info. We preferred the former, so that it could be trigger thanks to
-% our get_table/1 function below in a classical OTP way.
+% As such, a get_table_key inquiry could have been implemented as an handle_call
+% or an handle_info. We preferred the former, so that it could be triggered
+% thanks to our get_table_key/1 function below in a classical OTP way.
 
 
 % So we retrofitted the class manager into a gen_server for (optional) OTP
@@ -84,7 +84,7 @@
 
 % Service API:
 -export([ start/0, start_link/0, start/1, start_link/1,
-		  get_table/1, display/0, stop/0 ]).
+		  get_table_key/1, display/0, stop/0 ]).
 
 
 % Non-OTP API:
@@ -185,8 +185,7 @@ display_msg( String ) ->
 
 
 display_msg( FormatString, Values ) ->
-	Message = text_utils:format( ?log_prefix ++ FormatString ++ "~n",
-								 Values ),
+	Message = text_utils:format( ?log_prefix ++ FormatString ++ "~n", Values ),
 	wooper:log_info( Message ).
 
 
@@ -304,10 +303,11 @@ start_link( MaybeClientPid ) ->
 
 
 
-% Returns the virtual table associated to specified classname.
--spec get_table( wooper:classname() ) ->
-					   ?wooper_table_type:?wooper_table_type().
-get_table( Classname ) ->
+% Returns the key corresponding to the virtual table associated to specified
+% classname.
+%
+-spec get_table_key( wooper:classname() ) -> wooper:class_key().
+get_table_key( Classname ) ->
 
 	% Rather than specifying the registered name of the class manager
 	% (?wooper_class_manager_name) in the call, we attempt to fetch directly its
@@ -322,9 +322,20 @@ get_table( Classname ) ->
 	ClassManagerPid = get_manager_through_otp(),
 
 	% Still respect the OTP conventions:
-	{ ok, Table } = gen_server:call( ClassManagerPid,
-									 { get_table, Classname } ),
-	Table.
+	% Previously the virtual table was fetched as a message:
+	% { ok, Table } =
+	%
+	% Then we just fetch the corresponding key in persistent_term:
+	{ ok, ClassPersistentKey } =
+		gen_server:call( ClassManagerPid, { get_table_key, Classname } ),
+	%Table.
+
+	% Directly evaluated in the instance process:
+	%persistent_term:get( ClassPersistentKey ).
+
+	% Just returning the key now:
+	ClassPersistentKey.
+
 
 
 % Returns the PID of the WOOPER class manager.
@@ -410,17 +421,17 @@ init( _Args=[] ) ->
 
 
 
-% Handling OTP-based requests (gen_server callback, trigger by get_table/1 in
-% this module):
+% Handling OTP-based requests (gen_server callback, triggered by get_table_key/1
+% in this module):
 %
 
-handle_call( { get_table, Classname }, _From, _State=Tables ) ->
+handle_call( { get_table_key, Classname }, _From, _State=Tables ) ->
 
-	display_msg( "handle_call: get_table for ~s.", [ Classname ] ),
+	display_msg( "handle_call: get_table_key for ~s.", [ Classname ] ),
 
-	{ NewTables, TargetTable } = get_virtual_table_for( Classname, Tables ),
+	{ NewTables, TargetTableKey } = get_virtual_table_key_for( Classname, Tables ),
 
-	{ reply, { ok, TargetTable }, _NewState=NewTables }.
+	{ reply, { ok, TargetTableKey }, _NewState=NewTables }.
 
 
 
@@ -445,12 +456,12 @@ handle_cast( display, State=Tables ) ->
 
 
 % Handling OTP-based requests (gen_server callback):
-handle_info( { get_table, _Classname, _FromPid }, _State=_Tables ) ->
+handle_info( { get_table_key, _Classname, _FromPid }, _State=_Tables ) ->
 
 	trace_utils:error( "WOOPER class manager called according to the "
 		"non-OTP conventions, whereas is running as an (OTP) gen_server." ),
 
-	% (for the caller, see wooper:retrieve_virtual_table/1)
+	% (for the caller, see wooper:retrieve_virtual_table_key/1)
 
 	throw( otp_integration_mismatch );
 
@@ -630,11 +641,11 @@ loop( Tables ) ->
 
 	receive
 
-		{ get_table, Classname, Pid } ->
-			{ NewTables, TargetTable } =
-				get_virtual_table_for( Classname, Tables ),
+		{ get_table_key, Classname, Pid } ->
+			{ NewTables, TargetTableKey } =
+				get_virtual_table_key_for( Classname, Tables ),
 
-			Pid ! { wooper_virtual_table, TargetTable },
+			Pid ! { wooper_virtual_table_key, TargetTableKey },
 			loop( NewTables );
 
 		display ->
@@ -655,45 +666,72 @@ loop( Tables ) ->
 
 
 
-% Look-up specified table.
+% Look-up specified table: secures it and returns its corresponding key.
 %
-% If found, returns it immediately, otherwise constructs it, stores the result
-% and returns it as well.
+% If found, returns its key immediately, otherwise constructs it, stores the
+% result and returns its key in the persistent_term registry.
+%
+% Allows to synchronise the instances so that they can know for sure that their
+% virtual tables are available.
 %
 % Virtual tables are stored in a ?wooper_table_type.
 %
 % Returns a pair formed of the new set of virtual tables and of the requested
-% table.
+% table key.
 %
--spec get_virtual_table_for( basic_utils:module_name(),
-							 ?wooper_table_type:?wooper_table_type() ) ->
-								   { ?wooper_table_type:?wooper_table_type(),
-									 ?wooper_table_type:?wooper_table_type() }.
-get_virtual_table_for( Module, Tables ) ->
+-spec get_virtual_table_key_for( basic_utils:module_name(),
+								 ?wooper_table_type:?wooper_table_type() ) ->
+		{ ?wooper_table_type:?wooper_table_type(), wooper:class_key() }.
+get_virtual_table_key_for( Module, Tables ) ->
 
-	case ?wooper_table_type:lookup_entry( Module, Tables ) of
+	ModuleKey = wooper_utils:get_persistent_key_for( Module ),
 
-		{ value, Table } ->
+	case ?wooper_table_type:has_entry( Module, Tables ) of
 
+		true ->
 			% Cache hit, no change in internal data:
-			{ Tables, Table };
+			{ Tables, ModuleKey };
 
-		key_not_found ->
+		false ->
 
 			% Time to create this virtual table and to store it:
 			display_table_creation( Module ),
+
+
 			ModuleTable = create_method_table_for( Module ),
 
+			trace_utils:debug_fmt( "Persistent registry before addition "
+				"of ~s: ~p", [ Module, persistent_term:info() ] ),
+
+			% Apparently sufficient to handle from now on a reference:
+			persistent_term:put( ModuleKey, ModuleTable ),
+
+			trace_utils:debug_fmt( "Persistent registry after addition "
+				"of ~s: ~p", [ Module, persistent_term:info() ] ),
+
+			% Not using ModuleTable anymore, switching to following reference
+			% instead:
+			%
+			ModuleTableRef = persistent_term:get( ModuleKey ),
+
+			% Uncomment to report some information about this virtual table:
+			TableSize = system_utils:get_size( ModuleTableRef ),
+
+			trace_utils:debug_fmt( "For class '~s', returning a table whose "
+				"size is ~s (~B bytes): ~s",
+				[ Module, system_utils:interpret_byte_size( TableSize ),
+				  TableSize, table:to_string( ModuleTableRef ) ] ),
+
 			%trace_utils:debug_fmt( "Virtual table for ~s: ~s",
-			%         [ Module, ?wooper_table_type:to_string( ModuleTable ) ] ),
+			%     [ Module, ?wooper_table_type:to_string( ModuleTableRef ) ] ),
 
 			% Each class had its virtual table optimised:
 			%OptimisedModuleTable =
-			%    ?wooper_table_type:optimise( ModuleTable ),
+			%    ?wooper_table_type:optimise( ModuleTableRef ),
 
 			% Here the table could be patched with destruct/1, if defined.
 			ClassTable =
-				?wooper_table_type:add_entry( Module, ModuleTable, Tables ),
+				?wooper_table_type:add_entry( Module, ModuleTableRef, Tables ),
 
 			% And the table of virtual tables was itself optimised each time a
 			% new class was introduced:
@@ -701,14 +739,20 @@ get_virtual_table_for( Module, Tables ) ->
 			{ %?wooper_table_type:optimise( ClassTable ),
 			  ClassTable,
 			  % OptimisedModuleTable }
-			  ModuleTable }
+
+			  % Used to return that reference (as done in
+			  % https://blog.erlang.org/persistent_term/), yet did not seem to
+			  % lead to instances that are lighter in memory):
+			  %
+			  %ModuleTableRef }
+			  ModuleKey }
 
 	end.
 
 
 
 
-% Creates recursively (indirectly thanks to 'update_method_table_with') the
+% Creates recursively (indirectly thanks to update_method_table_with/2) the
 % virtual table corresponding to specified module.
 %
 -spec create_method_table_for( basic_utils:module_name() ) ->
@@ -862,7 +906,7 @@ create_local_method_table_for( Module ) ->
 
 				true ->
 					?wooper_table_type:add_entry( { Name, Arity }, Module,
-												 Hashtable );
+												  Hashtable );
 
 				false ->
 					Hashtable
@@ -876,7 +920,7 @@ create_local_method_table_for( Module ) ->
 
 
 
-% ping specified WOOPER instance, designated by its PID or registered name
+% Pings specified WOOPER instance, designated by its PID or registered name
 % (locally, otherwise, if not found, globally).
 %
 % Returns pong if it could be successfully ping'ed, otherwise returns pang.

@@ -88,7 +88,7 @@
 
 
 % Extra features:
--export([ declare_beam_dirs_for_wooper/0, retrieve_virtual_table/1,
+-export([ declare_beam_dirs_for_wooper/0, retrieve_virtual_table_key/1,
 		  get_execution_target/0 ]).
 
 
@@ -162,6 +162,13 @@
 
 % An atom prefixed with 'class_':
 -type classname() :: atom().
+
+
+% The key in the persistent_term registry corresponding to a class, to fetch its
+% virtual table:
+%
+-type class_key() :: term().
+
 
 
 % A method name (ex: 'setColor'):
@@ -1314,7 +1321,8 @@ get_blank_state( Classname ) ->
 
 	#state_holder{
 
-		virtual_table=retrieve_virtual_table( Classname ),
+		%virtual_table=retrieve_virtual_table( Classname ),
+		virtual_table_key=retrieve_virtual_table_key( Classname ),
 
 		attribute_table=
 		   ?wooper_table_type:new( ?wooper_attribute_count_upper_bound ),
@@ -1375,11 +1383,10 @@ default_down_handler( MonitorReference, MonitoredType, MonitoredElement,
 					  ExitReason, State ) ->
 
 	log_warning( "WOOPER default DOWN handler of the ~w "
-				 "instance ~w ignored the following down notification "
-				 "'~s' for monitored element ~p of type '~p' "
-				 "(monitor reference: ~w).",
-				 [ State#state_holder.actual_class, self(), ExitReason,
-				   MonitoredElement, MonitoredType, MonitorReference ] ),
+		"instance ~w ignored the following down notification "
+		"'~s' for monitored element ~p of type '~p' (monitor reference: ~w).",
+		[ State#state_holder.actual_class, self(), ExitReason,
+		  MonitoredElement, MonitoredType, MonitorReference ] ),
 
 	State.
 
@@ -1400,10 +1407,9 @@ default_down_handler( MonitorReference, MonitoredType, MonitoredElement,
 default_node_up_handler( Node, MonitorNodeInfo, State ) ->
 
 	log_warning( "WOOPER default node up handler of the ~w "
-				 "instance ~w ignored the connection notification "
-				 "for node '~s' (information: ~p).",
-				 [ State#state_holder.actual_class, self(), Node,
-				   MonitorNodeInfo ] ),
+		"instance ~w ignored the connection notification "
+		"for node '~s' (information: ~p).",
+		[ State#state_holder.actual_class, self(), Node, MonitorNodeInfo ] ),
 
 	State.
 
@@ -1424,50 +1430,55 @@ default_node_up_handler( Node, MonitorNodeInfo, State ) ->
 default_node_down_handler( Node, MonitorNodeInfo, State ) ->
 
 	log_warning( "WOOPER default node down handler of the ~w "
-				 "instance ~w ignored the disconnection notification "
-				 "for node '~s' (information: ~p).",
-				 [ State#state_holder.actual_class, self(), Node,
-				   MonitorNodeInfo ] ),
+		"instance ~w ignored the disconnection notification "
+		"for node '~s' (information: ~p).",
+		[ State#state_holder.actual_class, self(), Node, MonitorNodeInfo ] ),
 
 	State.
 
 
 
-% Returns the virtual table corresponding to the specified class.
+% Returns the key in persistent_term for the virtual table corresponding to the
+% specified class.
+%
+% Note: the key could be directly guessed by the instance; the interest here is
+% mostly for synchronisation (to ensure that a suitable entry for the current
+% class exists in the persistent_term registry, otherwise race conditions could
+% happen).
 %
 % (helper)
 %
--spec retrieve_virtual_table( classname() ) ->
-				   ?wooper_table_type:?wooper_table_type().
+-spec retrieve_virtual_table_key( classname() ) -> wooper:class_key().
 
 -if( ?wooper_enable_otp_integration =:= true ).
 
-retrieve_virtual_table( Classname ) ->
+retrieve_virtual_table_key( Classname ) ->
 
 	%trace_utils:debug_fmt( "Retrieving the OTP-way the virtual table "
-	%						"for '~s'.", [ Classname ] ),
+	%						"key for '~s'.", [ Classname ] ),
 
 	% The OTP way, through a gen_server:call/2:
-	wooper_class_manager:get_table( Classname ).
+	wooper_class_manager:get_table_key( Classname ).
+
 
 
 -elif( ?wooper_enable_otp_integration =:= false ).
 
-retrieve_virtual_table( Classname ) ->
+retrieve_virtual_table_key( Classname ) ->
 
 	%trace_utils:debug_fmt(
-	%  "Retrieving classically (non-OTP way) the virtual table for '~s'.",
+	%  "Retrieving classically (non-OTP way) the virtual table key for '~s'.",
 	%  [ Classname ] ),
 
 	% For per-instance virtual table: wooper_create_method_table_for(?MODULE).
 
 	% The non-OTP way:
-	wooper_class_manager:get_manager() ! { get_table, Classname, self() },
+	wooper_class_manager:get_manager() ! { get_table_key, Classname, self() },
 	receive
 
-		{ wooper_virtual_table, Table } ->
+		{ wooper_virtual_table_key, TableKey } ->
 			%?wooper_table_type:display( Table ),
-			Table
+			TableKey
 
 	end.
 
@@ -1522,10 +1533,10 @@ trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
 	end,
 
 	log_error( "~nWOOPER error for PID ~w, "
-			   "constructor (~s:construct/~B) failed due to an 'undef' "
-			   "call to ~s:~s/~B; diagnosis: ~s~s.",
-			   [ self(), Classname, Arity, ModuleName, FunctionName,
-				 UndefArity, Diagnosis, LocString ] ),
+		"constructor (~s:construct/~B) failed due to an 'undef' "
+		"call to ~s:~s/~B; diagnosis: ~s~s.",
+		[ self(), Classname, Arity, ModuleName, FunctionName,
+		  UndefArity, Diagnosis, LocString ] ),
 
 	throw( { wooper_constructor_failed, self(), Classname, Arity,
 			 { undef, { ModuleName, FunctionName, UndefArity } } } );
@@ -1543,16 +1554,17 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
 	%					   [ Classname, Arity ] ),
 
 	log_error( "~nWOOPER error for PID ~w, "
-			   "constructor (~s:construct/~B) failed (cause: ~p):~n~n"
-			   " - with error term:~n  ~p~n~n"
-			   " - stack trace was (latest calls first):~n~s~n"
-			   " - for construction parameters:~n  ~p~n",
-			   [ self(), Classname, Arity, Reason, ErrorTerm,
-				 code_utils:interpret_stacktrace( Stacktrace ),
-				 ConstructionParameters ] ),
+		"constructor (~s:construct/~B) failed (cause: ~p):~n~n"
+		" - with error term:~n  ~p~n~n"
+		" - stack trace was (latest calls first):~n~s~n"
+		" - for construction parameters:~n  ~p~n",
+		[ self(), Classname, Arity, Reason, ErrorTerm,
+		  code_utils:interpret_stacktrace( Stacktrace ),
+		  ConstructionParameters ] ),
 
 	throw( { wooper_constructor_failed, self(), Classname, Arity,
 			 ConstructionParameters, ErrorTerm } ).
+
 
 
 % Methods for getting information about an instance.
@@ -1697,7 +1709,7 @@ virtual_table_to_string( State ) ->
 						  "module defining that method)~n", [ self() ] ),
 
 	  _List=?wooper_table_type:enumerate(
-			   State#state_holder.virtual_table ) ).
+			 persistent_term:get( State#state_holder.virtual_table_key ) ) ).
 
 
 

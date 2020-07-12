@@ -49,7 +49,7 @@ wooper_destruct( State ) ->
 	%
 	% Then recurses with higher-level destructors (maybe just storing destruct/1
 	% in the method table would be more efficient, see
-	% wooper_class_manager:get_virtual_table_for):
+	% wooper_class_manager:get_virtual_table_key_for):
 
 	% We should never rely on 'wooper:get_classname( State )' here, as it would
 	% always return the leaf class. We use ?MODULE (even for embodied
@@ -81,11 +81,9 @@ wooper_destruct( State ) ->
 
 				Other ->
 
-					wooper:log_error(
-					  "~nWOOPER error for PID ~w of class ~s: "
-					  "user-defined destructor did not return a state, "
-					  "but returned '~p' instead.",
-					  [ self(), ?MODULE, Other ] ),
+					wooper:log_error( "~nWOOPER error for PID ~w of class ~s: "
+					  "user-defined destructor did not return a state, but "
+					  "returned '~p' instead.", [ self(), ?MODULE, Other ] ),
 
 					throw( { invalid_destructor, ?MODULE } )
 
@@ -128,7 +126,7 @@ wooper_destruct( State ) ->
 	%
 	% Then recurses with higher-level destructors (maybe just storing destruct/1
 	% in the method table would be more efficient, see
-	% wooper_class_manager:get_virtual_table_for):
+	% wooper_class_manager:get_virtual_table_key_for):
 	%
 	DestructedState = case lists:member( { destruct, 1 },
 										 module_info( exports ) ) of
@@ -138,7 +136,6 @@ wooper_destruct( State ) ->
 			% All destructors, included user-defined ones, must return a
 			% (possibly updated) state:
 			%
-
 			try
 
 				?MODULE:destruct( State )

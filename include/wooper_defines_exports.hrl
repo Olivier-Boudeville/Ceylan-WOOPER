@@ -103,11 +103,13 @@
 %
 -record( state_holder, {
 
-		   virtual_table :: maybe( ?wooper_table_type:?wooper_table_type() ),
+		   % Now just a key in the persistent_term registry:
+		   %virtual_table :: maybe( ?wooper_table_type:?wooper_table_type() ),
+		   virtual_table_key :: wooper:class_key(),
 
 		   attribute_table :: maybe( ?wooper_table_type:?wooper_table_type() ),
 
-		   % Only means we know to access the actual class name:
+		   % Only means that we know to access the actual class name:
 		   %
 		   % (otherwise we could not, for example, report in an intermediate
 		   % child class the actual class name of a deleted instance)

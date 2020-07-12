@@ -313,7 +313,7 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 								  { 'value', classname() } | 'key_not_found'.
 wooper_lookup_method( State, MethodAtom, Arity ) ->
 	?wooper_table_type:lookup_entry( { MethodAtom, Arity },
-									State#state_holder.virtual_table ).
+		persistent_term:get( State#state_holder.virtual_table_key ) ).
 
 
 

@@ -56,6 +56,14 @@ run( IsDebug ) ->
 
 	end,
 
+	% Called on purpose after a synchronous operation, otherwise, if triggered
+	% just after new_link/5 (with is asynchronous), is likely to return the size
+	% of a blank process:
+
+	PSize = basic_utils:get_process_size( MyP ),
+	trace_utils:info_fmt( "The total size of a (newly created) Platypus "
+		"instance is ~s (i.e. ~B bytes).",
+		[ system_utils:interpret_byte_size( PSize ), PSize ] ),
 
 	MyP ! { getSuperclasses, [], self() },
 	receive

@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2020 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Friday, May 15, 2020
+:Lastly updated: Saturday, July 11, 2020
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -3410,8 +3410,19 @@ As the table is built only once and is theoritically shared by all instances of 
 .. (except for binaries, which are of no use here), inducing a large per-instance overhead which, in turn, reduces a lot the scalability that can be achieved thanks to these WOOPER versions.
 
 
+Taking `class_Platypus.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Platypus.erl>`_ as a (small) example (shallow inheritance tree, and just a few attributes), by uncommenting traces in the class manager, we can see that the size of the ``class_Platypus`` virtual table is 1040 bytes.
+
+At runtime, after its full construction, the total size of a Platypus instance (i.e. the overall size of its corresponding process) is 8712 bytes.
+
+Knowing that (with OTP 23, AMD64 on GNU/Linux) the size of a blank process is 2688 bytes [#]_, the actual payload specific to this instance is ``8712-2688=6024 bytes`` (and the virtual table accounts for roughly 17% of it).
 
 
+.. [#] Measured with ``P=spawn(basic_utils, freeze, [])``, then ``basic_utils:get_process_size(P)``.
+
+
+After having used the `persistent_term <https://erlang.org/doc/man/persistent_term.html>`_ module (see our ``persistent_term`` branch) to share these (immutable) per-class virtual tables, the size of the same test Platypus instance became 6840 bytes, corresponding thus to a per-instance shrinking of ``8712-6840=1872 bytes`` here.
+
+When the class manager registers (once for all) the class_Platypus virtual table, the size of the persistent_term registry grows of 1072 bytes (which is consistent with a virtual table of 1040 bytes).
 
 
 

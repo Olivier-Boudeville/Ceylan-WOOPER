@@ -469,7 +469,7 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 	HookedEntries =
 		pre_deserialise_hook( { Classname, OtherEntries }, UserData ),
 
-	VirtualTable = wooper:retrieve_virtual_table( Classname ),
+	VirtualTableKey = wooper:retrieve_virtual_table_key( Classname ),
 
 	{ TransformedEntries, FinalUserData } = case EntryTransformer of
 
@@ -515,7 +515,7 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 	end,
 
 
-	ForgedState = #state_holder{ virtual_table=VirtualTable,
+	ForgedState = #state_holder{ virtual_table_key=VirtualTableKey,
 								 attribute_table=OptimisedAttributeTable,
 								 actual_class=Classname,
 								 request_sender=undefined },
