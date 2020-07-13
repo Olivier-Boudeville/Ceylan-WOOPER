@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2020 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Saturday, July 11, 2020
+:Lastly updated: Tuesday, July 14, 2020
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -2764,7 +2764,7 @@ We use ``Emacs`` but of course any editor will be fine.
 For Nedit users, a WOOPER-aware `nedit.rc <https://github.com/Olivier-Boudeville/Ceylan-Myriad/blob/master/conf/nedit.rc>`_ configuration file for syntax highlighting (on black backgrounds), inspired from Daniel Solaz's `Erlang Nedit mode <http://www.trapexit.org/forum/viewtopic.php?p=30189>`_, is available.
 
 
-Similarity With other Languages
+Similarity With Other Languages
 -------------------------------
 
 WOOPER is in some ways adding features quite similar to the ones available with other languages, including Python (simple multiple inheritance, implied ``self/State`` parameter, attribute dictionaries/associative tables, etc.) while still offering the major strengths of Erlang (concurrency, distribution, functional paradigm) and not hurting too much the overall performances (mainly thanks to the prebuilt attribute and method tables).
@@ -3193,12 +3193,12 @@ Version History & Changes
 Version 2.0 [current stable]
 ----------------------------
 
-Released officially on Sunday, February 3, 2019.
+Released officially on Sunday, February 3, 2019, and constantly updated since then.
 
-It has been a large rewriting of this layer, with much improvements notably:
+It has been a large rewriting of this layer, with much improvements, notably:
 
 - multiple different-arity constructors per class are supported now
-- no more ``wooper_construct_parameters``, longer ``wooper_construct_export`` or ``wooper_construct_export`` defines
+- no more cumbersome ``wooper_construct_parameters``, longer ``wooper_construct_export`` or ``wooper_construct_export`` defines
 - automatic detection and export of constructors, any destructor and methods
 - WOOPER method terminators introduced (ex: ``wooper:return_state_result/2``, instead of the ``?wooper_return_state_result`` macro)
 - the ``class_attributes`` optional parse attribute define introduced (``-define(class_attributes,[...]).``
@@ -3377,7 +3377,7 @@ This associative table allows, for a given class, to determine which module impl
 
 For example, all instances of ``class_Cat`` have to know that their ``getWhiskerColor/1`` method is defined directly in that class, as opposed to their ``setAge/2`` method whose actual implementation is to be found, say, in ``class_Mammal``, should this class have overridden it from ``class_Creature``.
 
-As performing a method look-up through the entire inheritance graph at each call would waste resources, the look-up is precomputed for each class.
+As performing a method look-up through the entire inheritance graph at each call would waste resources, the look-up is precomputed for each method of each class.
 
 
 
@@ -3405,24 +3405,26 @@ Hence each instance has a reference to a shared table that allows for a direct m
 
 As the table is built only once and is theoritically shared by all instances of that class [#]_, it adds very little overhead, space-wise and time-wise. Thanks to the table, method look-up is expected to be quite efficient too (constant-time).
 
-.. [#] Provided that Erlang does not copy these shared immutable structures, which unfortunately does not seem to be currently the case with the vanilla virtual machine. In a later version of WOOPER, the per-class table will be precompiled and shared as a module, thus fully removing that per-instance overhead.
+.. [#] Provided that Erlang does not copy these shared immutable structures, which unfortunately does not seem to be currently the case (at least with the vanilla virtual machine). We had planned in a later version of WOOPER that the per-class table would be precompiled and shared as a module, thus fully removing that per-instance overhead, yet, as explained below, the introduction of the ``persistent_term`` standard module offered a simpler option.
 
 .. (except for binaries, which are of no use here), inducing a large per-instance overhead which, in turn, reduces a lot the scalability that can be achieved thanks to these WOOPER versions.
 
 
-Taking `class_Platypus.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Platypus.erl>`_ as a (small) example (shallow inheritance tree, and just a few attributes), by uncommenting traces in the class manager, we can see that the size of the ``class_Platypus`` virtual table is 1040 bytes.
+Taking `class_Platypus.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Platypus.erl>`_ as a (small) example (shallow inheritance tree, and just a few attributes), by uncommenting traces in the class manager, we can see that the size of the ``class_Platypus`` virtual table is ``1040 bytes``.
 
-At runtime, after its full construction, the total size of a Platypus instance (i.e. the overall size of its corresponding process) is 8712 bytes.
+At runtime, after its full construction, the total size of a Platypus instance (i.e. the overall size of its corresponding process) used to be ``8712 bytes``, while it still included a per-instance copy of the class-level virtual table.
 
-Knowing that (with OTP 23, AMD64 on GNU/Linux) the size of a blank process is 2688 bytes [#]_, the actual payload specific to this instance is ``8712-2688=6024 bytes`` (and the virtual table accounts for roughly 17% of it).
+Knowing that (with OTP 23, AMD64 on GNU/Linux) the size of a blank process is ``2688 bytes`` [#]_, the actual payload specific to this instance was ``8712-2688=6024 bytes`` (the virtual table accounting for roughly 17% of it).
 
 
 .. [#] Measured with ``P=spawn(basic_utils, freeze, [])``, then ``basic_utils:get_process_size(P)``.
 
 
-After having used the `persistent_term <https://erlang.org/doc/man/persistent_term.html>`_ module (see our ``persistent_term`` branch) to share these (immutable) per-class virtual tables, the size of the same test Platypus instance became 6840 bytes, corresponding thus to a per-instance shrinking of ``8712-6840=1872 bytes`` here.
+After having used the `persistent_term <https://erlang.org/doc/man/persistent_term.html>`_ module (see our ``persistent_term`` and newer ``persistent_term_single_get`` branches) to share these (immutable) per-class virtual tables, the total size of the same test Platypus instance decreased to ``6840 bytes``, corresponding thus to a per-instance shrinking of ``8712-6840=1872 bytes`` here (and thus an instance-specific payload of ``6840-2688=4152 bytes``, for class_Platypus).
 
-When the class manager registers (once for all) the class_Platypus virtual table, the size of the persistent_term registry grows of 1072 bytes (which is consistent with a virtual table of 1040 bytes).
+Finally, when the class manager registers (once for all) the class_Platypus virtual table, the size of the persistent_term overall registry increases of ``1072 bytes`` (which is consistent with a virtual table of ``1040 bytes``).
+
+As a result, these changes do not introduce any specific drawback and have thus been merged in the WOOPER main branch, since Monday, July 13, 2020.
 
 
 
