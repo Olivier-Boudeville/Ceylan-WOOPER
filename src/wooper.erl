@@ -1319,10 +1319,12 @@ execute_oneway( PassiveInstance, OnewayName, OnewayArg )
 -spec get_blank_state( classname() ) -> wooper:state().
 get_blank_state( Classname ) ->
 
+	TableKey = retrieve_virtual_table_key( Classname ),
+
 	#state_holder{
 
-		%virtual_table=retrieve_virtual_table( Classname ),
-		virtual_table_key=retrieve_virtual_table_key( Classname ),
+		% Here we fetch once for all that table (as a "reference"):
+		virtual_table=persistent_term:get( TableKey ),
 
 		attribute_table=
 		   ?wooper_table_type:new( ?wooper_attribute_count_upper_bound ),
@@ -1644,10 +1646,10 @@ state_to_string( State ) ->
 	lists:foldl(
 
 		fun( { AttName, AttrValue }, Acc ) ->
-			Acc ++ io_lib:format( "     * ~s = ~s~n",
-				[ text_utils:term_to_string( AttName ),
-				  text_utils:term_to_string( AttrValue, _MaxDepth=16,
-											 _MaxLength=100 ) ] )
+			Acc ++ text_utils:format( "     * ~s = ~s~n",
+					[ text_utils:term_to_string( AttName ),
+					  text_utils:term_to_string( AttrValue, _MaxDepth=16,
+												 _MaxLength=100 ) ] )
 
 		end,
 
@@ -1701,15 +1703,16 @@ virtual_table_to_string( State ) ->
 	lists:foldl(
 
 	  fun( { { Name, Arity }, Module }, String ) ->
-			  String ++ io_lib:format( "     * ~s/~B -> ~s~n",
-									   [ Name, Arity, Module ] )
+			  String ++ text_utils:format( "     * ~s/~B -> ~s~n",
+										   [ Name, Arity, Module ] )
 	  end,
 
-	  _Acc=io_lib:format( "Virtual table of ~w:~n(method name/arity -> "
-						  "module defining that method)~n", [ self() ] ),
+	  _Acc=text_utils:format( "Virtual table of ~w:~n(method name/arity -> "
+							  "module defining that method)~n", [ self() ] ),
 
 	  _List=?wooper_table_type:enumerate(
-			 persistent_term:get( State#state_holder.virtual_table_key ) ) ).
+			 %persistent_term:get( State#state_holder.virtual_table_key ) ) ).
+			State#state_holder.virtual_table ) ).
 
 
 
@@ -1720,9 +1723,9 @@ virtual_table_to_string( State ) ->
 %
 -spec instance_to_string( wooper:state() ) -> string().
 instance_to_string( State ) ->
-	io_lib:format( "Inspection of instance ~w:~n~n  + ~s~n  + ~s",
-				   [ self(), state_to_string( State ),
-					 virtual_table_to_string( State ) ] ).
+	text_utils:format( "Inspection of instance ~w:~n~n  + ~s~n  + ~s",
+					   [ self(), state_to_string( State ),
+						 virtual_table_to_string( State ) ] ).
 
 
 

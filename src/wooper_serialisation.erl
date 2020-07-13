@@ -514,8 +514,9 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 
 	end,
 
+	VirtualTable = persistent_term:get( VirtualTableKey ),
 
-	ForgedState = #state_holder{ virtual_table_key=VirtualTableKey,
+	ForgedState = #state_holder{ virtual_table=VirtualTable,
 								 attribute_table=OptimisedAttributeTable,
 								 actual_class=Classname,
 								 request_sender=undefined },

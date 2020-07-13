@@ -697,7 +697,6 @@ get_virtual_table_key_for( Module, Tables ) ->
 			% Time to create this virtual table and to store it:
 			display_table_creation( Module ),
 
-
 			ModuleTable = create_method_table_for( Module ),
 
 			trace_utils:debug_fmt( "Persistent registry before addition "

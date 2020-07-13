@@ -205,8 +205,8 @@ wooper_main_loop( State ) ->
 
 			case ?wooper_table_type:lookup_entry(
 				  { _Name=onWOOPERExitReceived, _Arity=3 },
-				  persistent_term:get( State#state_holder.virtual_table_key ) )
-					of
+				  %persistent_term:get( State#state_holder.virtual_table_key ) )
+				  State#state_holder.virtual_table ) of
 
 				{ value, _Key } ->
 
@@ -243,8 +243,8 @@ wooper_main_loop( State ) ->
 
 			case ?wooper_table_type:lookup_entry(
 				  { _Name=onWOOPERDownNotified, _Arity=5 },
-				  persistent_term:get( State#state_holder.virtual_table_key ) )
-					of
+				  %persistent_term:get( State#state_holder.virtual_table_key ) )
+				  State#state_holder.virtual_table ) of
 
 				{ value, _Key } ->
 
@@ -282,8 +282,8 @@ wooper_main_loop( State ) ->
 
 			case ?wooper_table_type:lookup_entry(
 				  { _Name=onWOOPERNodeConnection, _Arity=3 },
-				  persistent_term:get( State#state_holder.virtual_table_key ) )
-					of
+				  %persistent_term:get( State#state_holder.virtual_table_key ) )
+				  State#state_holder.virtual_table ) of
 
 				{ value, _Key } ->
 
@@ -320,8 +320,8 @@ wooper_main_loop( State ) ->
 
 			case ?wooper_table_type:lookup_entry(
 				  { _Name=onWOOPERNodeDisconnection, _Arity=3 },
-				  persistent_term:get( State#state_holder.virtual_table_key ) )
-					  of
+				  %persistent_term:get( State#state_holder.virtual_table_key ) )
+				  State#state_holder.virtual_table ) of
 
 				{ value, _Key } ->
 

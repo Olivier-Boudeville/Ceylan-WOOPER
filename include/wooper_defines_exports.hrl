@@ -103,9 +103,13 @@
 %
 -record( state_holder, {
 
-		   % Now just a key in the persistent_term registry:
 		   %virtual_table :: maybe( ?wooper_table_type:?wooper_table_type() ),
-		   virtual_table_key :: wooper:class_key(),
+
+		   % Just a key in the persistent_term registry:
+		   %virtual_table_key :: wooper:class_key(),
+
+		   % Now directly a reference within the persistent_term registry:
+		   virtual_table :: ?wooper_table_type:?wooper_table_type(),
 
 		   attribute_table :: maybe( ?wooper_table_type:?wooper_table_type() ),
 
