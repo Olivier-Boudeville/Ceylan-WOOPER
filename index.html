@@ -78,7 +78,7 @@
 <li><a class="reference internal" href="#developer-guidelines" id="id80">Developer Guidelines</a></li>
 <li><a class="reference internal" href="#class-developer-cheat-sheet" id="id81">Class Developer Cheat Sheet</a></li>
 <li><a class="reference internal" href="#source-editors" id="id82">Source Editors</a></li>
-<li><a class="reference internal" href="#similarity-with-other-languages" id="id83">Similarity With other Languages</a></li>
+<li><a class="reference internal" href="#similarity-with-other-languages" id="id83">Similarity With Other Languages</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#wooper-example" id="id84">WOOPER Example</a><ul>
@@ -1980,12 +1980,8 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <p>For Nedit users, a WOOPER-aware <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-Myriad/blob/master/conf/nedit.rc">nedit.rc</a> configuration file for syntax highlighting (on black backgrounds), inspired from Daniel Solaz's <a class="reference external" href="http://www.trapexit.org/forum/viewtopic.php?p=30189">Erlang Nedit mode</a>, is available.</p>
 </div>
 <div class="section" id="similarity-with-other-languages">
-<h3><a class="toc-backref" href="#id83">Similarity With other Languages</a></h3>
+<h3><a class="toc-backref" href="#id83">Similarity With Other Languages</a></h3>
 <p>WOOPER is in some ways adding features quite similar to the ones available with other languages, including Python (simple multiple inheritance, implied <tt class="docutils literal">self/State</tt> parameter, attribute dictionaries/associative tables, etc.) while still offering the major strengths of Erlang (concurrency, distribution, functional paradigm) and not hurting too much the overall performances (mainly thanks to the prebuilt attribute and method tables).</p>
-<p>Actually the main implementation shortcomings that remain are:</p>
-<ul class="simple">
-<li>the per-instance memory footprint could be reduced by sharing the &quot;virtual table&quot; of a given class between all its instances</li>
-</ul>
 <p></p>
 </div>
 </div>
@@ -2223,11 +2219,11 @@ Successful end of <span class="nb">test</span> of the WOOPER application.
 <h2><a class="toc-backref" href="#id98">Version History &amp; Changes</a></h2>
 <div class="section" id="version-2-0-current-stable">
 <h3><a class="toc-backref" href="#id99">Version 2.0 [current stable]</a></h3>
-<p>Released officially on Sunday, February 3, 2019.</p>
-<p>It has been a large rewriting of this layer, with much improvements notably:</p>
+<p>Released officially on Sunday, February 3, 2019, and constantly updated since then.</p>
+<p>It has been a large rewriting of this layer, with much improvements, notably:</p>
 <ul class="simple">
 <li>multiple different-arity constructors per class are supported now</li>
-<li>no more <tt class="docutils literal">wooper_construct_parameters</tt>, longer <tt class="docutils literal">wooper_construct_export</tt> or <tt class="docutils literal">wooper_construct_export</tt> defines</li>
+<li>no more cumbersome <tt class="docutils literal">wooper_construct_parameters</tt>, longer <tt class="docutils literal">wooper_construct_export</tt> or <tt class="docutils literal">wooper_construct_export</tt> defines</li>
 <li>automatic detection and export of constructors, any destructor and methods</li>
 <li>WOOPER method terminators introduced (ex: <tt class="docutils literal">wooper:return_state_result/2</tt>, instead of the <tt class="docutils literal"><span class="pre">?wooper_return_state_result</span></tt> macro)</li>
 <li>the <tt class="docutils literal">class_attributes</tt> optional parse attribute define introduced (<tt class="docutils literal"><span class="pre">-define(class_attributes,[...]).</span></tt></li>
