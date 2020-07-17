@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2020 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Tuesday, July 14, 2020
+:Lastly updated: Friday, July 17, 2020
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -2321,34 +2321,46 @@ For a more concise way of doing the same, see also:
 Passive Instances
 -----------------
 
-A passive instance is an instance of a WOOPER class that is not powered by a dedicated (Erlang) process: it is just a mere (opaque) term, a pure data-structure that holds the state [#]_ of that instance, and that is returned to the process having created that instance (which can then do whatever it wants with it).
+A passive instance is an instance of a WOOPER class that is not powered by a dedicated (Erlang) process: it is just a mere (opaque) term, a pure data-structure that holds the state [#]_ of that instance, and that is returned to the process having created that instance (which can then do whatever it wants with it - most probably store it as a "super attribute").
 
-.. [#] This term is mostly the same state term as the one on which the process dedicated to an active instance is looping. So one could even imagine a WOOPER instance going back and forth between an active and a passive mode of operation.
+.. [#] This term is mostly the same state term as the one on which the process dedicated to an active instance is looping. So one could even imagine a WOOPER instance going back and forth between an active and a passive mode of operation, if it was useful.
 
 
-As a consequence, such a passive instance will not be able to perform any spontaneous behaviour or to have its member methods be triggered by other processes. However most operations that can be done on "standard" (active) WOOPER instances can also be done on passive ones: like their active counterparts, they are constructed thanks to, well, one of the constructors defined by their class, they are destructed thanks to, well, their destructor, and in-between they will retain their inner state and be able to execute any request or oneway triggered by the process holding that term (and of course any underlying multiple inheritance will be respected).
+As a consequence, such a passive instance will not be able to perform any spontaneous behaviour on its own, or to have its member methods triggered by other processes. However most operations that can be done on "standard" (active) WOOPER instances can also be done on passive ones: like their active counterparts, they are constructed thanks to, well, one of the constructors defined by their class, they are destructed thanks to, well, their destructor, and in-between they will retain their inner state and be able to execute any request or oneway triggered by the process holding that term (and of course any underlying multiple inheritance will be respected).
 
 Triggering a method onto a passive instance will result in a relevant function to be evaluated, not involving any message.
 
 
 To create a passive instance, the ``new_passive`` operator shall be used, like in::
 
- MyPassiveCat = class_Cat:new_passive(_Age=2,female,_Fur=brown,_Whiskers=white)
+ MyPassiveCat = class_Cat:new_passive(_Age=2, female, _Fur=brown, _Whiskers=white)
 
 Then methods can be triggered on it, like in::
 
- {WhiskerCat,white} = wooper:execute_request(MyPassiveCat,getWhiskerColor),
- OlderCat = wooper:execute_oneway(WhiskerCat,declareBirthday),
- RedCat = wooper:execute_oneway(OlderCat,setFurColor,red),
+ {WhiskerCat,white} = wooper:execute_request(MyPassiveCat, getWhiskerColor),
+ OlderCat = wooper:execute_oneway(WhiskerCat, declareBirthday),
+ RedCat = wooper:execute_oneway(OlderCat, setFurColor, red),
  [...]
 
+Note that, in addition to ``execute_request/{2,3}``, ``execute_const_request/{2,3}`` are available.
 
 Until, finally::
 
   wooper:delete_passive(RedCat).
 
 
-See the ``passive_instance_test`` module for more details.
+
+**Types** may be defined in order to clarify the fact that a term corresponds to a (WOOPER) passive instance.
+
+For example, for any kind of instance owning a passive calendar instance (created with, say, ``class_Calendar:new_passive/2``), one could define and use, as attribute type [#]_::
+
+ -type calendar_passive() :: wooper:passive_instance().
+
+
+.. [#] A type preferably defined that way and exported in ``class_Calendar``.
+
+
+See the ``passive_instance_test`` module for more details about passive instances.
 
 
 
@@ -2764,7 +2776,7 @@ We use ``Emacs`` but of course any editor will be fine.
 For Nedit users, a WOOPER-aware `nedit.rc <https://github.com/Olivier-Boudeville/Ceylan-Myriad/blob/master/conf/nedit.rc>`_ configuration file for syntax highlighting (on black backgrounds), inspired from Daniel Solaz's `Erlang Nedit mode <http://www.trapexit.org/forum/viewtopic.php?p=30189>`_, is available.
 
 
-Similarity With Other Languages
+Similarity With other Languages
 -------------------------------
 
 WOOPER is in some ways adding features quite similar to the ones available with other languages, including Python (simple multiple inheritance, implied ``self/State`` parameter, attribute dictionaries/associative tables, etc.) while still offering the major strengths of Erlang (concurrency, distribution, functional paradigm) and not hurting too much the overall performances (mainly thanks to the prebuilt attribute and method tables).
@@ -3193,12 +3205,12 @@ Version History & Changes
 Version 2.0 [current stable]
 ----------------------------
 
-Released officially on Sunday, February 3, 2019, and constantly updated since then.
+Released officially on Sunday, February 3, 2019.
 
-It has been a large rewriting of this layer, with much improvements, notably:
+It has been a large rewriting of this layer, with much improvements notably:
 
 - multiple different-arity constructors per class are supported now
-- no more cumbersome ``wooper_construct_parameters``, longer ``wooper_construct_export`` or ``wooper_construct_export`` defines
+- no more ``wooper_construct_parameters``, longer ``wooper_construct_export`` or ``wooper_construct_export`` defines
 - automatic detection and export of constructors, any destructor and methods
 - WOOPER method terminators introduced (ex: ``wooper:return_state_result/2``, instead of the ``?wooper_return_state_result`` macro)
 - the ``class_attributes`` optional parse attribute define introduced (``-define(class_attributes,[...]).``
@@ -3377,7 +3389,7 @@ This associative table allows, for a given class, to determine which module impl
 
 For example, all instances of ``class_Cat`` have to know that their ``getWhiskerColor/1`` method is defined directly in that class, as opposed to their ``setAge/2`` method whose actual implementation is to be found, say, in ``class_Mammal``, should this class have overridden it from ``class_Creature``.
 
-As performing a method look-up through the entire inheritance graph at each call would waste resources, the look-up is precomputed for each method of each class.
+As performing a method look-up through the entire inheritance graph at each call would waste resources, the look-up is precomputed for each class.
 
 
 
@@ -3405,26 +3417,24 @@ Hence each instance has a reference to a shared table that allows for a direct m
 
 As the table is built only once and is theoritically shared by all instances of that class [#]_, it adds very little overhead, space-wise and time-wise. Thanks to the table, method look-up is expected to be quite efficient too (constant-time).
 
-.. [#] Provided that Erlang does not copy these shared immutable structures, which unfortunately does not seem to be currently the case (at least with the vanilla virtual machine). We had planned in a later version of WOOPER that the per-class table would be precompiled and shared as a module, thus fully removing that per-instance overhead, yet, as explained below, the introduction of the ``persistent_term`` standard module offered a simpler option.
+.. [#] Provided that Erlang does not copy these shared immutable structures, which unfortunately does not seem to be currently the case with the vanilla virtual machine. In a later version of WOOPER, the per-class table will be precompiled and shared as a module, thus fully removing that per-instance overhead.
 
 .. (except for binaries, which are of no use here), inducing a large per-instance overhead which, in turn, reduces a lot the scalability that can be achieved thanks to these WOOPER versions.
 
 
-Taking `class_Platypus.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Platypus.erl>`_ as a (small) example (shallow inheritance tree, and just a few attributes), by uncommenting traces in the class manager, we can see that the size of the ``class_Platypus`` virtual table is ``1040 bytes``.
+Taking `class_Platypus.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Platypus.erl>`_ as a (small) example (shallow inheritance tree, and just a few attributes), by uncommenting traces in the class manager, we can see that the size of the ``class_Platypus`` virtual table is 1040 bytes.
 
-At runtime, after its full construction, the total size of a Platypus instance (i.e. the overall size of its corresponding process) used to be ``8712 bytes``, while it still included a per-instance copy of the class-level virtual table.
+At runtime, after its full construction, the total size of a Platypus instance (i.e. the overall size of its corresponding process) is 8712 bytes.
 
-Knowing that (with OTP 23, AMD64 on GNU/Linux) the size of a blank process is ``2688 bytes`` [#]_, the actual payload specific to this instance was ``8712-2688=6024 bytes`` (the virtual table accounting for roughly 17% of it).
+Knowing that (with OTP 23, AMD64 on GNU/Linux) the size of a blank process is 2688 bytes [#]_, the actual payload specific to this instance is ``8712-2688=6024 bytes`` (and the virtual table accounts for roughly 17% of it).
 
 
 .. [#] Measured with ``P=spawn(basic_utils, freeze, [])``, then ``basic_utils:get_process_size(P)``.
 
 
-After having used the `persistent_term <https://erlang.org/doc/man/persistent_term.html>`_ module (see our ``persistent_term`` and newer ``persistent_term_single_get`` branches) to share these (immutable) per-class virtual tables, the total size of the same test Platypus instance decreased to ``6840 bytes``, corresponding thus to a per-instance shrinking of ``8712-6840=1872 bytes`` here (and thus an instance-specific payload of ``6840-2688=4152 bytes``, for class_Platypus).
+After having used the `persistent_term <https://erlang.org/doc/man/persistent_term.html>`_ module (see our ``persistent_term`` branch) to share these (immutable) per-class virtual tables, the size of the same test Platypus instance became 6840 bytes, corresponding thus to a per-instance shrinking of ``8712-6840=1872 bytes`` here.
 
-Finally, when the class manager registers (once for all) the class_Platypus virtual table, the size of the persistent_term overall registry increases of ``1072 bytes`` (which is consistent with a virtual table of ``1040 bytes``).
-
-As a result, these changes do not introduce any specific drawback and have thus been merged in the WOOPER main branch, since Monday, July 13, 2020.
+When the class manager registers (once for all) the class_Platypus virtual table, the size of the persistent_term registry grows of 1072 bytes (which is consistent with a virtual table of 1040 bytes).
 
 
 
