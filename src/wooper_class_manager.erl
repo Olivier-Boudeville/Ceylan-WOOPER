@@ -699,14 +699,14 @@ get_virtual_table_key_for( Module, Tables ) ->
 
 			ModuleTable = create_method_table_for( Module ),
 
-			trace_utils:debug_fmt( "Persistent registry before addition "
-				"of ~s: ~p", [ Module, persistent_term:info() ] ),
+			%trace_utils:debug_fmt( "Persistent registry before addition "
+			%	"of ~s: ~p", [ Module, persistent_term:info() ] ),
 
 			% Apparently sufficient to handle from now on a reference:
 			persistent_term:put( ModuleKey, ModuleTable ),
 
-			trace_utils:debug_fmt( "Persistent registry after addition "
-				"of ~s: ~p", [ Module, persistent_term:info() ] ),
+			%trace_utils:debug_fmt( "Persistent registry after addition "
+			%	"of ~s: ~p", [ Module, persistent_term:info() ] ),
 
 			% Not using ModuleTable anymore, switching to following reference
 			% instead:
@@ -714,12 +714,12 @@ get_virtual_table_key_for( Module, Tables ) ->
 			ModuleTableRef = persistent_term:get( ModuleKey ),
 
 			% Uncomment to report some information about this virtual table:
-			TableSize = system_utils:get_size( ModuleTableRef ),
+			%TableSize = system_utils:get_size( ModuleTableRef ),
 
-			trace_utils:debug_fmt( "For class '~s', returning a table whose "
-				"size is ~s (~B bytes): ~s",
-				[ Module, system_utils:interpret_byte_size( TableSize ),
-				  TableSize, table:to_string( ModuleTableRef ) ] ),
+			%trace_utils:debug_fmt( "For class '~s', returning a table whose "
+			%	"size is ~s (~B bytes): ~s",
+			%	[ Module, system_utils:interpret_byte_size( TableSize ),
+			%	  TableSize, table:to_string( ModuleTableRef ) ] ),
 
 			%trace_utils:debug_fmt( "Virtual table for ~s: ~s",
 			%     [ Module, ?wooper_table_type:to_string( ModuleTableRef ) ] ),
