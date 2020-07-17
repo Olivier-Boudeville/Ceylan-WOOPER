@@ -80,6 +80,7 @@
 
 % Method execution for passive instances:
 -export([ execute_request/2, % already exported: execute_request/3,
+		  execute_const_request/2, execute_const_request/3,
 		  execute_oneway/2, execute_oneway/3 ]).
 
 
@@ -413,11 +414,11 @@
 
 
 
-% Sends specified request to specified (active or passive) instance, if active
+% Sends specified request to specified (active or passive) instance; if active,
 % waits indefinitively for its returned value (supposing none is already waiting
 % among the received messages), and returns it.
 %
-% (public helper, as a convenience wrapper or for passive instances)
+% (public helper, as a convenience wrapper for passive instances)
 %
 -spec execute_request( instance_pid(), request_name() ) -> request_result();
 					 ( passive_instance(), request_name() ) ->
@@ -443,11 +444,11 @@ execute_request( PassiveInstance, RequestName )
 
 
 
-% Sends specified request to specified (active or passive) instance, if active
+% Sends specified request to specified (active or passive) instance; if active,
 % waits indefinitively for its returned value (supposing none is already waiting
 % among the received messages), and returns it.
 %
-% (public helper, as a convenience wrapper or for passive instances)
+% (public helper, as a convenience wrapper for passive instances)
 %
 -spec execute_request( instance_pid(), request_name(), method_arguments() ) ->
 							 request_result();
@@ -474,7 +475,6 @@ execute_request( PassiveInstance, RequestName, RequestArgs )
 
 
 
-
 % (helper)
 execute_request_waiter( TargetInstancePID, RequestName, RequestArgs ) ->
 
@@ -485,12 +485,10 @@ execute_request_waiter( TargetInstancePID, RequestName, RequestArgs ) ->
 
 	after ?notify_long_wait_after ->
 
-		trace_utils:warning_fmt( "Still awaiting an answer "
-								 "from WOOPER instance ~p, after having called "
-								 "request '~s' on it with following "
-								 "parameters:~n~p",
-								 [ TargetInstancePID, RequestName,
-								   RequestArgs ] ),
+		trace_utils:warning_fmt( "Still awaiting an answer from WOOPER "
+			"instance ~p, after having called request '~s' on it with "
+			"following parameters:~n~p",
+			[ TargetInstancePID, RequestName, RequestArgs ] ),
 
 		execute_request_waiter( TargetInstancePID, RequestName, RequestArgs )
 
@@ -504,10 +502,9 @@ execute_request_waiter( TargetInstancePID, RequestName, RequestArgs ) ->
 %
 % (helper)
 %
--spec execute_request( request_name(), method_arguments(), instance_pid(),
-					   any() ) -> void().
-execute_request( RequestName, RequestArgs, TargetInstancePID,
-				 ExpectedResult ) ->
+-spec execute_request( instance_pid(), request_name(), method_arguments(),
+					   method_internal_result() ) -> void().
+execute_request( TargetInstancePID, RequestName, RequestArgs, ExpectedResult ) ->
 
 	TargetInstancePID ! { RequestName, RequestArgs, self() },
 
@@ -537,6 +534,80 @@ execute_request_waiter( ExpectedResult, TargetInstancePID, RequestName,
 
 	end.
 
+
+
+% Sends specified const request to specified passive instance, and returns it
+% this result, knowing that the state of this passive instance is expected to
+% remain the same (and thus will not be returned).
+%
+% Note: the called method is checked for constness only in debug mode.
+%
+% (public helper, as a convenience wrapper for passive instances)
+%
+-spec execute_const_request( passive_instance(), request_name() ) ->
+								   method_internal_result().
+
+-ifdef(wooper_debug_mode).
+
+execute_const_request( PassiveInstance, RequestName )
+  when is_record( PassiveInstance, ?passive_record )
+	   andalso is_atom( RequestName ) ->
+
+	% Matching PassiveInstance:
+	{ PassiveInstance, { wooper_result, R } } =
+		wooper_execute_method( RequestName, _RequestArgs=[], PassiveInstance ),
+
+	R.
+
+-else. % wooper_debug_mode
+
+execute_const_request( PassiveInstance, RequestName )
+  when is_record( PassiveInstance, ?passive_record )
+	   andalso is_atom( RequestName ) ->
+
+	{ _ExpectedSamePassiveInstance, { wooper_result, R } } =
+		wooper_execute_method( RequestName, _RequestArgs=[], PassiveInstance ),
+
+	R.
+
+-endif. % wooper_debug_mode
+
+
+
+% Sends specified const request to specified passive instance, and returns it
+% this result, knowing that the state of this passive instance is expected to
+% remain the same (and thus will not be returned).
+%
+% Note: the called method is checked for constness only in debug mode.
+%
+% (public helper, as a convenience wrapper for passive instances)
+%
+-spec execute_const_request( passive_instance(), request_name(),
+							 method_arguments() ) -> method_internal_result().
+-ifdef(wooper_debug_mode).
+
+execute_const_request( PassiveInstance, RequestName, RequestArgs )
+  when is_record( PassiveInstance, ?passive_record )
+	   andalso is_atom( RequestName ) ->
+
+	% Matching PassiveInstance:
+	{ PassiveInstance, { wooper_result, R } } =
+		wooper_execute_method( RequestName, RequestArgs, PassiveInstance ),
+
+	R.
+
+-else. % wooper_debug_mode
+
+execute_const_request( PassiveInstance, RequestName, RequestArgs )
+  when is_record( PassiveInstance, ?passive_record )
+	   andalso is_atom( RequestName ) ->
+
+	{ _ExpectedSamePassiveInstance, { wooper_result, R } } =
+		wooper_execute_method( RequestName, RequestArgs, PassiveInstance ),
+
+	R.
+
+-endif. % wooper_debug_mode
 
 
 
@@ -1350,11 +1421,9 @@ get_blank_state( Classname ) ->
 		 basic_utils:exit_reason(), wooper:state() ) -> wooper:state().
 default_exit_handler( PidOrPort, ExitReason, State ) ->
 
-	log_warning( "WOOPER default EXIT handler of the ~w "
-				 "instance ~w ignored the following EXIT message "
-				 "from ~w:~n'~p'.",
-				 [ State#state_holder.actual_class, self(), PidOrPort,
-				   ExitReason ] ),
+	log_warning( "WOOPER default EXIT handler of the ~w instance ~w "
+		"ignored the following EXIT message from ~w:~n'~p'.",
+		[ State#state_holder.actual_class, self(), PidOrPort, ExitReason ] ),
 
 	State.
 
@@ -1724,8 +1793,8 @@ virtual_table_to_string( State ) ->
 -spec instance_to_string( wooper:state() ) -> string().
 instance_to_string( State ) ->
 	text_utils:format( "Inspection of instance ~w:~n~n  + ~s~n  + ~s",
-					   [ self(), state_to_string( State ),
-						 virtual_table_to_string( State ) ] ).
+		[ self(), state_to_string( State ),
+		  virtual_table_to_string( State ) ] ).
 
 
 
@@ -1819,8 +1888,7 @@ log_info( FormatString, ValueList ) ->
 -spec log_warning( string() ) -> void().
 log_warning( String ) ->
 
-	logger:warning( text_utils:ellipse( String, ?ellipse_length )
-							  ++ "\n" ),
+	logger:warning( text_utils:ellipse( String, ?ellipse_length ) ++ "\n" ),
 
 	% Wait a bit, as logger (at least former error_logger) seems asynchronous:
 	system_utils:await_output_completion( ?wooper_warning_display_waiting ).
@@ -1834,8 +1902,7 @@ log_warning( FormatString, ValueList ) ->
 
 	Str = text_utils:format( FormatString, ValueList ),
 
-	logger:warning( text_utils:ellipse( Str, ?ellipse_length )
-							  ++ "\n" ),
+	logger:warning( text_utils:ellipse( Str, ?ellipse_length ) ++ "\n" ),
 
 	% Wait a bit, as logger (at least former error_logger) seems asynchronous:
 	system_utils:await_output_completion( ?wooper_warning_display_waiting ).
@@ -1849,8 +1916,7 @@ log_warning( FormatString, ValueList ) ->
 -spec log_error( string() ) -> void().
 log_error( Message ) ->
 
-	logger:error( text_utils:ellipse( Message, ?ellipse_length )
-							++ "\n" ),
+	logger:error( text_utils:ellipse( Message, ?ellipse_length ) ++ "\n" ),
 
 	% Wait a bit, as logger (at least former error_logger) seems asynchronous:
 	system_utils:await_output_completion( ?wooper_error_display_waiting ).
@@ -1864,8 +1930,8 @@ log_error( Message ) ->
 -spec log_error( text_utils:format_string(), [ term() ] ) -> void().
 log_error( FormatString, ValueList ) ->
 
-	Str = text_utils:format( FormatString
-			++ "~n=END OF WOOPER ERROR REPORT FOR ~w ===~n~n~n",
+	Str = text_utils:format(
+			FormatString ++ "~n=END OF WOOPER ERROR REPORT FOR ~w ===~n~n~n",
 			ValueList ++ [ self() ] ),
 
 	%trace_utils:debug_fmt( "Error message: ~p.", [ Str ] ),
@@ -1934,7 +2000,7 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType, ErrorTerm,
 		[ ModulePrefix, RequestName, Arity, ErrorType, ErrorTerm,
 		  code_utils:interpret_stacktrace( Stacktrace ), CallerPid,
 		  ArgumentList ],
-			   State ),
+		State ),
 
 	% ArgumentList and actual method module not propagated back to the caller:
 	ErrorReason = { request_failed, State#state_holder.actual_class,
@@ -1972,8 +2038,8 @@ on_failed_oneway( OnewayAtom, ArgumentList, ErrorType, ErrorTerm, Stacktrace,
 		" - stack trace was (latest calls first):~n~s~n"
 		" - for oneway parameters:~n  ~p~n",
 		[ ModulePrefix, OnewayAtom, Arity, ErrorType, ErrorTerm,
-		  code_utils:interpret_stacktrace( Stacktrace ),
-		  ArgumentList ], State ),
+		  code_utils:interpret_stacktrace( Stacktrace ), ArgumentList ],
+		State ),
 
 	% No caller to notify, for oneways.
 
@@ -2398,7 +2464,7 @@ safe_delete_synchronously_instances( InstanceList ) ->
 
 	% Testing for liveliness allows to avoid synchronous time-outs:
 	FilteredInstanceList = [ InstancePid
-					 ||	InstancePid <- list_utils:uniquify( InstanceList ),
+					 || InstancePid <- list_utils:uniquify( InstanceList ),
 			basic_utils:is_alive( InstancePid ) ],
 
 	delete_synchronously_instances( FilteredInstanceList ).
