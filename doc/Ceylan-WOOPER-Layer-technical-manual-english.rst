@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2020 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Friday, July 17, 2020
+:Lastly updated: Tuesday, July 28, 2020
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -2342,7 +2342,7 @@ Then methods can be triggered on it, like in::
  RedCat = wooper:execute_oneway(OlderCat, setFurColor, red),
  [...]
 
-Note that, in addition to ``execute_request/{2,3}``, ``execute_const_request/{2,3}`` are available.
+Note that, in addition to ``execute_request/{2,3}``, ``execute_const_request/{2,3}`` are available; the latter return only the request result, as the state of the passive instance shall be constant (this is checked in debug mode).
 
 Until, finally::
 
