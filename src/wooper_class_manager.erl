@@ -42,7 +42,8 @@
 % Local registration only of this manager, as we want the WOOPER instances to
 % benefit from a local direct reference to the same method table
 % (theoretically), rather to waste memory with one copy of the table per
-% instance (which is currently still the case in practice).
+% instance (which is now not anymore the case in practice, since using
+% persistent_term).
 %
 % In a distributed context, there should be exactly one class manager per node.
 %
@@ -143,6 +144,14 @@
 
 % In seconds:
 -define( registration_time_out, 5 ).
+
+
+
+% naming_utils:wait_for_local_registration_of/2 used:
+-define( manager_registration_scope, local_only ).
+
+-define( manager_lookup_scope, local ).
+
 
 
 % To avoid warnings (note: display/1 is apparently a BIF, renamed to
@@ -350,7 +359,7 @@ get_table_key( Classname ) ->
 get_manager_through_otp() ->
 
 	case naming_utils:is_registered( ?wooper_class_manager_name,
-									 _LookUpScope=local ) of
+									 ?manager_lookup_scope ) of
 
 		not_registered ->
 			% We have to launch, hopefully with no clash with other launchings:
@@ -515,7 +524,7 @@ get_manager() ->
 	% Could have been named start_automatic/0 as well.
 
 	case naming_utils:is_registered( ?wooper_class_manager_name,
-									 _LookUpScope=local ) of
+									 ?manager_lookup_scope ) of
 
 		not_registered ->
 
@@ -564,7 +573,7 @@ init_automatic() ->
 	% happen).
 	%
 	try naming_utils:register_as( self(), ?wooper_class_manager_name,
-								  local_only ) of
+								  ?manager_registration_scope ) of
 
 		% Registration success, we are the one, and we use our custom main loop:
 		_ ->
