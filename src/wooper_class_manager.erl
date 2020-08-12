@@ -150,6 +150,7 @@
 % naming_utils:wait_for_local_registration_of/2 used:
 -define( manager_registration_scope, local_only ).
 
+% Better local, as more efficient and any per-node duplication is not a problem:
 -define( manager_lookup_scope, local ).
 
 
