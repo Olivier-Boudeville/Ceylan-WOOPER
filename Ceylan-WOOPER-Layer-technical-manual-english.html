@@ -31,7 +31,7 @@
 </tr>
 <tr class="field"><th class="field-name">Creation date:</th><td class="field-body">Sunday, August 17, 2008</td>
 </tr>
-<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Friday, July 17, 2020</td>
+<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Thursday, August 13, 2020</td>
 </tr>
 <tr class="field"><th class="field-name">Dedication:</th><td class="field-body">Users and maintainers of the <tt class="docutils literal">WOOPER</tt> layer, version 2.0.</td>
 </tr>
@@ -1673,7 +1673,7 @@ OlderCat = wooper:execute_oneway(WhiskerCat, declareBirthday),
 RedCat = wooper:execute_oneway(OlderCat, setFurColor, red),
 [...]
 </pre>
-<p>Note that, in addition to <tt class="docutils literal"><span class="pre">execute_request/{2,3}</span></tt>, <tt class="docutils literal"><span class="pre">execute_const_request/{2,3}</span></tt> are available.</p>
+<p>Note that, in addition to <tt class="docutils literal"><span class="pre">execute_request/{2,3}</span></tt>, <tt class="docutils literal"><span class="pre">execute_const_request/{2,3}</span></tt> are available; the latter return only the request result, as the state of the passive instance shall be constant (this is checked in debug mode).</p>
 <p>Until, finally:</p>
 <pre class="literal-block">
 wooper:delete_passive(RedCat).
@@ -2217,6 +2217,7 @@ Successful end of <span class="nb">test</span> of the WOOPER application.
 
 <span class="o">(</span><span class="nb">test</span> finished, interpreter halted<span class="o">)</span>
 </pre>
+<p>One may run <tt class="docutils literal">make <span class="pre">create-wooper-checkout</span></tt> in order to create, based on our conventions, a suitable <tt class="docutils literal">_checkouts</tt> directory so that rebar3 can directly take into account local, directly available (in-development) dependencies (here, only Myriad).</p>
 </div>
 </div>
 <div class="section" id="using-hex">
