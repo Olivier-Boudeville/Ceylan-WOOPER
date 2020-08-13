@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2020 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Tuesday, July 28, 2020
+:Lastly updated: Thursday, August 13, 2020
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -3168,6 +3168,7 @@ More precisely, to test the WOOPER OTP application support, provided that ``make
 
  (test finished, interpreter halted)
 
+One may run ``make create-wooper-checkout`` in order to create, based on our conventions, a suitable ``_checkouts`` directory so that rebar3 can directly take into account local, directly available (in-development) dependencies (here, only Myriad).
 
 
 Using Hex
