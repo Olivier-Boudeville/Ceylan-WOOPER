@@ -321,7 +321,7 @@
 
 
 % We prefer having it prefixed by wooper:
--export_type([ classname/0,
+-export_type([ classname/0, class_key/0,
 			   method_name/0, request_name/0, oneway_name/0, static_name/0,
 			   method_arity/0,
 			   method_id/0, request_id/0, oneway_id/0, static_id/0,
@@ -1519,7 +1519,7 @@ default_node_down_handler( Node, MonitorNodeInfo, State ) ->
 %
 % (helper)
 %
--spec retrieve_virtual_table_key( classname() ) -> wooper:class_key().
+-spec retrieve_virtual_table_key( classname() ) -> class_key().
 
 -if( ?wooper_enable_otp_integration =:= true ).
 
