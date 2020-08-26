@@ -1,3 +1,5 @@
+![Erlang CI](https://github.com/Olivier-Boudeville/Ceylan-WOOPER/workflows/Erlang%20CI/badge.svg?event=push)
+
 # Ceylan-WOOPER
 
 ![](/doc/wooper-title.png)
