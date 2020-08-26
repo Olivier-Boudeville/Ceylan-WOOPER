@@ -1,6 +1,4 @@
-{"1.1.0",
-[{<<"myriad">>,{pkg,<<"myriad">>,<<"1.0.15">>},0}]}.
-[
-{pkg_hash,[
- {<<"myriad">>, <<"F28E2D7BD8E505B159A02ED2632D49BC0A7CA1856A3531AC114504D7AB7EF1A5">>}]}
-].
+[{<<"myriad">>,
+  {git,"git://github.com/Olivier-Boudeville/Ceylan-Myriad",
+       {ref,"3d1bc0640dc5740a7821785fb8cbede6bcb2330f"}},
+  0}].
