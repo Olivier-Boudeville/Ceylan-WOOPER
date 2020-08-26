@@ -310,7 +310,7 @@ endif
 # them and if all the packages mentioned here are themselves dependencies (in
 # which case they are all sitting together in the _checkouts child directory).
 #
-# Note also we rely on the names of build roots (ex: myriad) as opposed to
+# Note also that we rely on the names of build roots (ex: myriad) as opposed to
 # project/repository names (ex: Ceylan-Myriad):
 #
 ifneq ($(wildcard $(WOOPER_TOP)/../myriad),)
@@ -330,7 +330,7 @@ else
 		# Otherwise most probably in a 'rebar3 compile' context:
 		ifneq ($(wildcard $(WOOPER_TOP)/_build/default/lib/myriad),)
 
-			MYRIAD_TOP = $(WOOPER_TOP)/_build/default/lib/myriad,)
+			MYRIAD_TOP = $(WOOPER_TOP)/_build/default/lib/myriad
 
 		else
 
