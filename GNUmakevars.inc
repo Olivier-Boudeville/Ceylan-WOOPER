@@ -327,7 +327,16 @@ else
 
    else
 
-		FORCE_EVAL := $(error Unable to find the build root of Ceylan-Myriad)
+		# Otherwise most probably in a 'rebar3 compile' context:
+		ifneq ($(wildcard $(WOOPER_TOP)/_build/default/lib/myriad),)
+
+			MYRIAD_TOP = $(WOOPER_TOP)/_build/default/lib/myriad,)
+
+		else
+
+			FORCE_EVAL := $(error Unable to find the build root of Ceylan-Myriad from $(realpath .).)
+
+		endif
 
 	endif
 
