@@ -13,7 +13,7 @@
 -module(class_ViviparousBeing_test).
 
 
--include("test_facilities.hrl").
+-include_lib("myriad/include/test_facilities.hrl").
 
 
 -export([ run/1 ]).

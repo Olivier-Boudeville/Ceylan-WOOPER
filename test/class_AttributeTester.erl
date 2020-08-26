@@ -30,7 +30,7 @@
 -define( class_description, "Basic testing of WOOPER attribute management." ).
 
 
--include("test_facilities.hrl").
+-include_lib("myriad/include/test_facilities.hrl").
 
 
 % Determines what are the direct mother classes of this class (if any):

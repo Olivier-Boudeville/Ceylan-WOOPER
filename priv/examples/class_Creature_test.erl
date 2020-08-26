@@ -13,7 +13,7 @@
 -module(class_Creature_test).
 
 
--include("test_facilities.hrl").
+-include_lib("myriad/include/test_facilities.hrl").
 
 
 -spec run() -> no_return().

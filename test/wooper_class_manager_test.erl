@@ -32,7 +32,7 @@
 -module(wooper_class_manager_test).
 
 
--include("test_facilities.hrl").
+-include_lib("myriad/include/test_facilities.hrl").
 
 
 % For wooper_class_manager_name:
