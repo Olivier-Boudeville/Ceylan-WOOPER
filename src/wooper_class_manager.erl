@@ -890,7 +890,7 @@ select_function( _, _ )                                               -> true.
 
 
 
-% Returns an hashtable appropriate for method look-up, for the specified module.
+% Returns a table appropriate for method look-up, for the specified module.
 -spec create_local_method_table_for( basic_utils:module_name() ) ->
 							   ?wooper_table_type:?wooper_table_type().
 create_local_method_table_for( Module ) ->
@@ -901,6 +901,12 @@ create_local_method_table_for( Module ) ->
 			  catch
 
 				  error:undef ->
+					  trace_utils:error_fmt( "Unable to find a module "
+						"corresponding to '~s', knowing that ~s~n"
+						"Hint: check the BEAM_DIRS make variable and any "
+						"application-level setting that specifies code that "
+						"shall be deployed.",
+						[ Module, code_utils:get_code_path_as_string() ] ),
 					  throw( { class_not_found, Module } )
 
 			  end,
