@@ -30,6 +30,7 @@
 
 
 -export([ setAttribute/3, setAttributes/2,
+		  swapInAttribute/3,
 		  getAttribute/2, getAttributes/2,
 		  is_wooper_debug/0,
 		  hasAttribute/2,

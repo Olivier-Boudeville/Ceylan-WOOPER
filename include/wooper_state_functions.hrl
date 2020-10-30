@@ -66,6 +66,7 @@ is_wooper_debug() ->
 % not be inlined)
 %
 -compile( { inline, [ setAttribute/3, setAttributes/2,
+					  swapInAttribute/3,
 					  getAttribute/2, getAttributes/2,
 					  addToAttribute/3, subtractFromAttribute/3,
 					  incrementAttribute/2, decrementAttribute/2,
@@ -125,6 +126,23 @@ setAttributes( State, ListOfAttributePairs ) ->
 
 
 
+% Swaps in specified state the current value of the specified attribute with the
+% specified value.
+%
+% Returns an updated state and the previous value of that attribute.
+%
+-spec swapInAttribute( wooper:state(), attribute_name(), attribute_value() ) ->
+										{ wooper:state(), attribute_value() }.
+swapInAttribute( State=#state_holder{ attribute_table=AttrTable },
+				 AttributeName, NewAttributeValue ) ->
+
+	{ PreviousValue, NewAttrTable } = ?wooper_table_type:swap_value(
+								 AttributeName, NewAttributeValue, AttrTable ),
+
+   { State#state_holder{ attribute_table=NewAttrTable }, PreviousValue }.
+
+
+
 % Tells whether specified attribute exists, returns true or false.
 %
 % Note: usually the best practise is to set all possible attributes from the
@@ -145,9 +163,10 @@ hasAttribute( State, AttributeName ) ->
 % Returns the value associated to specified named-designated attribute, if
 % found, otherwise triggers a case clause error.
 %
-% Note: not used very frequently, as either the attribute value can be obtained
-% with the getAttr/1 macro, using the original state, named as 'State' (as
-% externally defined) or the value is already bound to an available variable.
+% Note: not used very frequently verbatim, as either the attribute value can be
+% obtained with the getAttr/1 macro, using the original state, named as 'State'
+% (as externally defined) or the value is already bound by design to an
+% available variable.
 %
 % See also: the getAttr/1 shorthand.
 %
@@ -162,12 +181,13 @@ getAttribute( State, AttributeName ) ->
 % attributes (if found, otherwise triggers a case clause error), in the order of
 % their specification.
 %
-% Ex: [ MyCount, MyAge, MyIdeas ] = getAttribute( SomeState,
-%                                                 [ count, age, ideas ] )
+% Ex: [MyCount, MyAge, MyIdeas] = getAttribute( SomeState,
+%                                               [count, age, ideas] )
 %
-% Note: not used very frequently, as either the attributes can be obtained with
-% the getAttr/1 macro, using the original state, named as 'State' (as externally
-% defined) or the values are already bound to available variables.
+% Note: not used very frequently verbatim, as either the attributes can be
+% obtained with the getAttr/1 macro, using the original state, named as 'State'
+% (as externally defined) or the values are already bound by design to available
+% variables.
 %
 % See also: the getAttr/1 shorthand.
 %
@@ -175,7 +195,7 @@ getAttribute( State, AttributeName ) ->
 						   [ attribute_value() ].
 getAttributes( State, AttributeNameList ) ->
 	?wooper_table_type:get_values( AttributeNameList,
-								  State#state_holder.attribute_table ).
+								   State#state_holder.attribute_table ).
 
 
 

@@ -865,6 +865,7 @@ select_function( popFromAttribute, 2 )                                -> false ;
 select_function( removeAttribute, 2 )                                 -> false ;
 select_function( setAttribute, 3 )                                    -> false ;
 select_function( setAttributes, 2 )                                   -> false ;
+select_function( swapInAttribute, 3 )                                 -> false ;
 select_function( subtractFromAttribute, 3 )                           -> false ;
 select_function( toggleAttribute, 2 )                                 -> false ;
 

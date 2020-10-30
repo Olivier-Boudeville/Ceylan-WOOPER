@@ -1652,6 +1652,16 @@ will return a new state, exact copy of ``MyState`` but for the listed attributes
 
 
 
+The ``swapInAttribute/3`` function
+**********************************
+
+This function allows to swap, in the specified state, the current value of the specified attribute with the specified value; for example:
+
+.. code:: erlang
+
+ {NewState,PastColor} = swapInAttribute(AState,fur_color,_NewValue=black)
+
+
 
 The ``removeAttribute/2`` function
 **********************************

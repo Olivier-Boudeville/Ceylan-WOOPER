@@ -883,6 +883,8 @@ get_state_builtins() ->
 	  {setAttribute,3},
 	  {setAttributes,2},
 
+	  {swapInAttribute,3},
+
 	  {incrementAttribute,2},
 	  {decrementAttribute,2},
 
