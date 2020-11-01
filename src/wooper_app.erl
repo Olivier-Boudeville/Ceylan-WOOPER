@@ -48,12 +48,15 @@
 
 
 % Starts the WOOPER services.
+%
+% Note: RestartType and StartArgs at least currently ignored.
+%
 -spec start( application:start_type(), StartArgs :: term() ) -> { 'ok', pid() }
 		| { 'ok', pid(), State :: term() } | { 'error', Reason :: term() }.
-start( Type, StartArgs ) ->
+start( RestartType, StartArgs ) ->
 
-	trace_utils:debug_fmt( "Starting WOOPER application (type: ~w, "
-						   "start arguments: ~w).", [ Type, StartArgs ] ),
+	trace_utils:debug_fmt( "Starting WOOPER application (restart type: ~w, "
+		"start arguments: ~w).", [ RestartType, StartArgs ] ),
 
 	% Previously, no specific root supervisor was to launch, but:
 	%wooper_class_manager:start().
