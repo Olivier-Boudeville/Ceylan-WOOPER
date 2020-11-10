@@ -345,6 +345,23 @@
 			   state/0, function_export_set/0 ]).
 
 
+% Shorthands:
+
+-type count() :: basic_utils:count().
+-type error_type() :: basic_utils:error_type().
+-type error_term() :: basic_utils:error_term().
+-type exit_reason() :: basic_utils:exit_reason().
+
+-type ustring() :: text_utils:ustring().
+-type format_string() :: text_utils:format_string().
+
+-type stack_trace() :: code_utils:stack_trace().
+-type stack_location() :: code_utils:stack_location().
+-type stack_item() :: code_utils:stack_item().
+
+-type time_out() :: time_utils:time_out().
+
+
 % Note: the {attribute, request, oneway, static, class}_info/0 types are
 % exported from wooper_info.
 
@@ -653,7 +670,7 @@ send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 % whether it succeeded or if some instances triggered a time-out.
 %
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
-		  [ instance_pid() ], time_utils:time_out(), ack_atom() ) ->
+		  [ instance_pid() ], time_out(), ack_atom() ) ->
 										 requests_outcome().
 send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 							 Timeout, AckAtom ) ->
@@ -689,8 +706,8 @@ wait_for_request_answers( RequestedPidList, AckAtom ) ->
 %
 % (helper)
 %
--spec wait_for_request_answers( [ instance_pid() ], time_utils:time_out(),
-								ack_atom() ) -> requests_outcome().
+-spec wait_for_request_answers( [ instance_pid() ], time_out(), ack_atom() ) ->
+									  requests_outcome().
 wait_for_request_answers( RequestedPidList, _Timeout=infinity, AckAtom ) ->
 	wait_indefinitively_for_request_answers( RequestedPidList, AckAtom );
 
@@ -774,8 +791,7 @@ wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
 % Waits (indefinitively) that the specified number of requests returned as
 % result the specified acknowledgement atom.
 %
--spec wait_for_request_acknowledgements( basic_utils:count(), ack_atom() ) ->
-											   void().
+-spec wait_for_request_acknowledgements( count(), ack_atom() ) -> void().
 wait_for_request_acknowledgements( Count, AckAtom ) ->
 	wait_for_request_acknowledgements( Count, AckAtom, _Timeout=infinity ).
 
@@ -784,8 +800,8 @@ wait_for_request_acknowledgements( Count, AckAtom ) ->
 % Waits, with the specified time-out, that the specified number of requests
 % returned as result the specified acknowledgement atom.
 %
--spec wait_for_request_acknowledgements( basic_utils:count(), ack_atom(),
-										 time_utils:time_out() ) -> void().
+-spec wait_for_request_acknowledgements( count(), ack_atom(), time_out() ) ->
+											   void().
 wait_for_request_acknowledgements( _Count=0, _AckAtom, _Timeout ) ->
 
 	%trace_utils:debug_fmt(
@@ -1418,7 +1434,7 @@ get_blank_state( Classname ) ->
 % (helper)
 %
 -spec default_exit_handler( basic_utils:pid_or_port(),
-		 basic_utils:exit_reason(), wooper:state() ) -> wooper:state().
+		 exit_reason(), wooper:state() ) -> wooper:state().
 default_exit_handler( PidOrPort, ExitReason, State ) ->
 
 	log_warning( "WOOPER default EXIT handler of the ~w instance ~w "
@@ -1441,10 +1457,8 @@ default_exit_handler( PidOrPort, ExitReason, State ) ->
 % (helper)
 %
 -spec default_down_handler( monitor_utils:monitor_reference(),
-							monitor_utils:monitored_element_type(),
-							monitor_utils:monitored_element(),
-							basic_utils:exit_reason(), wooper:state() ) ->
-								  wooper:state().
+	monitor_utils:monitored_element_type(), monitor_utils:monitored_element(),
+	exit_reason(), wooper:state() ) -> wooper:state().
 default_down_handler( _MonitorReference, _MonitoredType,
 					  _MonitoredElement, _ExitReason=normal, State ) ->
 	% Normal exits not notified:
@@ -1562,11 +1576,10 @@ retrieve_virtual_table_key( Classname ) ->
 % (helper)
 %
 -spec trigger_error( basic_utils:exception_class(), term(), classname(),
-		 [ method_arguments() ], code_utils:stack_trace() ) -> no_return().
+		 [ method_arguments() ], stack_trace() ) -> no_return().
 trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
 	   _Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
 					 | NextCalls ] ) ->
-
 
 	%trace_utils:debug_fmt( "NextCalls: ~p", [ NextCalls ] ),
 
@@ -1584,28 +1597,11 @@ trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
 	Diagnosis = code_utils:interpret_undef_exception( ModuleName, FunctionName,
 													  UndefArity ),
 
-
-	LocString = case Loc of
-
-		[] ->
-			case NextCalls of
-
-				[] ->
-					"";
-
-				[ { _M, _F, _A, NextLoc } | _ ] ->
-					text_utils:format( " (location: ~p)", [ NextLoc ] )
-
-			end;
-
-		_ ->
-			text_utils:format( " (location: ~p)", [ Loc ] )
-
-	end,
+	LocString = get_location_string( Loc, NextCalls ),
 
 	log_error( "~nWOOPER error for PID ~w, "
 		"constructor (~s:construct/~B) failed due to an 'undef' "
-		"call to ~s:~s/~B; diagnosis: ~s~s.",
+		"call to ~s:~s/~B.~nDiagnosis: ~s~s.",
 		[ self(), Classname, Arity, ModuleName, FunctionName,
 		  UndefArity, Diagnosis, LocString ] ),
 
@@ -1635,6 +1631,25 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
 
 	throw( { wooper_constructor_failed, self(), Classname, Arity,
 			 ConstructionParameters, ErrorTerm } ).
+
+
+
+% Returns the description of the best location found from specified stacktrace
+% excerpts.
+%
+-spec get_location_string( stack_location(), stack_item() ) -> ustring().
+get_location_string( _Loc=[], _NextCalls=[ { _M, _F, _A, NextLoc } | _ ] ) ->
+	LocStr = code_utils:stack_location_to_string( NextLoc ),
+	text_utils:format( " (call location: ~s)", [ LocStr ] );
+
+% Includes _NextCalls=[] and any unexpected pattern:
+get_location_string( _Loc=[], _NextCalls ) ->
+	"";
+
+get_location_string( Loc, _NextCalls ) ->
+	LocStr = code_utils:stack_location_to_string( Loc ),
+	text_utils:format( " (call location: ~s)", [ LocStr ] ).
+
 
 
 
@@ -1701,7 +1716,7 @@ get_wooper_reserved_attribute_names() ->
 
 
 % Returns a textual representation of the attributes of the specified state.
--spec state_to_string( wooper:state() ) -> string().
+-spec state_to_string( wooper:state() ) -> ustring().
 state_to_string( State ) ->
 
 	% Not using get_attribute_pairs/1 to rely on the full state:
@@ -1742,7 +1757,7 @@ get_class_filename( Classname ) ->
 % Returns the time-out to be used for synchronous operations, depending on the
 % debug mode.
 %
--spec get_synchronous_time_out( boolean() ) -> time_utils:time_out().
+-spec get_synchronous_time_out( boolean() ) -> time_out().
 get_synchronous_time_out( _IsDebugMode=true ) ->
 
 	% Suitable for most applications (5 seconds, to benefit from earlier
@@ -1766,7 +1781,7 @@ get_synchronous_time_out( _IsDebugMode=false ) ->
 %
 % (helper)
 %
--spec virtual_table_to_string( wooper:state() ) -> string().
+-spec virtual_table_to_string( wooper:state() ) -> ustring().
 virtual_table_to_string( State ) ->
 
 	lists:foldl(
@@ -1790,7 +1805,7 @@ virtual_table_to_string( State ) ->
 %
 % (helper)
 %
--spec instance_to_string( wooper:state() ) -> string().
+-spec instance_to_string( wooper:state() ) -> ustring().
 instance_to_string( State ) ->
 	text_utils:format( "Inspection of instance ~w:~n~n  + ~s~n  + ~s",
 		[ self(), state_to_string( State ),
@@ -1866,7 +1881,7 @@ declare_beam_dirs_for_wooper() ->
 % Reports (on a best-effort basis) the specified information to the user,
 % typically by displaying an information report on the console.
 %
--spec log_info( string() ) -> void().
+-spec log_info( ustring() ) -> void().
 log_info( String ) ->
 	logger:info(
 	  text_utils:ellipse( String, ?ellipse_length ) ++ "\n" ).
@@ -1875,7 +1890,7 @@ log_info( String ) ->
 % Reports (on a best-effort basis) the specified information to the user,
 % typically by displaying an information report on the console.
 %
--spec log_info( text_utils:format_string(), [ term() ] ) -> void().
+-spec log_info( format_string(), [ term() ] ) -> void().
 log_info( FormatString, ValueList ) ->
 	Str = text_utils:format( FormatString, ValueList ),
 	logger:info( text_utils:ellipse( Str, ?ellipse_length ) ++ "\n" ).
@@ -1885,7 +1900,7 @@ log_info( FormatString, ValueList ) ->
 % Reports (on a best-effort basis) the specified warning to the user,
 % typically by displaying a warning report on the console.
 %
--spec log_warning( string() ) -> void().
+-spec log_warning( ustring() ) -> void().
 log_warning( String ) ->
 
 	logger:warning( text_utils:ellipse( String, ?ellipse_length ) ++ "\n" ),
@@ -1897,7 +1912,7 @@ log_warning( String ) ->
 % Reports (on a best-effort basis) the specified warning to the user,
 % typically by displaying a warning report on the console.
 %
--spec log_warning( text_utils:format_string(), [ term() ] ) -> void().
+-spec log_warning( format_string(), [ term() ] ) -> void().
 log_warning( FormatString, ValueList ) ->
 
 	Str = text_utils:format( FormatString, ValueList ),
@@ -1913,7 +1928,7 @@ log_warning( FormatString, ValueList ) ->
 % notification) the specified error to the user, typically by displaying an
 % error report on the console (non-halting function, ex: no exception thrown).
 %
--spec log_error( string() ) -> void().
+-spec log_error( ustring() ) -> void().
 log_error( Message ) ->
 
 	logger:error( text_utils:ellipse( Message, ?ellipse_length ) ++ "\n" ),
@@ -1927,7 +1942,7 @@ log_error( Message ) ->
 % notification) the specified error to the user, typically by displaying an
 % error report on the console (non-halting function, ex: no exception thrown).
 %
--spec log_error( text_utils:format_string(), [ term() ] ) -> void().
+-spec log_error( format_string(), [ term() ] ) -> void().
 log_error( FormatString, ValueList ) ->
 
 	Str = text_utils:format(
@@ -1949,7 +1964,7 @@ log_error( FormatString, ValueList ) ->
 % so with fewer information) to the user, typically by displaying an error
 % report on the console (non-halting function, ex: no exception thrown).
 %
--spec log_error( text_utils:format_string(), [ term() ],
+-spec log_error( format_string(), [ term() ],
 				 wooper:state() | basic_utils:module_name() ) -> void().
 log_error( FormatString, ValueList, State )
   when is_record( State, state_holder ) ->
@@ -1983,8 +1998,48 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 % the caller, and have the process instance exit.
 %
 -spec on_failed_request( request_name(), method_arguments(), pid(),
-	basic_utils:error_type(), basic_utils:error_term(),
-	code_utils:stack_trace(), wooper:state() ) -> no_return().
+	error_type(), error_term(), stack_trace(), wooper:state() ) -> no_return().
+on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType, ErrorTerm=undef,
+	   _Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
+					 | NextCalls ], State ) ->
+
+	Arity = length( ArgumentList ) + 1,
+
+	ModulePrefix = lookup_method_prefix( RequestName, Arity, State ),
+
+	% An undef error is difficult to investigate (multiple possible reasons
+	% behind), let's be nice to the developer:
+
+	UndefArity = length( UndefArgs ),
+
+	Diagnosis = code_utils:interpret_undef_exception( ModuleName, FunctionName,
+													  UndefArity ),
+
+	LocString = get_location_string( Loc, NextCalls ),
+
+	log_error( "request ~s~s/~B failed due to an 'undef' "
+		"call to ~s:~s/~B.~nDiagnosis: ~s~s.",
+		[ ModulePrefix, RequestName, Arity, ModuleName, FunctionName,
+		  UndefArity, Diagnosis, LocString ],
+		State ),
+
+	% ArgumentList and actual method module not propagated back to the caller:
+	ErrorReason = { request_failed, State#state_holder.actual_class,
+					self(), RequestName, { ErrorType, ErrorTerm } },
+
+	CallerPid ! { wooper_error, ErrorReason },
+
+	% Investigating a transient case where no message other than request_failed
+	% was output:
+	%
+	%timer:sleep( 1000 ),
+
+	% We do not want a duplicate error message, yet we cannot use 'normal' as
+	% linked processes would not be triggered:
+	%
+	exit( request_failed );
+
+
 on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType, ErrorTerm,
 				   Stacktrace, State ) ->
 
@@ -2024,20 +2079,51 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType, ErrorTerm,
 % the caller, and have the process instance exit.
 %
 -spec on_failed_oneway( oneway_name(), method_arguments(),
-		basic_utils:error_type(), basic_utils:error_term(),
-		code_utils:stack_trace(), wooper:state() ) -> no_return().
-on_failed_oneway( OnewayAtom, ArgumentList, ErrorType, ErrorTerm, Stacktrace,
+	error_type(), error_term(), stack_trace(), wooper:state() ) -> no_return().
+on_failed_oneway( OnewayName, ArgumentList, _ErrorType, _ErrorTerm=undef,
+	   _Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
+					 | NextCalls ], State ) ->
+
+	Arity = length( ArgumentList ) + 1,
+
+	ModulePrefix = lookup_method_prefix( OnewayName, Arity, State ),
+
+	% An undef error is difficult to investigate (multiple possible reasons
+	% behind), let's be nice to the developer:
+
+	UndefArity = length( UndefArgs ),
+
+	Diagnosis = code_utils:interpret_undef_exception( ModuleName, FunctionName,
+													  UndefArity ),
+
+	LocString = get_location_string( Loc, NextCalls ),
+
+	log_error( "oneway ~s~s/~B failed due to an 'undef' "
+		"call to ~s:~s/~B.~nDiagnosis: ~s~s.",
+		[ ModulePrefix, OnewayName, Arity, ModuleName, FunctionName,
+		  UndefArity, Diagnosis, LocString ],
+		State ),
+
+	% No caller to notify, for oneways.
+
+	% We do not want a duplicate error message, yet we cannot use 'normal' as
+	% linked processes would not be triggered:
+	%
+	exit( oneway_failed );
+
+on_failed_oneway( OnewayName, ArgumentList, ErrorType, ErrorTerm, Stacktrace,
 				  State ) ->
 
 	Arity = length( ArgumentList ) + 1,
 
-	ModulePrefix = lookup_method_prefix( OnewayAtom, Arity, State ),
+	ModulePrefix = lookup_method_prefix( OnewayName, Arity, State ),
 
+	% PID managed by log_error:
 	log_error( "oneway ~s~s/~B failed (cause: ~s):~n~n"
 		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first):~n~s~n"
 		" - for oneway parameters:~n  ~p~n",
-		[ ModulePrefix, OnewayAtom, Arity, ErrorType, ErrorTerm,
+		[ ModulePrefix, OnewayName, Arity, ErrorType, ErrorTerm,
 		  code_utils:interpret_stacktrace( Stacktrace ), ArgumentList ],
 		State ),
 
@@ -2058,7 +2144,7 @@ on_failed_oneway( OnewayAtom, ArgumentList, ErrorType, ErrorTerm, Stacktrace,
 % (helper)
 %
 -spec lookup_method_prefix( method_name(), arity(), wooper:state() ) ->
-								  string().
+								  ustring().
 lookup_method_prefix( MethodAtom, Arity, State ) ->
 
 	try wooper_lookup_method( State, MethodAtom, Arity ) of

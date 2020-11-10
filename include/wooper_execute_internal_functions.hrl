@@ -195,8 +195,7 @@ wooper_execute_method( MethodAtom, Parameters, State )
 					% is displayed as a list:
 					%
 					wooper:log_error(
-					  "oneway ~s:~s/~B not found, "
-					  "parameters were:~n~p~n",
+					  "oneway ~s:~s/~B not found, parameters were:~n~p~n",
 					  [ Classname, MethodAtom, MethodArity, Parameters ],
 					  State ),
 
@@ -211,8 +210,7 @@ wooper_execute_method( MethodAtom, Parameters, State )
 					% send back a relevant answer):
 					%
 					wooper:log_error(
-					  "request ~s:~s/~B not found, "
-					  "parameters were:~n~p~n",
+					  "request ~s:~s/~B not found, parameters were:~n~p~n",
 					  [ Classname, MethodAtom, MethodArity, Parameters ],
 					  State ),
 
@@ -268,8 +266,7 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 					% as a list:
 					%
 					wooper:log_error(
-					  "oneway ~s:~s/~B not found, "
-					  "parameters were:~n~p",
+					  "oneway ~s:~s/~B not found, parameters were:~n~p",
 					  [ Classname, MethodAtom, MethodArity, Parameters ] ),
 
 					throw( { wooper_oneway_not_found, self(), Classname,
@@ -283,8 +280,7 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 					% back a relevant answer):
 					%
 					wooper:log_error(
-					  "request ~s:~s/~B not found, "
-					  "parameters were:~n~p~n",
+					  "request ~s:~s/~B not found, parameters were:~n~p~n",
 					  [ Classname, MethodAtom, MethodArity, Parameters ] ),
 
 					throw( { wooper_request_not_found, self(), Classname,
@@ -391,10 +387,9 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 				undefined ->
 
 					% This is a oneway, so log and crash:
-					wooper:log_error(
-					  "oneway ~s:~s/~B made a faulty return "
+					wooper:log_error( "oneway ~s:~s/~B made a faulty return "
 					  "'~p', parameters were:~n~p",
-					  [ SelectedModule, MethodAtom,	MethodArity, Other,
+					  [ SelectedModule, MethodAtom, MethodArity, Other,
 						Parameters ] ),
 
 					throw( { wooper_oneway_faulty_return, self(),
@@ -406,10 +401,9 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 					% This is a request, log and throw, the try/catch clause of
 					% the main loop will intercept it, log and rethrow:
 					%
-					wooper:log_error(
-					  "request ~s:~s/~B made a faulty return "
+					wooper:log_error( "request ~s:~s/~B made a faulty return "
 					  "'~p', parameters were:~n~p",
-					  [ SelectedModule, MethodAtom,	MethodArity, Other,
+					  [ SelectedModule, MethodAtom, MethodArity, Other,
 						Parameters ] ),
 
 					% We do not include anymore 'Other', as it is best kept
@@ -512,8 +506,7 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 			ExecState;
 
 		{ _ExecState, wooper_method_returns_void } ->
-			wooper:log_error(
-			  "method ~s:~s/~B, which was called (by ~w) with "
+			wooper:log_error( "method ~s:~s/~B, which was called (by ~w) with "
 			  "parameters ~p, did not return a result whereas, according to "
 			  "its call, it was expected to be a request.~n"
 			  "Either the request implementation is incorrect or it is a "
@@ -991,6 +984,7 @@ wooper_handle_local_oneway_execution_as( OnewayAtom, State, ArgumentList,
 		{ OnewayState, wooper_method_returns_void } ->
 			% Just an additional checking that it was not changed
 			% (post-condition):
+			%
 			undefined = OnewayState#state_holder.request_sender,
 			OnewayState#state_holder{ request_sender=PreviousRequestSender };
 
