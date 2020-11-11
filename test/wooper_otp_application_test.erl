@@ -27,7 +27,7 @@
 
 
 % Testing of WOOPER as an OTP active application, directly from within its code
-% base (hence without needing to create a separate, mock-up test release for
+% base (hence without needing to create a separate, mock-up test OTP release for
 % that).
 %
 -module(wooper_otp_application_test).
@@ -55,8 +55,9 @@ test_wooper_application( OrderedAppNames ) ->
 			 [ TestClassname, wooper:get_class_filename( TestClassname ) ] ),
 
 
-	test_facilities:display( "Stopping the WOOPER application." ),
-	otp_utils:stop_applications( OrderedAppNames ),
+	% Including WOOPER:
+	test_facilities:display( "Stopping all user applications." ),
+	otp_utils:stop_user_applications( OrderedAppNames ),
 
 	test_facilities:display(
 	  "Successful end of test of the WOOPER OTP application." ).
@@ -72,22 +73,18 @@ run() ->
 
 	test_facilities:start( ?MODULE ),
 
-	% Build root directory from which prerequisite applications may be found:
+	% Build root directory from which sibling prerequisite applications may be
+	% found:
+	%
 	BuildRootDir = "..",
 
-	OrderedAppNames = [ myriad, wooper ],
+	% No dependency specified in this test, yet they are managed:
+	OrderedAppNames = otp_utils:prepare_for_execution( _ThisAppName=wooper,
+													   BuildRootDir ),
 
-	case otp_utils:prepare_for_execution( OrderedAppNames, BuildRootDir ) of
+	trace_utils:info_fmt( "Resulting applications to start, in order: ~w.",
+						  [ OrderedAppNames ] ),
 
-		ready ->
-			test_wooper_application( OrderedAppNames ) ;
-
-		{ lacking_app, _App } ->
-			% (a detailed warning message has been issued by
-			% otp_utils:prepare_for_execution/2)
-			%
-			ok
-
-	end,
+	test_wooper_application( OrderedAppNames ),
 
 	test_facilities:stop().
