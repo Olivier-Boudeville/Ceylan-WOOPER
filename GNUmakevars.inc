@@ -38,6 +38,17 @@ endif
 
 
 
+# Tells whether the debug mode will be activated for the next WOOPER classes to
+# be built (maximum performance versus extended checkings).
+#
+ifeq ($(ENABLE_DEBUG),true)
+	ENABLE_WOOPER_DEBUG_OPT = -Dwooper_debug_mode
+else
+	ENABLE_WOOPER_DEBUG_OPT =
+endif
+
+
+
 # Defining (optional) layer-specific flags, typically used by in-code
 # conditional compilation primitives (see cond_utils for their management):
 
@@ -56,17 +67,6 @@ endif
 
 ERLANG_COMPILER_OPT_BASE += $(WOOPER_DEBUG_FLAGS) \
 							$(WOOPER_CHECK_FLAGS)
-
-
-
-# Tells whether the debug mode will be activated for the next WOOPER classes to
-# be built (maximum performance versus extended checkings).
-#
-ifeq ($(ENABLE_DEBUG),true)
-	ENABLE_WOOPER_DEBUG_OPT = -Dwooper_debug_mode
-else
-	ENABLE_WOOPER_DEBUG_OPT =
-endif
 
 
 
