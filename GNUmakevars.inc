@@ -37,6 +37,28 @@ else
 endif
 
 
+
+# Defining (optional) layer-specific flags, typically used by in-code
+# conditional compilation primitives (see cond_utils for their management):
+
+# Topics covered by flags:
+#  - xx (none yet)
+
+# Defining debug flags (at least the most verbose are by default commented-out):
+ifeq ($(ENABLE_DEBUG),true)
+	#WOOPER_DEBUG_FLAGS += -Dwooper_debug_xx
+endif
+
+# Defining check flags:
+ifeq ($(EXECUTION_TARGET),development)
+	# Does not exist: WOOPER_CHECK_FLAGS += -Dwooper_check_xx
+endif
+
+ERLANG_COMPILER_OPT_BASE += $(WOOPER_DEBUG_FLAGS) \
+							$(WOOPER_CHECK_FLAGS)
+
+
+
 # Tells whether the debug mode will be activated for the next WOOPER classes to
 # be built (maximum performance versus extended checkings).
 #
@@ -302,42 +324,32 @@ endif
 # We define the path to the Myriad layer (possibly available as a symbolic
 # link).
 #
-# For the sake of these build-related makefiles, dependencies may be found
-# either in a local _checkouts child directory (if checkout directories are used
-# and if the top-level package of interest is the current one), or in sibling
-# directories (i.e. whose build root is at the same level as this one).
+# For the sake of these build-related makefiles, Ceylan dependencies will be
+# searched (in that order, the one enforced in otp_utils) in a local _checkouts
+# child directory (if checkout directories are used and if the top-level package
+# of interest is the current one), otherwise in sibling directories (i.e. whose
+# build root is at the same level as this one).
+#
 # This last case happens notably if not using checkout directories, or if using
 # them and if all the packages mentioned here are themselves dependencies (in
 # which case they are all sitting together in the _checkouts child directory).
 #
-# Note also that we rely on the names of build roots (ex: myriad) as opposed to
+# Note also we rely on the names of build roots (ex: myriad) as opposed to
 # project/repository names (ex: Ceylan-Myriad):
 #
-ifneq ($(wildcard $(WOOPER_TOP)/../myriad),)
-
-	# By default, expect sibling directories:
-	MYRIAD_TOP = $(WOOPER_TOP)/../myriad
-
+# First priority is an existing checkout directory:
+ifneq ($(wildcard $(WOOPER_TOP)/_checkouts/myriad/.),)
+	MYRIAD_TOP = $(WOOPER_TOP)/_checkouts/myriad
 else
-
-	# Otherwise assume a checkout one:
-	ifneq ($(wildcard $(WOOPER_TOP)/_checkouts/myriad),)
-
-		MYRIAD_TOP = $(WOOPER_TOP)/_checkouts/myriad
-
+	# Second, a sibling one is searched for:
+	ifneq ($(wildcard $(WOOPER_TOP)/../myriad/.),)
+		MYRIAD_TOP = $(WOOPER_TOP)/../myriad
    else
-
 		# Otherwise most probably in a 'rebar3 compile' context:
-		ifneq ($(wildcard $(WOOPER_TOP)/_build/default/lib/myriad),)
-
+		ifneq ($(wildcard $(WOOPER_TOP)/_build/default/lib/myriad/.),)
 			MYRIAD_TOP = $(WOOPER_TOP)/_build/default/lib/myriad
-
 		else
-
 			FORCE_EVAL := $(error Unable to find the build root of Ceylan-Myriad from $(realpath .).)
-
 		endif
-
 	endif
-
 endif

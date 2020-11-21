@@ -1,12 +1,12 @@
 WOOPER_TOP = .
 
 
-.PHONY: help help-intro help-wooper                                   \
-		all register-version-in-header register-wooper list-beam-dirs \
-		add-prerequisite-plts link-plt                                \
-		release release-zip release-bz2 release-xz                    \
-		prepare-release clean-release clean-archive stats             \
-		info-paths info-compile info-parse-transform
+.PHONY: help help-intro help-wooper                                    \
+		all register-version-in-header register-wooper list-beam-dirs  \
+		add-prerequisite-plts link-plt                                 \
+		release release-zip release-bz2 release-xz                     \
+		prepare-release clean-release clean-archive stats              \
+		info-paths info-compile info-parse-transform info-conditionals \
 
 
 MODULES_DIRS = src doc conf test priv
@@ -136,6 +136,11 @@ info-parse-transform:
 	@echo "ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_OPT_FOR_PT)"
 	@echo "META_BEAM_FILES = $(META_BEAM_FILES)"
 	@echo "ERLANG_COMPILER_PARSE_TRANSFORM_OPT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT)"
+
+
+info-conditionals:
+	@echo "WOOPER_DEBUG_FLAGS = $(WOOPER_DEBUG_FLAGS)"
+	@echo "WOOPER_CHECK_FLAGS = $(WOOPER_CHECK_FLAGS)"
 
 
 include $(WOOPER_TOP)/GNUmakesettings.inc
