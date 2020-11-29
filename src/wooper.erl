@@ -115,11 +115,8 @@
 
 
 % State-related helpers (only available in debug mode):
--export([ virtual_table_to_string/1,
-		  instance_to_string/1,
-		  display_state/1,
-		  display_virtual_table/1,
-		  display_instance/1 ]).
+-export([ virtual_table_to_string/1, instance_to_string/1,
+		  display_state/1, display_virtual_table/1, display_instance/1 ]).
 
 
 -else. % wooper_debug_mode
@@ -416,11 +413,11 @@
 %
 -ifdef(wooper_debug_mode).
 
--define( notify_long_wait_after, 2500 ).
+	-define( notify_long_wait_after, 2500 ).
 
 -else. % wooper_debug_mode
 
--define( notify_long_wait_after, 60000 ).
+	-define( notify_long_wait_after, 60000 ).
 
 -endif. % wooper_debug_mode
 
@@ -473,7 +470,6 @@ execute_request( PassiveInstance, RequestName )
 					 ( passive_instance(), request_name(),
 					   method_arguments() ) ->
 							 { passive_instance(), method_internal_result() }.
-
 execute_request( TargetInstancePID, RequestName, RequestArgs )
   when is_pid( TargetInstancePID ) andalso is_atom( RequestName ) ->
 
@@ -520,7 +516,7 @@ execute_request_waiter( TargetInstancePID, RequestName, RequestArgs ) ->
 % (helper)
 %
 -spec execute_request( instance_pid(), request_name(), method_arguments(),
-					   method_internal_result() ) -> void().
+					method_internal_result() ) -> void().
 execute_request( TargetInstancePID, RequestName, RequestArgs, ExpectedResult ) ->
 
 	TargetInstancePID ! { RequestName, RequestArgs, self() },
@@ -562,7 +558,7 @@ execute_request_waiter( ExpectedResult, TargetInstancePID, RequestName,
 % (public helper, as a convenience wrapper for passive instances)
 %
 -spec execute_const_request( passive_instance(), request_name() ) ->
-								   method_internal_result().
+								method_internal_result().
 
 -ifdef(wooper_debug_mode).
 
@@ -637,7 +633,7 @@ execute_const_request( PassiveInstance, RequestName, RequestArgs )
 % (helper)
 %
 -spec send_requests( request_name(), method_arguments(), [ instance_pid() ] ) ->
-						   void().
+						void().
 send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 
 	Request = { RequestName, RequestArgs, self() },
@@ -655,7 +651,7 @@ send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 % No time-out: answers will be waited indefinitely.
 %
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
-								   [ instance_pid() ], ack_atom() ) -> void().
+								[ instance_pid() ], ack_atom() ) -> void().
 send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 							 AckAtom ) ->
 
@@ -670,8 +666,8 @@ send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 % whether it succeeded or if some instances triggered a time-out.
 %
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
-		  [ instance_pid() ], time_out(), ack_atom() ) ->
-										 requests_outcome().
+		[ instance_pid() ], time_out(), ack_atom() ) ->
+										requests_outcome().
 send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 							 Timeout, AckAtom ) ->
 
@@ -691,7 +687,7 @@ send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 % (helper)
 %
 -spec wait_for_request_answers( [ instance_pid() ], ack_atom() ) ->
-									  requests_outcome().
+									requests_outcome().
 wait_for_request_answers( RequestedPidList, AckAtom ) ->
 	wait_indefinitively_for_request_answers( RequestedPidList, AckAtom ).
 
@@ -707,7 +703,7 @@ wait_for_request_answers( RequestedPidList, AckAtom ) ->
 % (helper)
 %
 -spec wait_for_request_answers( [ instance_pid() ], time_out(), ack_atom() ) ->
-									  requests_outcome().
+									requests_outcome().
 wait_for_request_answers( RequestedPidList, _Timeout=infinity, AckAtom ) ->
 	wait_indefinitively_for_request_answers( RequestedPidList, AckAtom );
 
@@ -801,7 +797,7 @@ wait_for_request_acknowledgements( Count, AckAtom ) ->
 % returned as result the specified acknowledgement atom.
 %
 -spec wait_for_request_acknowledgements( count(), ack_atom(), time_out() ) ->
-											   void().
+											void().
 wait_for_request_acknowledgements( _Count=0, _AckAtom, _Timeout ) ->
 
 	%trace_utils:debug_fmt(
@@ -1005,7 +1001,7 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 % corresponding module exists and that it has the relevant arity.
 %
 -spec check_classname_and_arity( classname(), construction_parameters() ) ->
-									   void().
+									void().
 check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 	% Normally useless, as called by the module itself:
@@ -1131,9 +1127,9 @@ construct_and_run( Classname, ConstructionParameters ) ->
 		Other ->
 
 			log_error( "~nWOOPER error for PID ~w of class ~s: "
-					   "constructor did not return a state, but returned '~p' "
-					   "instead. Construction parameters were:~n~p.",
-					   [ self(), Classname, Other, ConstructionParameters ] ),
+				"constructor did not return a state, but returned '~p' "
+				"instead. Construction parameters were:~n~p.",
+				[ self(), Classname, Other, ConstructionParameters ] ),
 
 			Arity = length( ConstructionParameters ) + 1,
 
@@ -1240,9 +1236,9 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 		Other ->
 
 			log_error( "~nWOOPER error for PID ~w of class ~s: "
-					   "constructor did not return a state, but returned '~p' "
-					   "instead. Construction parameters were:~n~p.~n",
-					   [ self(), Classname, Other, ConstructionParameters ] ),
+				"constructor did not return a state, but returned '~p' "
+				"instead. Construction parameters were:~n~p.~n",
+				[ self(), Classname, Other, ConstructionParameters ] ),
 
 			Arity = length( ConstructionParameters ) + 1,
 
@@ -1309,7 +1305,7 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 
 % Constructs a passive instance: returns the initial state thereof.
 -spec construct_passive( classname(), construction_parameters() ) ->
-							   passive_instance().
+							passive_instance().
 construct_passive( Classname, ConstructionParameters ) ->
 
 	%trace_utils:debug_fmt( "wooper:construct_passive for class ~s "
@@ -1329,10 +1325,10 @@ construct_passive( Classname, ConstructionParameters ) ->
 
 		Other ->
 			log_error( "WOOPER error when creating a passive instance "
-					   "of class ~s: constructor did not return a state, "
-					   "but returned '~p' instead. "
-					   "Construction parameters were:~n~p",
-					   [ Classname, Other, ConstructionParameters ] ),
+				"of class ~s: constructor did not return a state, "
+				"but returned '~p' instead. "
+				"Construction parameters were:~n~p",
+				[ Classname, Other, ConstructionParameters ] ),
 
 			Arity = length( ConstructionParameters ) + 1,
 
@@ -1845,8 +1841,8 @@ display_instance( State ) ->
 
 
 
-% Returns all the attributes of this instance, as a list of { AttributeName,
-% AttributeValue } pairs.
+% Returns all the attributes of this instance, as a list of {AttributeName,
+% AttributeValue} pairs.
 %
 -spec get_all_attributes( wooper:state() ) -> [ attribute_entry() ].
 get_all_attributes( State ) ->
@@ -1866,7 +1862,7 @@ get_all_attributes( State ) ->
 % and must point to the respective root directories
 %
 % - the determined directories are not specifically checked for existence,
-% and are added at the end of the code path.
+% and are added at the end of the code path
 %
 -spec declare_beam_dirs_for_wooper() -> void().
 declare_beam_dirs_for_wooper() ->
@@ -1897,8 +1893,8 @@ log_info( FormatString, ValueList ) ->
 
 
 
-% Reports (on a best-effort basis) the specified warning to the user,
-% typically by displaying a warning report on the console.
+% Reports (on a best-effort basis) the specified warning to the user, typically
+% by displaying a warning report on the console.
 %
 -spec log_warning( ustring() ) -> void().
 log_warning( String ) ->
@@ -1909,8 +1905,8 @@ log_warning( String ) ->
 	system_utils:await_output_completion( ?wooper_warning_display_waiting ).
 
 
-% Reports (on a best-effort basis) the specified warning to the user,
-% typically by displaying a warning report on the console.
+% Reports (on a best-effort basis) the specified warning to the user, typically
+% by displaying a warning report on the console.
 %
 -spec log_warning( format_string(), [ term() ] ) -> void().
 log_warning( FormatString, ValueList ) ->
