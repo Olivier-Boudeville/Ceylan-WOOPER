@@ -16,7 +16,7 @@
 -define( superclasses, [ class_Mammal, class_OvoviviparousBeing ] ).
 
 
--define( class_attributes, [ { nozzle_color, "Color of the nozzle" },
+-define( class_attributes, [ { nozzle_color, "the color of the nozzle" },
 							 alternate_names,
 							 { cat_pid, pid(), "PID of a cat" } ] ).
 
@@ -32,9 +32,8 @@
 
 
 % Constructs a new Platypus.
-%
--spec construct( wooper:state(), age(), gender(), fur_color(), nozzle_color() )
-			   -> wooper:state().
+-spec construct( wooper:state(), age(), gender(), fur_color(),
+				 nozzle_color() ) -> wooper:state().
 construct( State, Age, Gender, FurColor, NozzleColor ) ->
 
 	% First the direct mother classes:
@@ -95,7 +94,8 @@ canEat( State, _OtherFood ) ->
 
 
 % Returns the color of the nozzle of this platypus.
--spec getNozzleColor( wooper:state() ) -> const_request_return( nozzle_color() ).
+-spec getNozzleColor( wooper:state() ) ->
+							const_request_return( nozzle_color() ).
 getNozzleColor( State )->
 
 	% If needing to test the crash of a request:
@@ -108,7 +108,7 @@ getNozzleColor( State )->
 
 
 % Returns the list of alternate names for this platypus.
--spec getAlternateNames( wooper:state() ) -> const_request_return( [atom()] ).
+-spec getAlternateNames( wooper:state() ) -> const_request_return( [ atom() ] ).
 getAlternateNames( State ) ->
 	wooper:const_return_result( ?getAttr(alternate_names) ).
 
@@ -162,7 +162,7 @@ testCreationDeletion( State ) ->
 % the created cat instance).
 %
 -spec onWOOPERExitReceived( wooper:state(), pid(),
-					basic_utils:exit_reason() ) -> const_oneway_return().
+						basic_utils:exit_reason() ) -> const_oneway_return().
 onWOOPERExitReceived( State, Pid, ExitType ) ->
 
 	% Typically: "Received exit message '{{nocatch,
