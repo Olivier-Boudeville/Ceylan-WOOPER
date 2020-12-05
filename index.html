@@ -31,7 +31,9 @@
 </tr>
 <tr class="field"><th class="field-name">Creation date:</th><td class="field-body">Sunday, August 17, 2008</td>
 </tr>
-<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Wednesday, October 21, 2020</td>
+<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Saturday, December 5, 2020</td>
+</tr>
+<tr class="field"><th class="field-name">Version:</th><td class="field-body">2.0.9</td>
 </tr>
 <tr class="field"><th class="field-name">Dedication:</th><td class="field-body">Users and maintainers of the <tt class="docutils literal">WOOPER</tt> layer, version 2.0.</td>
 </tr>
@@ -1235,6 +1237,13 @@ setFurColor(State,FurColor) -&gt;
 </pre>
 <p>will return a new state, exact copy of <tt class="docutils literal">MyState</tt> but for the listed attributes, set to their respective specified value.</p>
 </div>
+<div class="section" id="the-swapinattribute-3-function">
+<h6>The <tt class="docutils literal">swapInAttribute/3</tt> function</h6>
+<p>This function allows to swap, in the specified state, the current value of the specified attribute with the specified value; for example:</p>
+<pre class="code erlang literal-block">
+<span class="p">{</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">PastColor</span><span class="p">}</span> <span class="o">=</span> <span class="n">swapInAttribute</span><span class="p">(</span><span class="nv">AState</span><span class="p">,</span><span class="n">fur_color</span><span class="p">,_</span><span class="nv">NewValue</span><span class="o">=</span><span class="n">black</span><span class="p">)</span>
+</pre>
+</div>
 <div class="section" id="the-removeattribute-2-function">
 <h6>The <tt class="docutils literal">removeAttribute/2</tt> function</h6>
 <div class="admonition note">
@@ -1944,7 +1953,7 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 </div>
 <p>To help declaring the right defines in the right order, using the WOOPER <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_WOOPERTemplate.erl.sample">template</a> is recommended.</p>
 <p>One may also have a look at the full <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples">test examples</a>, as a source of inspiration.</p>
-<p>For examples of re-use of WOOPER by upper layers, one may refer to <a class="reference external" href="http://traces.esperide.org">Ceylan-Traces</a> or to the <a class="reference external" href="http://sim-diasca.com">Sim-Diasca</a> simulation engine.</p>
+<p>For examples of re-use of WOOPER by upper layers, one may refer to <a class="reference external" href="http://traces.esperide.org">Ceylan-Traces</a>, to <a class="reference external" href="http://us-web.esperide.org">US-Web</a> or to the <a class="reference external" href="http://sim-diasca.com">Sim-Diasca</a> simulation engine.</p>
 </div>
 <div class="section" id="otp-guidelines">
 <h4>OTP Guidelines</h4>
@@ -1961,12 +1970,12 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <p>When specifying its <strong>class attributes</strong>: <tt class="docutils literal"><span class="pre">-define(class_attributes,[ATTR1,ATTR2,...])</span></tt></p>
 <p>A given <tt class="docutils literal">ATTRn</tt> may be one of:</p>
 <ul class="simple">
-<li><tt class="docutils literal">{Name,Type,QualifierInfo,Description}</tt></li>
-<li><tt class="docutils literal">{Name,Type,Description}</tt></li>
-<li><tt class="docutils literal">{Name,Description}</tt></li>
+<li><tt class="docutils literal">{Name, Type, QualifierInfo, Description}</tt></li>
+<li><tt class="docutils literal">{Name, Type, Description}</tt></li>
+<li><tt class="docutils literal">{Name, Description}</tt></li>
 <li><tt class="docutils literal">Name</tt></li>
 </ul>
-<p><tt class="docutils literal">QualifierInfo</tt> can be, for example, <tt class="docutils literal">public</tt>, or <tt class="docutils literal">[private,const]</tt>.</p>
+<p><tt class="docutils literal">QualifierInfo</tt> can be, for example, <tt class="docutils literal">public</tt>, or <tt class="docutils literal">[private, const]</tt>.</p>
 <p>All member methods have <tt class="docutils literal">State</tt> for initial parameter, and are expected to return at least a (possibly const) state.</p>
 <p>When defining a <strong>request</strong>:</p>
 <ul class="simple">
