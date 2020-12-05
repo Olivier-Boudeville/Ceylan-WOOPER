@@ -35,20 +35,20 @@
 %
 -spec pre_serialise_hook( wooper:state() ) -> wooper:state().
 pre_serialise_hook( State ) ->
-	trace_utils:trace( "Pre-serialising a reptile!" ),
+	trace_utils:info( "Pre-serialising a reptile!" ),
 	State.
 
 
 
 % Triggered just after serialisation.
 %
-% (using WOOPER default hook implementation augmented of an trace_utils:trace)
+% (using WOOPER default hook implementation augmented of an trace_utils:info)
 %
 -spec post_serialise_hook( classname(),
 						   wooper_serialisation:term_serialisation(),
 						   wooper:state() ) -> term().
 post_serialise_hook( Classname, Entries, _State ) ->
-	trace_utils:trace( "Post-serialising a reptile!" ),
+	trace_utils:info( "Post-serialising a reptile!" ),
 	{ Classname, Entries }.
 
 
@@ -58,7 +58,7 @@ post_serialise_hook( Classname, Entries, _State ) ->
 -spec pre_deserialise_hook( term(), basic_utils:user_data() ) ->
 							wooper_serialisation:term_serialisation().
 pre_deserialise_hook( _SerialisedEntries={ _Classname, Entries }, _UserData ) ->
-	trace_utils:trace( "Pre-deserialising a reptile!" ),
+	trace_utils:info( "Pre-deserialising a reptile!" ),
 	Entries.
 
 
@@ -67,7 +67,7 @@ pre_deserialise_hook( _SerialisedEntries={ _Classname, Entries }, _UserData ) ->
 %
 -spec post_deserialise_hook( wooper:state() ) -> wooper:state().
 post_deserialise_hook( State ) ->
-	trace_utils:trace( "Post-deserialising a reptile!" ),
+	trace_utils:info( "Post-deserialising a reptile!" ),
 	State.
 
 
@@ -85,7 +85,7 @@ construct( State, Age, Gender ) ->
 % Overridden destructor
 -spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
-	trace_utils:trace( "Deleting a Reptile." ),
+	trace_utils:info( "Deleting a Reptile." ),
 	State.
 	% To test destructor checking use instead:
 	%an_unexpected_final_state.

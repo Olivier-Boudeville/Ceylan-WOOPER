@@ -82,8 +82,8 @@ run() ->
 	OrderedAppNames = otp_utils:prepare_for_execution( _ThisAppName=wooper,
 													   BuildRootDir ),
 
-	trace_utils:info_fmt( "Resulting applications to start, in order: ~w.",
-						  [ OrderedAppNames ] ),
+	trace_utils:notice_fmt( "Resulting applications to start, in order: ~w.",
+							[ OrderedAppNames ] ),
 
 	test_wooper_application( OrderedAppNames ),
 

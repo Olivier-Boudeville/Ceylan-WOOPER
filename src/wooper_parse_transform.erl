@@ -220,9 +220,9 @@ run_standalone( FileToTransform, PreprocessorOptions ) ->
 -spec parse_transform( ast(), meta_utils:parse_transform_options() ) -> ast().
 parse_transform( InputAST, Options ) ->
 
-	%trace_utils:trace_fmt( "WOOPER input AST:~n~p~n", [ InputAST ] ),
+	%trace_utils:info_fmt( "WOOPER input AST:~n~p~n", [ InputAST ] ),
 
-	%trace_utils:trace_fmt( "WOOPER options:~n~p~n", [ Options ] ),
+	%trace_utils:info_fmt( "WOOPER options:~n~p~n", [ Options ] ),
 
 	%ast_utils:write_ast_to_file( InputAST, "WOOPER-input-AST.txt" ),
 
@@ -231,7 +231,7 @@ parse_transform( InputAST, Options ) ->
 	%
 	{ WOOPERAST, _ClassModInfo } = apply_wooper_transform( InputAST, Options ),
 
-	%trace_utils:trace_fmt( "WOOPER output AST:~n~p~n", [ WOOPERAST ] ),
+	%trace_utils:info_fmt( "WOOPER output AST:~n~p~n", [ WOOPERAST ] ),
 
 	%ast_utils:write_ast_to_file( WOOPERAST, "WOOPER-output-AST.txt" ),
 
@@ -289,7 +289,7 @@ apply_wooper_transform( InputAST, Options ) ->
 			NewClassInfo = transform_class_info( ClassInfo ),
 
 			%trace_utils:debug_fmt( "Transformed class information: ~s",
-			% [ wooper_info:class_info_to_string( NewClassInfo ) ] ),
+			%    [ wooper_info:class_info_to_string( NewClassInfo ) ] ),
 
 			?display_trace( "Generating back module information." ),
 

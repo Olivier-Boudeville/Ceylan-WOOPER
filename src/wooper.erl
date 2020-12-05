@@ -1369,7 +1369,7 @@ execute_oneway( PassiveInstance, OnewayName, OnewayArgs )
    when is_record( PassiveInstance, ?passive_record )
 		andalso is_atom( OnewayName ) andalso is_list( OnewayArgs ) ->
 
-	%trace_utils:trace_fmt( "Executing oneway ~s/~B on passive instance",
+	%trace_utils:info_fmt( "Executing oneway ~s/~B on passive instance",
 	%					   [ OnewayName, length( OnewayArgs ) ] ),
 
 	{ NewPassiveInstance, wooper_method_returns_void } =
@@ -1382,7 +1382,7 @@ execute_oneway( PassiveInstance, OnewayName, OnewayArg )
    when is_record( PassiveInstance, ?passive_record )
 		andalso is_atom( OnewayName ) ->
 
-	%trace_utils:trace_fmt( "Executing oneway ~s on passive instance",
+	%trace_utils:info_fmt( "Executing oneway ~s on passive instance",
 	%					   [ OnewayName ] ),
 
 	{ NewPassiveInstance, wooper_method_returns_void } =
@@ -1586,7 +1586,7 @@ trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
 
 	UndefArity = length( UndefArgs ),
 
-	%trace_utils:trace_fmt( "Construction failed (undef) in ~s:construct/~B, for "
+	%trace_utils:info_fmt( "Construction failed (undef) in ~s:construct/~B, for "
 	%			"~s:~s/~B.",
 	%			[ Classname, Arity, ModuleName, FunctionName, UndefArity ] ),
 
@@ -1613,7 +1613,7 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
 
 	Arity = length( ConstructionParameters ) + 1,
 
-	%trace_utils:trace_fmt( "Construction failed for ~s:construct/~B.",
+	%trace_utils:info_fmt( "Construction failed for ~s:construct/~B.",
 	%					   [ Classname, Arity ] ),
 
 	log_error( "~nWOOPER error for PID ~w, "
@@ -2556,7 +2556,7 @@ safe_delete_synchronously_instances( InstanceList ) ->
 % Deletes specified passive instance.
 -spec delete_passive( passive_instance() ) -> void().
 delete_passive( _PassiveInstance ) ->
-	%trace_utils:trace( "Passive instance deleted." ),
+	%trace_utils:info( "Passive instance deleted." ),
 	ok.
 
 

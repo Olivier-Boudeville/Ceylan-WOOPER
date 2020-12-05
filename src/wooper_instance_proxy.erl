@@ -54,8 +54,8 @@
 -spec start( instance_pid() ) -> instance_pid().
 start( TargetInstancePid ) ->
 
-	trace_utils:info_fmt( "Starting proxy for WOOPER instance ~w.",
-						  [ TargetInstancePid ] ),
+	trace_utils:notice_fmt( "Starting proxy for WOOPER instance ~w.",
+							[ TargetInstancePid ] ),
 
 	?myriad_spawn( fun() ->
 						   proxy_main_loop( TargetInstancePid )
@@ -66,8 +66,8 @@ start( TargetInstancePid ) ->
 -spec start_link( pid() ) -> pid().
 start_link( TargetInstancePid ) ->
 
-	trace_utils:info_fmt( "Starting linked proxy for WOOPER instance ~w.",
-						  [ TargetInstancePid ] ),
+	trace_utils:notice_fmt( "Starting linked proxy for WOOPER instance ~w.",
+							[ TargetInstancePid ] ),
 
 	?myriad_spawn_link( fun() ->
 								proxy_main_loop( TargetInstancePid )

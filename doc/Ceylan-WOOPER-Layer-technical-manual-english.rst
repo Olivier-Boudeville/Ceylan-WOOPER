@@ -40,7 +40,8 @@
 :Organisation: Copyright (C) 2008-2020 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Wednesday, October 21, 2020
+:Lastly updated: Saturday, December 5, 2020
+:Version: 2.0.9
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -2715,7 +2716,7 @@ To help declaring the right defines in the right order, using the WOOPER `templa
 
 One may also have a look at the full `test examples <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples>`_, as a source of inspiration.
 
-For examples of re-use of WOOPER by upper layers, one may refer to `Ceylan-Traces <http://traces.esperide.org>`_ or to the `Sim-Diasca <http://sim-diasca.com>`_ simulation engine.
+For examples of re-use of WOOPER by upper layers, one may refer to `Ceylan-Traces <http://traces.esperide.org>`_, to `US-Web <http://us-web.esperide.org>`_ or to the `Sim-Diasca <http://sim-diasca.com>`_ simulation engine.
 
 .. comment Note:: To be updated, notably with respect to parse transforms.
 
@@ -2745,12 +2746,12 @@ When specifying its **class attributes**: ``-define(class_attributes,[ATTR1,ATTR
 
 A given ``ATTRn`` may be one of:
 
-- ``{Name,Type,QualifierInfo,Description}``
-- ``{Name,Type,Description}``
-- ``{Name,Description}``
+- ``{Name, Type, QualifierInfo, Description}``
+- ``{Name, Type, Description}``
+- ``{Name, Description}``
 - ``Name``
 
-``QualifierInfo`` can be, for example, ``public``, or ``[private,const]``.
+``QualifierInfo`` can be, for example, ``public``, or ``[private, const]``.
 
 All member methods have ``State`` for initial parameter, and are expected to return at least a (possibly const) state.
 

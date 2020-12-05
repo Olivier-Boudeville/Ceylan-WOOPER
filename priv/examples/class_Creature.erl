@@ -90,7 +90,7 @@ getArbitraryNumber( State ) ->
 -spec testDirectMethodExecution( wooper:state(), age() ) -> oneway_return().
 testDirectMethodExecution( State, NewAge ) ->
 
-	trace_utils:trace( "Testing executeOneway." ),
+	trace_utils:info( "Testing executeOneway." ),
 
 	% Note: the version of setAge called in the context of a Creature sets in on
 	% purpose to a fixed value (36), regardless of the specified age, whereas
@@ -104,7 +104,7 @@ testDirectMethodExecution( State, NewAge ) ->
 	% NewAge is expected to be 347:
 	NewAge = getAttribute( NewState, age ),
 
-	trace_utils:trace( "Testing executeRequest." ),
+	trace_utils:info( "Testing executeRequest." ),
 	% 15 from Mammal child classes, not 10 from here:
 
 	{ OtherState, 15 } = executeRequest( NewState, getArbitraryNumber ,[] ),
@@ -114,7 +114,7 @@ testDirectMethodExecution( State, NewAge ) ->
 
 	%{ OtherState, 15 } = executeRequest( NewState, 43, [] ),
 
-	trace_utils:trace( "Direct self-invocation success." ),
+	trace_utils:info( "Direct self-invocation success." ),
 
 	wooper:return_state( OtherState ).
 
@@ -127,7 +127,7 @@ testDirectMethodExecution( State, NewAge ) ->
 % statement like 'setAttribute( f(State), attr, value )' call f/1 twice.
 %
 % The returned value of the setAttribute call was correct, but any side-effect
-% triggered by f (sending a message, writing a trace, etc.) happened twice.
+% triggered by f/1 (sending a message, writing a trace, etc.) happened twice.
 %
 -spec testSingleExecution( wooper:state() ) -> oneway_return().
 testSingleExecution( State ) ->
@@ -139,7 +139,7 @@ testSingleExecution( State ) ->
 -spec side_effect_function( wooper:state() ) -> wooper:state().
 side_effect_function( State ) ->
 	trace_utils:warning(
-	  "### This message must be displayed exactly once." ),
+	   "### This message must be displayed exactly once." ),
 	State.
 
 

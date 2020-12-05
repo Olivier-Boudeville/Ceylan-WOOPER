@@ -120,19 +120,19 @@
 
 -ifdef(log_traversal).
 
--define(debug,trace_utils:debug).
--define(debug_fmt,trace_utils:debug_fmt).
+ -define(debug,trace_utils:debug).
+ -define(debug_fmt,trace_utils:debug_fmt).
 
--define(trace,trace_utils:trace).
--define(trace_fmt,trace_utils:trace_fmt).
+ -define(trace,trace_utils:info).
+ -define(trace_fmt,trace_utils:info_fmt).
 
 -else. % log_traversal
 
--define(debug,trace_utils:void).
--define(debug_fmt,trace_utils:void_fmt).
+ -define(debug,trace_utils:void).
+ -define(debug_fmt,trace_utils:void_fmt).
 
--define(trace,trace_utils:void).
--define(trace_fmt,trace_utils:void_fmt).
+ -define(trace,trace_utils:void).
+ -define(trace_fmt,trace_utils:void_fmt).
 
 -endif. % log_traversal
 
@@ -1261,7 +1261,7 @@ get_wooper_transform_table() ->
 % The goal is to feed the call-transformer only with relevant expressions.
 %
 -spec clause_transformer( ast_clause(), ast_transforms() ) ->
-						  { ast_clause(), ast_transforms() }.
+								{ ast_clause(), ast_transforms() }.
 clause_transformer(
   Clause={ clause, Line, Params, Guards, Body },
   Transforms ) ?rec_guard ->
@@ -1289,7 +1289,7 @@ clause_transformer(
 % WOOPER-driven traversal of branching constructs.
 %
 -spec body_transformer( ast_body(), ast_transforms() ) ->
-							  { ast_body(), ast_transforms() }.
+							{ ast_body(), ast_transforms() }.
 body_transformer( Body, Transforms=#ast_transforms{
 							transformed_function_identifier=FunId } ) ->
 	wooper_internals:raise_usage_error( "standard body transform called when "
@@ -1312,7 +1312,7 @@ body_transformer( Body, Transforms=#ast_transforms{
 % Note: resets its transforms by itself.
 %
 -spec body_transformer( ast_body(), ast_transforms(), line() ) ->
-							  { ast_body(), ast_transforms() }.
+							{ ast_body(), ast_transforms() }.
 % As empty bodies may happen (ex: 'receive' without an 'after'):
 % (nevertheless should never happen in this WOOPER traversal)
 body_transformer( _BodyExprs=[], Transforms, _Line ) ->
@@ -1996,7 +1996,7 @@ call_transformer( LineCall, FunctionRef, Params,
 % (see ast_expression:transform_if/3)
 %
 -spec if_transformer( line(), [ ast_if_clause() ], ast_transforms() ) ->
-						  { [ ast_expression() ], ast_transforms() }.
+						{ [ ast_expression() ], ast_transforms() }.
 if_transformer( Line, IfClauses, Transforms ) ?rec_guard ->
 
 	{ NewIfClauses, NewTransforms } =
@@ -2034,7 +2034,7 @@ case_transformer( Line, TestExpression, CaseClauses, Transforms ) ?rec_guard ->
 % (see ast_expression:transform_simple_receive/3)
 %
 -spec simple_receive_transformer( line(), [ ast_case_clause() ],
-		  ast_transforms() ) -> { [ ast_expression() ], ast_transforms() }.
+		ast_transforms() ) -> { [ ast_expression() ], ast_transforms() }.
 simple_receive_transformer( Line, ReceiveClauses, Transforms ) ?rec_guard ->
 
 	% Receive clauses are actually case clauses:
@@ -2101,7 +2101,7 @@ receive_with_after_transformer( Line, ReceiveClauses, AfterTest, AfterBody,
 %
 -spec try_transformer( line(), ast_body(), [ ast_case_clause() ],
 					 [ ast_case_clause() ], ast_body(), ast_transforms() ) ->
-						   { [ ast_expression() ], ast_transforms() }.
+						{ [ ast_expression() ], ast_transforms() }.
 % Form (1): no try clauses (and no after):
 try_transformer( Line, TryBody, TryClauses=[], CatchClauses, AfterBody=[],
 				 Transforms ) ?rec_guard ->
@@ -2308,7 +2308,7 @@ catch_clause_transformer(
 %
 -spec reset_transformation_state( ast_transforms() ) -> ast_transforms().
 reset_transformation_state( Transforms=#ast_transforms{
-		  transformation_state={ _Nature, _Qualifiers, WOOPERExportSet } } ) ->
+		transformation_state={ _Nature, _Qualifiers, WOOPERExportSet } } ) ->
 	Transforms#ast_transforms{
 			transformation_state={ undefined, [], WOOPERExportSet } }.
 

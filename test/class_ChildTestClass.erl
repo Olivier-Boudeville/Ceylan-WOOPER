@@ -191,7 +191,7 @@ side_effect_function( State ) ->
 
 
 -spec test_multi_clause_const_request( wooper:state(), integer(), integer() ) ->
-											 const_request_return( integer() ).
+											const_request_return( integer() ).
 test_multi_clause_const_request( State, _X=1, _Y ) ->
 	wooper:const_return_result( 1 );
 
@@ -226,7 +226,7 @@ test_multi_clause_const_oneway( State, _X, _Y ) ->
 
 
 -spec test_multi_clause_non_const_oneway( wooper:state(), integer(),
-								   integer() ) -> oneway_return().
+										  integer() ) -> oneway_return().
 test_multi_clause_non_const_oneway( State, _X=1, _Y ) ->
 	wooper:const_return();
 
@@ -241,7 +241,7 @@ test_multi_clause_non_const_oneway( State, _X, _Y ) ->
 
 % Overridden request.
 -spec someRequest( wooper:state(), integer() ) ->
-						 const_request_return( integer() ).
+						const_request_return( integer() ).
 someRequest( State, _Arg ) ->
 		wooper:const_return_result( 50 ).
 
@@ -251,7 +251,7 @@ someRequest( State, _Arg ) ->
 -spec get_static_info( integer(), integer() ) -> static_return( integer() ).
 get_static_info( A, B ) ->
 
-	trace_utils:trace( "get_static_info/2 called" ),
+	trace_utils:info( "get_static_info/2 called" ),
 
 	wooper:return_static( A + B + 10 ).
 

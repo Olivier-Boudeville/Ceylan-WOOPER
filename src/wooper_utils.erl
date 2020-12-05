@@ -258,7 +258,7 @@ wooper_class_to_camelcase_type( WOOPERClassname ) ->
 
 
 start_for_test() ->
-	trace_utils:trace( "Starting WOOPER test OTP environment." ),
+	trace_utils:info( "Starting WOOPER test OTP environment." ),
 	%wooper_class_manager:start().
 	ok.
 
@@ -269,8 +269,8 @@ start_for_test() ->
 % creation shall remain optional:
 %
 start_for_test() ->
-	trace_utils:trace( "Starting WOOPER test non-OTP environment "
-					   "(thus not creating the WOOPER class manager)." ),
+	trace_utils:info( "Starting WOOPER test non-OTP environment "
+					  "(thus not creating the WOOPER class manager)." ),
 	ok.
 
 
@@ -288,7 +288,7 @@ start_for_test() ->
 
 
 start_for_app() ->
-	%trace_utils:trace( "Starting WOOPER application OTP environment." ),
+	%trace_utils:info( "Starting WOOPER application OTP environment." ),
 	%wooper_class_manager:start().
 	ok.
 
@@ -299,8 +299,8 @@ start_for_app() ->
 % creation shall remain optional:
 %
 start_for_app() ->
-	trace_utils:trace( "Starting WOOPER application non-OTP environment "
-					   "(thus not creating the WOOPER class manager)." ),
+	trace_utils:info( "Starting WOOPER application non-OTP environment "
+					  "(thus not creating the WOOPER class manager)." ),
 	ok.
 
 

@@ -488,7 +488,7 @@ handle_info( Info, State ) ->
 % Optional callback:
 terminate( Reason, _State ) ->
 
-	trace_utils:trace_fmt( "WOOPER class manager terminated (reason: ~w).",
+	trace_utils:info_fmt( "WOOPER class manager terminated (reason: ~w).",
 						   [ Reason ] ),
 
 	ok.
@@ -497,7 +497,7 @@ terminate( Reason, _State ) ->
 % Optional callback:
 code_change( OldVsn, State, Extra ) ->
 
-	trace_utils:trace_fmt( "Code change for the WOOPER class manager; "
+	trace_utils:info_fmt( "Code change for the WOOPER class manager; "
 		"old version is ~w, and extra information is ~w", [ OldVsn, Extra ] ),
 
 	{ ok, State }.

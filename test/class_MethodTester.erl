@@ -49,7 +49,7 @@
 -spec construct( wooper:state() ) -> wooper:state().
 construct( State ) ->
 
-	trace_utils:trace( "construction" ),
+	trace_utils:info( "construction" ),
 
 	% No mother class.
 	setAttribute( State, name, "Terry" ).
@@ -59,7 +59,7 @@ construct( State ) ->
 -spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
 
-	trace_utils:trace( "destruction" ),
+	trace_utils:info( "destruction" ),
 
 	io:format( "  I am ~s, and I am just destructed.~n", [ ?getAttr(name) ] ),
 	State.
@@ -72,7 +72,7 @@ destruct( State ) ->
 % Returns the name of this instance.
 -spec getName( wooper:state() ) -> const_request_return( name() ).
 getName( State ) ->
-	trace_utils:trace( "getName/1" ),
+	trace_utils:info( "getName/1" ),
 	wooper:const_return_result( ?getAttr(name) ).
 
 
@@ -80,7 +80,7 @@ getName( State ) ->
 -spec setName( wooper:state(), name() ) -> oneway_return().
 setName( State, Name ) ->
 
-	trace_utils:trace( "setName/2" ),
+	trace_utils:info( "setName/2" ),
 
 	NewState = setAttribute( State, name, Name ),
 
@@ -91,7 +91,7 @@ setName( State, Name ) ->
 -spec get_static_info( integer(), integer() ) -> static_return( integer() ).
 get_static_info( A, B ) ->
 
-	trace_utils:trace( "get_static_info/2 called" ),
+	trace_utils:info( "get_static_info/2 called" ),
 
 	wooper:return_static( A + B + 10 ).
 

@@ -31,7 +31,7 @@
 
 -ifdef(enable_wooper_traces).
 
--define( display_trace( S ), trace_utils:trace( "[WOOPER] " ++ S ) ).
+-define( display_trace( S ), trace_utils:info( "[WOOPER] " ++ S ) ).
 
 -define( display_trace( S, F ),
 		 ast_utils:trace_fmt( "[WOOPER] " ++ S, F ) ).

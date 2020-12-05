@@ -41,25 +41,25 @@
 
 perform_direct_ast_operations( TargetSourceFile ) ->
 
-	trace_utils:info( "Now performing directly AST-level operations." ),
+	trace_utils:notice( "Now performing directly AST-level operations." ),
 
 	BaseAST = ast_utils:erl_to_ast( TargetSourceFile ),
 
-	%trace_utils:info_fmt( "Base AST:~n~p", [ BaseAST ] ),
+	%trace_utils:notice_fmt( "Base AST:~n~p", [ BaseAST ] ),
 
 	BaseModuleInfo = ast_info:extract_module_info_from_ast( BaseAST ),
 
-	trace_utils:info_fmt( "Base module info: ~s~n",
+	trace_utils:notice_fmt( "Base module info: ~s~n",
 			   [ ast_info:module_info_to_string( BaseModuleInfo ) ] ),
 
 	FinalModuleInfo = BaseModuleInfo,
 
-	trace_utils:info_fmt( "Final module info: ~s~n",
+	trace_utils:notice_fmt( "Final module info: ~s~n",
 			   [ ast_info:module_info_to_string( FinalModuleInfo ) ] ),
 
 	_FinalAST = ast_info:recompose_ast_from_module_info( FinalModuleInfo ),
 
-	%trace_utils:info_fmt( "Final AST:~n~p", [ FinalAST ] ),
+	%trace_utils:notice_fmt( "Final AST:~n~p", [ FinalAST ] ),
 
 	ok.
 
@@ -72,21 +72,21 @@ run() ->
 
 	TargetSourceFile = "../priv/examples/class_Cat.erl",
 
-	trace_utils:info_fmt( "Applying the WOOPER parse transform to the "
-						  "'~s' source file.", [ TargetSourceFile ] ),
+	trace_utils:notice_fmt( "Applying the WOOPER parse transform to the "
+							"'~s' source file.", [ TargetSourceFile ] ),
 
 	PreprocessorOptions = [ { includes, [ "../include" ] } ],
 
 	_TransformedAST = wooper_parse_transform:run_standalone( TargetSourceFile,
 													PreprocessorOptions ),
 
-	%trace_utils:info_fmt( "Transformed AST:~n~p", [ TransformedAST ] ),
+	%trace_utils:notice_fmt( "Transformed AST:~n~p", [ TransformedAST ] ),
 
 	%ast_utils:write_ast_to_file( TransformedAST, TargetSourceFile ++ ".ast" ),
 
 	%perform_direct_ast_operations( TargetSourceFile ),
 
-	trace_utils:info( "Test successful." ),
+	trace_utils:notice( "Test successful." ),
 
 	% Otherwise freezes indefinitely:
 	basic_utils:stop(),

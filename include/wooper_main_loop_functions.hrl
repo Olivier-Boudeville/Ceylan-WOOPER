@@ -368,4 +368,4 @@ wooper_main_loop( State ) ->
 	end.
 
 	% Commented out to preserve (presumably) tail-recursion:
-	% trace_utils:trace( "wooper_main_loop exited." ).
+	% trace_utils:info( "wooper_main_loop exited." ).

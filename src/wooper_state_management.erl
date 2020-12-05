@@ -92,7 +92,7 @@ manage_attributes( ClassInfo=#class_info{ class={ Classname, _LocForm },
 										  statics=StaticTable,
 										  markers=MarkerTable } ) ->
 
-	%trace_utils:trace( "Managing class attributes." ),
+	%trace_utils:info( "Managing class attributes." ),
 
 	% Now the sole means of declaring the class attributes is by specifying a
 	% class_attributes define (rather than a type-limiting -attributes parse
