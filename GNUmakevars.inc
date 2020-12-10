@@ -65,8 +65,14 @@ ifeq ($(EXECUTION_TARGET),development)
 	# Does not exist: WOOPER_CHECK_FLAGS += -Dwooper_check_xx
 endif
 
+
+# One may specify wooper_unellipsed_traces if not wanting the emitted traces to be
+# ellipsed (typically if relying on an advanced logger able to cope with longer
+# traces, such as Ceylan-Traces).
+
 ERLANG_COMPILER_OPT_BASE += $(WOOPER_DEBUG_FLAGS) \
-							$(WOOPER_CHECK_FLAGS)
+							$(WOOPER_CHECK_FLAGS) \
+							-Dwooper_unellipsed_traces
 
 
 

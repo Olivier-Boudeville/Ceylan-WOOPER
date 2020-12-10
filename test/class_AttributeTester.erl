@@ -80,32 +80,32 @@ test( State ) ->
 	RevertState = toggleAttribute(MultiState, test_attribute ),
 	true        = getAttribute( RevertState, test_attribute ),
 
-	VoidState   = setAttribute( RevertState, test_list,[]),
-	AppendState = appendToAttribute(VoidState, test_list, 7),
-	AgainState  = appendToAttribute( AppendState, test_list, 8),
-	[8,7]       = getAttribute( AgainState, test_list),
+	VoidState   = setAttribute( RevertState, test_list,[] ),
+	AppendState = appendToAttribute(VoidState, test_list, 7 ),
+	AgainState  = appendToAttribute( AppendState, test_list, 8 ),
+	[8,7]       = getAttribute( AgainState, test_list ),
 
-	DeleteState = deleteFromAttribute( AgainState, test_list,7),
-	[8]         = getAttribute( DeleteState, test_list),
+	DeleteState = deleteFromAttribute( AgainState, test_list,7 ),
+	[8]         = getAttribute( DeleteState, test_list ),
 
-	PreAddState = setAttribute( DeleteState, test_add,1),
-	AddState    = addToAttribute( PreAddState, test_add,10),
-	11          = getAttribute( AddState, test_add),
+	PreAddState = setAttribute( DeleteState, test_add,1 ),
+	AddState    = addToAttribute( PreAddState, test_add,10 ),
+	11          = getAttribute( AddState, test_add ),
 
-	SubState    = subtractFromAttribute( AddState, test_add,5),
-	6           = getAttribute( SubState, test_add),
+	SubState    = subtractFromAttribute( AddState, test_add,5 ),
+	6           = getAttribute( SubState, test_add ),
 
-	{ PoppedState, 8 } = popFromAttribute( AgainState, test_list),
-	{ _, 7 }           = popFromAttribute( PoppedState, test_list),
+	{ PoppedState, 8 } = popFromAttribute( AgainState, test_list ),
+	{ _, 7 }           = popFromAttribute( PoppedState, test_list ),
 
-	UndefState = setAttribute( PoppedState, test_undef, undefined),
-	%UndefState = setAttribute( PoppedState, test_undef, not_undefined),
+	UndefState = setAttribute( PoppedState, test_undef, undefined ),
+	%UndefState = setAttribute( PoppedState, test_undef, not_undefined ),
 
 	not_crashing_examples( UndefState ),
 	%crashing_examples( UndefState ),
 
 	test_facilities:display(
-							"Successful ending of attribute management test." ),
+		"Successful ending of attribute management test." ),
 	wooper:return_state_result( SubState, test_ok ).
 
 
@@ -151,15 +151,11 @@ crashing_examples( State ) ->
 
 
 
-% Function needed as the checkUndefined macro operates on 'State':
 not_crashing_test_undefined( State ) ->
-	?checkUndefined( test_undef ).
+	wooper:check_undefined( test_undef, State ).
 
-
-
-% Function needed as the checkUndefined macro operates on 'State':
 crashing_test_undefined( State ) ->
-	?checkUndefined( unexisting_attribute ).
+	wooper:check_undefined( unexisting_attribute, State ).
 
 
 
@@ -177,7 +173,7 @@ not_crashing_test_hashtable( State ) ->
 	ReadTable = getAttribute( EntrySetState, test_hashtable ),
 
 	{ value, my_value } = ?wooper_table_type:lookup_entry( my_key,
-														  ReadTable ),
+														   ReadTable ),
 
 	test_ok.
 

@@ -44,8 +44,7 @@
 		  concatToAttribute/3,
 		  deleteFromAttribute/3,
 		  addKeyValueToAttribute/4,
-		  popFromAttribute/2,
-		  wooper_check_undefined/2 ]).
+		  popFromAttribute/2 ]).
 
 
 
@@ -55,8 +54,8 @@
 % Note that the below macros had to be one-liners, otherwise their actual value
 % would be the first evaluated in the macro - not the last.
 %
-% Indeed 'NewState = ?setAttribute( State, ...)' *and* ' my_function(
-% ?setAttribute( State, ...)' have to be supported, whereas they respectively
+% Indeed 'NewState = ?setAttribute(State, ...)' *and* ' my_function(
+% ?setAttribute(State, ...)' have to be supported, whereas they respectively
 % use the first and the last element of a sequence of statements separated with
 % a comma.
 %
@@ -74,7 +73,7 @@
 % previous shell output).
 
 % Another problem that must be avoided is that if calling for example
-% '?setAttribute( f(State), name, value )', then we want any side-effect caused
+% '?setAttribute(f(State), name, value)', then we want any side-effect caused
 % by f/1 to be triggered exactly once.
 %
 % For example in the setAttribute/3 macros defined below (and now
@@ -86,8 +85,8 @@
 % penalty of an additional function call. To alleviate this overhead, we
 % recommend the compiler to inline these functions.
 %
-% So finally '?setAttribute( AState, name, value )' should be transformed into
-% 'setAttribute( AState, name, value )'.
+% So finally '?setAttribute(AState, name, value)' should be transformed into
+% 'setAttribute(AState, name, value)'.
 
 % Newer macros are defined for backward compatibility, resulting in the same
 % function call. They should not be used anymore, their purpose is just to
@@ -133,7 +132,7 @@
 % attributes (if found, otherwise triggers a case clause error), in the order of
 % their specification.
 %
-% Ex: [ MyCount, MyAge, MyIdeas ] = ?getAttrList([ count, age, ideas ])
+% Ex: [MyCount, MyAge, MyIdeas] = ?getAttrList([count, age, ideas])
 %
 % This macro is usually more useful than the getAttributes function, as one
 % generally wants to retrieve attributes already available in the 'State'
@@ -160,24 +159,6 @@
 % Must be a macro, due to the implied 'State' variable.
 %
 -define( getSender(), State#state_holder.request_sender ).
-
-
-
-% Checks that the value of specified attribute is 'undefined'.
-%
-% Triggers an exception otherwise.
-%
-% Note: operates on a state called 'State', thus must be a macro.
-%
-% The check could be disabled in debug mode.
-%
-% Not a macro per se, in order to avoid unintended multiple function calls,
-% warnings about unused variables or, more probably, unintended pattern matches.
-%
--define( checkUndefined( AttributeName ),
-	wooper_check_undefined( (AttributeName), State )
-).
-
 
 
 

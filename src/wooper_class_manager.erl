@@ -825,7 +825,6 @@ select_function( delete_any_instance_referenced_in,_ )                -> false ;
 select_function( delete_synchronously_any_instance_referenced_in,_ )  -> false ;
 select_function( delete_synchronously_instances,_ )                   -> false ;
 
-select_function( wooper_check_undefined,_ )                           -> false ;
 select_function( wooper_construct_and_run,_ )                         -> false ;
 select_function( wooper_construct_and_run_synchronous,_ )             -> false ;
 select_function( wooper_debug_listen,_ )                              -> false ;

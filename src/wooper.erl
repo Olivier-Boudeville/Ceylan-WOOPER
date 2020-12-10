@@ -85,7 +85,7 @@
 
 
 % Infrequently-called functions for state management:
--export([ get_all_attributes/1 ]).
+-export([ get_all_attributes/1, check_undefined/2, check_all_undefined/2 ]).
 
 
 % Extra features:
@@ -113,18 +113,14 @@
 
 -ifdef(wooper_debug_mode).
 
-
 % State-related helpers (only available in debug mode):
 -export([ virtual_table_to_string/1, instance_to_string/1,
 		  display_state/1, display_virtual_table/1, display_instance/1 ]).
 
-
 -else. % wooper_debug_mode
-
 
 % Exported as otherwise reported as unused:
 -export([ check_classname_and_arity/2 ]).
-
 
 -endif. % wooper_debug_mode
 
@@ -142,7 +138,21 @@
 % The record defining the state of a passive instance:
 -define( passive_record, state_holder ).
 
--define( ellipse_length, 1500 ).
+
+-ifdef(wooper_unellipsed_traces).
+
+ % Disables the ellipsing of traces (typically if having a suitable trace
+ % handler):
+  %
+ -define( ellipse_length, unlimited ).
+
+-else.
+
+ % Default:
+ -define( ellipse_length, 1500 ).
+
+-endif.
+
 
 
 % For the name of the registered process that keeps the per-class method
@@ -1872,6 +1882,11 @@ declare_beam_dirs_for_wooper() ->
 
 
 % Log section.
+%
+% Note that, depending on the context, the standard logger might be configured
+% to rely on a dedicated handler (typically see Ceylan-Traces for integrated,
+% advanced log services).
+
 
 
 % Reports (on a best-effort basis) the specified information to the user,
@@ -1942,7 +1957,7 @@ log_error( Message ) ->
 log_error( FormatString, ValueList ) ->
 
 	Str = text_utils:format(
-			FormatString ++ "~n=END OF WOOPER ERROR REPORT FOR ~w ===~n~n~n",
+			FormatString ++ "~n=END OF WOOPER ERROR REPORT FOR ~w ===~n",
 			ValueList ++ [ self() ] ),
 
 	%trace_utils:debug_fmt( "Error message: ~p.", [ Str ] ),
@@ -2601,3 +2616,37 @@ const_return() ->
 -spec get_exported_functions_set() -> function_export_set().
 get_exported_functions_set() ->
 	set_utils:new( meta_utils:list_exported_functions( ?MODULE ) ).
+
+
+
+% Checks that specified attribute is indeed equal to 'undefined'.
+-spec check_undefined( attribute_name(), wooper:state() ) -> void().
+check_undefined( AttributeName, State ) ->
+
+	try
+
+		undefined = ?getAttr(AttributeName)
+
+	catch
+
+		exit:{ { badmatch, UnexpectedValue }, Stack } ->
+
+			% Attribute value was not equal to 'undefined':
+			throw( { attribute_was_not_undefined,
+					 { AttributeName, UnexpectedValue }, Stack } );
+
+		exit:Error ->
+			% Other error (ex: unknown attribute):
+			throw( { attribute_error, AttributeName, Error } );
+
+		OtherError ->
+			throw( { unexpected_attribute_error, AttributeName, OtherError } )
+
+	end.
+
+
+
+% Checks that all specified attributes are indeed equal to 'undefined'.
+-spec check_all_undefined( [ attribute_name() ], wooper:state() ) -> void().
+check_all_undefined( AttributeNames, State ) ->
+	[ check_undefined( Attr, State ) || Attr <- AttributeNames ].

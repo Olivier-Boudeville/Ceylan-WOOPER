@@ -38,23 +38,19 @@
 -spec is_wooper_debug() -> boolean().
 
 
-% On debug mode, various additional checkins are enabled:
+% On debug mode, various additional checkings are enabled:
 %
 % (put in an header, as different settings might apply to different classes)
 %
 -ifdef(wooper_debug_mode).
 
-
 is_wooper_debug() ->
 	true.
 
-
 -else. % wooper_debug_mode
-
 
 is_wooper_debug() ->
 	false.
-
 
 -endif. % wooper_debug_mode
 
@@ -118,7 +114,6 @@ setAttribute( State, AttributeName, AttributeValue ) ->
 -spec setAttributes( wooper:state(), [ attribute_entry() ] ) ->
 						wooper:state().
 setAttributes( State, ListOfAttributePairs ) ->
-
    State#state_holder{
 	   attribute_table=?wooper_table_type:add_entries(
 		   ListOfAttributePairs,
@@ -131,13 +126,20 @@ setAttributes( State, ListOfAttributePairs ) ->
 %
 % Returns an updated state and the previous value of that attribute.
 %
+% For example, if the 'color' attribute happened to be previously set to 'red'
+% in SomeState, then:
+%
+%  {NewState, red} = swapInAttribute(SomeState, color, blue)
+%
+% And in NewState 'color' is set to 'blue'.
+%
 -spec swapInAttribute( wooper:state(), attribute_name(), attribute_value() ) ->
 										{ wooper:state(), attribute_value() }.
 swapInAttribute( State=#state_holder{ attribute_table=AttrTable },
 				 AttributeName, NewAttributeValue ) ->
 
 	{ PreviousValue, NewAttrTable } = ?wooper_table_type:swap_value(
-								 AttributeName, NewAttributeValue, AttrTable ),
+								AttributeName, NewAttributeValue, AttrTable ),
 
    { State#state_holder{ attribute_table=NewAttrTable }, PreviousValue }.
 
@@ -156,7 +158,7 @@ swapInAttribute( State=#state_holder{ attribute_table=AttrTable },
 -spec hasAttribute( wooper:state(), attribute_name() ) -> boolean().
 hasAttribute( State, AttributeName ) ->
 	?wooper_table_type:has_entry( AttributeName,
-								 State#state_holder.attribute_table ).
+								  State#state_holder.attribute_table ).
 
 
 
@@ -173,7 +175,7 @@ hasAttribute( State, AttributeName ) ->
 -spec getAttribute( wooper:state(), attribute_name() ) -> attribute_value().
 getAttribute( State, AttributeName ) ->
 	?wooper_table_type:get_value( AttributeName,
-								 State#state_holder.attribute_table ).
+								  State#state_holder.attribute_table ).
 
 
 
@@ -223,7 +225,7 @@ removeAttribute( State, AttributeName ) ->
 % triggered if no addition can be performed on the attribute value.
 %
 -spec addToAttribute( wooper:state(), attribute_name(), attribute_value() ) ->
-		wooper:state().
+							wooper:state().
 addToAttribute( State, AttributeName, Value ) ->
 
 	State#state_holder{
@@ -242,7 +244,7 @@ addToAttribute( State, AttributeName, Value ) ->
 % triggered if no subtraction can be performed on the attribute value.
 %
 -spec subtractFromAttribute( wooper:state(), attribute_name(),
-					attribute_value() ) -> wooper:state().
+							 attribute_value() ) -> wooper:state().
 subtractFromAttribute( State, AttributeName, Value ) ->
 
 	State#state_holder{
@@ -316,7 +318,7 @@ toggleAttribute( State, BooleanAttributeName ) ->
 % operation will not complain if not.
 %
 -spec appendToAttribute( wooper:state(), attribute_name(),
-						attribute_value() ) -> wooper:state().
+						 attribute_value() ) -> wooper:state().
 appendToAttribute( State, AttributeName, Element ) ->
 
 	State#state_holder{
@@ -339,7 +341,7 @@ appendToAttribute( State, AttributeName, Element ) ->
 % operation will not complain if not.
 %
 -spec concatToAttribute( wooper:state(), attribute_name(),
-						attribute_value() ) -> wooper:state().
+						 attribute_value() ) -> wooper:state().
 concatToAttribute( State, AttributeName, List ) ->
 
 	State#state_holder{
@@ -359,7 +361,7 @@ concatToAttribute( State, AttributeName, List ) ->
 % Returns an updated state.
 %
 -spec deleteFromAttribute( wooper:state(), attribute_name(),
-		  attribute_value() ) -> wooper:state().
+						   attribute_value() ) -> wooper:state().
 deleteFromAttribute( State, AttributeName, Element ) ->
 
 	State#state_holder{
@@ -403,7 +405,7 @@ addKeyValueToAttribute( State, AttributeName, Key, Value ) ->
 % a tuple { NewState, PoppedHead }.
 %
 % For example, if the attribute 'my_list' contains [5,8,3], executing:
-% '{ PoppedState, Head }=?popFromAttribute( State, my_list )'
+% '{PoppedState, Head} = ?popFromAttribute( State, my_list )'
 % returns a state whose my_list attribute is [8,3] and a value Head = 5.
 %
 % A case clause is triggered if the attribute did not exist.
@@ -412,34 +414,7 @@ addKeyValueToAttribute( State, AttributeName, Key, Value ) ->
 							{ wooper:state(), attribute_value() }.
 popFromAttribute( State, AttributeName ) ->
 
-	{ Head, PoppedAttributeTable }=?wooper_table_type:pop_from_entry(
+	{ Head, PoppedAttributeTable } = ?wooper_table_type:pop_from_entry(
 				  AttributeName, State#state_holder.attribute_table ),
 
 	{ State#state_holder{ attribute_table=PoppedAttributeTable }, Head }.
-
-
-
-% Helper function for the checkUndefined macro.
--spec wooper_check_undefined( attribute_name(), wooper:state() ) -> void().
-wooper_check_undefined( Attribute, State ) ->
-
-	try
-
-		undefined = ?getAttr(Attribute)
-
-	catch
-
-		exit:{ { badmatch, UnexpectedValue }, Stack } ->
-
-			% Attribute value was not equal to 'undefined':
-			throw( { attribute_was_not_undefined,
-					 { Attribute, UnexpectedValue }, Stack } );
-
-		exit:Error ->
-			% Other error (ex: unknown attribute):
-			throw( { attribute_error, Attribute, Error } );
-
-		OtherError ->
-			throw( { unexpected_attribute_error, Attribute, OtherError } )
-
-	end.
