@@ -139,11 +139,12 @@
 -define( passive_record, state_holder ).
 
 
+
 -ifdef(wooper_unellipsed_traces).
 
  % Disables the ellipsing of traces (typically if having a suitable trace
  % handler):
-  %
+ %
  -define( ellipse_length, unlimited ).
 
 -else.

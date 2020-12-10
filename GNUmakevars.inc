@@ -66,13 +66,23 @@ ifeq ($(EXECUTION_TARGET),development)
 endif
 
 
-# One may specify wooper_unellipsed_traces if not wanting the emitted traces to be
-# ellipsed (typically if relying on an advanced logger able to cope with longer
-# traces, such as Ceylan-Traces).
+# Default is ellipsing traces to avoid saturating typically a console, so
+# disabled:
+#
+# (note that, for such a variable to be assigned by an upper layer and be taken
+# into account here, WOOPER must be built from an overall, integrated Make
+# context - not as a series of separate builds)
+#
+#WOOPER_UNELLIPSED_TRACES_OPT= -Dwooper_unellipsed_traces
+
+
+# One may specify wooper_unellipsed_traces if not wanting the emitted traces to
+# be ellipsed (typically if relying on an advanced logger able to cope with
+# longer traces, such as Ceylan-Traces).
 
 ERLANG_COMPILER_OPT_BASE += $(WOOPER_DEBUG_FLAGS) \
 							$(WOOPER_CHECK_FLAGS) \
-							-Dwooper_unellipsed_traces
+							$(WOOPER_UNELLIPSED_TRACES_OPT)
 
 
 
