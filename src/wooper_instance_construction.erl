@@ -69,9 +69,9 @@ manage_constructors( { FunctionTable, ClassInfo } ) ->
 	Classname = pair:first( ClassEntry ),
 
 	% First element is a list of {arity(), function_info()} pairs corresponding
-	% to the defined constructors (construct/N) , while the second element is
-	% the input function table obtained once these corresponding entries have
-	% been removed:
+	% to the defined constructors (construct/N), while the second element is the
+	% input function table obtained once these corresponding entries have been
+	% removed:
 	%
 	{ ConstructPairs, ShrunkFunctionTable } =
 		extract_constructors_from( FunctionTable, Classname ),
@@ -91,7 +91,7 @@ manage_constructors( { FunctionTable, ClassInfo } ) ->
 			%							 || { _Arity, FI } <- ConstructPairs ] )
 			%					   ] ),
 
-			% Returns { NewFunctionTable, NewClassInfo }:
+			% Returns {NewFunctionTable, NewClassInfo}:
 			manage_new_operators( ConstructPairs, ShrunkFunctionTable,
 								  ClassInfo )
 
@@ -125,16 +125,19 @@ filter_constructors( _FunIdInfos=[ { { construct, Arity },
 		   clauses=[],
 		   spec={ _Loc, _FunSpec={ attribute, SpecLine, spec, _SpecElems } }
 		  } } | _T ], Classname, _AccPairs, _AccFunInfos ) ->
-	wooper_internals:raise_usage_error( "the constructor construct/~B has a spec, "
-			"yet it has never been defined.", [ Arity ], Classname, SpecLine );
+	wooper_internals:raise_usage_error( "the constructor construct/~B "
+		"has a spec, yet it has never been defined.", [ Arity ], Classname,
+		SpecLine );
 
 % Legit constructor:
 filter_constructors( _FunIdInfos=[ { { construct, Arity }, FunInfo } | T ],
 					 Classname, AccPairs, AccFunInfos ) ->
-	filter_constructors( T, Classname, [ { Arity, FunInfo } | AccPairs ], AccFunInfos );
+	filter_constructors( T, Classname, [ { Arity, FunInfo } | AccPairs ],
+						 AccFunInfos );
 
-% 'Other' expected to be { { _NonConstructFunName, Arity }, FunInfo }:
-filter_constructors( _FunIdInfos=[ Other | T ], Classname, AccPairs, AccFunInfos ) ->
+% 'Other' expected to be {{ _NonConstructFunName, Arity}, FunInfo}:
+filter_constructors( _FunIdInfos=[ Other | T ], Classname, AccPairs,
+					 AccFunInfos ) ->
 	filter_constructors( T, Classname, AccPairs, [ Other | AccFunInfos ] ).
 
 
@@ -142,7 +145,7 @@ filter_constructors( _FunIdInfos=[ Other | T ], Classname, AccPairs, AccFunInfos
 % Adds the new operators and all their relevant variations for each of the
 % specified constructors construct/N.
 %
-% Returns { NewFunctionTable, NewClassInfo }.
+% Returns {NewFunctionTable, NewClassInfo}.
 %
 manage_new_operators( _ConstructPairs=[], FunctionTable, ClassInfo ) ->
 	{ FunctionTable, ClassInfo };
@@ -163,8 +166,9 @@ manage_new_operators( _ConstructPairs=[ { Arity, FunInfo } | T ], FunctionTable,
 	%
 	ExportLoc = ast_info:get_default_export_function_location( MarkerTable ),
 
-	% First, for the class developer, exporting a constructor is not mandatory;
-	% so, if this constructor is not exported, let's do it automatically:
+	% First, for the class developer, exporting a constructor is not mandatory
+	% (and generally not to be done); so, if this constructor is not exported,
+	% let's do it automatically:
 	%
 	NewFunInfo = wooper_method_management:ensure_exported( FunInfo,
 														   MarkerTable ),
@@ -176,8 +180,8 @@ manage_new_operators( _ConstructPairs=[ { Arity, FunInfo } | T ], FunctionTable,
 
 	% Then, for a constructor of arity N, we have to automatically define and
 	% export here following 15 functions, which are all new operator variations
-	% V (7 base ones, each doubled to support whether or not an atomic link is
-	% wanted as well between the creator process and the created instance), plus
+	% V; 7 base ones, each doubled to support whether or not an atomic link is
+	% wanted as well between the creator process and the created instance, plus
 	% one passive:
 	%
 	% - V1: new/N-1 and new_link/N-1 (N-1, as no State parameter expected here)
@@ -295,7 +299,7 @@ add_v1_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				   }]},
 
 
-	% We also generate the corresponding spec, which is:
+	% We also generate the corresponding spec, which is in this N=3 example:
 	%
 	% '-spec new( wooper:construction_parameter(),
 	%             wooper:construction_parameter() ) -> pid().':
@@ -363,8 +367,8 @@ add_v1_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 									exported=[ ExportLocation ] },
 
 	% Ensure not already defined (ex: by an unwary user):
-	table:add_new_entries( [ { NewId, NewOpInfo }, { NewLinkId, NewLinkOpInfo } ],
-						 OperatorTable ).
+	table:add_new_entries( [ { NewId, NewOpInfo },
+							 { NewLinkId, NewLinkOpInfo } ], OperatorTable ).
 
 
 
@@ -374,7 +378,7 @@ add_v1_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 %
 -spec add_v2_operators( wooper:classname(), arity(), ast_base:form_location(),
 			ast_base:form_location(), boolean(), operator_table() ) ->
-							  operator_table().
+							operator_table().
 add_v2_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
@@ -495,8 +499,7 @@ add_v2_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 
 	% Ensure not already defined (ex: by an unwary user):
 	table:add_new_entries( [ { SyncNewId, SyncNewOpInfo },
-						   { SyncNewLinkId, SyncNewLinkOpInfo } ],
-						 OperatorTable ).
+		{ SyncNewLinkId, SyncNewLinkOpInfo } ], OperatorTable ).
 
 
 
@@ -506,7 +509,7 @@ add_v2_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 %
 -spec add_v3_operators( wooper:classname(), arity(), ast_base:form_location(),
 			ast_base:form_location(), boolean(), operator_table() ) ->
-							  operator_table().
+							operator_table().
 add_v3_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
@@ -545,7 +548,6 @@ add_v3_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 	%			throw( { synchronous_time_out, ?MODULE } )
 	%
 	%       end.
-
 
 	S1 = { match, Line, {var,Line,'CreatorPid'},
 		   { call, Line, {atom,Line,self}, [] } },
@@ -629,7 +631,7 @@ add_v3_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 
 	% Ensure not already defined (ex: by an unwary user):
 	table:add_new_entries( [ { OpNewId, OpNewInfo },
-						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
+		{ OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
 
 
 
@@ -639,7 +641,7 @@ add_v3_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 %
 -spec add_v4_operators( wooper:classname(), arity(), ast_base:form_location(),
 			ast_base:form_location(), boolean(), operator_table() ) ->
-							  operator_table().
+							operator_table().
 add_v4_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
@@ -690,7 +692,7 @@ add_v4_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 					 }]},
 
 
-	% Now the spec, which is:
+	% Now the spec, which is here:
 	%
 	% -spec remote_new( net_utils:atom_node_name(),
 	%                   wooper:construction_parameter(),
@@ -755,7 +757,7 @@ add_v4_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 
 	% Ensure not already defined (ex: by an unwary user):
 	table:add_new_entries( [ { OpNewId, OpNewInfo },
-						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
+		{ OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
 
 
 
@@ -766,7 +768,7 @@ add_v4_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 %
 -spec add_v5_operators( wooper:classname(), arity(), ast_base:form_location(),
 			ast_base:form_location(), boolean(), operator_table() ) ->
-							  operator_table().
+							operator_table().
 add_v5_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
@@ -900,7 +902,7 @@ add_v5_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 
 	% Ensure not already defined (ex: by an unwary user):
 	table:add_new_entries( [ { OpNewId, OpNewInfo },
-						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
+		{ OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
 
 
 
@@ -911,7 +913,7 @@ add_v5_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 %
 -spec add_v6_operators( wooper:classname(), arity(), ast_base:form_location(),
 			ast_base:form_location(), boolean(), operator_table() ) ->
-							  operator_table().
+							operator_table().
 add_v6_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
@@ -1035,7 +1037,7 @@ add_v6_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 
 	% Ensure not already defined (ex: by an unwary user):
 	table:add_new_entries( [ { OpNewId, OpNewInfo },
-						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
+		{ OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
 
 
 
@@ -1045,7 +1047,7 @@ add_v6_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 %
 -spec add_v7_operators( wooper:classname(), arity(), ast_base:form_location(),
 			ast_base:form_location(), boolean(), operator_table() ) ->
-							  operator_table().
+							operator_table().
 add_v7_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
@@ -1056,8 +1058,7 @@ add_v7_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 	ArgArity = OpArity - 1,
 
 	%trace_utils:debug_fmt( "Adding {remote_synchronous_timed_new,"
-	%					   "remote_synchronous_timed_new_link}/~B.",
-	%					   [ OpArity ] ),
+	%    "remote_synchronous_timed_new_link}/~B.", [ OpArity ] ),
 
 	% Let's start with:
 	OpNewName = remote_synchronous_timed_new,
@@ -1179,12 +1180,11 @@ add_v7_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 
 	% Ensure not already defined (ex: by an unwary user):
 	table:add_new_entries( [ { OpNewId, OpNewInfo },
-						   { OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
+		{ OpNewLinkId, OpNewLinkInfo } ], OperatorTable ).
 
 
 
 % Adds the V8 operator, i.e. new_passive/N-1 (no other variation makes sense).
-%
 -spec add_v8_operators( wooper:classname(), arity(), ast_base:form_location(),
 			ast_base:form_location(), boolean(), operator_table() ) ->
 							  operator_table().
@@ -1291,7 +1291,7 @@ get_sync_run_call( Line ) ->
 %
 % receive
 %
-%	{ spawn_successful, SpawnedPid } ->
+%	{spawn_successful, SpawnedPid} ->
 %		SpawnedPid
 %
 % end
@@ -1309,7 +1309,7 @@ get_receive( Line ) ->
 %
 % receive
 %
-%	{ spawn_successful, SpawnedPid } ->
+%	{spawn_successful, SpawnedPid} ->
 %		SpawnedPid
 %
 % after 5000 ->
@@ -1340,17 +1340,17 @@ get_local_receive_with_after( ModuleName, IsDebugMode, Line ) ->
 %
 % receive
 %
-%	{ spawn_successful, SpawnedPid } ->
+%	{spawn_successful, SpawnedPid} ->
 %		SpawnedPid
 %
 % afterTimeOut  ->
 %
-%	throw( { remote_synchronous_time_out, node(), ?MODULE } )
+%	throw( {remote_synchronous_time_out, node(), ?MODULE})
 %
 % end
 %
 -spec get_remote_receive_with_after( basic_utils:module_name(),
-		   time_utils:time_out(), line() ) -> form_element().
+		time_utils:time_out(), line() ) -> form_element().
 get_remote_receive_with_after( ModuleName, IsDebugMode, Line ) ->
 
 	TimeOut = wooper:get_synchronous_time_out( IsDebugMode ),
