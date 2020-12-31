@@ -140,6 +140,9 @@
 
 
 
+% At least for error cases, ellipsing traces is not a good idea; it may be done
+% later in the trace chain, by the actual logger itself:
+%
 -ifdef(wooper_unellipsed_traces).
 
  % Disables the ellipsing of traces (typically if having a suitable trace
@@ -150,7 +153,7 @@
 -else.
 
  % Default:
- -define( ellipse_length, 1500 ).
+ -define( ellipse_length, 2000 ).
 
 -endif.
 
@@ -528,7 +531,8 @@ execute_request_waiter( TargetInstancePID, RequestName, RequestArgs ) ->
 %
 -spec execute_request( instance_pid(), request_name(), method_arguments(),
 					method_internal_result() ) -> void().
-execute_request( TargetInstancePID, RequestName, RequestArgs, ExpectedResult ) ->
+execute_request( TargetInstancePID, RequestName, RequestArgs,
+				 ExpectedResult ) ->
 
 	TargetInstancePID ! { RequestName, RequestArgs, self() },
 
@@ -1097,7 +1101,7 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 % (helper)
 %
 -spec construct_and_run( classname(), construction_parameters() ) ->
-							   no_return().
+								no_return().
 
 
 -ifdef(wooper_debug_mode).
@@ -1441,7 +1445,7 @@ get_blank_state( Classname ) ->
 % (helper)
 %
 -spec default_exit_handler( basic_utils:pid_or_port(),
-		 exit_reason(), wooper:state() ) -> wooper:state().
+							exit_reason(), wooper:state() ) -> wooper:state().
 default_exit_handler( PidOrPort, ExitReason, State ) ->
 
 	log_warning( "WOOPER default EXIT handler of the ~w instance ~w "
@@ -1495,7 +1499,8 @@ default_down_handler( MonitorReference, MonitoredType, MonitoredElement,
 % (helper)
 %
 -spec default_node_up_handler( net_utils:atom_node_name(),
-		   monitor_utils:monitor_node_info(), wooper:state() ) -> wooper:state().
+		   monitor_utils:monitor_node_info(), wooper:state() ) ->
+									 wooper:state().
 default_node_up_handler( Node, MonitorNodeInfo, State ) ->
 
 	log_warning( "WOOPER default node up handler of the ~w "
@@ -1518,7 +1523,7 @@ default_node_up_handler( Node, MonitorNodeInfo, State ) ->
 % onWOOPERDownNotified/5 pair (which is process-related).
 %
 -spec default_node_down_handler( net_utils:atom_node_name(),
-		 monitor_utils:monitor_node_info(), wooper:state() ) -> wooper:state().
+		monitor_utils:monitor_node_info(), wooper:state() ) -> wooper:state().
 default_node_down_handler( Node, MonitorNodeInfo, State ) ->
 
 	log_warning( "WOOPER default node down handler of the ~w "
@@ -1597,8 +1602,8 @@ trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
 
 	UndefArity = length( UndefArgs ),
 
-	%trace_utils:info_fmt( "Construction failed (undef) in ~s:construct/~B, for "
-	%			"~s:~s/~B.",
+	%trace_utils:info_fmt( "Construction failed (undef) in ~s:construct/~B, "
+	%           "for ~s:~s/~B.",
 	%			[ Classname, Arity, ModuleName, FunctionName, UndefArity ] ),
 
 	Diagnosis = code_utils:interpret_undef_exception( ModuleName, FunctionName,
@@ -1943,7 +1948,9 @@ log_warning( FormatString, ValueList ) ->
 -spec log_error( ustring() ) -> void().
 log_error( Message ) ->
 
-	logger:error( text_utils:ellipse( Message, ?ellipse_length ) ++ "\n" ),
+	% Never ellipsing for errors now:
+	%logger:error( text_utils:ellipse( Message, ?ellipse_length ) ++ "\n" ),
+	logger:error( Message ++ "\n" ),
 
 	% Wait a bit, as logger (at least former error_logger) seems asynchronous:
 	system_utils:await_output_completion( ?wooper_error_display_waiting ).
@@ -1963,7 +1970,9 @@ log_error( FormatString, ValueList ) ->
 
 	%trace_utils:debug_fmt( "Error message: ~p.", [ Str ] ),
 
-	logger:error( text_utils:ellipse( Str, ?ellipse_length ) ),
+	% Never ellipsing for errors now:
+	%logger:error( text_utils:ellipse( Str, ?ellipse_length ) ),
+	logger:error( Str ),
 
 	% Wait a bit, as logger (at least former error_logger) seems asynchronous:
 	system_utils:await_output_completion( ?wooper_error_display_waiting ).
@@ -2011,9 +2020,10 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 %
 -spec on_failed_request( request_name(), method_arguments(), pid(),
 	error_type(), error_term(), stack_trace(), wooper:state() ) -> no_return().
-on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType, ErrorTerm=undef,
-	   _Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
-					 | NextCalls ], State ) ->
+on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType,
+	ErrorTerm=undef,
+	_Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
+				  | NextCalls ], State ) ->
 
 	Arity = length( ArgumentList ) + 1,
 
@@ -2156,7 +2166,7 @@ on_failed_oneway( OnewayName, ArgumentList, ErrorType, ErrorTerm, Stacktrace,
 % (helper)
 %
 -spec lookup_method_prefix( method_name(), arity(), wooper:state() ) ->
-								  ustring().
+									ustring().
 lookup_method_prefix( MethodAtom, Arity, State ) ->
 
 	try wooper_lookup_method( State, MethodAtom, Arity ) of
@@ -2347,7 +2357,7 @@ delete_synchronously_any_instance_referenced_in( _Attributes=[],
 
 
 delete_synchronously_any_instance_referenced_in( Attributes, PreTestLiveliness,
-								 State ) when is_list( Attributes ) ->
+									State ) when is_list( Attributes ) ->
 
 	% Triggers the deletion of selected instances:
 	{ TargetAttributes, TargetPids } =
