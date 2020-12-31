@@ -67,13 +67,13 @@ endif
 
 
 
-# As, with WOOPER, traces still rely on console output, default is ellipsing
-# emitted traces of lesser severity; uncomment next line to disable any
-# ellipsing of them (in order to have all of them in full):
+# As, with WOOPER, traces still rely on console output, the default here is to
+# ellipse emitted traces of lesser severity; uncomment next line to disable any
+# ellipsing of them (in order to have all traces in full):
 #
-# (note that, for such a variable to be assigned by an upper layer and be taken
-# into account here, WOOPER must be built from an overall, integrated Make
-# context - not as a series of separate builds)
+# (note that, for such a make variable to be assigned by an upper layer and to
+# be taken into account here, WOOPER must be built from an overall, integrated
+# Make context - not as a series of separate builds)
 #
 #WOOPER_UNELLIPSED_TRACES_OPT = -Dwooper_unellipsed_traces
 

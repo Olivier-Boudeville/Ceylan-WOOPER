@@ -141,7 +141,8 @@
 
 
 % At least for error cases, ellipsing traces is not a good idea; it may be done
-% later in the trace chain, by the actual logger itself:
+% later in the trace chain, by the actual logger itself (the default here is to
+% ellipse traces of lesser severity, supposing a basic console-like logger):
 %
 -ifdef(wooper_unellipsed_traces).
 
