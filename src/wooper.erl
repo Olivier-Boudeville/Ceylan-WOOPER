@@ -49,6 +49,7 @@
 -export([ execute_request/3, execute_request/4, send_requests/3,
 
 		  send_requests_and_wait_acks/4, send_requests_and_wait_acks/5,
+		  send_acknowledged_oneway_in_turn/5,
 		  wait_for_request_answers/2, wait_for_request_answers/3,
 		  wait_for_request_acknowledgements/2,
 		  wait_for_request_acknowledgements/3,
@@ -146,17 +147,17 @@
 %
 -ifdef(wooper_unellipsed_traces).
 
- % Disables the ellipsing of traces (typically if having a suitable trace
- % handler):
- %
- -define( ellipse_length, unlimited ).
+	% Disables the ellipsing of traces (typically if having a suitable trace
+	% handler):
+	%
+	-define( ellipse_length, unlimited ).
 
--else.
+-else. % wooper_unellipsed_traces
 
- % Default:
- -define( ellipse_length, 2000 ).
+	% Default:
+	-define( ellipse_length, 2000 ).
 
--endif.
+-endif. % wooper_unellipsed_traces
 
 
 
@@ -371,10 +372,11 @@
 -type stack_location() :: code_utils:stack_location().
 -type stack_item() :: code_utils:stack_item().
 
+% In milliseconds, if finite:
 -type time_out() :: time_utils:time_out().
 
 
-% Note: the {attribute, request, oneway, static, class}_info/0 types are
+% Note that the {attribute, request, oneway, static, class}_info/0 types are
 % exported from wooper_info.
 
 
@@ -480,11 +482,11 @@ execute_request( PassiveInstance, RequestName )
 % (public helper, as a convenience wrapper for passive instances)
 %
 -spec execute_request( instance_pid(), request_name(), method_arguments() ) ->
-							 request_result();
+							request_result();
 
 					 ( passive_instance(), request_name(),
 					   method_arguments() ) ->
-							 { passive_instance(), method_internal_result() }.
+							{ passive_instance(), method_internal_result() }.
 execute_request( TargetInstancePID, RequestName, RequestArgs )
   when is_pid( TargetInstancePID ) andalso is_atom( RequestName ) ->
 
@@ -513,7 +515,7 @@ execute_request_waiter( TargetInstancePID, RequestName, RequestArgs ) ->
 
 	after ?notify_long_wait_after ->
 
-		trace_utils:warning_fmt( "Still awaiting an answer from WOOPER "
+		trace_bridge:warning_fmt( "Still awaiting an answer from WOOPER "
 			"instance ~p, after having called request '~s' on it with "
 			"following parameters:~n~p",
 			[ TargetInstancePID, RequestName, RequestArgs ] ),
@@ -531,7 +533,7 @@ execute_request_waiter( TargetInstancePID, RequestName, RequestArgs ) ->
 % (helper)
 %
 -spec execute_request( instance_pid(), request_name(), method_arguments(),
-					method_internal_result() ) -> void().
+					   method_internal_result() ) -> void().
 execute_request( TargetInstancePID, RequestName, RequestArgs,
 				 ExpectedResult ) ->
 
@@ -553,7 +555,7 @@ execute_request_waiter( ExpectedResult, TargetInstancePID, RequestName,
 
 	after ?notify_long_wait_after ->
 
-		trace_utils:warning_fmt( "Still awaiting the expected answer '~p' "
+		trace_bridge:warning_fmt( "Still awaiting the expected answer '~p' "
 			"from WOOPER instance ~p, after having called request '~s' on it "
 			"with following parameters:~n~p",
 			[ ExpectedResult, TargetInstancePID, RequestName, RequestArgs ] ),
@@ -640,11 +642,14 @@ execute_const_request( PassiveInstance, RequestName, RequestArgs )
 
 
 
+
 % Second: one caller, one request, multiple callees, with a time-out or not.
 
 
-% Sends specified request (based on its names and arguments) to each of the
-% specified target instances.
+% Sends (in parallel) the specified request (based on its name and arguments) to
+% each of the specified target instances.
+%
+% No waiting/receiving of the request results performed here.
 %
 % (helper)
 %
@@ -659,15 +664,15 @@ send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 
 
 
-% Sends specified request (based on its name and arguments) to each of the
-% specified target instances, and waits (indefinitively) for their
+% Sends (in parallel) the specified request (based on its name and arguments) to
+% each of the specified target instances, and waits (indefinitively) for their
 % acknowledgement, which shall be their only result (i.e. these methods should
 % be requests only for synchronisation).
 %
 % No time-out: answers will be waited indefinitely.
 %
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
-								[ instance_pid() ], ack_atom() ) -> void().
+								   [ instance_pid() ], ack_atom() ) -> void().
 send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 							 AckAtom ) ->
 
@@ -677,9 +682,9 @@ send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 
 
 
-% Sends specified request (based on its names and arguments) to each of the
-% specified target instances, and waits for their acknowledgement; returns
-% whether it succeeded or if some instances triggered a time-out.
+% Sends (in parallel) the specified request (based on its name and arguments) to
+% each of the specified target instances, and waits for their acknowledgement;
+% returns whether it succeeded or if some instances triggered a time-out.
 %
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
 		[ instance_pid() ], time_out(), ack_atom() ) ->
@@ -690,6 +695,78 @@ send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 	send_requests( RequestName, RequestArgs, TargetInstancePIDs ),
 
 	wait_for_request_answers( TargetInstancePIDs, Timeout, AckAtom ).
+
+
+
+% Triggers a oneway on the specified series of instances, with no overlapping of
+% their processing, and returns the ones that failed to report on time that they
+% were executed.
+%
+% More precisely, for each of the specified instances, sends the specified
+% oneway (expecting one of the specified arguments to contain the PID of the
+% caller process so that the instance can send back an answer) and waits for an
+% acknowledgement thereof (as {AckAtom, InstancePid}}), then proceeds to the
+% next instance. Returns an (ordered, according to the input one) list of the
+% PIDs of the instances that failed to answer on time, based on specified
+% time-out.
+%
+-spec send_acknowledged_oneway_in_turn( oneway_name(), method_arguments(),
+		[ instance_pid() ], time_out(), ack_atom() ) -> [ instance_pid() ].
+send_acknowledged_oneway_in_turn( OnewayName, OnewayArgs, TargetInstancePIDs,
+								  Timeout, AckAtom ) ->
+
+	OnewayCall = { OnewayName, OnewayArgs },
+
+	Res = send_acked_oneway_in_turn_helper( OnewayCall, TargetInstancePIDs,
+											Timeout, AckAtom, _FailedAcc=[] ),
+
+	trace_bridge:debug_fmt( "For oneway call ~p, failed instances were ~p.",
+							[ OnewayCall, Res ] ),
+
+	Res.
+
+
+% (helper)
+send_acked_oneway_in_turn_helper( _OnewayCall, _TargetInstancePIDs=[], _Timeout,
+								  _AckAtom, FailedAcc ) ->
+	% Order maintained:
+	lists:reverse( FailedAcc );
+
+send_acked_oneway_in_turn_helper( OnewayCall,
+	  _TargetInstancePIDs=[ InstancePid | T ], Timeout, AckAtom, FailedAcc ) ->
+
+	trace_bridge:debug_fmt( "Sending oneway call ~p to ~w, to be acknowledged "
+		"with the atom '~s'.", [ OnewayCall, InstancePid, AckAtom ] ),
+
+	InstancePid ! OnewayCall,
+
+	receive
+
+		{ AckAtom, InstancePid } ->
+
+			trace_bridge:debug_fmt( "Received ack atom '~s' for ~w.",
+									[ AckAtom, InstancePid ] ),
+
+			send_acked_oneway_in_turn_helper( OnewayCall, T, Timeout, AckAtom,
+											  FailedAcc )
+
+		% Just to debug:
+		%Other ->
+		%	trace_bridge:debug_fmt( "Received ~w instead of ack.", [ Other ] ),
+		%	throw( { unexpected_ack, Other, OnewayCall, InstancePid } )
+
+	after Timeout ->
+
+		trace_bridge:error_fmt( "Ack atom '~s' not received for oneway call ~p "
+			"from ~w after a ~s.", [ AckAtom, OnewayCall,
+			InstancePid, time_utils:time_out_to_string( Timeout ) ] ),
+
+		send_acked_oneway_in_turn_helper( OnewayCall, T, Timeout, AckAtom,
+										  [ InstancePid | FailedAcc ] )
+
+	end.
+
+
 
 
 
@@ -816,7 +893,7 @@ wait_for_request_acknowledgements( Count, AckAtom ) ->
 											void().
 wait_for_request_acknowledgements( _Count=0, _AckAtom, _Timeout ) ->
 
-	%trace_utils:debug_fmt(
+	%trace_bridge:debug_fmt(
 	%  "[~w] No more waiting of the '~s' acknowledgement atom.",
 	%  [ self(), AckAtom ] ),
 
@@ -825,14 +902,14 @@ wait_for_request_acknowledgements( _Count=0, _AckAtom, _Timeout ) ->
 
 wait_for_request_acknowledgements( Count, AckAtom, Timeout ) ->
 
-	%trace_utils:debug_fmt( "[~w] Waiting for ~B '~s' acknowledgement atom(s).",
-	%						[ self(), Count, AckAtom ] ),
+	%trace_bridge:debug_fmt( "[~w] Waiting for ~B '~s' acknowledgement "
+	%    atom(s).", [ self(), Count, AckAtom ] ),
 
 	receive
 
 		{ wooper_result, AckAtom } ->
 
-			%trace_utils:debug_fmt(
+			%trace_bridge:debug_fmt(
 			%  "[~w] Received a '~s' acknowledgement atom.",
 			%  [ self(), AckAtom ] ),
 
@@ -840,7 +917,7 @@ wait_for_request_acknowledgements( Count, AckAtom, Timeout ) ->
 
 	after Timeout ->
 
-		trace_utils:error_fmt( "Time-out after ~s, while still waiting for ~B "
+		trace_bridge:error_fmt( "Time-out after ~s, while still waiting for ~B "
 			"'~s' request acknowledgements.",
 			[ time_utils:duration_to_string( Timeout ), Count, AckAtom ] ),
 
@@ -894,7 +971,7 @@ collect_wooper_messages( Count, Acc ) ->
 
 
 
-% Second: one caller,multiple requests, one callee (expected to answer them in
+% Second: one caller, multiple requests, one callee (expected to answer them in
 % order - which is the general case in WOOPER where there is no selective
 % receive).
 %
@@ -903,14 +980,20 @@ collect_wooper_messages( Count, Acc ) ->
 
 
 
-% Sends specified series of requests (based on its names and arguments) to the
-% specified target instance.
+% Sends directly the specified series of requests (based on their respective
+% names and arguments) to the specified (single) target instance.
+%
+% Request answers not specifically managed by this function.
 %
 % (helper)
 %
 -spec send_request_series( [ { request_name(), method_arguments() } ],
 						   instance_pid() ) -> void().
 send_request_series( _Requests=[], _TargetInstancePID ) ->
+
+	% A list comprehension could have been used (but then no check that elements
+	% are pairs indeed)
+	%
 	ok;
 
 send_request_series( _Requests=[ { RequestName, RequestArgs } | T ],
@@ -924,13 +1007,9 @@ send_request_series( _Requests=[ { RequestName, RequestArgs } | T ],
 
 
 
-
-% Sends the specified request to all specified instances for execution, in
-% parallel, and returns the corresponding results, in indiscriminated order.
-%
-% Note: no specified order is enforced in the result list; hence this helper is
-% meant to be used when we can collect each result regardless of its specific
-% sender.
+% Sends directly the specified series of requests (based on their respective
+% names and arguments) to the specified (single) target instance, and returns
+% the corresponding results, in the specified order for the requests.
 %
 % (exported helper)
 %
@@ -941,7 +1020,7 @@ obtain_results_for_request_series( Requests, TargetInstancePID ) ->
 
 	send_request_series( Requests, TargetInstancePID ),
 
-	% Requests sent in-order, so will answers be received:
+	% Requests sent in-order, so answers will be received in the same order:
 	wait_request_series( _WaitCount=length( Requests ), _Acc=[] ).
 
 
@@ -982,7 +1061,7 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 
 			  { embody, [ Class, ConstructionParameters ] } ->
 
-				%trace_utils:debug_fmt(
+				%trace_bridge:debug_fmt(
 				%   "Process ~w becoming asynchronously an instance "
 				%	"of class '~s', constructed from following "
 				%	"parameters:~n~p.",
@@ -995,7 +1074,7 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 			  % We might need to notify another process than the caller:
 			  { embody, [ Class, ConstructionParameters ], ToNotifyPid } ->
 
-				%trace_utils:debug_fmt(
+				%trace_bridge:debug_fmt(
 				%   "Process ~w becoming synchronously an instance "
 				%	"of class '~s', constructed from following "
 				%	"parameters:~n~p.",
@@ -1049,7 +1128,7 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 
 				[] ->
-					trace_utils:error_fmt( "Error, no 'construct' exported "
+					trace_bridge:error_fmt( "Error, no 'construct' exported "
 						"in '~s' (regardless of arity).", [ Classname ] ),
 					throw( { no_exported_construct, Classname } );
 
@@ -1057,7 +1136,7 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 					ExtraCount  = FoundArity - ArgCount,
 
-					trace_utils:error_fmt( "Error, no ~s:construct/~B found, "
+					trace_bridge:error_fmt( "Error, no ~s:construct/~B found, "
 						"whereas construct/~B is exported; ~B extra "
 						"construction parameter(s) specified.",
 						[ Classname, ArgCount, FoundArity, ExtraCount ] ),
@@ -1071,7 +1150,7 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 					LackingCount  = ArgCount - FoundArity,
 
-					trace_utils:error_fmt( "Error, no ~s:construct/~B found, "
+					trace_bridge:error_fmt( "Error, no ~s:construct/~B found, "
 						"whereas construct/~B is exported; ~B lacking "
 						"construction parameter(s) specified.",
 						[ Classname, ArgCount, FoundArity, LackingCount ] ),
@@ -1082,7 +1161,7 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 				ConstructArities ->
 
-					trace_utils:error_fmt( "Error, no ~s:construct/~B found, "
+					trace_bridge:error_fmt( "Error, no ~s:construct/~B found, "
 						"whereas this function is exported for following "
 						"arities: ~w.",
 						[ Classname, ArgCount, ConstructArities ] ),
@@ -1109,7 +1188,7 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 construct_and_run( Classname, ConstructionParameters ) ->
 
-	%trace_utils:debug_fmt( "wooper:construct_and_run for class ~p "
+	%trace_bridge:debug_fmt( "wooper:construct_and_run for class ~p "
 	%					   "and following parameters:~n ~p",
 	%					   [ Classname, ConstructionParameters ] ),
 
@@ -1324,12 +1403,12 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 							passive_instance().
 construct_passive( Classname, ConstructionParameters ) ->
 
-	%trace_utils:debug_fmt( "wooper:construct_passive for class ~s "
+	%trace_bridge:debug_fmt( "wooper:construct_passive for class ~s "
 	%					   "and parameters ~p.",
 	%					   [ Classname, ConstructionParameters ] ),
 
 	cond_utils:if_defined( wooper_debug_mode,
-		   check_classname_and_arity( Classname, ConstructionParameters ) ),
+			check_classname_and_arity( Classname, ConstructionParameters ) ),
 
 	BlankState = get_blank_state( Classname ),
 
@@ -1385,7 +1464,7 @@ execute_oneway( PassiveInstance, OnewayName, OnewayArgs )
    when is_record( PassiveInstance, ?passive_record )
 		andalso is_atom( OnewayName ) andalso is_list( OnewayArgs ) ->
 
-	%trace_utils:info_fmt( "Executing oneway ~s/~B on passive instance",
+	%trace_bridge:info_fmt( "Executing oneway ~s/~B on passive instance",
 	%					   [ OnewayName, length( OnewayArgs ) ] ),
 
 	{ NewPassiveInstance, wooper_method_returns_void } =
@@ -1398,7 +1477,7 @@ execute_oneway( PassiveInstance, OnewayName, OnewayArg )
    when is_record( PassiveInstance, ?passive_record )
 		andalso is_atom( OnewayName ) ->
 
-	%trace_utils:info_fmt( "Executing oneway ~s on passive instance",
+	%trace_bridge:info_fmt( "Executing oneway ~s on passive instance",
 	%					   [ OnewayName ] ),
 
 	{ NewPassiveInstance, wooper_method_returns_void } =
@@ -1552,7 +1631,7 @@ default_node_down_handler( Node, MonitorNodeInfo, State ) ->
 
 retrieve_virtual_table_key( Classname ) ->
 
-	%trace_utils:debug_fmt( "Retrieving the OTP-way the virtual table "
+	%trace_bridge:debug_fmt( "Retrieving the OTP-way the virtual table "
 	%						"key for '~s'.", [ Classname ] ),
 
 	% The OTP way, through a gen_server:call/2:
@@ -1564,7 +1643,7 @@ retrieve_virtual_table_key( Classname ) ->
 
 retrieve_virtual_table_key( Classname ) ->
 
-	%trace_utils:debug_fmt(
+	%trace_bridge:debug_fmt(
 	%  "Retrieving classically (non-OTP way) the virtual table key for '~s'.",
 	%  [ Classname ] ),
 
@@ -1594,7 +1673,7 @@ trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
 	   _Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
 					 | NextCalls ] ) ->
 
-	%trace_utils:debug_fmt( "NextCalls: ~p", [ NextCalls ] ),
+	%trace_bridge:debug_fmt( "NextCalls: ~p", [ NextCalls ] ),
 
 	% An undef error is difficult to investigate (multiple possible reasons
 	% behind), let's be nice to the developer:
@@ -1603,7 +1682,7 @@ trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
 
 	UndefArity = length( UndefArgs ),
 
-	%trace_utils:info_fmt( "Construction failed (undef) in ~s:construct/~B, "
+	%trace_bridge:info_fmt( "Construction failed (undef) in ~s:construct/~B, "
 	%           "for ~s:~s/~B.",
 	%			[ Classname, Arity, ModuleName, FunctionName, UndefArity ] ),
 
@@ -1630,7 +1709,7 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
 
 	Arity = length( ConstructionParameters ) + 1,
 
-	%trace_utils:info_fmt( "Construction failed for ~s:construct/~B.",
+	%trace_bridge:info_fmt( "Construction failed for ~s:construct/~B.",
 	%					   [ Classname, Arity ] ),
 
 	log_error( "~nWOOPER error for PID ~w, "
@@ -1969,7 +2048,7 @@ log_error( FormatString, ValueList ) ->
 			FormatString ++ "~n=END OF WOOPER ERROR REPORT FOR ~w ===~n",
 			ValueList ++ [ self() ] ),
 
-	%trace_utils:debug_fmt( "Error message: ~p.", [ Str ] ),
+	%trace_bridge:debug_fmt( "Error message: ~p.", [ Str ] ),
 
 	% Never ellipsing for errors now:
 	%logger:error( text_utils:ellipse( Str, ?ellipse_length ) ),
@@ -2207,7 +2286,7 @@ send_and_listen( InstancePid, RequestName, Arguments ) ->
 
 		{ wooper_result, Result } ->
 
-			%trace_utils:debug_fmt(
+			%trace_bridge:debug_fmt(
 			%   "Result of call to '~w' with arguments '~w': ~s",
 			%	[ RequestName, Arguments,
 			%	 text_utils:term_to_string( Result ) ] ),
@@ -2216,7 +2295,7 @@ send_and_listen( InstancePid, RequestName, Arguments ) ->
 
 		Anything ->
 
-			%trace_utils:debug_fmt(
+			%trace_bridge:debug_fmt(
 			% "Answer to call to '~w' with arguments '~w': ~s",
 			%	[ RequestName, Arguments,
 			%	  text_utils:term_to_string( Anything ) ] ),
@@ -2364,7 +2443,7 @@ delete_synchronously_any_instance_referenced_in( Attributes, PreTestLiveliness,
 	{ TargetAttributes, TargetPids } =
 		delete_pid_from( Attributes, PreTestLiveliness, State ),
 
-	%trace_utils:debug_fmt(
+	%trace_bridge:debug_fmt(
 	%  "delete_synchronously_any_instance_referenced_in:~n"
 	%  " - attributes are: ~p~n"
 	%  " - PIDs are: ~p~n"
@@ -2375,7 +2454,7 @@ delete_synchronously_any_instance_referenced_in( Attributes, PreTestLiveliness,
 	% Waits for their completion:
 	wait_for_deletion_ack( TargetPids ),
 
-	%trace_utils:debug_fmt( "(all deletion acks received for ~p)",
+	%trace_bridge:debug_fmt( "(all deletion acks received for ~p)",
 	%                       [ TargetAttributes ] ),
 
 	% Erases deleted PIDs:
@@ -2426,13 +2505,13 @@ delete_pid_from( [ Attr | T ], DeleteMessage, PreTestLiveliness, State,
 
 				% Only case where no deletion oneway shall be sent:
 				true ->
-					%trace_utils:debug_fmt(
+					%trace_bridge:debug_fmt(
 					%  "(PID ~w was already dead, nothing done)", [ Pid ] ),
 					delete_pid_from( T, DeleteMessage, PreTestLiveliness,
 									 State, [ Attr | AccAttr ], AccPid );
 
 				false ->
-					%trace_utils:debug_fmt( "Sending sync delete now ~s "
+					%trace_bridge:debug_fmt( "Sending sync delete now ~s "
 					%                       "(PID: ~w).", [ Attr, Pid ] ),
 					Pid ! DeleteMessage,
 					delete_pid_from( T, DeleteMessage, PreTestLiveliness,
@@ -2451,7 +2530,7 @@ delete_pid_from( [ Attr | T ], DeleteMessage, PreTestLiveliness, State,
 -spec delete_synchronously_instance( instance_pid() ) -> void().
 delete_synchronously_instance( InstancePid ) ->
 
-	%trace_utils:debug_fmt( "delete_synchronously_instance for ~w.",
+	%trace_bridge:debug_fmt( "delete_synchronously_instance for ~w.",
 	%                       [ InstancePid ] ),
 
 	InstancePid ! { synchronous_delete, self() },
@@ -2459,7 +2538,7 @@ delete_synchronously_instance( InstancePid ) ->
 	receive
 
 		{ deleted, InstancePid } ->
-			%trace_utils:debug_fmt( "Synchronous deletion of ~w confirmed.",
+			%trace_bridge:debug_fmt( "Synchronous deletion of ~w confirmed.",
 			%						[ Pid ] ),
 			ok
 
@@ -2477,7 +2556,7 @@ delete_synchronously_instance( InstancePid ) ->
 -spec delete_synchronously_instances( [ instance_pid() ] ) -> void().
 delete_synchronously_instances( InstanceList ) ->
 
-	%trace_utils:debug_fmt( "delete_synchronously_instances for ~p.",
+	%trace_bridge:debug_fmt( "delete_synchronously_instances for ~p.",
 	%                       [ InstanceList ] ),
 
 	DeleteMessage = { synchronous_delete, self() },
@@ -2521,7 +2600,7 @@ wait_for_deletion_ack( WaitedPids ) ->
 					ok;
 
 				NewWaitedPids ->
-					trace_utils:debug_fmt(
+					trace_bridge:debug_fmt(
 					  "(still waiting for the synchronous deletion of "
 					  "following live WOOPER instance(s): ~p)",
 					  [ NewWaitedPids ] ),
@@ -2540,7 +2619,7 @@ examine_waited_deletions( _WaitedPids=[], Acc ) ->
 
 examine_waited_deletions( _WaitedPids=[ Pid | T ], Acc ) ->
 
-	%trace_utils:debug_fmt( "Testing whether ~p is alive...", [ Pid ] ),
+	%trace_bridge:debug_fmt( "Testing whether ~p is alive...", [ Pid ] ),
 
 	% Manages processes that are not local as well:
 	case basic_utils:is_alive( Pid ) of
@@ -2549,7 +2628,7 @@ examine_waited_deletions( _WaitedPids=[ Pid | T ], Acc ) ->
 			examine_waited_deletions( T, [ Pid | Acc ] );
 
 		false ->
-			trace_utils:debug_fmt(
+			trace_bridge:debug_fmt(
 			  "Stopped waiting for the deletion of instance "
 			  "whose PID is ~p: not found alive.", [ Pid ] ),
 
@@ -2583,7 +2662,7 @@ safe_delete_synchronously_instances( InstanceList ) ->
 % Deletes specified passive instance.
 -spec delete_passive( passive_instance() ) -> void().
 delete_passive( _PassiveInstance ) ->
-	%trace_utils:info( "Passive instance deleted." ),
+	%trace_bridge:info( "Passive instance deleted." ),
 	ok.
 
 
