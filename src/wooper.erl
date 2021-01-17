@@ -48,6 +48,8 @@
 % Communication helpers for active instances:
 -export([ execute_request/3, execute_request/4, send_requests/3,
 
+		  send_request_in_turn/3, send_request_in_turn/4,
+
 		  send_requests_and_wait_acks/4, send_requests_and_wait_acks/5,
 		  send_acknowledged_oneway_in_turn/5,
 		  wait_for_request_answers/2, wait_for_request_answers/3,
@@ -567,9 +569,9 @@ execute_request_waiter( ExpectedResult, TargetInstancePID, RequestName,
 
 
 
-% Sends specified const request to specified passive instance, and returns it
-% this result, knowing that the state of this passive instance is expected to
-% remain the same (and thus will not be returned).
+% Triggers the specified const request on the specified passive instance, and
+% returns it this result, knowing that the state of this passive instance is
+% expected to remain the same (and thus will not be returned).
 %
 % Note: the called method is checked for constness only in debug mode.
 %
@@ -643,7 +645,80 @@ execute_const_request( PassiveInstance, RequestName, RequestArgs )
 
 
 
-% Second: one caller, one request, multiple callees, with a time-out or not.
+% Second: one caller, one request, multiple callees, sequentially or in
+% parallel, with a time-out or not.
+
+
+% Triggers a request in turn on the specified series of instances, with no
+% overlapping of their processing, and returns their respective, ordered
+% results.
+%
+% No time-out applies: blocks indefinitely if an instance fails to answer.
+%
+-spec send_request_in_turn( request_name(), method_arguments(),
+							[ instance_pid() ] ) -> [ request_result() ].
+send_request_in_turn( RequestName, RequestArgs, TargetInstancePIDs ) ->
+
+	trace_utils:debug_fmt( "Sending request '~s' (no time-out) in turn to ~B "
+		"instances (~p), with arguments ~p .",
+		[ RequestName, length( TargetInstancePIDs ), TargetInstancePIDs,
+		  RequestArgs ] ),
+
+	send_request_in_turn( RequestName, RequestArgs, TargetInstancePIDs,
+						  _AccRes=[], _Timeout=infinity ).
+
+
+
+% Triggers a request in turn on the specified series of instances, with no
+% overlapping of their processing, and returns their respective, ordered
+% results.
+%
+% Throws an exception if an instance fails to answer within specified time-out.
+%
+-spec send_request_in_turn( request_name(), method_arguments(),
+		[ instance_pid() ], time_utils:time_out() ) -> [ request_result() ].
+send_request_in_turn( RequestName, RequestArgs, TargetInstancePIDs, Timeout ) ->
+
+	trace_utils:debug_fmt( "Sending request '~s', with a ~s, in turn "
+		"to ~B instances (~p), with arguments ~p.",
+		[ RequestName, time_utils:time_out_to_string( Timeout ),
+		  length( TargetInstancePIDs ), TargetInstancePIDs, RequestArgs ] ),
+
+	send_request_in_turn( RequestName, RequestArgs, TargetInstancePIDs,
+						  _AccRes=[], Timeout ).
+
+
+% (helper)
+send_request_in_turn( _RequestName, _RequestArgs, _TargetInstancePIDs=[],
+					  AccRes, _Timeout ) ->
+	lists:reverse( AccRes );
+
+send_request_in_turn( RequestName, RequestArgs,
+			  _TargetInstancePIDs=[ InstancePid | H ], AccRes, Timeout ) ->
+
+	InstancePid ! { RequestName, RequestArgs, self() },
+
+	trace_utils:debug_fmt( "Sent request '~s' to ~w, waiting for result.",
+						   [ RequestName, InstancePid ] ),
+
+	receive
+
+		{ wooper_result, R } ->
+			trace_utils:debug_fmt( "For request '~s' sent to ~w, got following "
+				"result: ~p.", [ RequestName, InstancePid, R ] ),
+			send_request_in_turn( RequestName, RequestArgs, H, [ R | AccRes ] )
+
+	after Timeout ->
+
+		trace_utils:error_fmt( "Time-out reached (~s) for call of request '~s' "
+			"with arguments ~p to instance ~w.",
+			[ time_utils:time_out_to_string( Timeout ), RequestName,
+			  RequestArgs, InstancePid ] ),
+
+		throw( { request_time_out, RequestName, InstancePid, Timeout } )
+
+	end.
+
 
 
 % Sends (in parallel) the specified request (based on its name and arguments) to
@@ -1015,7 +1090,7 @@ send_request_series( _Requests=[ { RequestName, RequestArgs } | T ],
 %
 -spec obtain_results_for_request_series(
 		[ { request_name(), method_arguments() } ], instance_pid() ) ->
-											   [ request_result() ].
+											[ request_result() ].
 obtain_results_for_request_series( Requests, TargetInstancePID ) ->
 
 	send_request_series( Requests, TargetInstancePID ),
@@ -1668,7 +1743,7 @@ retrieve_virtual_table_key( Classname ) ->
 % (helper)
 %
 -spec trigger_error( basic_utils:exception_class(), term(), classname(),
-		 [ method_arguments() ], stack_trace() ) -> no_return().
+			[ method_arguments() ], stack_trace() ) -> no_return().
 trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
 	   _Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
 					 | NextCalls ] ) ->
