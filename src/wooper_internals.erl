@@ -40,8 +40,17 @@
 -include_lib("myriad/include/ast_transform.hrl").
 
 
-% Shorthand:
+% Shorthands:
+
+-type ustring() :: text_utils:ustring().
+-type format_string() :: text_utils:format_string().
+-type format_values() :: text_utils:format_values().
+
+-type line() :: ast_base:line().
+
 -type ast_transforms() :: ast_transform:ast_transforms().
+
+-type classname() :: wooper:classname().
 
 
 
@@ -85,7 +94,7 @@ raise_error( ErrorTerm, Context ) ->
 % source context is available), when applying this parse transform, to stop the
 % build on failure and report adequately the actual error to the user.
 %
--spec raise_usage_error( text_utils:ustring() ) -> no_return().
+-spec raise_usage_error( ustring() ) -> no_return().
 raise_usage_error( ErrorString ) ->
 	raise_usage_error( ErrorString, _ErrorFormatValues=[] ).
 
@@ -94,8 +103,7 @@ raise_usage_error( ErrorString ) ->
 % source context is available), when applying this parse transform, to stop the
 % build on failure and report adequately the actual error to the user.
 %
--spec raise_usage_error( text_utils:format_string(),
-						 text_utils:format_values() ) -> no_return().
+-spec raise_usage_error( format_string(), format_values() ) -> no_return().
 raise_usage_error( ErrorFormatString, ErrorFormatValues ) ->
 
 	io:format( "error: " ++ ErrorFormatString ++ "~n", ErrorFormatValues ),
@@ -108,12 +116,10 @@ raise_usage_error( ErrorFormatString, ErrorFormatValues ) ->
 % source context, when applying this parse transform, to stop the build on
 % failure and report adequately the actual error to the user.
 %
--spec raise_usage_error( text_utils:ustring(), ast_transforms(),
-						 ast_base:line() ) -> no_return();
-					   ( text_utils:ustring(), wooper:classname(),
-						 ast_base:line() ) -> no_return();
-					   ( text_utils:format_string(), text_utils:format_values(),
-						 wooper:classname() ) -> no_return().
+-spec raise_usage_error( ustring(), ast_transforms(), line() ) -> no_return();
+					   ( ustring(), classname(), line() ) -> no_return();
+					   ( format_string(), format_values(), classname() ) ->
+							   no_return().
 raise_usage_error( ErrorString,
 				   #ast_transforms{ transformed_module_name=Classname },
 				   Line ) ->
@@ -161,13 +167,11 @@ raise_usage_error( ErrorFormatString, ErrorFormatValues, Classname ) ->
 % source context, when applying this parse transform, to stop the build on
 % failure and report the actual error.
 %
--spec raise_usage_error( text_utils:format_string(), text_utils:format_values(),
-			ast_transforms() | wooper:classname(), ast_base:line() ) ->
-							   no_return().
+-spec raise_usage_error( format_string(), format_values(),
+			ast_transforms() | classname(), line() ) -> no_return().
 raise_usage_error( ErrorFormatString, ErrorValues, TransformsOrClass, Line ) ->
 	ErrorString = text_utils:format( ErrorFormatString, ErrorValues ),
 	raise_usage_error( ErrorString, TransformsOrClass, Line ).
-
 
 
 
@@ -176,10 +180,9 @@ raise_usage_error( ErrorFormatString, ErrorValues, TransformsOrClass, Line ) ->
 %
 % Does not stop the build.
 %
--spec notify_warning( [ term() ] ) -> basic_utils:void().
+-spec notify_warning( [ term() ] ) -> void().
 notify_warning( Elements ) ->
 	notify_warning( Elements, _Context=undefined ).
-
 
 
 % Notifies a (compile-time, rather ad hoc) warning, with specified context, when
@@ -187,7 +190,6 @@ notify_warning( Elements ) ->
 %
 % Does not stop the build.
 %
--spec notify_warning( [ term() ], ast_base:form_context() ) ->
-							basic_utils:void().
+-spec notify_warning( [ term() ], ast_base:form_context() ) -> void().
 notify_warning( Elements, Context ) ->
 	ast_utils:notify_warning( Elements, Context ).

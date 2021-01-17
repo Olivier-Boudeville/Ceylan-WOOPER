@@ -1904,7 +1904,7 @@ call_transformer( LineCall, FunctionRef={ remote, _, {atom,_,wooper},
 				  Params,
 				  Transforms=#ast_transforms{
 						transformed_function_identifier=FunId,
-						transformation_state={ _Nature, _Qualifiers,
+						transformation_state={ Nature, _Qualifiers,
 											   WOOPERExportSet } } ) ->
 
 	CallFunId = { FunctionName, length( Params ) },
@@ -1938,10 +1938,37 @@ call_transformer( LineCall, FunctionRef={ remote, _, {atom,_,wooper},
 			%					   "module:~n  ~s",
 			%					   [ table:to_string( WOOPERExportSet ) ] ),
 
+			% To convert end of lines:
+			ExtraHint = text_utils:format( case Nature of
+
+				request ->
+					"~nThe supported terminators for requests are "
+					"wooper:return_state_result/2 and "
+					"wooper:const_return_result/1.";
+
+				oneway ->
+					"~nThe supported terminators for oneways are "
+					"wooper:return_state/1 and wooper:const_return/0.";
+
+				static ->
+					"~nThe only supported terminator for static methods is "
+					"wooper:return_static/1.";
+
+				_ ->
+					"~nSupported terminators are (all prefixed with the "
+					"'wooper' module):~n"
+					"  - for requests: return_state_result/2 and "
+					"const_return_result/1~n"
+					"  - for oneways: return_state/1 and const_return/0~n"
+					"  - for static methods: return_static/1~n"
+
+			end, [] ),
+
 			wooper_internals:raise_usage_error( "invalid method terminator "
-			  "specified for ~s/~B: wooper:~s/~B is neither a known terminator "
-			  "nor a WOOPER-exported function.",
-			  pair:to_list( FunId ) ++ pair:to_list( CallFunId ),
+			  "specified for ~s/~B: wooper:~s/~B is neither a known "
+			  "terminator nor a WOOPER-exported function.~s",
+			  pair:to_list( FunId ) ++ pair:to_list( CallFunId )
+									++ [ ExtraHint ],
 			  Transforms, LineCall )
 
 	end;
