@@ -676,7 +676,7 @@ send_request_in_turn( RequestName, RequestArgs, TargetInstancePIDs ) ->
 % Throws an exception if an instance fails to answer within specified time-out.
 %
 -spec send_request_in_turn( request_name(), method_arguments(),
-		[ instance_pid() ], time_utils:time_out() ) -> [ request_result() ].
+		[ instance_pid() ], time_out() ) -> [ request_result() ].
 send_request_in_turn( RequestName, RequestArgs, TargetInstancePIDs, Timeout ) ->
 
 	trace_utils:debug_fmt( "Sending request '~s', with a ~s, in turn "
@@ -706,7 +706,8 @@ send_request_in_turn( RequestName, RequestArgs,
 		{ wooper_result, R } ->
 			trace_utils:debug_fmt( "For request '~s' sent to ~w, got following "
 				"result: ~p.", [ RequestName, InstancePid, R ] ),
-			send_request_in_turn( RequestName, RequestArgs, H, [ R | AccRes ] )
+			send_request_in_turn( RequestName, RequestArgs, H, [ R | AccRes ],
+								  Timeout )
 
 	after Timeout ->
 
