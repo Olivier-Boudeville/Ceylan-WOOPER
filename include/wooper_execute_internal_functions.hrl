@@ -87,8 +87,8 @@
 
 
 % Requests send results as they are (with 'CallerPid ! Result'). They could
-% specify additionally the PID of the called instance ('CallerPid ! {
-% _InstancePID=self(), Result }') to discriminate possible parallel requests
+% specify additionally the PID of the called instance ('CallerPid !
+% {_InstancePID=self(), Result}') to discriminate possible parallel requests
 % triggered by a single caller.
 
 
@@ -162,8 +162,7 @@ wooper_execute_method( MethodAtom, Parameters, State )
 	   andalso is_record( State, state_holder ) ->
 
 	%trace_utils:debug_fmt( "wooper_execute_method: looking up ~s(~w) "
-	%					   "from ~s (A).",
-	%					   [ MethodAtom, Parameters, ?MODULE ] ),
+	%   "from ~s (A).",	[ MethodAtom, Parameters, ?MODULE ] ),
 
 	% +1: take into account the State additional parameter:
 	MethodArity = length( Parameters ) + 1,
@@ -176,7 +175,7 @@ wooper_execute_method( MethodAtom, Parameters, State )
 			%   "~s:~s(~w) from ~s.",
 			%   [ ?MODULE, MethodAtom, Parameters, LocatedModule ] ),
 
-			% Returns { NewState, PossibleResult }:
+			% Returns {NewState, PossibleResult}:
 			wooper_effective_method_execution( LocatedModule, MethodAtom,
 											   State, Parameters );
 
@@ -233,8 +232,7 @@ wooper_execute_method( MethodAtom, Parameters, State )
 wooper_execute_method( MethodAtom, Parameters, State ) ->
 
 	%trace_utils:debug_fmt( "wooper_execute_method: looking up ~s(~w) "
-	%					   "from ~s (B).",
-	%					   [ MethodAtom, Parameters, ?MODULE ] ),
+	%	"from ~s (B).", [ MethodAtom, Parameters, ?MODULE ] ),
 
 	% +1: take into account the State additional parameter:
 	MethodArity = length( Parameters ) + 1,
@@ -244,8 +242,7 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 		{ value, LocatedModule } ->
 
 			%trace_utils:debug_fmt( "wooper_execute_method: executing ~s:~s(~w)"
-			%   " from ~s.",
-			%   [ ?MODULE, MethodAtom, Parameters, LocatedModule ] ),
+			% " from ~s.", [ ?MODULE, MethodAtom, Parameters, LocatedModule ] ),
 
 			wooper_effective_method_execution( LocatedModule, MethodAtom,
 											   State, Parameters );
@@ -306,7 +303,7 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 % (helper)
 %
 -spec wooper_lookup_method( wooper:state(), method_name(), arity() ) ->
-								  { 'value', classname() } | 'key_not_found'.
+							    { 'value', classname() } | 'key_not_found'.
 wooper_lookup_method( State, MethodAtom, Arity ) ->
 	?wooper_table_type:lookup_entry( { MethodAtom, Arity },
 		%persistent_term:get( State#state_holder.virtual_table_key ) ).
@@ -674,7 +671,7 @@ wooper_handle_local_request_execution( RequestAtom, State, ArgumentList ) ->
 %
 -spec wooper_handle_local_request_execution_as( method_name(), wooper:state(),
 		method_arguments(), classname() ) ->
-							 { wooper:state(), method_internal_result() }.
+							    { wooper:state(), method_internal_result() }.
 
 
 -compile( { inline, [ wooper_handle_local_request_execution_as/4 ] } ).
@@ -685,7 +682,7 @@ wooper_handle_local_request_execution( RequestAtom, State, ArgumentList ) ->
 
 % In debug mode, we perform additional checkings:
 wooper_handle_local_request_execution_as( RequestAtom, State, ArgumentList,
-											Classname ) ->
+										  Classname ) ->
 
 	% Due to nesting, can be licitly 'undefined' or a PID:
 	PreviousRequestSender = State#state_holder.request_sender,
@@ -694,7 +691,7 @@ wooper_handle_local_request_execution_as( RequestAtom, State, ArgumentList,
 
 	% Local request, hence no try/catch:
 	{ RequestState, Result } = wooper_execute_method_as( Classname,
-								  RequestAtom, ArgumentList, SenderAwareState ),
+							    RequestAtom, ArgumentList, SenderAwareState ),
 
 	ActualResult = case Result of
 
@@ -1020,7 +1017,7 @@ wooper_handle_local_oneway_execution_as( OnewayAtom, State, ArgumentList,
 
 	% Result expected to be 'wooper_method_returns_void' here:
 	{ OnewayState, _Result } = wooper_execute_method_as( Classname,
-								   OnewayAtom, ArgumentList, SenderAwareState ),
+							    OnewayAtom, ArgumentList, SenderAwareState ),
 
 	OnewayState#state_holder{ request_sender=PreviousRequestSender }.
 
