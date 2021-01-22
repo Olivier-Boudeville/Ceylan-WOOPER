@@ -45,7 +45,7 @@
 
 
 
-% Communication helpers for active instances:
+% Single/multi call communication helpers for active instances:
 -export([ execute_request/3, execute_request/4, send_requests/3,
 
 		  send_request_in_turn/3, send_request_in_turn/4,
@@ -84,7 +84,8 @@
 % Method execution for passive instances:
 -export([ execute_request/2, % already exported: execute_request/3,
 		  execute_const_request/2, execute_const_request/3,
-		  execute_oneway/2, execute_oneway/3 ]).
+		  execute_oneway/2, execute_oneway/3,
+		  execute_const_oneway/2, execute_const_oneway/3 ]).
 
 
 % Infrequently-called functions for state management:
@@ -304,10 +305,10 @@
 -type passive_instance() :: state().
 
 
-% Atom used to denote an acknowlegment (i.e. a conventional symbol to ensure
-% that a request was synchronously executed):
+% A term (often an atom) used to denote an acknowlegment (i.e. a conventional
+% symbol to ensure that a request was synchronously executed):
 %
--type ack_atom() :: atom().
+-type ack_term() :: term().
 
 
 % PID of a process (not necessarily a WOOPER instance) interacting with such an
@@ -485,7 +486,6 @@ execute_request( PassiveInstance, RequestName )
 %
 -spec execute_request( instance_pid(), request_name(), method_arguments() ) ->
 							request_result();
-
 					 ( passive_instance(), request_name(),
 					   method_arguments() ) ->
 							{ passive_instance(), method_internal_result() }.
@@ -587,10 +587,10 @@ execute_const_request( PassiveInstance, RequestName )
 	   andalso is_atom( RequestName ) ->
 
 	% Matching PassiveInstance:
-	{ PassiveInstance, { wooper_result, R } } =
+	{ PassiveInstance, { wooper_result, Res } } =
 		wooper_execute_method( RequestName, _RequestArgs=[], PassiveInstance ),
 
-	R.
+	Res.
 
 -else. % wooper_debug_mode
 
@@ -598,10 +598,10 @@ execute_const_request( PassiveInstance, RequestName )
   when is_record( PassiveInstance, ?passive_record )
 	   andalso is_atom( RequestName ) ->
 
-	{ _ExpectedSamePassiveInstance, { wooper_result, R } } =
+	{ _ExpectedSamePassiveInstance, { wooper_result, Res } } =
 		wooper_execute_method( RequestName, _RequestArgs=[], PassiveInstance ),
 
-	R.
+	Res.
 
 -endif. % wooper_debug_mode
 
@@ -624,10 +624,10 @@ execute_const_request( PassiveInstance, RequestName, RequestArgs )
 	   andalso is_atom( RequestName ) ->
 
 	% Matching PassiveInstance:
-	{ PassiveInstance, { wooper_result, R } } =
+	{ PassiveInstance, { wooper_result, Res } } =
 		wooper_execute_method( RequestName, RequestArgs, PassiveInstance ),
 
-	R.
+	Res.
 
 -else. % wooper_debug_mode
 
@@ -635,10 +635,79 @@ execute_const_request( PassiveInstance, RequestName, RequestArgs )
   when is_record( PassiveInstance, ?passive_record )
 	   andalso is_atom( RequestName ) ->
 
-	{ _ExpectedSamePassiveInstance, { wooper_result, R } } =
+	{ _ExpectedSamePassiveInstance, { wooper_result, Res } } =
 		wooper_execute_method( RequestName, RequestArgs, PassiveInstance ),
 
-	R.
+	Res.
+
+-endif. % wooper_debug_mode
+
+
+
+% Triggers the specified const oneway on the specified passive instance, and
+% returns nothing at all, knowing that the state of this passive instance is
+% expected to remain the same (and thus will not be returned).
+%
+% Note: the called method is checked for constness only in debug mode.
+%
+% (public helper, as a convenience wrapper for passive instances)
+%
+-spec execute_const_oneway( passive_instance(), oneway_name() ) -> void().
+
+-ifdef(wooper_debug_mode).
+
+execute_const_oneway( PassiveInstance, OnewayName )
+  when is_record( PassiveInstance, ?passive_record )
+	   andalso is_atom( OnewayName ) ->
+
+	% Matching PassiveInstance:
+	{ PassiveInstance, wooper_method_returns_void } =
+		wooper_execute_method( OnewayName, _OnewayArgs=[], PassiveInstance ).
+
+-else. % wooper_debug_mode
+
+execute_const_oneway( PassiveInstance, OnewayName )
+  when is_record( PassiveInstance, ?passive_record )
+	   andalso is_atom( OnewayName ) ->
+
+	% Reckless:
+	%{ _ExpectedSamePassiveInstance, wooper_method_returns_void } =
+	wooper_execute_method( OnewayName, _OnewayArgs=[], PassiveInstance ).
+
+-endif. % wooper_debug_mode
+
+
+
+% Sends specified const oneway to specified passive instance, and returns
+% nothing at all, knowing that the state of this passive instance is expected to
+% remain the same (and thus will not be returned).
+%
+% Note: the called method is checked for constness only in debug mode.
+%
+% (public helper, as a convenience wrapper for passive instances)
+%
+-spec execute_const_oneway( passive_instance(), oneway_name(),
+							 method_arguments() ) -> void().
+
+-ifdef(wooper_debug_mode).
+
+execute_const_oneway( PassiveInstance, OnewayName, OnewayArgs )
+  when is_record( PassiveInstance, ?passive_record )
+	   andalso is_atom( OnewayName ) ->
+
+	% Matching PassiveInstance:
+	{ PassiveInstance, wooper_method_returns_void } =
+		wooper_execute_method( OnewayName, OnewayArgs, PassiveInstance ).
+
+-else. % wooper_debug_mode
+
+execute_const_oneway( PassiveInstance, OnewayName, OnewayArgs )
+  when is_record( PassiveInstance, ?passive_record )
+	   andalso is_atom( OnewayName ) ->
+
+	% Reckless:
+	%{ _ExpectedSamePassiveInstance, wooper_method_returns_void } =
+	wooper_execute_method( OnewayName, OnewayArgs, PassiveInstance ).
 
 -endif. % wooper_debug_mode
 
@@ -748,13 +817,13 @@ send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 % No time-out: answers will be waited indefinitely.
 %
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
-								   [ instance_pid() ], ack_atom() ) -> void().
+								   [ instance_pid() ], ack_term() ) -> void().
 send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
-							 AckAtom ) ->
+							 AckTerm ) ->
 
 	send_requests( RequestName, RequestArgs, TargetInstancePIDs ),
 
-	wait_indefinitively_for_request_answers( TargetInstancePIDs, AckAtom ).
+	wait_indefinitively_for_request_answers( TargetInstancePIDs, AckTerm ).
 
 
 
@@ -763,14 +832,14 @@ send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 % returns whether it succeeded or if some instances triggered a time-out.
 %
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
-		[ instance_pid() ], time_out(), ack_atom() ) ->
+		[ instance_pid() ], time_out(), ack_term() ) ->
 										requests_outcome().
 send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
-							 Timeout, AckAtom ) ->
+							 Timeout, AckTerm ) ->
 
 	send_requests( RequestName, RequestArgs, TargetInstancePIDs ),
 
-	wait_for_request_answers( TargetInstancePIDs, Timeout, AckAtom ).
+	wait_for_request_answers( TargetInstancePIDs, Timeout, AckTerm ).
 
 
 
@@ -781,20 +850,20 @@ send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 % More precisely, for each of the specified instances, sends the specified
 % oneway (expecting one of the specified arguments to contain the PID of the
 % caller process so that the instance can send back an answer) and waits for an
-% acknowledgement thereof (as {AckAtom, InstancePid}}), then proceeds to the
+% acknowledgement thereof (as {AckTerm, InstancePid}}), then proceeds to the
 % next instance. Returns an (ordered, according to the input one) list of the
 % PIDs of the instances that failed to answer on time, based on specified
 % time-out.
 %
 -spec send_acknowledged_oneway_in_turn( oneway_name(), method_arguments(),
-		[ instance_pid() ], time_out(), ack_atom() ) -> [ instance_pid() ].
+		[ instance_pid() ], time_out(), ack_term() ) -> [ instance_pid() ].
 send_acknowledged_oneway_in_turn( OnewayName, OnewayArgs, TargetInstancePIDs,
-								  Timeout, AckAtom ) ->
+								  Timeout, AckTerm ) ->
 
 	OnewayCall = { OnewayName, OnewayArgs },
 
 	Res = send_acked_oneway_in_turn_helper( OnewayCall, TargetInstancePIDs,
-											Timeout, AckAtom, _FailedAcc=[] ),
+											Timeout, AckTerm, _FailedAcc=[] ),
 
 	trace_bridge:debug_fmt( "For oneway call ~p, failed instances were ~p.",
 							[ OnewayCall, Res ] ),
@@ -804,26 +873,26 @@ send_acknowledged_oneway_in_turn( OnewayName, OnewayArgs, TargetInstancePIDs,
 
 % (helper)
 send_acked_oneway_in_turn_helper( _OnewayCall, _TargetInstancePIDs=[], _Timeout,
-								  _AckAtom, FailedAcc ) ->
+								  _AckTerm, FailedAcc ) ->
 	% Order maintained:
 	lists:reverse( FailedAcc );
 
 send_acked_oneway_in_turn_helper( OnewayCall,
-	  _TargetInstancePIDs=[ InstancePid | T ], Timeout, AckAtom, FailedAcc ) ->
+	  _TargetInstancePIDs=[ InstancePid | T ], Timeout, AckTerm, FailedAcc ) ->
 
 	trace_bridge:debug_fmt( "Sending oneway call ~p to ~w, to be acknowledged "
-		"with the atom '~s'.", [ OnewayCall, InstancePid, AckAtom ] ),
+		"with the term '~p'.", [ OnewayCall, InstancePid, AckTerm ] ),
 
 	InstancePid ! OnewayCall,
 
 	receive
 
-		{ AckAtom, InstancePid } ->
+		{ AckTerm, InstancePid } ->
 
-			trace_bridge:debug_fmt( "Received ack atom '~s' for ~w.",
-									[ AckAtom, InstancePid ] ),
+			trace_bridge:debug_fmt( "Received ack term '~p' for ~w.",
+									[ AckTerm, InstancePid ] ),
 
-			send_acked_oneway_in_turn_helper( OnewayCall, T, Timeout, AckAtom,
+			send_acked_oneway_in_turn_helper( OnewayCall, T, Timeout, AckTerm,
 											  FailedAcc )
 
 		% Just to debug:
@@ -833,11 +902,11 @@ send_acked_oneway_in_turn_helper( OnewayCall,
 
 	after Timeout ->
 
-		trace_bridge:error_fmt( "Ack atom '~s' not received for oneway call ~p "
-			"from ~w after a ~s.", [ AckAtom, OnewayCall,
+		trace_bridge:error_fmt( "Ack term '~p' not received for oneway call ~p "
+			"from ~w after a ~s.", [ AckTerm, OnewayCall,
 			InstancePid, time_utils:time_out_to_string( Timeout ) ] ),
 
-		send_acked_oneway_in_turn_helper( OnewayCall, T, Timeout, AckAtom,
+		send_acked_oneway_in_turn_helper( OnewayCall, T, Timeout, AckTerm,
 										  [ InstancePid | FailedAcc ] )
 
 	end.
@@ -846,61 +915,61 @@ send_acked_oneway_in_turn_helper( OnewayCall,
 
 
 
-% Waits for an acknowledgement answer, based on specified atom and on the PID of
+% Waits for an acknowledgement answer, based on specified term and on the PID of
 % each of the specified requested instances, indefinitively (no time-out).
 %
-% Allows to trigger requests (supposing returning all the same, specified atom)
+% Allows to trigger requests (supposing returning all the same, specified term)
 % in parallel yet being able to wait synchronously for them, and know which, if
 % any, did not answer.
 %
 % (helper)
 %
--spec wait_for_request_answers( [ instance_pid() ], ack_atom() ) ->
+-spec wait_for_request_answers( [ instance_pid() ], ack_term() ) ->
 									requests_outcome().
-wait_for_request_answers( RequestedPidList, AckAtom ) ->
-	wait_indefinitively_for_request_answers( RequestedPidList, AckAtom ).
+wait_for_request_answers( RequestedPidList, AckTerm ) ->
+	wait_indefinitively_for_request_answers( RequestedPidList, AckTerm ).
 
 
 
-% Waits for an acknowledgement answer, based on specified atom, from the
+% Waits for an acknowledgement answer, based on specified term, from the
 % specified requested instances, unless the specified time-out is exceeded
-% (specified as integer milliseconds or the 'infinity' atom).
+% (specified as integer milliseconds or as the 'infinity' atom).
 %
 % Allows to trigger requests in parallel yet being able to wait synchronously
 % for them.
 %
 % (helper)
 %
--spec wait_for_request_answers( [ instance_pid() ], time_out(), ack_atom() ) ->
+-spec wait_for_request_answers( [ instance_pid() ], time_out(), ack_term() ) ->
 									requests_outcome().
-wait_for_request_answers( RequestedPidList, _Timeout=infinity, AckAtom ) ->
-	wait_indefinitively_for_request_answers( RequestedPidList, AckAtom );
+wait_for_request_answers( RequestedPidList, _Timeout=infinity, AckTerm ) ->
+	wait_indefinitively_for_request_answers( RequestedPidList, AckTerm );
 
-wait_for_request_answers( RequestedPidList, Timeout, AckAtom ) ->
+wait_for_request_answers( RequestedPidList, Timeout, AckTerm ) ->
 
 	InitialTimestamp = time_utils:get_timestamp(),
 
 	wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
-							  AckAtom ).
+							  AckTerm ).
 
 
 % Waits until end of time if necessary.
 %
 % (helper)
 %
-wait_indefinitively_for_request_answers( _RequestedPidList=[], _AckAtom ) ->
+wait_indefinitively_for_request_answers( _RequestedPidList=[], _AckTerm ) ->
 	success;
 
-wait_indefinitively_for_request_answers( RequestedPidList, AckAtom ) ->
+wait_indefinitively_for_request_answers( RequestedPidList, AckTerm ) ->
 
 	receive
 
-		{ wooper_result, { AckAtom, SenderPid } } ->
+		{ wooper_result, { AckTerm, SenderPid } } ->
 
 			NewPidList = list_utils:delete_existing( SenderPid,
 													 RequestedPidList ),
 
-			wait_indefinitively_for_request_answers( NewPidList, AckAtom )
+			wait_indefinitively_for_request_answers( NewPidList, AckTerm )
 
 	end.
 
@@ -911,27 +980,27 @@ wait_indefinitively_for_request_answers( RequestedPidList, AckAtom ) ->
 % (helper)
 %
 wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
-						  AckAtom ) ->
+						  AckTerm ) ->
 	wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
-							  _DefaultPollDuration=1000, AckAtom ).
+							  _DefaultPollDuration=1000, AckTerm ).
 
 
 wait_for_request_answers( _RequestedPidList=[], _InitialTimestamp, _Timeout,
-						  _PollDuration, _AckAtom ) ->
+						  _PollDuration, _AckTerm ) ->
 	success;
 
 wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
-						  PollDuration, AckAtom ) ->
+						  PollDuration, AckTerm ) ->
 
 	receive
 
-		{ wooper_result, { AckAtom, SenderPid } } ->
+		{ wooper_result, { AckTerm, SenderPid } } ->
 
 			NewPidList = list_utils:delete_existing( SenderPid,
 													 RequestedPidList ),
 
 			wait_for_request_answers( NewPidList, InitialTimestamp, Timeout,
-									  PollDuration, AckAtom )
+									  PollDuration, AckTerm )
 
 	after PollDuration ->
 
@@ -945,7 +1014,7 @@ wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
 				false ->
 					% Still waiting then:
 					wait_for_request_answers( RequestedPidList,
-						   InitialTimestamp, Timeout, PollDuration, AckAtom )
+						   InitialTimestamp, Timeout, PollDuration, AckTerm )
 
 			end
 
@@ -954,50 +1023,50 @@ wait_for_request_answers( RequestedPidList, InitialTimestamp, Timeout,
 
 
 % Waits (indefinitively) that the specified number of requests returned as
-% result the specified acknowledgement atom.
+% result the specified acknowledgement term.
 %
--spec wait_for_request_acknowledgements( count(), ack_atom() ) -> void().
-wait_for_request_acknowledgements( Count, AckAtom ) ->
-	wait_for_request_acknowledgements( Count, AckAtom, _Timeout=infinity ).
+-spec wait_for_request_acknowledgements( count(), ack_term() ) -> void().
+wait_for_request_acknowledgements( Count, AckTerm ) ->
+	wait_for_request_acknowledgements( Count, AckTerm, _Timeout=infinity ).
 
 
 
 % Waits, with the specified time-out, that the specified number of requests
-% returned as result the specified acknowledgement atom.
+% returned as result the specified acknowledgement term.
 %
--spec wait_for_request_acknowledgements( count(), ack_atom(), time_out() ) ->
+-spec wait_for_request_acknowledgements( count(), ack_term(), time_out() ) ->
 											void().
-wait_for_request_acknowledgements( _Count=0, _AckAtom, _Timeout ) ->
+wait_for_request_acknowledgements( _Count=0, _AckTerm, _Timeout ) ->
 
 	%trace_bridge:debug_fmt(
-	%  "[~w] No more waiting of the '~s' acknowledgement atom.",
-	%  [ self(), AckAtom ] ),
+	%  "[~w] No more waiting of the '~p' acknowledgement term.",
+	%  [ self(), AckTerm ] ),
 
 	ok;
 
 
-wait_for_request_acknowledgements( Count, AckAtom, Timeout ) ->
+wait_for_request_acknowledgements( Count, AckTerm, Timeout ) ->
 
-	%trace_bridge:debug_fmt( "[~w] Waiting for ~B '~s' acknowledgement "
-	%    atom(s).", [ self(), Count, AckAtom ] ),
+	%trace_bridge:debug_fmt( "[~w] Waiting for ~B '~p' acknowledgement "
+	%    term(s).", [ self(), Count, AckTerm ] ),
 
 	receive
 
-		{ wooper_result, AckAtom } ->
+		{ wooper_result, AckTerm } ->
 
 			%trace_bridge:debug_fmt(
-			%  "[~w] Received a '~s' acknowledgement atom.",
-			%  [ self(), AckAtom ] ),
+			%  "[~w] Received a '~p' acknowledgement term.",
+			%  [ self(), AckTerm ] ),
 
-			wait_for_request_acknowledgements( Count-1, AckAtom )
+			wait_for_request_acknowledgements( Count-1, AckTerm )
 
 	after Timeout ->
 
 		trace_bridge:error_fmt( "Time-out after ~s, while still waiting for ~B "
-			"'~s' request acknowledgements.",
-			[ time_utils:duration_to_string( Timeout ), Count, AckAtom ] ),
+			"'~p' request acknowledgements.",
+			[ time_utils:duration_to_string( Timeout ), Count, AckTerm ] ),
 
-		throw( { wooper_request_ack_time_out, Count, AckAtom, Timeout } )
+		throw( { wooper_request_ack_time_out, Count, AckTerm, Timeout } )
 
 	end.
 
@@ -1520,8 +1589,16 @@ construct_passive( Classname, ConstructionParameters ) ->
 
 
 % Executes specified oneway on specified passive instance.
--spec execute_oneway( passive_instance(), oneway_name() ) ->
+-spec execute_oneway( instance_pid(), oneway_name() ) -> void();
+					( passive_instance(), oneway_name() ) ->
 							passive_instance().
+execute_oneway( TargetInstancePID, OnewayName )
+   when is_pid( TargetInstancePID ) andalso is_atom( OnewayName ) ->
+
+	% Hardly useful:
+	TargetInstancePID ! OnewayName;
+
+
 execute_oneway( PassiveInstance, OnewayName )
    when is_record( PassiveInstance, ?passive_record )
 		andalso is_atom( OnewayName ) ->
@@ -1534,8 +1611,17 @@ execute_oneway( PassiveInstance, OnewayName )
 
 
 % Executes specified oneway on specified passive instance.
--spec execute_oneway( passive_instance(), oneway_name(), method_arguments() ) ->
+-spec execute_oneway( instance_pid(), oneway_name(),
+					  method_arguments() ) -> void();
+					( passive_instance(), oneway_name(), method_arguments() ) ->
 							passive_instance().
+execute_oneway( TargetInstancePID, OnewayName, OnewayArgs )
+   when is_pid( TargetInstancePID ) andalso is_atom( OnewayName ) ->
+
+	% Hardly useful:
+	TargetInstancePID ! { OnewayName, OnewayArgs };
+
+
 execute_oneway( PassiveInstance, OnewayName, OnewayArgs )
    when is_record( PassiveInstance, ?passive_record )
 		andalso is_atom( OnewayName ) andalso is_list( OnewayArgs ) ->
