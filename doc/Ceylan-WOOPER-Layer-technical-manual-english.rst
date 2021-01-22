@@ -37,10 +37,10 @@
 ---------------------------------------------------
 
 
-:Organisation: Copyright (C) 2008-2020 Olivier Boudeville
+:Organisation: Copyright (C) 2008-2021 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Saturday, December 5, 2020
+:Lastly updated: Friday, January 22, 2021
 :Version: 2.0.9
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
@@ -2355,6 +2355,9 @@ Then methods can be triggered on it, like in::
 
 Note that, in addition to ``execute_request/{2,3}``, ``execute_const_request/{2,3}`` are available; the latter return only the request result, as the state of the passive instance shall be constant (this is checked in debug mode).
 
+Symmetrically, in addition to ``execute_oneway/{2,3}``, ``execute_const_oneway/{2,3}`` are available even though their use is less common.
+
+
 Until, finally::
 
   wooper:delete_passive(RedCat).
@@ -2479,6 +2482,48 @@ Therefore the implementation we target could be best [#]_ written as:
 	wooper:return_state_result(NewState,Price).
 
 .. [#] ``wooper:executeRequest/3`` could be used instead of matching the result of ``wooper:return_state_result/2`` and breaking its opaqueness - but (even it is a matter of taste here) we prefer the more direct and efficient approach that was presented. Note though that in general they do not bear the same semantics: ``wooper:executeRequest/3`` calls a possibly overridden version of the specified method, whereas a direct call targets specifically the class-local version of that method.
+
+
+Integrated Call APIs
+--------------------
+
+
+Single Calls
+............
+
+Calls made to **passive instances** require the use of a dedicated API that is provided by the ``wooper`` module, namely:
+
+- for requests: ``execute_request/{2,3}`` and ``execute_const_request/{2,3}``
+- for oneways: ``execute_oneway/{2,3}`` and ``execute_const_oneway/{2,3}``
+
+
+As for **active instances**, doing the same directly through Erlang base constructs (message sending and receiving) is so easy that generally no specific API is involved - even though it exists (notably to allow for a few usage variations):
+
+- for requests: ``execute_request/{2,3,4}``
+- for oneways: ``execute_oneway/{2,3}``
+
+(with active instances, constness does not need to be taken at this level)
+
+
+
+
+Multi-Calls
+...........
+
+Sometimes, in the context of *active instances*, it may be more convenient to reason not in terms of single calls, but of multiple calls, with various flavours in the number of callers, callees, method calls involved, parallelism and synchronisation.
+
+So the ``wooper`` module provides facilities in order to execute:
+
+- a given **request** **sequentially** on **multiple callees**: ``send_request_in_turn/3`` or, if wanting that a time-out applies, ``send_request_in_turn/4``
+- the same for a **oneway** sending (off-band, through a direct message sending) a user-specified **acknowledgement term** (ex: a conventional atom): ``send_acknowledged_oneway_in_turn/5``
+- a given **request**, whose only result in a user-specified **acknowledgement term**, in **parallel** on **multiple callees**: ``send_requests_and_wait_acks/4`` or, if wanting that a time-out applies, ``send_requests_and_wait_acks/5``
+- a given **request** in **parallel** on **multiple callees**, obtaining back an **unordered** list of their results: ``obtain_results_for_requests/3``
+- a **series of requests** on a **single** callee: ``send_request_series/2`` (just for the sending) and ``obtain_results_for_request_series/2`` (to include also the collecting of their ordered results)
+
+
+Many more flavours can be considered (ex: for active/passive instances, requests or oneways, with or without time-out, synchronisable or not, etc.) and may be supported in the future, on a per-need basis.
+
+However it may be more convenient to compose any extra multi-call that is needed thanks to the various basic helpers that are provided in the ``wooper`` module in order to send calls or to collect their results. Doing so allows for example to perform interleaving (triggering concurrent calls as soon as possible, collecting their results as late as possible) and maximise the overall parallelism.
 
 
 
