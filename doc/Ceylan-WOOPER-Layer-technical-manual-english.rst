@@ -2791,12 +2791,12 @@ When specifying its **class attributes**: ``-define(class_attributes,[ATTR1,ATTR
 
 A given ``ATTRn`` may be one of:
 
-- ``{Name, Type, QualifierInfo, Description}``
-- ``{Name, Type, Description}``
-- ``{Name, Description}``
+- ``{Name,Type,QualifierInfo,Description}``
+- ``{Name,Type,Description}``
+- ``{Name,Description}``
 - ``Name``
 
-``QualifierInfo`` can be, for example, ``public``, or ``[private, const]``.
+``QualifierInfo`` can be, for example, ``public``, or ``[private,const]``.
 
 All member methods have ``State`` for initial parameter, and are expected to return at least a (possibly const) state.
 
@@ -3174,6 +3174,12 @@ As a result, once a proper Erlang version is available, the `Ceylan-Myriad repos
 
 Using OTP-Related Build/Runtime Conventions
 -------------------------------------------
+
+.. Note:: Over the years, we slowly migrated from our custom, make-based build to integrate more closely to the OTP ecosystem (using applications, releases; then rebar3, hex).
+   Only mixed results were obtained (operations were slower, more complex, more fragile, and not always suitable for "complex" builds involving parse transforms).
+   So, at least for the moment, we switched back to our custom build system (still supporting OTP conventions) and experienced no drawback.
+   Maybe in the years to come another attempt will be done to fully embrace the rebar3 way.
+
 
 As discussed for `Myriad <http://myriad.esperide.org/myriad.html#otp>`_, we added the (optional) possibility of generating a WOOPER *OTP application* out of the build tree (obtained thanks to the method described in the previous section), ready to be integrated into an *(OTP) release*. For that we rely on `rebar3 <https://www.rebar3.org/>`_, `relx <https://github.com/erlware/relx>`_ and `hex <https://hex.pm/>`_.
 
@@ -3623,7 +3629,7 @@ Sources, Inspirations & Alternate Solutions
 - As mentioned by Niclas Eklund, despite relying on quite different operating modes, WOOPER and `Orber <http://www1.erlang.org/doc/apps/orber/index.html>`_, an Erlang implementation of a **CORBA ORB** (*Object Request Broker*) offer similar OOP features, as CORBA IDL implies an object-oriented approach (see their `OMG IDL to Erlang Mapping <http://www.erlang.org/doc/apps/orber/ch_idl_to_erlang_mapping.html#6>`_)
 
 
-WOOPER and Orber are rather different beasts, though: WOOPER is quite lightweight (less than 20 000 lines of code, including blank lines, numerous comments, tests and examples), does not involve a specific (IDL) compiler generating several stub/skeleton Erlang files, nor depends on OTP or on Mnesia (but depends on Myriad), whereas Orber offers a full, standard, CORBA implementation, including IDL language mapping, CosNaming, IIOP, Interface Repository, etc.
+WOOPER and Orber are rather different beasts, though: WOOPER is quite lightweight (less than 25 000 lines of code, including blank lines, numerous comments, tests and examples), does not involve a specific (IDL) compiler generating several stub/skeleton Erlang files, nor depends on OTP or on Mnesia (but depends on Myriad), whereas Orber offers a full, standard, CORBA implementation, including IDL language mapping, CosNaming, IIOP, Interface Repository, etc.
 
 Since Orber respects the OMG standard, integrating a new language (C/C++, Java, Smalltalk, Ada, Lisp, Python etc.) should be rather easy. On the other hand, if a full-blown CORBA-compliant middleware is not needed, if simplicity and ease of understanding is a key point, then WOOPER could be preferred. If unsure, give a try to both!
 
@@ -3633,7 +3639,7 @@ See also another IDL-based approach (otherwise not connected to CORBA), the `Gen
 
 The WOOPER name is also a tribute to the vastly underrated `Wargames <http://en.wikipedia.org/wiki/WarGames>`_ movie (remember the `WOPR <http://en.wikipedia.org/wiki/WOPR>`_, the NORAD central computer?) that the author enjoyed a lot. It is as well a second-order tribute to the *Double Whopper King Size*, which is a great hamburger indeed [#]_.
 
-.. [#] Provided of course one is fine with eating other animals (this is another topic).
+.. [#] Provided of course one is still fine with eating other animals (this is another topic).
 
 
 
