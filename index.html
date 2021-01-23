@@ -2004,12 +2004,12 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <p>When specifying its <strong>class attributes</strong>: <tt class="docutils literal"><span class="pre">-define(class_attributes,[ATTR1,ATTR2,...])</span></tt></p>
 <p>A given <tt class="docutils literal">ATTRn</tt> may be one of:</p>
 <ul class="simple">
-<li><tt class="docutils literal">{Name, Type, QualifierInfo, Description}</tt></li>
-<li><tt class="docutils literal">{Name, Type, Description}</tt></li>
-<li><tt class="docutils literal">{Name, Description}</tt></li>
+<li><tt class="docutils literal">{Name,Type,QualifierInfo,Description}</tt></li>
+<li><tt class="docutils literal">{Name,Type,Description}</tt></li>
+<li><tt class="docutils literal">{Name,Description}</tt></li>
 <li><tt class="docutils literal">Name</tt></li>
 </ul>
-<p><tt class="docutils literal">QualifierInfo</tt> can be, for example, <tt class="docutils literal">public</tt>, or <tt class="docutils literal">[private, const]</tt>.</p>
+<p><tt class="docutils literal">QualifierInfo</tt> can be, for example, <tt class="docutils literal">public</tt>, or <tt class="docutils literal">[private,const]</tt>.</p>
 <p>All member methods have <tt class="docutils literal">State</tt> for initial parameter, and are expected to return at least a (possibly const) state.</p>
 <p>When defining a <strong>request</strong>:</p>
 <ul class="simple">
@@ -2213,6 +2213,13 @@ $ <span class="nb">cd</span> wooper <span class="o">&amp;&amp;</span> make all
 </div>
 <div class="section" id="using-otp-related-build-runtime-conventions">
 <span id="otp-build"></span><h3><a class="toc-backref" href="#id100">Using OTP-Related Build/Runtime Conventions</a></h3>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Over the years, we slowly migrated from our custom, make-based build to integrate more closely to the OTP ecosystem (using applications, releases; then rebar3, hex).
+Only mixed results were obtained (operations were slower, more complex, more fragile, and not always suitable for &quot;complex&quot; builds involving parse transforms).
+So, at least for the moment, we switched back to our custom build system (still supporting OTP conventions) and experienced no drawback.
+Maybe in the years to come another attempt will be done to fully embrace the rebar3 way.</p>
+</div>
 <p>As discussed for <a class="reference external" href="http://myriad.esperide.org/myriad.html#otp">Myriad</a>, we added the (optional) possibility of generating a WOOPER <em>OTP application</em> out of the build tree (obtained thanks to the method described in the previous section), ready to be integrated into an <em>(OTP) release</em>. For that we rely on <a class="reference external" href="https://www.rebar3.org/">rebar3</a>, <a class="reference external" href="https://github.com/erlware/relx">relx</a> and <a class="reference external" href="https://hex.pm/">hex</a>.</p>
 <p>OTP conventions mandate using:</p>
 <pre class="literal-block">
@@ -2462,14 +2469,14 @@ Successful end of <span class="nb">test</span> of the WOOPER application.
 <li>As Burkhard Neppert suggested, an alternative way of implementing OOP here could be to use Erlang behaviours. This is the way OTP handles generic functionalities that can be specialised (e.g. <tt class="docutils literal">gen_server</tt>). One approach could be to map each object-oriented base class to an Erlang <strong>behaviour</strong>. See some guidelines about <a class="reference external" href="http://wiki.trapexit.org/index.php/Defining_Your_Own_Behaviour">defining</a> your own behaviours and making them <a class="reference external" href="http://wiki.trapexit.org/index.php/Cascading_Behaviours">cascade</a></li>
 <li>As mentioned by Niclas Eklund, despite relying on quite different operating modes, WOOPER and <a class="reference external" href="http://www1.erlang.org/doc/apps/orber/index.html">Orber</a>, an Erlang implementation of a <strong>CORBA ORB</strong> (<em>Object Request Broker</em>) offer similar OOP features, as CORBA IDL implies an object-oriented approach (see their <a class="reference external" href="http://www.erlang.org/doc/apps/orber/ch_idl_to_erlang_mapping.html#6">OMG IDL to Erlang Mapping</a>)</li>
 </ul>
-<p>WOOPER and Orber are rather different beasts, though: WOOPER is quite lightweight (less than 20 000 lines of code, including blank lines, numerous comments, tests and examples), does not involve a specific (IDL) compiler generating several stub/skeleton Erlang files, nor depends on OTP or on Mnesia (but depends on Myriad), whereas Orber offers a full, standard, CORBA implementation, including IDL language mapping, CosNaming, IIOP, Interface Repository, etc.</p>
+<p>WOOPER and Orber are rather different beasts, though: WOOPER is quite lightweight (less than 25 000 lines of code, including blank lines, numerous comments, tests and examples), does not involve a specific (IDL) compiler generating several stub/skeleton Erlang files, nor depends on OTP or on Mnesia (but depends on Myriad), whereas Orber offers a full, standard, CORBA implementation, including IDL language mapping, CosNaming, IIOP, Interface Repository, etc.</p>
 <p>Since Orber respects the OMG standard, integrating a new language (C/C++, Java, Smalltalk, Ada, Lisp, Python etc.) should be rather easy. On the other hand, if a full-blown CORBA-compliant middleware is not needed, if simplicity and ease of understanding is a key point, then WOOPER could be preferred. If unsure, give a try to both!</p>
 <p>See also another IDL-based approach (otherwise not connected to CORBA), the <a class="reference external" href="http://www.erlang.org/doc/apps/ic/ch_erl_genserv.html#5">Generic Server Back-end</a> (wrapper around <tt class="docutils literal">gen_server</tt>).</p>
 <p>The WOOPER name is also a tribute to the vastly underrated <a class="reference external" href="http://en.wikipedia.org/wiki/WarGames">Wargames</a> movie (remember the <a class="reference external" href="http://en.wikipedia.org/wiki/WOPR">WOPR</a>, the NORAD central computer?) that the author enjoyed a lot. It is as well a second-order tribute to the <em>Double Whopper King Size</em>, which is a great hamburger indeed <a class="footnote-reference" href="#id56" id="id55">[23]</a>.</p>
 <table class="docutils footnote" frame="void" id="id56" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id55">[23]</a></td><td>Provided of course one is fine with eating other animals (this is another topic).</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id55">[23]</a></td><td>Provided of course one is still fine with eating other animals (this is another topic).</td></tr>
 </tbody>
 </table>
 <p></p>
