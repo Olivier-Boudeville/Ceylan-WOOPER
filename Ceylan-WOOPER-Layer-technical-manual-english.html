@@ -31,7 +31,7 @@
 </tr>
 <tr class="field"><th class="field-name">Creation date:</th><td class="field-body">Sunday, August 17, 2008</td>
 </tr>
-<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Friday, January 22, 2021</td>
+<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Saturday, January 23, 2021</td>
 </tr>
 <tr class="field"><th class="field-name">Version:</th><td class="field-body">2.0.9</td>
 </tr>
@@ -2041,12 +2041,14 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <div class="section" id="wooper-limitations">
 <h3><a class="toc-backref" href="#id87">WOOPER limitations</a></h3>
 <p>Actually no significant implementation shortcoming has been identified.</p>
-<p>The main ones that existed beforehand was (from most recently fixed to earlier ones):</p>
+<p>The main limitations that existed beforehand were (from the most recently alleviated to the earlier ones):</p>
 <ul class="simple">
 <li>the per-instance memory footprint has been reduced by sharing the &quot;virtual table&quot; of a given class between all its instances, thanks to <tt class="docutils literal">persistent_term</tt></li>
 <li>the efficiency of the per-instance associative table to store the attribute values has been improved by switching from our hashtable implementation to a map-based one</li>
 <li>the macro-based constructor declarations were too cumbersome and limiting (ex: a single constructor per class was supported); this is fully addressed thanks to the WOOPER parse transform now</li>
 </ul>
+<p>We expect the upcoming JIT compilation to benefit a lot to WOOPER, with no change having to be operated at its level.</p>
+<p>As always, there is certainly room for improvement, to grind a bit more runtime performances and/or to further reduce the per-instance memory footprint. Profiling actions welcome!</p>
 <p></p>
 </div>
 </div>
