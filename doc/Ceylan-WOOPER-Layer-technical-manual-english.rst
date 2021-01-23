@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2021 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Friday, January 22, 2021
+:Lastly updated: Saturday, January 23, 2021
 :Version: 2.0.9
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
@@ -2832,16 +2832,30 @@ We use ``Emacs`` but of course any editor will be fine.
 For Nedit users, a WOOPER-aware `nedit.rc <https://github.com/Olivier-Boudeville/Ceylan-Myriad/blob/master/conf/nedit.rc>`_ configuration file for syntax highlighting (on black backgrounds), inspired from Daniel Solaz's `Erlang Nedit mode <http://www.trapexit.org/forum/viewtopic.php?p=30189>`_, is available.
 
 
+
 Similarity With other Languages
 -------------------------------
 
 WOOPER is in some ways adding features quite similar to the ones available with other languages, including Python (simple multiple inheritance, implied ``self/State`` parameter, attribute dictionaries/associative tables, etc.) while still offering the major strengths of Erlang (concurrency, distribution, functional paradigm) and not hurting too much the overall performances (mainly thanks to the prebuilt attribute and method tables).
 
 
-Actually the main implementation shortcomings that remain are:
 
-.. comment - some syntactical elements are still too cumbersome (ex: the ``wooper_construct_export`` declaration, which moreover hinders from being able to declare constructors with various arities)
-- the per-instance memory footprint could be reduced by sharing the "virtual table" of a given class between all its instances
+WOOPER limitations
+------------------
+
+Actually no significant implementation shortcoming has been identified.
+
+The main limitations that existed beforehand were (from the most recently alleviated to the earlier ones):
+
+- the per-instance memory footprint has been reduced by sharing the "virtual table" of a given class between all its instances, thanks to ``persistent_term``
+- the efficiency of the per-instance associative table to store the attribute values has been improved by switching from our hashtable implementation to a map-based one
+- the macro-based constructor declarations were too cumbersome and limiting (ex: a single constructor per class was supported); this is fully addressed thanks to the WOOPER parse transform now
+
+We expect the upcoming JIT compilation to benefit a lot to WOOPER, with no change having to be operated at its level.
+
+As always, there is certainly room for improvement, to grind a bit more runtime performances and/or to further reduce the per-instance memory footprint. Profiling actions welcome!
+
+.. comment - some syntactical elements are still too cumbersome (ex: the ``wooper_cons
 
 .. Both of these limitations are to be removed over time thanks to metaprogramming (based on parse transforms).
 
