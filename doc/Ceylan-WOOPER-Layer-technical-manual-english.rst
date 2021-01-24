@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2021 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Saturday, January 23, 2021
+:Lastly updated: Sunday, January 24, 2021
 :Version: 2.0.9
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
