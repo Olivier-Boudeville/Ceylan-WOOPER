@@ -357,9 +357,9 @@ wooper_main_loop( State ) ->
 			?wooper_log_format( "Main loop (case Z) for ~w: unmatched ~p.~n",
 								[ self(), Other ] ),
 
-			wooper:log_error(
-			  "WOOPER ignored following message for instance ~w:~n~p.~n",
-			  [ self(), Other ] ),
+			wooper:log_error( "As the following message did not respect "
+				"the WOOPER conventions, the WOOPER instance ~w had to "
+				"ignore it (abnormal):~n~p.~n", [ self(), Other ] ),
 
 			%?wooper_log( "Main loop (case Z) ended.~n" ),
 			throw( { wooper_erroneous_call, Other } )
