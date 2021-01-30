@@ -7,7 +7,7 @@ WOOPER_TOP = .
 		release release-zip release-bz2 release-xz                     \
 		prepare-release clean-release clean-archive stats              \
 		info-paths info-compile info-parse-transform info-conditionals \
-	    info-deps
+		info-deps
 
 
 MODULES_DIRS = src doc conf test priv
