@@ -114,7 +114,7 @@ endif
 # The uniquely-defined version of this layer, for all uses (including rebar and
 # hex):
 #
-WOOPER_VERSION := 2.0.9
+WOOPER_VERSION := 2.0.10
 
 
 # PROJECT_VERSION should be defined on a per-project basis.
