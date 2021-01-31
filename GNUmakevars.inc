@@ -106,8 +106,8 @@ endif
 
 
 # REBAR3_PROJECT_NAME should be defined on a per-project basis.
-ifndef REBAR3_PROJECT_NAME
-	REBAR3_PROJECT_NAME := wooper
+ifndef PROJECT_NAME_FOR_REBAR
+	PROJECT_NAME_FOR_REBAR := wooper
 endif
 
 
@@ -171,7 +171,7 @@ WOOPER_BEAM_DIRS := $(WOOPER_BEAM)
 
 # For OTP releases and all:
 
-WOOPER_REBAR_BUILD_BASE = $(REBAR_BUILD_DIR)/lib/wooper
+WOOPER_REBAR_BUILD_BASE = $(MYRIAD_REBAR_BUILD_DIR)/lib/wooper
 
 
 # When building WOOPER in an OTP context from its usual (GIT) root (ex: with
