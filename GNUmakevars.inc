@@ -105,7 +105,7 @@ ifndef PROJECT_NAME
 endif
 
 
-# REBAR3_PROJECT_NAME should be defined on a per-project basis.
+# PROJECT_NAME_FOR_REBAR should be defined on a per-project basis.
 ifndef PROJECT_NAME_FOR_REBAR
 	PROJECT_NAME_FOR_REBAR := wooper
 endif
