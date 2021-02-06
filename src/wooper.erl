@@ -2663,10 +2663,10 @@ delete_pid_from( [ Attr | T ], DeleteMessage, PreTestLiveliness, State,
 
 		Pid when is_pid( Pid ) ->
 
-			NodePid = node( Pid ),
+			NodeOfPid = node( Pid ),
 
 			case PreTestLiveliness andalso
-					not basic_utils:is_alive( Pid, NodePid, _Verbose=false ) of
+				not basic_utils:is_alive( Pid, NodeOfPid, _Verbose=false ) of
 
 				% Only case where no deletion oneway shall be sent:
 				true ->
@@ -2680,7 +2680,7 @@ delete_pid_from( [ Attr | T ], DeleteMessage, PreTestLiveliness, State,
 					%                       "(PID: ~w).", [ Attr, Pid ] ),
 					Pid ! DeleteMessage,
 					delete_pid_from( T, DeleteMessage, PreTestLiveliness,
-							State, [ Attr | AccAttr ], [ Pid | AccPid ] )
+							 State, [ Attr | AccAttr ], [ Pid | AccPid ] )
 
 			end
 

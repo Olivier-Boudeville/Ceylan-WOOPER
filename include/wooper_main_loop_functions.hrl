@@ -237,9 +237,8 @@ wooper_main_loop( State ) ->
 		{ 'DOWN', MonitorRef, MonitoredType, MonitoredElement, ExitReason } ->
 
 			?wooper_log_format( "Main loop (case H) for ~w: down message "
-								"with ~w.~n",
-								[ self(), { MonitorRef, MonitoredType,
-											MonitoredElement, ExitReason } ] ),
+				"with ~w.~n", [ self(),
+				{ MonitorRef, MonitoredType, MonitoredElement, ExitReason } ] ),
 
 			case ?wooper_table_type:lookup_entry(
 				  { _Name=onWOOPERDownNotified, _Arity=5 },
@@ -255,9 +254,9 @@ wooper_main_loop( State ) ->
 					% MonitoredType, MonitoredElement, ExitReason )':
 
 					{ NewState, _ } = wooper_execute_method(
-							onWOOPERDownNotified, State,
-							[ MonitorRef, MonitoredType, MonitoredElement,
-							  ExitReason  ] ),
+						onWOOPERDownNotified, State,
+						[ MonitorRef, MonitoredType, MonitoredElement,
+						  ExitReason ] ),
 
 					%?wooper_log( "Main loop (case H) ended.~n" ),
 					wooper_main_loop( NewState );
