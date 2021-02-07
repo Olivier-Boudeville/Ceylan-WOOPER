@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2021 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Sunday, January 24, 2021
+:Lastly updated: Sunday, February 7, 2021
 :Version: 2.0.9
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
@@ -2899,6 +2899,8 @@ Class implementations
 Tests
 -----
 
+Here are a few examples of tests:
+
 - `class_Creature_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Creature_test.erl>`__
 
 - `class_ViviparousBeing_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_ViviparousBeing_test.erl>`__
@@ -2914,7 +2916,7 @@ Tests
 - `class_Platypus_test.erl <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Platypus_test.erl>`__
 
 
-To run a test (ex: ``class_Cat_test.erl``), when WOOPER has already been compiled, one just has to enter: ``make class_Cat_run``.
+To run a test (ex: ``class_Cat_test.erl``), when WOOPER has already been compiled, one just has to enter, from the corresponding directory: ``make class_Cat_run``.
 
 
 
@@ -3177,8 +3179,10 @@ Using OTP-Related Build/Runtime Conventions
 
 .. Note:: Over the years, we slowly migrated from our custom, make-based build to integrate more closely to the OTP ecosystem (using applications, releases; then rebar3, hex).
    Only mixed results were obtained (operations were slower, more complex, more fragile, and not always suitable for "complex" builds involving parse transforms).
-   So, at least for the moment, we switched back to our custom build system (still supporting OTP conventions) and experienced no drawback.
-   Maybe in the years to come another attempt will be done to fully embrace the rebar3 way.
+   So, at least for the moment, we prefer mostly relying on our custom build system (still supporting OTP conventions) and experience no drawback.
+
+
+.. comment Maybe in the years to come another attempt will be done to fully embrace the rebar3 way.
 
 
 As discussed for `Myriad <http://myriad.esperide.org/myriad.html#otp>`_, we added the (optional) possibility of generating a WOOPER *OTP application* out of the build tree (obtained thanks to the method described in the previous section), ready to be integrated into an *(OTP) release*. For that we rely on `rebar3 <https://www.rebar3.org/>`_, `relx <https://github.com/erlware/relx>`_ and `hex <https://hex.pm/>`_.
@@ -3201,6 +3205,21 @@ Unlike Myriad, which is an OTP *library* application, WOOPER is an OTP *active* 
 
 Using Rebar3
 ............
+
+
+.. Note:: In a nutshell: the usual rebar3 machinery is in place and functional, so the only WOOPER prerequisite (`Myriad <https://myriad.esperide.org>`_) and WOOPER itself can be obtained simply thanks to:
+
+  .. code:: bash
+
+	$ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git wooper
+	$ cd wooper
+	$ rebar3 compile
+
+  Then WOOPER and its tests shall be ready for a successful execution.
+
+  Note that rebar3 is an alternate way of building WOOPER, as one may rely directly on our make-based system instead.
+
+
 
 The same procedures as `explained for Myriad <http://myriad.esperide.org/myriad.html#otp>`_ apply, once rebar3 is available:
 
@@ -3250,13 +3269,31 @@ One may run ``make create-wooper-checkout`` in order to create, based on our con
 Using Hex
 ---------
 
-`Hex packages for WOOPER <https://hex.pm/packages/wooper>`_ are published for most versions.
+`Hex packages for WOOPER <https://hex.pm/packages/wooper>`_ used to be published for most versions, yet finally our workflow does not rely on Hex, so we do not update the Hex packages anymore. Just drop us an email if needing a recent one.
 
 For more details, one may have a look at:
 
 - `rebar.config.template <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/conf/rebar.config.template>`_, the general rebar configuration file used when generating the WOOPER OTP application and release (implying the automatic management of Myriad)
 - `rebar-for-hex.config.template <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/conf/rebar-for-hex.config.template>`_, to generate a corresponding Hex package for WOOPER (whose structure and conventions is quite different from the previous OTP elements)
 - `rebar-for-testing.config.template <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/conf/rebar-for-testing.config.template>`_, the simplest test of the previous Hex package: an empty rebar project having for sole dependency that Hex package
+
+
+
+Testing WOOPER
+--------------
+
+Once `Myriad <https://myriad.esperide.org>`_ and WOOPER itself have been built (for that refer to either `Using Cutting-Edge GIT`_ or `Using Rebar3`_), just run from the root directory of WOOPER:
+
+.. code:: bash
+
+ $ make test
+
+
+The testing shall complete successfully (if it is not the case, see our support_ section).
+
+.. Note:: WOOPER is built and tested at each commit through `continuous integration <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/actions?query=workflow%3A%22Erlang+CI%22>`_, and the same holds for its only prerequisite (`Myriad <https://myriad.esperide.org>`_).
+		  Reciprocally this procedure applies to the projects based on it, directly (ex: `Traces <https://traces.esperide.org/>`_) or not (ex: `US-Web <https://us-web.esperide.org/>`_), so in terms of usability, confidence should be high.
+
 
 
 :raw-latex:`\pagebreak`
@@ -3556,13 +3593,13 @@ Issues & Planned Enhancements
 
 .. For all versions of WOOPER:
 
-- test the impact of using HiPE by default
+- test the impact of using HiPE by default / wait for the upcoming JIT compilation
 - integrate automatic persistent storage of instance states, for example in Mnesia databases
 - integrate specific constructs for code reflection
 - check that a class specified in ``execute*As`` is indeed a (direct or not) mother class of this one, at least in debug mode
-- check that referenced attributes are legit (existing, not reserved, etc.) and their acess as well (ex: regarding constness)
+- check that the declared attributes are legit (existing, not reserved, etc.) and their access as well (ex: regarding constness)
 - support qualifier-based declarations of methods and attributes (``public``, ``protected``, ``private``, ``final``, ``const``, ``pure``, etc.)
-- generate a graphical class diagram out of a set of sources (ex: using `PlantUML <http://plantuml.com/>`_)
+- generate automatically a graphical class diagram out of the sources of a set of projects (ex: using `PlantUML <http://plantuml.com/>`_)
 
 .. For WOOPER versions 2.0 and more recent:
 
@@ -3575,7 +3612,7 @@ Issues & Planned Enhancements
 
 .. - would there be a **more efficient** implementation of hashtables? (ex: using proplists, process dictionary, generated modules, dict or ETS-based?); more generally speaking, some profiling could be done to further increase overall performances
 
-- ensure that all instances of a given class *reference* the same table dedicated to the method look-ups, and do not have each their own private *copy* of it (mere referencing is expected to result from single-assignment); storing a per-class direct method mapping could also be done with prebuilt modules: ``class_Cat`` would rely on an automatically generated ``class_Cat_mt`` (for "method table") module, which would just be used in order to convert a method name in the name of the module that should be called in the context of that class, inheritance-wise; or, preferably, this information could be added directly to ``class_Cat``
+- ensure that all instances of a given class *reference* the same table dedicated to the method look-ups, and do not have each their own private *copy* of it (mere referencing is expected to result from single-assignment); storing a per-class direct method mapping could also be done with prebuilt modules: ``class_Cat`` would rely on an automatically generated ``class_Cat_mt`` (for "method table") module, which would just be used in order to convert a method name in the name of the module that should be called in the context of that class, inheritance-wise; or, preferably, this information could be added directly to ``class_Cat``; note that this should be the case now that the use of ``persistent_term`` has been integrated
 
 .. - ensure that each of these references remains purely *local* to the node (no network access wanted for method look-up!); this should be the case thanks to the local WOOPER class manager; otherwise, other types of tables could be used (maybe ETS)
 
