@@ -313,8 +313,8 @@ ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER = \
 
 
 # We conditionally defined this option, as upper layers may want to trigger
-# their own parse transforms *instead* (probably that will call directly, by
-# themselves, at the Erlang level, this 'WOOPER' parse transform):
+# their own parse transforms *instead* (probably that they will call directly,
+# by themselves, at the Erlang level, this 'WOOPER' parse transform):
 #
 ifndef ERLANG_COMPILER_PARSE_TRANSFORM_OPT
 	ERLANG_COMPILER_PARSE_TRANSFORM_OPT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER)
