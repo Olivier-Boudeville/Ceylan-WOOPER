@@ -21,7 +21,7 @@
 
 :raw-html:`<a name="wooper_top"></a>`
 
-:raw-html:`<div class="banner"><p><em>WOOPER 2.0 documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/index.html">browse mirror</a> <a href="wooper.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER%202.0]%20Remark">email us</a></p></div>`
+:raw-html:`<div class="banner"><p><em>WOOPER 2.0 documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/index.html">browse mirror</a> <a href="wooper.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">go to project</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER%202.0]%20Remark">email us</a></p></div>`
 
 
 
@@ -40,7 +40,7 @@
 :Organisation: Copyright (C) 2008-2021 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Sunday, February 7, 2021
+:Lastly updated: Monday, February 8, 2021
 :Version: 2.0.9
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
@@ -87,6 +87,8 @@ WOOPER, which stands for *Wrapper for Object-Oriented Programming in Erlang*, is
 This documentation applies to the WOOPER 2.0 version.
 
 WOOPER is a rather autonomous part of the `Ceylan <https://github.com/Olivier-Boudeville/Ceylan>`_ project (yet it uses `Myriad <https://github.com/Olivier-Boudeville/Ceylan-Myriad>`_ and is used by `Traces <https://github.com/Olivier-Boudeville/Ceylan-Traces>`_).
+
+The project repository is located `here <https://github.com/Olivier-Boudeville/Ceylan-WOOPER>`_.
 
 At least a basic knowledge of Erlang is expected in order to use WOOPER.
 
