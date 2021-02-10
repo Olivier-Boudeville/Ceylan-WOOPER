@@ -46,7 +46,6 @@ all:
 
 full-doc: $(DOC_GENERATED_FILES)
 	@/bin/ln -sf $(CURRENT_WOOPER_HTML) wooper.html
-	@/bin/ln -sf wooper.html index.html
 	@/bin/ln -sf $(CURRENT_WOOPER_PDF) wooper.pdf
 
 
@@ -91,7 +90,7 @@ clean-doc: clean-links
 
 
 clean-links:
-	-@/bin/rm -f index.html wooper.html wooper.pdf
+	-@/bin/rm -f wooper.html wooper.pdf
 
 
 info: info-doc info-web
