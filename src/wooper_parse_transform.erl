@@ -27,9 +27,10 @@
 
 
 % Defined now here, as the rebar-based build system would not allow us to define
-% per-module rules (ex: this module shall itself be compiled by the Myriad parse transform).
+% per-module rules (ex: this module shall itself be compiled by the Myriad parse
+% transform).
 %
- -compile({parse_transform, myriad_parse_transform}).
+-compile({parse_transform, myriad_parse_transform}).
 
 
 % Overall parse transform for the WOOPER layer.
@@ -149,13 +150,20 @@
 -include_lib("myriad/include/ast_info.hrl").
 
 
+% Shorthands:
 
-% Local shorthands:
+-type file_name() :: file_utils:file_name().
 
 -type ast() :: ast_base:ast().
+-type form() :: ast_base:form().
+
+-type preprocessor_option() :: ast_utils:preprocessor_option().
+
 -type module_info() :: ast_info:module_info().
 -type function_info() :: ast_info:function_info().
 -type function_table() :: ast_info:function_table().
+
+-type parse_transform_options() :: meta_utils:parse_transform_options().
 
 -type request_table() :: wooper_info:request_table().
 -type oneway_table() :: wooper_info:oneway_table().
@@ -187,7 +195,7 @@
 % transform (ex: 'undefined parse transform 'foobar'' as soon as a function or a
 % module is not found).
 %
--spec run_standalone( file_utils:file_name() ) -> { ast(), class_info() }.
+-spec run_standalone( file_name() ) -> { ast(), class_info() }.
 run_standalone( FileToTransform ) ->
 	run_standalone( FileToTransform, _PreprocessorOptions=[] ).
 
@@ -202,8 +210,8 @@ run_standalone( FileToTransform ) ->
 % transform (ex: 'undefined parse transform 'foobar'' as soon as a function or a
 % module is not found).
 %
--spec run_standalone( file_utils:file_name(),
-			  [ ast_utils:preprocessor_option() ] ) -> { ast(), class_info() }.
+-spec run_standalone( file_name(), [ preprocessor_option() ] ) ->
+							{ ast(), class_info() }.
 run_standalone( FileToTransform, PreprocessorOptions ) ->
 
 	InputAST = ast_utils:erl_to_ast( FileToTransform, PreprocessorOptions ),
@@ -217,7 +225,7 @@ run_standalone( FileToTransform, PreprocessorOptions ) ->
 % Format code first into a Myriad-based information being itself converted in
 % turn into an Erlang-compliant Abstract Format code.
 %
--spec parse_transform( ast(), meta_utils:parse_transform_options() ) -> ast().
+-spec parse_transform( ast(), parse_transform_options() ) -> ast().
 parse_transform( InputAST, Options ) ->
 
 	%trace_utils:info_fmt( "WOOPER input AST:~n~p~n", [ InputAST ] ),
@@ -244,7 +252,7 @@ parse_transform( InputAST, Options ) ->
 % Depending on the nature of the AST (WOOPER class or mere module), returns a
 % class information or a module information.
 %
--spec apply_wooper_transform( ast(), meta_utils:parse_transform_options() ) ->
+-spec apply_wooper_transform( ast(), parse_transform_options() ) ->
 									{ ast(), class_info() | module_info() }.
 apply_wooper_transform( InputAST, Options ) ->
 
@@ -272,8 +280,8 @@ apply_wooper_transform( InputAST, Options ) ->
 	?display_trace( "Module information extracted." ),
 
 	%ast_utils:display_debug( "Module information, directly as obtained "
-	%				"from Myriad and command-line options: ~s",
-	%				[ ast_info:module_info_to_string( WithOptsModuleInfo ) ] ),
+	%	"from Myriad and command-line options: ~s",
+	%	[ ast_info:module_info_to_string( WithOptsModuleInfo ) ] ),
 
 	{ ModInfo, MaybeClassInfo } = case is_wooper_class( WithOptsModuleInfo ) of
 
@@ -580,7 +588,7 @@ create_class_info_from(
 
 
 % Adds specified function into the corresponding table.
--spec add_function( meta_utils:function_name(), arity(), ast_base:form(),
+-spec add_function( meta_utils:function_name(), arity(), form(),
 					function_table() ) -> function_table().
 add_function( Name, Arity, Form, FunctionTable ) ->
 
@@ -609,8 +617,8 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 
 		% Here a definition was already set:
 		_ ->
-			wooper_internals:raise_usage_error( "multiple definition for ~s/~B.",
-												pair:to_list( FunId ) )
+			wooper_internals:raise_usage_error(
+			  "multiple definition for ~s/~B.", pair:to_list( FunId ) )
 
 	end,
 
@@ -619,8 +627,8 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 
 
 % Adds specified request into the corresponding table.
--spec add_request( wooper:request_name(), arity(), ast_base:form(),
-				   request_table() ) -> request_table().
+-spec add_request( wooper:request_name(), arity(), form(), request_table() ) ->
+							request_table().
 add_request( Name, Arity, Form, RequestTable ) ->
 
 	RequestId = { Name, Arity },
@@ -657,8 +665,8 @@ add_request( Name, Arity, Form, RequestTable ) ->
 
 
 % Adds specified oneway into the corresponding table.
--spec add_oneway( wooper:oneway_name(), arity(), ast_base:form(),
-				  oneway_table() ) -> oneway_table().
+-spec add_oneway( wooper:oneway_name(), arity(), form(), oneway_table() ) ->
+						oneway_table().
 add_oneway( Name, Arity, Form, OnewayTable ) ->
 
 	OnewayId = { Name, Arity },
@@ -695,7 +703,7 @@ add_oneway( Name, Arity, Form, OnewayTable ) ->
 
 
 % Adds specified static method into the corresponding table.
--spec add_static_method( wooper:static_name(), arity(), ast_base:form(),
+-spec add_static_method( wooper:static_name(), arity(), form(),
 						 static_table() ) -> static_table().
 add_static_method( Name, Arity, Form, StaticTable ) ->
 
@@ -939,9 +947,8 @@ register_functions( [ { FunId, FunInfo } | T ], FunctionTable ) ->
 		{ value, OtherFunInfo } ->
 			{ FunName, FunArity } = FunId,
 			ast_utils:display_error( "Attempt to declare ~s/~B more than once; "
-									 "whereas already registered as:~n  ~s~n"
-									 "this function has been declared again, "
-									 "as:~n  ~s~n",
+				"whereas already registered as:~n  ~s~n"
+				"this function has been declared again, as:~n  ~s~n",
 				[ FunName, FunArity,
 				  ast_info:function_info_to_string( OtherFunInfo ),
 				  ast_info:function_info_to_string( FunInfo ) ] ),
