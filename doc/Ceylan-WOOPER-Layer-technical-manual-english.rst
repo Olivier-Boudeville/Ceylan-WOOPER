@@ -21,7 +21,7 @@
 
 :raw-html:`<a name="wooper_top"></a>`
 
-:raw-html:`<div class="banner"><p><em>WOOPER 2.0 documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/index.html">browse mirror</a> <a href="wooper.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">go to project</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER%202.0]%20Remark">email us</a></p></div>`
+:raw-html:`<div class="banner"><p><em>WOOPER 2.0 documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/index.html">browse mirror</a> <a href="Ceylan-WOOPER-Layer-technical-manual-english.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">go to project</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER%202.0]%20Remark">email us</a></p></div>`
 
 
 
@@ -40,8 +40,8 @@
 :Organisation: Copyright (C) 2008-2021 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Monday, February 8, 2021
-:Version: 2.0.9
+:Lastly updated: Saturday, February 20, 2021
+:Version: 2.0.10
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -3659,13 +3659,13 @@ Sources, Inspirations & Alternate Solutions
 
 - **Concurrent Programming in Erlang**, Joe Armstrong, Robert Virding, Claes Wikström et Mike Williams. Chapter 18, page 299: Object-oriented Programming. This book describes a simple way of implementing multiple inheritance, without virtual table, at the expense of a (probably slow) systematic method look-up (at each method call). No specific state management is supported
 
-- Chris Rathman's `approach <http://www.angelfire.com/tx4/cus/shapes/erlang.html>`_ to life cycle management and polymorphism. Inheritance not supported
+- Chris Rathman's `approach <http://www.angelfire.com/tx4/cus/shapes/erlang.html>`_ to life cycle management and polymorphism ; inheritance not supported
 
 - `ECT <http://www.erlang-factory.com/upload/presentations/162/ECT.pdf>`_, an Object-Oriented Extension to Erlang, very promising yet apparently not maintained anymore
 
-- As Burkhard Neppert suggested, an alternative way of implementing OOP here could be to use Erlang behaviours. This is the way OTP handles generic functionalities that can be specialised (e.g. ``gen_server``). One approach could be to map each object-oriented base class to an Erlang **behaviour**. See some guidelines about `defining <http://wiki.trapexit.org/index.php/Defining_Your_Own_Behaviour>`_ your own behaviours and making them `cascade <http://wiki.trapexit.org/index.php/Cascading_Behaviours>`_
+- As Burkhard Neppert suggested, an alternative way of implementing OOP here could be to use Erlang behaviours. This is the way OTP handles generic functionalities that can be specialised (e.g. ``gen_server``). One approach could be to map each object-oriented base class to an Erlang **behaviour**; see some guidelines about `defining <http://wiki.trapexit.org/index.php/Defining_Your_Own_Behaviour>`_ your own behaviours and making them `cascade <http://wiki.trapexit.org/index.php/Cascading_Behaviours>`_ (warning: probably dead links now)
 
-- As mentioned by Niclas Eklund, despite relying on quite different operating modes, WOOPER and `Orber <http://www1.erlang.org/doc/apps/orber/index.html>`_, an Erlang implementation of a **CORBA ORB** (*Object Request Broker*) offer similar OOP features, as CORBA IDL implies an object-oriented approach (see their `OMG IDL to Erlang Mapping <http://www.erlang.org/doc/apps/orber/ch_idl_to_erlang_mapping.html#6>`_)
+- As mentioned by Niclas Eklund, despite relying on quite different operating modes, WOOPER and `Orber <http://www1.erlang.org/doc/apps/orber/index.html>`_, an Erlang implementation of a **CORBA ORB** (*Object Request Broker*) offer similar OOP features, as CORBA IDL implies an object-oriented approach (see their `OMG IDL to Erlang Mapping <http://www.erlang.org/doc/apps/orber/ch_idl_to_erlang_mapping.html#6>`_; warning: probably a dead link now)
 
 
 WOOPER and Orber are rather different beasts, though: WOOPER is quite lightweight (less than 25 000 lines of code, including blank lines, numerous comments, tests and examples), does not involve a specific (IDL) compiler generating several stub/skeleton Erlang files, nor depends on OTP or on Mnesia (but depends on Myriad), whereas Orber offers a full, standard, CORBA implementation, including IDL language mapping, CosNaming, IIOP, Interface Repository, etc.
@@ -3673,7 +3673,7 @@ WOOPER and Orber are rather different beasts, though: WOOPER is quite lightweigh
 Since Orber respects the OMG standard, integrating a new language (C/C++, Java, Smalltalk, Ada, Lisp, Python etc.) should be rather easy. On the other hand, if a full-blown CORBA-compliant middleware is not needed, if simplicity and ease of understanding is a key point, then WOOPER could be preferred. If unsure, give a try to both!
 
 
-See also another IDL-based approach (otherwise not connected to CORBA), the `Generic Server Back-end <http://www.erlang.org/doc/apps/ic/ch_erl_genserv.html#5>`_ (wrapper around ``gen_server``).
+See also another IDL-based approach (otherwise not connected to CORBA), the `Generic Server Back-end <http://www.erlang.org/doc/apps/ic/ch_erl_genserv.html#5>`_ (wrapper around ``gen_server``; warning: probably a dead link now).
 
 
 The WOOPER name is also a tribute to the vastly underrated `Wargames <http://en.wikipedia.org/wiki/WarGames>`_ movie (remember the `WOPR <http://en.wikipedia.org/wiki/WOPR>`_, the NORAD central computer?) that the author enjoyed a lot. It is as well a second-order tribute to the *Double Whopper King Size*, which is a great hamburger indeed [#]_.
