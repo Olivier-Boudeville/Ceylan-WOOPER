@@ -52,13 +52,11 @@
    :keywords: WOOPER, OOP, inheritance, object-oriented, Erlang
 
 
-
-
 The latest version of this documentation is to be found at the `official WOOPER website <http://wooper.esperide.org>`_ (``http://wooper.esperide.org``).
 
-:raw-html:`This WOOPER documentation is also available in the PDF format (see <a href="wooper.pdf">wooper.pdf</a>), and mirrored <a href="http://olivier-boudeville.github.io/Ceylan-WOOPER/wooper.html">here</a>.`
+:raw-html:`This WOOPER documentation is also available in the PDF format (see <a href="Ceylan-WOOPER-Layer-technical-manual-english.pdf">Ceylan-WOOPER-Layer-technical-manual-english.pdf</a>), and mirrored <a href="http://olivier-boudeville.github.io/Ceylan-WOOPER/">here</a>.`
 
-:raw-latex:`The documentation is also mirrored \href{https://olivier-boudeville.github.io/Ceylan-WOOPER/wooper.html}{here}.`
+:raw-latex:`The documentation is also mirrored \href{https://olivier-boudeville.github.io/Ceylan-WOOPER/}{here}.`
 
 
 
