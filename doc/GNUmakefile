@@ -32,8 +32,8 @@ GITHUB_PAGES_BASE := $(shell basename "$(WOOPER_WEB_MIRROR_BRANCH)")
 
 
 
-.PHONY: doc all full-doc html pdf clone-mirror           \
-		export-doc export-to-official export-to-mirror   \
+.PHONY: doc all full-doc create-links html pdf clone-mirror    \
+		export-doc export-to-official export-to-mirror         \
 		clean clean-doc clean-links info info-web
 
 
@@ -45,8 +45,11 @@ all:
 
 
 full-doc: $(DOC_GENERATED_FILES)
-	@/bin/ln -sf $(CURRENT_WOOPER_HTML) wooper.html
-	@/bin/ln -sf $(CURRENT_WOOPER_PDF) wooper.pdf
+
+
+# This link does not need to be in version control:
+create-links:
+	@/bin/ln -sf $(CURRENT_WOOPER_HTML) index.html
 
 
 html: clean-doc $(HTML_TARGET)
@@ -70,12 +73,12 @@ export-doc: clean-doc full-doc export-to-official export-to-mirror
 # not a set of files), so currently not used:
 # rsync -avze "ssh $(SP)" $(SOME_WEB_TREE) $(WEB_SRV):$(WEB_ROOT)/WOOPER/
 #
-export-to-official: $(DOC_GENERATED_FILES)
+export-to-official: create-links $(DOC_GENERATED_FILES)
 	@echo "   Exporting WOOPER documentation to official website ($(WEB_SRV))"
 	@/bin/scp $(SP) $(WEB_CONTENT) $(WEB_SRV):$(WEB_ROOT)/WOOPER/
 
 
-export-to-mirror: $(DOC_GENERATED_FILES)
+export-to-mirror: create-links $(DOC_GENERATED_FILES)
 	@echo "   Exporting WOOPER documentation to mirror website in $(WOOPER_WEB_MIRROR_BRANCH)"
 	@/bin/cp -f $(WEB_CONTENT) $(WOOPER_WEB_MIRROR_BRANCH) && cd $(WOOPER_WEB_MIRROR_BRANCH) && git add . && git merge -s ours && git commit -m "WOOPER doc updated." && git push && git pull --ff-only
 
@@ -89,8 +92,9 @@ clean-doc: clean-links
 	-@/bin/rm -f *.aux *.log *.maf *.mtc* *.stc* *.tex *.toc $(DOC_GENERATED_FILES)
 
 
+# No more wooper.html wooper.pdf:
 clean-links:
-	-@/bin/rm -f wooper.html wooper.pdf
+	-@/bin/rm -f index.html
 
 
 info: info-doc info-web
