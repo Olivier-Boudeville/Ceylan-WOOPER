@@ -32,13 +32,15 @@ GITHUB_PAGES_BASE := $(shell basename "$(WOOPER_WEB_MIRROR_BRANCH)")
 
 
 
-.PHONY: doc all full-doc create-links html pdf clone-mirror    \
-		export-doc export-to-official export-to-mirror         \
+.PHONY: doc all full-doc create-links html pdf clone-mirror         \
+		export-doc export-to-official export-to-mirror              \
 		clean clean-doc clean-links info info-web
+
 
 
 # Default do-nothing target:
 doc:
+
 
 all:
 	@echo "  Run 'make full-doc' to generate the manual of the 'WOOPER' layer."
@@ -92,17 +94,11 @@ clean-doc: clean-links
 	-@/bin/rm -f *.aux *.log *.maf *.mtc* *.stc* *.tex *.toc $(DOC_GENERATED_FILES)
 
 
-# No more wooper.html wooper.pdf:
 clean-links:
 	-@/bin/rm -f index.html
 
 
-info: info-doc info-web
-
-
-info-doc:
-	@echo "OVERALL_DOCUMENT_SOURCE = $(OVERALL_DOCUMENT_SOURCE)"
-	@echo "DOC_TRACKER = $(DOC_TRACKER)"
+info: info-web
 
 
 info-web:
