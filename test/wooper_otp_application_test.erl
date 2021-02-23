@@ -41,11 +41,37 @@
 test_wooper_application( OrderedAppNames ) ->
 
 	test_facilities:display( "Starting the WOOPER OTP active application." ),
-	otp_utils:start_applications( OrderedAppNames ),
 
+	% We did not trap EXIT messages, as we wanted this test to crash (thanks to
+	% the link below) in case of problem (and not to receive an EXIT message
+	% bound not to be read).
+	%
+	% However this test was crashing even when stopping (normally) applications,
+	% as apparently an OTP application has its processes terminated with reason
+	% 'shutdown' (not 'normal').
+	%
+	% So now this test process traps EXIT messages, and ensures that none
+	% besides {'EXIT',P,shutdown}, P being the PID of the WOOPER class manager,
+	% is received.
+	%
+	false = erlang:process_flag( trap_exit, true ),
+
+	otp_utils:start_applications( OrderedAppNames ),
 
 	test_facilities:display( "WOOPER version: ~p.",
 				 [ system_utils:get_application_version( wooper ) ] ),
+
+	% The top-level user process may not be aware that an OTP application fails
+	% (ex: because its main process crashed), which is a problem for a test. So
+	% here we link explicitly this test process to the WOOPER class manager, to
+	% increase the chances of detecting any issue:
+
+	WOOPERClassManagerPid = wooper_class_manager:get_existing_manager(),
+
+	erlang:link( WOOPERClassManagerPid ),
+
+	test_facilities:display( "Linked to WOOPER class manager ~w.",
+							 [ WOOPERClassManagerPid ] ),
 
 	% To test also a WOOPER module:
 
@@ -58,6 +84,19 @@ test_wooper_application( OrderedAppNames ) ->
 	% Including WOOPER:
 	test_facilities:display( "Stopping all user applications." ),
 	otp_utils:stop_user_applications( OrderedAppNames ),
+
+
+	test_facilities:display( "Checking pending messages." ),
+
+	receive
+
+		{ 'EXIT', WOOPERClassManagerPid, shutdown } ->
+			ok
+
+	end,
+
+	% None expected to be left:
+	basic_utils:check_no_pending_message(),
 
 	test_facilities:display(
 	  "Successful end of test of the WOOPER OTP application." ).
