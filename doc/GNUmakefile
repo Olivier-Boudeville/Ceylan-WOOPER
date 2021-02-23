@@ -37,7 +37,6 @@ GITHUB_PAGES_BASE := $(shell basename "$(WOOPER_WEB_MIRROR_BRANCH)")
 		clean clean-doc clean-links info info-web
 
 
-
 # Default do-nothing target:
 doc:
 
