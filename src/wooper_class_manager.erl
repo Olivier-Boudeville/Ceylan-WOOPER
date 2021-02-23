@@ -85,7 +85,7 @@
 
 % Service API:
 -export([ start/0, start_link/0, start/1, start_link/1,
-		  get_table_key/1, display/0, stop/0 ]).
+		  get_existing_manager/0, get_table_key/1, display/0, stop/0 ]).
 
 
 % Non-OTP API:
@@ -313,6 +313,16 @@ start_link( MaybeClientPid ) ->
 
 
 
+% Returns (possibly after some waiting) a supposedly already-existing WOOPER
+% class manager.
+%
+-spec get_existing_manager() -> manager_pid().
+get_existing_manager() ->
+	naming_utils:wait_for_local_registration_of( ?wooper_class_manager_name,
+												 ?registration_time_out ).
+
+
+
 % Returns the key corresponding to the virtual table associated to specified
 % classname.
 %
@@ -376,9 +386,8 @@ get_manager_through_otp() ->
 					"manager failed (~p), assuming simultaneous launches, "
 					"waiting for one to succeed.", [ E ] ),
 
-				% Returning the PID of the winne, whichever it is:
-				naming_utils:wait_for_local_registration_of(
-					?wooper_class_manager_name, ?registration_time_out )
+				% Returning the PID of the winner, whichever it is:
+				get_existing_manager()
 
 			end;
 
@@ -619,6 +628,7 @@ stop_automatic() ->
 
 
 % Section common to all kinds of modes of operation (OTP or not).
+
 
 
 % Returns the initial state of this manager, i.e. an (initially empty) table of
