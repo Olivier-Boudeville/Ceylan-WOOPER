@@ -47,8 +47,8 @@ test_wooper_application( OrderedAppNames ) ->
 	% bound not to be read).
 	%
 	% However this test was crashing even when stopping (normally) applications,
-	% as apparently an OTP application has its processes terminated with reason
-	% 'shutdown' (not 'normal').
+	% as apparently an OTP application has its child processes terminated with
+	% reason 'shutdown' (not 'normal').
 	%
 	% So now this test process traps EXIT messages, and ensures that none
 	% besides {'EXIT',P,shutdown}, P being the PID of the WOOPER class manager,
