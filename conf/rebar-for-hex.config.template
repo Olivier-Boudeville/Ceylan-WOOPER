@@ -59,7 +59,7 @@
 %
 {relx, [
 
-  {release, {wooper_release, "VERSION_FOR_REBAR3"},
+  {release, {wooper_release, "VERSION_FOR_REBAR"},
 			% myriad thus implied:
 			[sasl, wooper]},
 

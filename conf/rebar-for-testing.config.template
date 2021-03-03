@@ -22,7 +22,7 @@
 %
 % Implied: {myriad, "MYRIAD_VERSION_FOR_REBAR"}
 %
-{deps, [ {wooper, "VERSION_FOR_REBAR3" } ] }.
+{deps, [ {wooper, "VERSION_FOR_REBAR" } ] }.
 
 
 % This testing just targets to trigger the build of WOOPER (and its Myriad
@@ -48,7 +48,7 @@
 %
 {relx, [
 
-  {release, {wooper_test_release, "VERSION_FOR_REBAR3"},
+  {release, {wooper_test_release, "VERSION_FOR_REBAR"},
 			[sasl, wooper]},
 
   %{sys_config, "./config/sys.config"},
