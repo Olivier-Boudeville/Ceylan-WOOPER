@@ -7,6 +7,7 @@
 declared-types-in-*.txt
 .eunit
 erl_crash.dump
+doc/index.html
 
 # For Emacs temporary files:
 *.#*
