@@ -13,11 +13,6 @@
 .. role:: raw-latex(raw)
    :format: latex
 
-.. comment Would appear too late, can only be an be used only in preamble:
-.. comment :raw-latex:`\usepackage{graphicx}`
-.. comment As a result, in this document at least a '.. figure:: XXXX' must
-.. exist, otherwise: 'Undefined control sequence \includegraphics.'.
-
 
 :raw-html:`<a name="wooper_top"></a>`
 
@@ -25,8 +20,8 @@
 
 
 
-:raw-html:`<center><img src="wooper-title.png" width="70%"></img></center>`
-:raw-latex:`\includegraphics[scale=0.34]{wooper-title.png}`
+:raw-html:`<center><img src="wooper-title.png" width="35%"></img></center>`
+:raw-latex:`\centering \includegraphics[scale=0.28]{wooper-title.png}`
 
 .. comment Note: this is the latest, current version of the WOOPER 2.x documentation, directly obtained from the one of WOOPER 1.x.
 
@@ -40,7 +35,7 @@
 :Organisation: Copyright (C) 2008-2021 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Saturday, February 20, 2021
+:Lastly updated: Friday, March 12, 2021
 :Version: 2.0.10
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
@@ -3710,14 +3705,9 @@ If you have information more detailed or more recent than those presented in thi
 Ending Word
 ===========
 
-Have fun with WOOPER!
+Have fun with Ceylan-WOOPER!
 
-.. comment Mostly added to ensure there is at least one figure directive,
-.. otherwise the LateX graphic support will not be included:
-
-.. figure:: wooper-title.png
-   :alt: WOOPER logo
-   :width: 50 %
-   :align: center
+:raw-html:`<center><img src="wooper-title.png" width="25%"></img></center>`
+:raw-latex:`\begin{figure}[h] \centering \includegraphics[scale=0.15]{wooper-title.png} \end{figure}`
 
 :raw-html:`<a name="wooper_bottom"></a>`
