@@ -58,11 +58,10 @@ html: clean-doc $(HTML_TARGET)
 pdf: clean-doc $(PDF_TARGET)
 
 
-# Creates a separate repository for the GitHub pages branch:
-# (please then remove all initial content of that branch)
-#
 clone-mirror:
+	@ echo "  Creating a separate repository in $(GITHUB_PAGES_BASE)"
 	@cd ../../ && git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git $(GITHUB_PAGES_BASE) && cd $(GITHUB_PAGES_BASE) && git checkout -b gh-pages
+	@echo "Please remove all initial content in that selected 'gh-pages' branch."
 
 
 export-doc: clean-doc full-doc export-to-official export-to-mirror
