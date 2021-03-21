@@ -23,10 +23,10 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
-% Creation date: Wednesday, December 24, 2014
+% Creation date: Wednesday, December 24, 2014.
 
 
-% Centralizes, on behalf of the WOOPER parse transform, the support for the
+% Centralises, on behalf of the WOOPER parse transform, the support for the
 % state management, including instance attributes.
 %
 -module(wooper_state_management).
@@ -43,8 +43,6 @@
 
 
 % Shorthands:
-
-%-type form_element() :: ast_base:form_element().
 
 -type class_info() :: wooper_info:class_info().
 
@@ -192,7 +190,7 @@ manage_attributes( ClassInfo=#class_info{ class={ Classname, _LocForm },
 	NewStaticTable = table:add_new_entry( AttrTargetFunKey, NewStaticInfo,
 										  StaticTable ),
 
-	%trace_utils:debug_fmt( "As class-specific attributes, we have ~s",
+	%trace_utils:debug_fmt( "As class-specific attributes, we have ~ts",
 	%					   [ attributes_to_string( NewAttributeTable ) ] ),
 
 	ClassInfo#class_info{ attributes=NewAttributeTable,
@@ -317,7 +315,7 @@ register_attribute( AttrNameForm, TypeForm, QualifiersForm, DescriptionForm,
 
 		true ->
 			wooper_internals:raise_usage_error( "multiple declarations for "
-				   "class attribute '~s'.", [ AttrName ], Classname );
+				   "class attribute '~ts'.", [ AttrName ], Classname );
 
 		false ->
 			table:add_entry( AttrName, AttrInfo, AttributeTable )
@@ -326,8 +324,8 @@ register_attribute( AttrNameForm, TypeForm, QualifiersForm, DescriptionForm,
 
 
 
-% Returns a clause that is compilable, a list of { AttrName, AttrType,
-% AttrQualifier, AttrDescription } quadruplets.
+% Returns a clause that is compilable, a list of {AttrName, AttrType,
+% AttrQualifier, AttrDescription} quadruplets.
 %
 % Currently:
 %
@@ -414,7 +412,7 @@ filter_attribute_forms( _ListForm=[
 
 % Attribute name, type, qualifier and description specified:
 filter_attribute_forms( _ListForm=[ { tuple, _Line,
-				   [ Name, Type, Qualifier, Description ] } | T ], Acc ) ->
+				[ Name, Type, Qualifier, Description ] } | T ], Acc ) ->
 
 	AttrName = filter_name( Name ),
 
@@ -555,7 +553,7 @@ handle_attribute_type( TypeForm, _Classname, _AttrName )
 % Probably never triggered:
 handle_attribute_type( _TypeForm, Classname, AttrName ) ->
 	wooper_internals:raise_usage_error(
-	  "invalid type for class attribute '~s'.", [ AttrName ], Classname ).
+	  "invalid type for class attribute '~ts'.", [ AttrName ], Classname ).
 
 
 
@@ -613,12 +611,12 @@ handle_attribute_qualifier( {atom,_,const}, _Classname, _AttrName ) ->
 
 handle_attribute_qualifier( {atom,_,Other}, Classname, AttrName ) ->
 	wooper_internals:raise_usage_error(
-	  "invalid qualifier '~s' for class attribute '~s'.", [ Other, AttrName ],
+	  "invalid qualifier '~ts' for class attribute '~ts'.", [ Other, AttrName ],
 	  Classname );
 
 handle_attribute_qualifier( _UnexpectedForm, Classname, AttrName ) ->
 	wooper_internals:raise_usage_error(
-	  "invalid qualifier for class attribute '~s'.", [ AttrName ], Classname ).
+	  "invalid qualifier for class attribute '~ts'.", [ AttrName ], Classname ).
 
 
 
@@ -653,7 +651,7 @@ attributes_to_string( AttributeTable ) ->
 			"no attribute defined";
 
 		L ->
-			text_utils:format( "~B attributes defined: ~s",
+			text_utils:format( "~B attributes defined: ~ts",
 				[ L, text_utils:strings_to_sorted_string( AttrStrings ) ] )
 
 	end.
@@ -684,10 +682,10 @@ attribute_to_string( #attribute_info{ name=Name,
 			"with no associated description";
 
 		_ ->
-			text_utils:format( "whose description is '~s'", [ Description ] )
+			text_utils:format( "whose description is '~ts'", [ Description ] )
 
 	end,
 
 	text_utils:format(
-	  "attribute named '~s' of ~s, with qualifiers ~w, and ~s",
+	  "attribute named '~ts' of ~ts, with qualifiers ~w, and ~ts",
 	  [ Name, TypeString, Qualifiers, DescString ] ).

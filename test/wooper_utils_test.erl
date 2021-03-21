@@ -47,10 +47,11 @@ run() ->
 	FirstJavaFullClassname = wooper_utils:get_java_package_and_class_for(
 							   FirstWOOPERClassname   ),
 
-	test_facilities:display( "To the WOOPER classname '~s' corresponds "
-		"~p, i.e. ~s.~n", [ FirstWOOPERClassname, FirstJavaFullClassname,
-							java_utils:fully_qualified_classname_to_string(
-							  FirstJavaFullClassname ) ] ),
+	test_facilities:display( "To the WOOPER classname '~ts' corresponds "
+		"~p, i.e. ~ts.~n",
+		[ FirstWOOPERClassname, FirstJavaFullClassname,
+		  java_utils:fully_qualified_classname_to_string(
+			FirstJavaFullClassname ) ] ),
 
 
 	SecondWOOPERClassname = 'class_MyPackage__MyExample',
@@ -58,10 +59,11 @@ run() ->
 	SecondJavaFullClassname = wooper_utils:get_java_package_and_class_for(
 							   SecondWOOPERClassname   ),
 
-	test_facilities:display( "To the WOOPER classname '~s' corresponds "
-		"~p, i.e. ~s.~n", [ SecondWOOPERClassname, SecondJavaFullClassname,
-							java_utils:fully_qualified_classname_to_string(
-							  SecondJavaFullClassname ) ] ),
+	test_facilities:display( "To the WOOPER classname '~ts' corresponds "
+		"~p, i.e. ~ts.~n",
+		[ SecondWOOPERClassname, SecondJavaFullClassname,
+		  java_utils:fully_qualified_classname_to_string(
+			SecondJavaFullClassname ) ] ),
 
 
 	ThirdWOOPERClassname = 'class_MyExample',
@@ -69,9 +71,10 @@ run() ->
 	ThirdJavaFullClassname = wooper_utils:get_java_package_and_class_for(
 							   ThirdWOOPERClassname ),
 
-	test_facilities:display( "To the WOOPER classname '~s' corresponds "
-		"~p, i.e. ~s.~n", [ ThirdWOOPERClassname, ThirdJavaFullClassname,
-							java_utils:fully_qualified_classname_to_string(
-							  ThirdJavaFullClassname ) ] ),
+	test_facilities:display( "To the WOOPER classname '~ts' corresponds "
+		"~p, i.e. ~ts.~n",
+		[ ThirdWOOPERClassname, ThirdJavaFullClassname,
+		  java_utils:fully_qualified_classname_to_string(
+			ThirdJavaFullClassname ) ] ),
 
 	test_facilities:stop().

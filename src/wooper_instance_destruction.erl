@@ -105,7 +105,7 @@ manage_destructor( { FunctionTable, ClassInfo } ) ->
 	% In all cases a destructor is defined then:
 	NewClassInfo = ClassInfo#class_info{ destructor=DestructFunInfo },
 
-	%trace_utils:debug_fmt( "Destructor info: ~s",
+	%trace_utils:debug_fmt( "Destructor info: ~ts",
 	%	[ wooper_info:destructor_to_string( DestructFunInfo,
 	%				_DoIncludeForms=true, _IndentationLevel=1 ) ] ),
 
@@ -204,7 +204,7 @@ get_default_destructor_info( MarkerTable ) ->
 	% that export form):
 	%
 	ExportLocation = ast_info:get_default_export_function_location(
-					   MarkerTable ),
+						MarkerTable ),
 
 	#function_info{ name=destruct,
 					arity=1,

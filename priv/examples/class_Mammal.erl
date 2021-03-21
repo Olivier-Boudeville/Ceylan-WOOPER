@@ -40,7 +40,7 @@ construct( State, Age, Gender, FurColor ) ->
 	% Even when constructing a cat, we should see the right class (class_Cat)
 	% and not the current class (class_Mammal):
 	%
-	io:format( "Actual class from constructor: ~s.~n", [ ActualClass ] ),
+	io:format( "Actual class from constructor: ~ts.~n", [ ActualClass ] ),
 
 	setAttribute( RequestedState, fur_color, FurColor ).
 
@@ -57,7 +57,7 @@ destruct( State ) ->
 
 	% Even when constructing a cat, we should see the right class (class_Cat)
 	% and not the current class (class_Mammal):
-	io:format( "Actual class from destructor: ~s.~n", [ ActualClass ] ),
+	io:format( "Actual class from destructor: ~ts.~n", [ ActualClass ] ),
 
 	io:format( "Deleting mammal ~w! (overridden destructor)~n", [ self() ] ),
 
@@ -109,13 +109,13 @@ getFurColor( State ) ->
 -spec getArbitraryNumber( wooper:state() ) -> request_return( number() ).
 getArbitraryNumber( State ) ->
 
-	{ RequestedState, ActualClass } = executeRequest( State,
-													  getClassname ),
+	{ RequestedState, ActualClass } =
+		executeRequest( State, getClassname ),
 
 	% Even when constructing a cat, we should see the right class (class_Cat)
 	% and not the current class (class_Mammal):
 	%
-	io:format( "Actual class from non-overridden method: ~s.~n",
+	io:format( "Actual class from non-overridden method: ~ts.~n",
 			   [ ActualClass ] ),
 
 	% Interesting test for the stack trace, when called from the Mammal test:
@@ -131,7 +131,7 @@ getArbitraryNumber( State ) ->
 -spec testExplicitClassSelection( wooper:state() ) -> oneway_return().
 testExplicitClassSelection( State ) ->
 
-	% Using just executeOneway( State, setAge, 20 ) would call the class_Mammal
+	% Using just executeOneway(State, setAge, 20) would call the class_Mammal
 	% version, we call the class_Creature version instead, which sets the age to
 	% 36 regardless of the specified one:
 	%

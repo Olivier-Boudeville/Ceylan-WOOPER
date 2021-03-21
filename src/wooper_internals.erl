@@ -119,7 +119,7 @@ raise_usage_error( ErrorFormatString, ErrorFormatValues ) ->
 -spec raise_usage_error( ustring(), ast_transforms(), line() ) -> no_return();
 					   ( ustring(), classname(), line() ) -> no_return();
 					   ( format_string(), format_values(), classname() ) ->
-							   no_return().
+								no_return().
 raise_usage_error( ErrorString,
 				   #ast_transforms{ transformed_module_name=Classname },
 				   Line ) ->
@@ -131,8 +131,7 @@ raise_usage_error( ErrorString,
 	%
 	%ast_utils:raise_error( ErrorString, _Context={ ExpectedModFile, Line },
 	%					   ?origin_layer ).
-	io:format( "~s:~B: ~s~n",
-			   [ ExpectedSrcFile, Line, ErrorString ] ),
+	io:format( "~ts:~B: ~ts~n", [ ExpectedSrcFile, Line, ErrorString ] ),
 
 	% Almost the only way to stop the processing of the AST:
 	halt( 6 );
@@ -142,7 +141,7 @@ raise_usage_error( ErrorString, Classname, Line ) when is_atom( Classname ) ->
 
 	ExpectedSrcFile = wooper:get_class_filename( Classname ),
 
-	io:format( "~s:~B: ~s~n", [ ExpectedSrcFile, Line, ErrorString ] ),
+	io:format( "~ts:~B: ~ts~n", [ ExpectedSrcFile, Line, ErrorString ] ),
 
 	% Almost the only way to stop the processing of the AST:
 	halt( 6 );
@@ -155,7 +154,7 @@ raise_usage_error( ErrorFormatString, ErrorFormatValues, Classname ) ->
 	% Cannot target better:
 	Line = 0,
 
-	io:format( "~s:~B: " ++ ErrorFormatString ++ "~n",
+	io:format( "~ts:~B: " ++ ErrorFormatString ++ "~n",
 			   [ ExpectedSrcFile, Line | ErrorFormatValues ] ),
 
 	% Almost the only way to stop the processing of the AST:

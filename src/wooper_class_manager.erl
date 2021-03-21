@@ -186,11 +186,11 @@ display_state( Tables ) ->
 
 display_table_creation( Module ) ->
 	wooper:log_info( ?log_prefix "Creating a virtual table "
-					 "for module ~s.~n", [ Module ] ).
+					 "for module ~ts.~n", [ Module ] ).
 
 
 display_msg( String ) ->
-	Message = text_utils:format( ?log_prefix "~s~n", [ String ] ),
+	Message = text_utils:format( ?log_prefix "~ts~n", [ String ] ),
 	wooper:log_info( Message ).
 
 
@@ -217,6 +217,9 @@ display_msg( _FormatString, _Values ) ->
 -endif. % wooper_debug_class_manager
 
 
+% Shorthands:
+
+-type module_name() :: basic_utils:module_name().
 
 
 
@@ -425,7 +428,7 @@ stop() ->
 -spec init( any() ) -> { 'ok', state() }.
 init( _Args=[] ) ->
 
-	display_msg( "Starting (init) WOOPER class manager on node ~s (PID: ~w).",
+	display_msg( "Starting (init) WOOPER class manager on node ~ts (PID: ~w).",
 				 [ node(), self() ] ),
 
 	% With this creation procedure, we are supposed to start from scratch
@@ -446,9 +449,10 @@ init( _Args=[] ) ->
 
 handle_call( { get_table_key, Classname }, _From, _State=Tables ) ->
 
-	display_msg( "handle_call: get_table_key for ~s.", [ Classname ] ),
+	display_msg( "handle_call: get_table_key for ~ts.", [ Classname ] ),
 
-	{ NewTables, TargetTableKey } = get_virtual_table_key_for( Classname, Tables ),
+	{ NewTables, TargetTableKey } =
+		get_virtual_table_key_for( Classname, Tables ),
 
 	{ reply, { ok, TargetTableKey }, _NewState=NewTables }.
 
@@ -466,7 +470,7 @@ handle_cast( stop, State ) ->
 
 handle_cast( display, State=Tables ) ->
 
-	wooper:log_info( ?log_prefix "Internal state is: ~s~n",
+	wooper:log_info( ?log_prefix "Internal state is: ~ts~n",
 					 [ ?wooper_table_type:to_string( Tables ) ] ),
 
 	% Const:
@@ -498,7 +502,7 @@ handle_info( Info, State ) ->
 terminate( Reason, _State ) ->
 
 	trace_utils:info_fmt( "WOOPER class manager terminated (reason: ~w).",
-						   [ Reason ] ),
+						  [ Reason ] ),
 
 	ok.
 
@@ -554,7 +558,7 @@ get_manager() ->
 			% others areto terminate immediately):
 			%
 			naming_utils:wait_for_local_registration_of(
-			  ?wooper_class_manager_name, ?registration_time_out );
+				?wooper_class_manager_name, ?registration_time_out );
 
 
 		ManagerPid ->
@@ -630,7 +634,6 @@ stop_automatic() ->
 % Section common to all kinds of modes of operation (OTP or not).
 
 
-
 % Returns the initial state of this manager, i.e. an (initially empty) table of
 % per-class tables.
 %
@@ -669,7 +672,7 @@ loop( Tables ) ->
 			loop( NewTables );
 
 		display ->
-			wooper:log_info( ?log_prefix "Internal state is: ~s~n",
+			wooper:log_info( ?log_prefix "Internal state is: ~ts~n",
 							 [ ?wooper_table_type:to_string( Tables ) ] ),
 			loop( Tables );
 
@@ -699,7 +702,7 @@ loop( Tables ) ->
 % Returns a pair formed of the new set of virtual tables and of the requested
 % table key.
 %
--spec get_virtual_table_key_for( basic_utils:module_name(),
+-spec get_virtual_table_key_for( module_name(),
 								 ?wooper_table_type:?wooper_table_type() ) ->
 		{ ?wooper_table_type:?wooper_table_type(), wooper:class_key() }.
 get_virtual_table_key_for( Module, Tables ) ->
@@ -720,13 +723,13 @@ get_virtual_table_key_for( Module, Tables ) ->
 			ModuleTable = create_method_table_for( Module ),
 
 			%trace_utils:debug_fmt( "Persistent registry before addition "
-			%	"of ~s: ~p", [ Module, persistent_term:info() ] ),
+			%	"of ~ts: ~p", [ Module, persistent_term:info() ] ),
 
 			% Apparently sufficient to handle from now on a reference:
 			persistent_term:put( ModuleKey, ModuleTable ),
 
 			%trace_utils:debug_fmt( "Persistent registry after addition "
-			%	"of ~s: ~p", [ Module, persistent_term:info() ] ),
+			%	"of ~ts: ~p", [ Module, persistent_term:info() ] ),
 
 			% Not using ModuleTable anymore, switching to following reference
 			% instead:
@@ -736,12 +739,12 @@ get_virtual_table_key_for( Module, Tables ) ->
 			% Uncomment to report some information about this virtual table:
 			%TableSize = system_utils:get_size( ModuleTableRef ),
 
-			%trace_utils:debug_fmt( "For class '~s', returning a table whose "
-			%	"size is ~s (~B bytes): ~s",
+			%trace_utils:debug_fmt( "For class '~ts', returning a table whose "
+			%	"size is ~ts (~B bytes): ~ts",
 			%	[ Module, system_utils:interpret_byte_size( TableSize ),
 			%	  TableSize, table:to_string( ModuleTableRef ) ] ),
 
-			%trace_utils:debug_fmt( "Virtual table for ~s: ~s",
+			%trace_utils:debug_fmt( "Virtual table for ~ts: ~ts",
 			%     [ Module, ?wooper_table_type:to_string( ModuleTableRef ) ] ),
 
 			% Each class had its virtual table optimised:
@@ -774,7 +777,7 @@ get_virtual_table_key_for( Module, Tables ) ->
 % Creates recursively (indirectly thanks to update_method_table_with/2) the
 % virtual table corresponding to specified module.
 %
--spec create_method_table_for( basic_utils:module_name() ) ->
+-spec create_method_table_for( module_name() ) ->
 						?wooper_table_type:?wooper_table_type().
 create_method_table_for( TargetModule ) ->
 
@@ -797,9 +800,9 @@ create_method_table_for( TargetModule ) ->
 % priority over the ones relative to Module. Hence methods redefined in child
 % classes are selected, rather than the ones of the mother class.
 %
--spec update_method_table_with( basic_utils:module_name(),
+-spec update_method_table_with( module_name(),
 		  ?wooper_table_type:?wooper_table_type() ) ->
-						  ?wooper_table_type:?wooper_table_type().
+							?wooper_table_type:?wooper_table_type().
 update_method_table_with( Module, Hashtable ) ->
 	?wooper_table_type:merge( Hashtable, create_method_table_for( Module ) ).
 
@@ -901,8 +904,8 @@ select_function( _, _ )                                               -> true.
 
 
 % Returns a table appropriate for method look-up, for the specified module.
--spec create_local_method_table_for( basic_utils:module_name() ) ->
-							   ?wooper_table_type:?wooper_table_type().
+-spec create_local_method_table_for( module_name() ) ->
+								?wooper_table_type:?wooper_table_type().
 create_local_method_table_for( Module ) ->
 
 	% Typically if Module is misspelled:
@@ -912,7 +915,7 @@ create_local_method_table_for( Module ) ->
 
 				  error:undef ->
 					  trace_utils:error_fmt( "Unable to find a module "
-						"corresponding to '~s', knowing that ~s~n"
+						"corresponding to '~ts', knowing that ~ts~n"
 						"Hint: check the BEAM_DIRS make variable and any "
 						"application-level setting that specifies code that "
 						"shall be deployed.",

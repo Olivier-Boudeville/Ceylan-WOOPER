@@ -45,7 +45,7 @@ construct( State, Age, Gender, FurColor, NozzleColor ) ->
 	OvoviviparousMammalState =
 		class_OvoviviparousBeing:construct( MammalState ),
 
-	io:format( "Synchronous time-out is ~s.~n",
+	io:format( "Synchronous time-out is ~ts.~n",
 			   [ time_utils:duration_to_string( ?synchronous_time_out ) ] ),
 
 	% Then the class-specific attributes:
@@ -149,8 +149,8 @@ testCreationDeletion( State ) ->
 		"though that the 5-second time-out in debug mode is a 30-minute one in "
 		"normal mode)." ),
 
-	DeleteState =
-		wooper:delete_synchronously_any_instance_referenced_in( cat_pid, CatState ),
+	DeleteState = wooper:delete_synchronously_any_instance_referenced_in(
+					cat_pid, CatState ),
 
 	undefined = getAttribute( DeleteState, cat_pid ),
 

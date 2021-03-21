@@ -77,7 +77,7 @@ construct( State ) ->
 % Overriding the default destructor:
 -spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
-	io:format( "  I am ~s, and I am just destructed.~n", [ ?getAttr(name) ] ),
+	io:format( "  I am ~ts, and I am just destructed.~n", [ ?getAttr(name) ] ),
 	State.
 
 

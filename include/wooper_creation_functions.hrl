@@ -232,7 +232,7 @@
 %
 %% synchronous_new_link( ?wooper_construct_parameters ) ->
 
-%%	%trace_utils:debug_fmt( "synchronous_new_link for ~s with parameters:~n~p.~n",
+%%	%trace_utils:debug_fmt( "synchronous_new_link for ~ts with parameters:~n~p.~n",
 %%	%		  [ ?MODULE, [ ?wooper_construct_parameters ] ] ),
 
 %%	CreatorPid = self(),

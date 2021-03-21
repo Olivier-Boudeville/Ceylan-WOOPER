@@ -34,12 +34,11 @@ run( IsDebug ) ->
 	% Allows to support both OTP conventions and ad hoc, automatic ones:
 	wooper_utils:start_for_test(),
 
-	test_facilities:display( "Debug mode: ~s.",
+	test_facilities:display( "Debug mode: ~ts.",
 							 [ class_Platypus:is_wooper_debug() ] ),
 
 
 	% General tests.
-
 
 	MyP = class_Platypus:new_link( 4, male, brown, black ),
 
@@ -62,7 +61,7 @@ run( IsDebug ) ->
 
 	PSize = basic_utils:get_process_size( MyP ),
 	trace_utils:notice_fmt( "The total size of a (newly created) Platypus "
-		"instance is ~s (i.e. ~B bytes).",
+		"instance is ~ts (i.e. ~B bytes).",
 		[ system_utils:interpret_byte_size( PSize ), PSize ] ),
 
 	MyP ! { getSuperclasses, [], self() },
@@ -310,7 +309,7 @@ run( IsDebug ) ->
 			receive
 
 				{ wooper_result, InspectString } ->
-					test_facilities:display( "Instance description: ~s",
+					test_facilities:display( "Instance description: ~ts",
 											 [ InspectString ] )
 			end;
 

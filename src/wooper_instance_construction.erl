@@ -26,7 +26,7 @@
 % Creation date: Wednesday, December 24, 2014.
 
 
-% Centralizes, on behalf of the WOOPER parse transform, the support for instance
+% Centralises, on behalf of the WOOPER parse transform, the support for instance
 % construction.
 %
 -module(wooper_instance_construction).
@@ -46,8 +46,11 @@
 
 -type line() :: ast_base:line().
 -type form_element() :: ast_base:form_element().
+-type form_location() :: ast_base:form_location().
+
 -type compose_pair() :: wooper_parse_transform:compose_pair().
 -type operator_table() :: wooper_parse_transform:operator_table().
+-type classname() :: wooper:classname().
 
 
 % For myriad_spawn*:
@@ -84,7 +87,7 @@ manage_constructors( { FunctionTable, ClassInfo } ) ->
 			{ FunctionTable, ClassInfo#class_info{ errors=NewErrors } };
 
 		_ ->
-			%trace_utils:debug_fmt( "~B constructor(s) found: ~s",
+			%trace_utils:debug_fmt( "~B constructor(s) found: ~ts",
 			%					   [ length( ConstructPairs ),
 			%						 text_utils:strings_to_string(
 			%						   [ ast_info:function_info_to_string( FI )
@@ -151,14 +154,13 @@ manage_new_operators( _ConstructPairs=[], FunctionTable, ClassInfo ) ->
 	{ FunctionTable, ClassInfo };
 
 manage_new_operators( _ConstructPairs=[ { Arity, FunInfo } | T ], FunctionTable,
-					  ClassInfo=#class_info{
-								   class={ Classname, _ClassLocForm },
-								   constructors=Constructors,
-								   new_operators=NewOpTable,
-								   debug_mode=IsDebugMode,
-								   markers=MarkerTable  } ) ->
+					  ClassInfo=#class_info{ class={ Classname, _ClassLocForm },
+											 constructors=Constructors,
+											 new_operators=NewOpTable,
+											 debug_mode=IsDebugMode,
+											 markers=MarkerTable  } ) ->
 
-	%trace_utils:debug_fmt( "Processing constructor of arity ~B: ~s",
+	%trace_utils:debug_fmt( "Processing constructor of arity ~B: ~ts",
 	%			   [ Arity, ast_info:function_info_to_string( FunInfo ) ] ),
 
 	% Where the generated 'new*' operators (and possibly the constructor) will
@@ -176,7 +178,7 @@ manage_new_operators( _ConstructPairs=[ { Arity, FunInfo } | T ], FunctionTable,
 
 	% Registering this (possibly updated) constructor in the dedicated table:
 	NewConstructors = table:add_new_entry( _K=Arity, _V=NewFunInfo,
-										 Constructors ),
+										   Constructors ),
 
 	% Then, for a constructor of arity N, we have to automatically define and
 	% export here following 15 functions, which are all new operator variations
@@ -195,8 +197,8 @@ manage_new_operators( _ConstructPairs=[ { Arity, FunInfo } | T ], FunctionTable,
 	% - V8: new_passive/N-1
 
 	% Where the generated 'new*' operators will be defined:
-	DefinitionLoc = ast_info:get_default_definition_function_location(
-					  MarkerTable ),
+	DefinitionLoc =
+		ast_info:get_default_definition_function_location( MarkerTable ),
 
 	V1OpTable = add_v1_operators( Classname, Arity, ExportLoc, DefinitionLoc,
 								  IsDebugMode, NewOpTable ),
@@ -233,9 +235,8 @@ manage_new_operators( _ConstructPairs=[ { Arity, FunInfo } | T ], FunctionTable,
 % Adds the V1 operators, i.e. new/N-1 and new_link/N-1, by updating the
 % specified operator table.
 %
--spec add_v1_operators( wooper:classname(), arity(), ast_base:form_location(),
-			ast_base:form_location(), boolean(), operator_table() ) ->
-							  operator_table().
+-spec add_v1_operators( classname(), arity(), form_location(),
+			form_location(), boolean(), operator_table() ) -> operator_table().
 add_v1_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
@@ -376,9 +377,8 @@ add_v1_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 % by updating the specified operator table; they correspond roughly to the V1
 % ones, augmented with a receive clause.
 %
--spec add_v2_operators( wooper:classname(), arity(), ast_base:form_location(),
-			ast_base:form_location(), boolean(), operator_table() ) ->
-							operator_table().
+-spec add_v2_operators( classname(), arity(), form_location(),
+			form_location(), boolean(), operator_table() ) -> operator_table().
 add_v2_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
@@ -507,9 +507,8 @@ add_v2_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 % synchronous_timed_new_link/N-1, by updating the specified operator table; they
 % correspond roughly to the V2 ones, augmented with an after clause.
 %
--spec add_v3_operators( wooper:classname(), arity(), ast_base:form_location(),
-			ast_base:form_location(), boolean(), operator_table() ) ->
-							operator_table().
+-spec add_v3_operators( classname(), arity(), form_location(),
+			form_location(), boolean(), operator_table() ) -> operator_table().
 add_v3_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
@@ -639,9 +638,8 @@ add_v3_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 % specified operator table; they correspond roughly to the V1 ones, augmented
 % with a node specification at the spawn call.
 %
--spec add_v4_operators( wooper:classname(), arity(), ast_base:form_location(),
-			ast_base:form_location(), boolean(), operator_table() ) ->
-							operator_table().
+-spec add_v4_operators( classname(), arity(), form_location(),
+			form_location(), boolean(), operator_table() ) -> operator_table().
 add_v4_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
@@ -766,9 +764,8 @@ add_v4_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 % correspond roughly to the V4 ones, augmented with a synchronous variant and a
 % receive clause.
 %
--spec add_v5_operators( wooper:classname(), arity(), ast_base:form_location(),
-			ast_base:form_location(), boolean(), operator_table() ) ->
-							operator_table().
+-spec add_v5_operators( classname(), arity(), form_location(),
+			form_location(), boolean(), operator_table() ) -> operator_table().
 add_v5_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
@@ -911,9 +908,8 @@ add_v5_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 % they correspond roughly to the V5 ones, except there is no integrated receive,
 % as it is left at the hand of the user.
 %
--spec add_v6_operators( wooper:classname(), arity(), ast_base:form_location(),
-			ast_base:form_location(), boolean(), operator_table() ) ->
-							operator_table().
+-spec add_v6_operators( classname(), arity(), form_location(),
+			form_location(), boolean(), operator_table() ) -> operator_table().
 add_v6_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
@@ -1045,9 +1041,8 @@ add_v6_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 % remote_synchronous_timed_new/N, by updating the specified operator table; they
 % correspond roughly to a version of V5 with an additional after clause.
 %
--spec add_v7_operators( wooper:classname(), arity(), ast_base:form_location(),
-			ast_base:form_location(), boolean(), operator_table() ) ->
-							operator_table().
+-spec add_v7_operators( classname(), arity(), form_location(),
+			form_location(), boolean(), operator_table() ) -> operator_table().
 add_v7_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 				  OperatorTable ) ->
 
@@ -1185,9 +1180,8 @@ add_v7_operators( Classname, Arity, ExportLocation, DefinitionLoc, IsDebugMode,
 
 
 % Adds the V8 operator, i.e. new_passive/N-1 (no other variation makes sense).
--spec add_v8_operators( wooper:classname(), arity(), ast_base:form_location(),
-			ast_base:form_location(), boolean(), operator_table() ) ->
-							  operator_table().
+-spec add_v8_operators( classname(), arity(), form_location(),
+			form_location(), boolean(), operator_table() ) -> operator_table().
 add_v8_operators( Classname, Arity, ExportLocation, DefinitionLoc, _IsDebugMode,
 				  OperatorTable ) ->
 

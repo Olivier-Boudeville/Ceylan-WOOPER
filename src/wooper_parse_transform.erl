@@ -96,7 +96,7 @@
 % We preferred that methods are auto-exported (defining them is sufficient, no
 % particular export declaration needed):
 %
-% - a pseudo-export line (i.e. '-export([ setColor/2, ...]).') is generated and
+% - a pseudo-export line (i.e. '-export([setColor/2, ...]).') is generated and
 % appropriately placed in the AST
 %
 % - knowing that we want -spec lines (even in the form '-oneway setColor(...,
@@ -112,25 +112,28 @@
 % Regarding function/method type specifications:
 %
 % - example for a (plain) function:
-%       -spec f( float() ) -> integer().
+%       -spec f(float()) -> integer().
 %
 % - example for a oneway method:
-%       -oneway_spec setColor( wooper:state(), color() ) -> void().
+%       -oneway_spec setColor(wooper:state(), color()) -> void().
 %
 % - example for a request method:
-%       -request_spec getColor( wooper:state() ) -> color().
+%       -request_spec getColor(wooper:state()) -> color().
 %
 % - example for a static method:
-%       -static_spec get_mean_count( foo() ) -> count().
+%       -static_spec get_mean_count(foo()) -> count().
 
 
 % Used for iterated (re)composition of class information:
 -type compose_pair() :: { ast_info:function_table(), class_info() }.
 
+
 % For clarity:
 -type operator_table() :: function_table().
 
+
 -export_type([ compose_pair/0, operator_table/0 ]).
+
 
 
 -export([ run_standalone/1, run_standalone/2,
@@ -280,7 +283,7 @@ apply_wooper_transform( InputAST, Options ) ->
 	?display_trace( "Module information extracted." ),
 
 	%ast_utils:display_debug( "Module information, directly as obtained "
-	%	"from Myriad and command-line options: ~s",
+	%	"from Myriad and command-line options: ~ts",
 	%	[ ast_info:module_info_to_string( WithOptsModuleInfo ) ] ),
 
 	{ ModInfo, MaybeClassInfo } = case is_wooper_class( WithOptsModuleInfo ) of
@@ -296,7 +299,7 @@ apply_wooper_transform( InputAST, Options ) ->
 			% Finally perform WOOPER-specific transformation:
 			NewClassInfo = transform_class_info( ClassInfo ),
 
-			%trace_utils:debug_fmt( "Transformed class information: ~s",
+			%trace_utils:debug_fmt( "Transformed class information: ~ts",
 			%    [ wooper_info:class_info_to_string( NewClassInfo ) ] ),
 
 			?display_trace( "Generating back module information." ),
@@ -314,7 +317,7 @@ apply_wooper_transform( InputAST, Options ) ->
 	end,
 
 	%trace_utils:debug_fmt(
-	%  "Module information just prior to Myriad transformation: ~s",
+	%  "Module information just prior to Myriad transformation: ~ts",
 	%  [ ast_info:module_info_to_string( ModInfo ) ] ),
 
 	% And finally obtain the corresponding updated AST thanks to Myriad:
@@ -328,7 +331,7 @@ apply_wooper_transform( InputAST, Options ) ->
 		myriad_parse_transform:transform_module_info( ModInfo ),
 
 	%trace_utils:debug_fmt(
-	%  "Module information after Myriad transformation: ~s",
+	%  "Module information after Myriad transformation: ~ts",
 	%  [ ast_info:module_info_to_string( TransformedModuleInfo ) ] ),
 
 	OutputAST = ast_info:recompose_ast_from_module_info(
@@ -339,7 +342,7 @@ apply_wooper_transform( InputAST, Options ) ->
 	%trace_utils:debug_fmt( "WOOPER output AST:~n~p", [ OutputAST ] ),
 
 	%OutputASTFilename = text_utils:format(
-	%   "WOOPER-output-AST-for-module-~s.txt",
+	%   "WOOPER-output-AST-for-module-~ts.txt",
 	%	[ element( 1, TransformedModuleInfo#module_info.module ) ] ),
 
 	%ast_utils:write_ast_to_file( OutputAST, OutputASTFilename ),
@@ -499,23 +502,22 @@ create_class_info_from(
 	InitialPair = { InitialFunctionTable, AttrClassInfo },
 
 
-	ConstructPair = wooper_instance_construction:manage_constructors(
-					  InitialPair ),
+	ConstructPair =
+		wooper_instance_construction:manage_constructors( InitialPair ),
 
-	DestructPair = wooper_instance_destruction:manage_destructor(
-					 ConstructPair ),
+	DestructPair =
+		wooper_instance_destruction:manage_destructor( ConstructPair ),
 
 	MethodPair = wooper_method_management:manage_methods( DestructPair ),
-
 
 	% ...
 
 	_FinalPair = { FinalFunctionTable, FinalClassInfo } = MethodPair,
 
 	ReturnedClassInfo = FinalClassInfo#class_info{
-						  functions=FinalFunctionTable },
+							functions=FinalFunctionTable },
 
-	%trace_utils:debug_fmt( "Recomposed class information: ~s",
+	%trace_utils:debug_fmt( "Recomposed class information: ~ts",
 	%	   [ wooper_info:class_info_to_string( ReturnedClassInfo ) ] ),
 
 	ReturnedClassInfo.
@@ -548,7 +550,7 @@ create_class_info_from(
 %%		  C=#class_info{ class=undefined, class_def=undefined } ) ->
 
 %%	trace_utils:debug_fmt( "Intercepting WOOPER classname declaration for "
-%%						   "'~s'.", [ Classname ] ),
+%%						   "'~ts'.", [ Classname ] ),
 
 %%	check_classname( Classname ),
 
@@ -565,7 +567,7 @@ create_class_info_from(
 %%		  C=#class_info{ class=undefined, class_def=undefined } ) ->
 
 %%	%trace_utils:debug_fmt( "Intercepting module-based classname declaration "
-%%	%					   "for '~s'.", [ Classname ] ),
+%%	%					   "for '~ts'.", [ Classname ] ),
 
 %%	check_classname( Classname ),
 
@@ -618,7 +620,7 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 		% Here a definition was already set:
 		_ ->
 			wooper_internals:raise_usage_error(
-			  "multiple definition for ~s/~B.", pair:to_list( FunId ) )
+			  "multiple definition for ~ts/~B.", pair:to_list( FunId ) )
 
 	end,
 
@@ -656,7 +658,7 @@ add_request( Name, Arity, Form, RequestTable ) ->
 		% Here a definition was already set:
 		_ ->
 			wooper_internals:raise_usage_error( "multiple definitions for "
-				"request ~s/~B.", pair:to_list( RequestId ) )
+				"request ~ts/~B.", pair:to_list( RequestId ) )
 
 	end,
 
@@ -694,7 +696,7 @@ add_oneway( Name, Arity, Form, OnewayTable ) ->
 		% Here a definition was already set:
 		_ ->
 			wooper_internals:raise_usage_error( "multiple definitions for "
-				"oneway ~s/~B.", pair:to_list( OnewayId ) )
+				"oneway ~ts/~B.", pair:to_list( OnewayId ) )
 
 	end,
 
@@ -729,7 +731,7 @@ add_static_method( Name, Arity, Form, StaticTable ) ->
 		% Here a definition was already set:
 		_ ->
 			wooper_internals:raise_usage_error( "multiple definitions for "
-				"static method ~s/~B.", pair:to_list( StaticId ) )
+				"static method ~ts/~B.", pair:to_list( StaticId ) )
 
 	end,
 
@@ -854,7 +856,7 @@ generate_module_info_from( #class_info{
 			ConstructId = { construct, ConstructArity },
 			% Expected to have already been appropriately exported.
 			table:add_new_entry( ConstructId, ConstructFunInfo,
-							   AccFunTable )
+								 AccFunTable )
 		end,
 		_Acc0=FunctionTable,
 		_List=table:enumerate( ConstructorTable ) ),
@@ -881,7 +883,7 @@ generate_module_info_from( #class_info{
 			DestructId = { destruct, 1 },
 			% Expected to have already been appropriately exported.
 			table:add_new_entry( DestructId, DestructFunInfo,
-							   WithNewOpFunTable )
+								 WithNewOpFunTable )
 
 	end,
 
@@ -892,12 +894,12 @@ generate_module_info_from( #class_info{
 	AllExportTable = WithMthdExpTable,
 
 	WithMthdFunTable = wooper_method_management:methods_to_functions(
-				RequestTable, OnewayTable, StaticTable, WithDestrFunTable,
-				MarkerTable ),
+		RequestTable, OnewayTable, StaticTable, WithDestrFunTable,
+		MarkerTable ),
 
 	AllFunctionTable = WithMthdFunTable,
 
-	%trace_utils:debug_fmt( "Complete function table: ~s",
+	%trace_utils:debug_fmt( "Complete function table: ~ts",
 	%					   [ table:to_string( AllFunctionTable ) ] ),
 
 	% Directly returned (many fields can be copied verbatim):
@@ -946,9 +948,9 @@ register_functions( [ { FunId, FunInfo } | T ], FunctionTable ) ->
 
 		{ value, OtherFunInfo } ->
 			{ FunName, FunArity } = FunId,
-			ast_utils:display_error( "Attempt to declare ~s/~B more than once; "
-				"whereas already registered as:~n  ~s~n"
-				"this function has been declared again, as:~n  ~s~n",
+			ast_utils:display_error( "Attempt to declare ~ts/~B more than "
+				"once; whereas already registered as:~n  ~ts~n"
+				"this function has been declared again, as:~n  ~ts~n",
 				[ FunName, FunArity,
 				  ast_info:function_info_to_string( OtherFunInfo ),
 				  ast_info:function_info_to_string( FunInfo ) ] ),

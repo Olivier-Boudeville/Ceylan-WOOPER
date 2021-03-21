@@ -23,8 +23,7 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
-% Creation date: Wednesday, October 31, 2018
-
+% Creation date: Wednesday, October 31, 2018.
 
 
 % This module allows to test the support for multiple constructors.
@@ -46,7 +45,7 @@ run() ->
 
 	I1Name = "Ian",
 
-	test_facilities:display( "Creating a new instance of ~s, named '~s'.",
+	test_facilities:display( "Creating a new instance of ~ts, named '~ts'.",
 							 [ TestedClass, I1Name ] ),
 
 	I1Pid = TestedClass:new_link( I1Name, male ),
@@ -78,7 +77,7 @@ run() ->
 
 	I2Name = "Murdock",
 
-	test_facilities:display( "Creating a new instance of ~s, named '~s'.",
+	test_facilities:display( "Creating a new instance of ~ts, named '~ts'.",
 							 [ TestedClass, I2Name ] ),
 
 	I2Pid = TestedClass:new_link( I2Name ),
@@ -108,7 +107,7 @@ run() ->
 	end,
 
 
-	test_facilities:display( "Creating a new, anonymous instance of ~s.",
+	test_facilities:display( "Creating a new, anonymous instance of ~ts.",
 							 [ TestedClass ] ),
 
 	I3Pid = TestedClass:new_link(),

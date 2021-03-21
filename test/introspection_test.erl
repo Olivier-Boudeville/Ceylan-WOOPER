@@ -26,13 +26,11 @@
 % Creation date: Wednesday, October 31, 2018.
 
 
-
 % This module allows to test the support for introspection.
 -module(introspection_test).
 
 
 -export([ run/0 ]).
-
 
 
 -spec run() -> no_return().
@@ -47,17 +45,17 @@ run() ->
 
 	TargetClass = class_ChildTestClass,
 
-	test_facilities:display( "Superclasses of ~s: ~p~n",
+	test_facilities:display( "Superclasses of ~ts: ~p~n",
 			[ TargetClass, TargetClass:get_superclasses() ] ),
 
-	test_facilities:display( "Attribute information for ~s:~n  ~p~n",
+	test_facilities:display( "Attribute information for ~ts:~n  ~p~n",
 			[ TargetClass, TargetClass:get_class_specific_attributes() ] ),
 
 
-	test_facilities:display( "Attribute names of ~s instances: ~s",
-			[ TargetClass, text_utils:atoms_to_string(
-				wooper_introspection:get_class_specific_attribute_names(
-				  TargetClass ) ) ] ),
+	test_facilities:display( "Attribute names of ~ts instances: ~ts",
+		[ TargetClass, text_utils:atoms_to_string(
+			wooper_introspection:get_class_specific_attribute_names(
+			  TargetClass ) ) ] ),
 
 	test_facilities:display( "Test success." ),
 

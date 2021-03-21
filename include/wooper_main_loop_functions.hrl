@@ -70,11 +70,11 @@ wooper_main_loop( State ) ->
 				when is_pid( CallerPid ) and is_list( ArgumentList ) ->
 
 			?wooper_log_format( "Main loop (case A) for ~w: "
-				"request '~s' with argument list ~w for ~w.~n",
+				"request '~ts' with argument list ~w for ~w.~n",
 				[ self(), MethodAtom, ArgumentList, CallerPid ] ),
 
 			NewState = wooper_handle_remote_request_execution( MethodAtom,
-										  State, ArgumentList, CallerPid ),
+										State, ArgumentList, CallerPid ),
 
 			%?wooper_log( "Main loop (case A) ended.~n" ),
 
@@ -87,12 +87,12 @@ wooper_main_loop( State ) ->
 		%
 		{ MethodAtom, Argument, CallerPid } when is_pid( CallerPid ) ->
 
-			?wooper_log_format( "Main loop (case B) for ~w: request '~s' "
-								"with argument ~w for ~w.~n",
-								[ self(), MethodAtom, Argument, CallerPid ] ),
+			?wooper_log_format( "Main loop (case B) for ~w: request '~ts' "
+				"with argument ~w for ~w.~n",
+				[ self(), MethodAtom, Argument, CallerPid ] ),
 
 			NewState = wooper_handle_remote_request_execution( MethodAtom,
-										  State, [ Argument ], CallerPid ),
+										State, [ Argument ], CallerPid ),
 
 			%?wooper_log( "Main loop (case B) ended.~n" ),
 
@@ -112,8 +112,8 @@ wooper_main_loop( State ) ->
 		{ MethodAtom, ArgumentList } when is_list( ArgumentList ) ->
 
 			?wooper_log_format( "Main loop (case C) for ~w: "
-								"oneway '~s' with argument list ~w.~n",
-								[ self(), MethodAtom, ArgumentList ] ),
+				"oneway '~ts' with argument list ~w.~n",
+				[ self(), MethodAtom, ArgumentList ] ),
 
 			NewState = wooper_handle_remote_oneway_execution( MethodAtom, State,
 															  ArgumentList ),
@@ -155,7 +155,7 @@ wooper_main_loop( State ) ->
 		{ MethodAtom, Argument } ->
 
 			?wooper_log_format( "Main loop (case E) for ~w: "
-				"oneway '~s' with argument ~w.~n",
+				"oneway '~ts' with argument ~w.~n",
 				[ self(), MethodAtom, Argument ] ),
 
 			NewState = wooper_handle_remote_oneway_execution( MethodAtom, State,
@@ -182,12 +182,12 @@ wooper_main_loop( State ) ->
 		MethodAtom when is_atom( MethodAtom ) ->
 
 			?wooper_log_format(
-			   "Main loop (case F) for ~w: oneway from atom ~s.~n",
+			   "Main loop (case F) for ~w: oneway from atom ~ts.~n",
 			   [ self(), MethodAtom ] ),
 
 			% Any result should be ignored, only the updated state is kept:
 			NewState = wooper_handle_remote_oneway_execution( MethodAtom, State,
-												  _ArgumentList=[] ),
+													_ArgumentList=[] ),
 
 			%?wooper_log( "Main loop (case F) ended.~n" ),
 			wooper_main_loop( NewState );
@@ -277,7 +277,7 @@ wooper_main_loop( State ) ->
 		{ nodeup, Node, MonitorNodeInfo } ->
 
 			?wooper_log_format( "Main loop (case I) for ~w: node up message "
-				"for '~s' with ~p.~n", [ self(), Node, MonitorNodeInfo ] ),
+				"for '~ts' with ~p.~n", [ self(), Node, MonitorNodeInfo ] ),
 
 			case ?wooper_table_type:lookup_entry(
 				  { _Name=onWOOPERNodeConnection, _Arity=3 },
@@ -293,8 +293,8 @@ wooper_main_loop( State ) ->
 					% MonitorNodeInfo )':
 
 					{ NewState, _ } = wooper_execute_method(
-							onWOOPERNodeConnection, State,
-							[ Node, MonitorNodeInfo ] ),
+						onWOOPERNodeConnection, State,
+						[ Node, MonitorNodeInfo ] ),
 
 					%?wooper_log( "Main loop (case I) ended.~n" ),
 					wooper_main_loop( NewState );
@@ -306,7 +306,7 @@ wooper_main_loop( State ) ->
 					% nodeup handler not overridden, using default one:
 					%?wooper_log( "Main loop (case I) ended.~n" ),
 					NewState = wooper:default_node_up_handler( Node,
-										   MonitorNodeInfo, State ),
+											MonitorNodeInfo, State ),
 					wooper_main_loop( NewState )
 
 			end;
@@ -315,7 +315,7 @@ wooper_main_loop( State ) ->
 		{ nodedown, Node, MonitorNodeInfo } ->
 
 			?wooper_log_format( "Main loop (case J) for ~w: node down message "
-				"for '~s' with ~p.~n", [ self(), Node, MonitorNodeInfo ] ),
+				"for '~ts' with ~p.~n", [ self(), Node, MonitorNodeInfo ] ),
 
 			case ?wooper_table_type:lookup_entry(
 				  { _Name=onWOOPERNodeDisconnection, _Arity=3 },
@@ -331,8 +331,8 @@ wooper_main_loop( State ) ->
 					% NodeName, MonitorNodeInfo )':
 
 					{ NewState, _ } = wooper_execute_method(
-							onWOOPERNodeDisconnection, State,
-							[ Node, MonitorNodeInfo ] ),
+						onWOOPERNodeDisconnection, State,
+						[ Node, MonitorNodeInfo ] ),
 
 					%?wooper_log( "Main loop (case J) ended.~n" ),
 					wooper_main_loop( NewState );
@@ -344,7 +344,7 @@ wooper_main_loop( State ) ->
 					% nodedown handler not overridden, using default one:
 					% ?wooper_log( "Main loop (case J) ended.~n" ),
 					NewState = wooper:default_node_down_handler( Node,
-												 MonitorNodeInfo, State ),
+													MonitorNodeInfo, State ),
 					wooper_main_loop( NewState )
 
 			end;

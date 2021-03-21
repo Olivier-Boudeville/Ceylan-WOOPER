@@ -51,7 +51,7 @@ wooper_destruct( State ) ->
 	% in the method table would be more efficient, see
 	% wooper_class_manager:get_virtual_table_key_for):
 
-	% We should never rely on 'wooper:get_classname( State )' here, as it would
+	% We should never rely on 'wooper:get_classname(State)' here, as it would
 	% always return the leaf class. We use ?MODULE (even for embodied
 	% instances):
 	%
@@ -81,7 +81,7 @@ wooper_destruct( State ) ->
 
 				Other ->
 
-					wooper:log_error( "~nWOOPER error for PID ~w of class ~s: "
+					wooper:log_error( "~nWOOPER error for PID ~w of class ~ts: "
 					  "user-defined destructor did not return a state, but "
 					  "returned '~p' instead.", [ self(), ?MODULE, Other ] ),
 
@@ -183,10 +183,10 @@ trigger_destruct_error( Reason, ErrorTerm, StackTrace, State ) ->
 	ActualClassname = wooper:get_classname( State ),
 
 	wooper:log_error( "~nWOOPER error for PID ~w, "
-		"destructor (~s:destruct/1) failed (cause: ~p):~n~n"
+		"destructor (~ts:destruct/1) failed (cause: ~p):~n~n"
 		" - with error term:~n  ~p~n~n"
-		" - stack trace was (latest calls first):~n~s~n"
-		" - instance state was: ~s~n~n",
+		" - stack trace was (latest calls first):~n~ts~n"
+		" - instance state was: ~ts~n~n",
 		[ self(), ActualClassname, Reason, ErrorTerm,
 		  code_utils:interpret_stacktrace( StackTrace ),
 		  wooper:state_to_string( State ) ] ),

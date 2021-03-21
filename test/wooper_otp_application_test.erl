@@ -77,7 +77,7 @@ test_wooper_application( OrderedAppNames ) ->
 
 	TestClassname = 'class_Tiger',
 
-	test_facilities:display( "Class filename corresponding to '~s': '~s'.",
+	test_facilities:display( "Class filename corresponding to '~ts': '~ts'.",
 			[ TestClassname, wooper:get_class_filename( TestClassname ) ] ),
 
 

@@ -34,7 +34,7 @@ run( IsDebug ) ->
 	% Allows to support both OTP conventions and ad hoc, automatic ones:
 	wooper_utils:start_for_test(),
 
-	test_facilities:display( "Debug mode: ~s.",
+	test_facilities:display( "Debug mode: ~ts.",
 							 [ class_Cat:is_wooper_debug() ] ),
 
 	% General tests.
@@ -268,7 +268,7 @@ run( IsDebug ) ->
 			receive
 
 				{ wooper_result, InspectString } ->
-					test_facilities:display( "Instance description: ~s",
+					test_facilities:display( "Instance description: ~ts",
 											 [ InspectString ] )
 			end;
 

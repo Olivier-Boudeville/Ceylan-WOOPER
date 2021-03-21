@@ -32,7 +32,7 @@ run() ->
 	receive
 
 		{ wooper_result, FirstDescription } ->
-			test_facilities:display( "Created following cat: ~s~n" ,
+			test_facilities:display( "Created following cat: ~ts~n" ,
 									 [ FirstDescription ] )
 
 	end,
@@ -54,9 +54,8 @@ run() ->
 	TextTransformer = fun( Entry={ AttributeName, AttributeValue },
 						   _Acc={ AccEntries, AccUserData } ) ->
 
-			test_facilities:display( " - attribute name '~s' is associated "
-									 "to value '~p'",
-									 [ AttributeName, AttributeValue ] ),
+			test_facilities:display( " - attribute name '~ts' is associated "
+				"to value '~p'", [ AttributeName, AttributeValue ] ),
 
 			% New accumulator:
 			{ [ Entry | AccEntries ], AccUserData }
@@ -126,7 +125,7 @@ run() ->
 	receive
 
 		{ wooper_result, SecondDescription } ->
-			test_facilities:display( "Deserialised following cat: ~s~n" ,
+			test_facilities:display( "Deserialised following cat: ~ts~n" ,
 									 [ SecondDescription ] )
 
 	end,

@@ -49,13 +49,13 @@ perform_direct_ast_operations( TargetSourceFile ) ->
 
 	BaseModuleInfo = ast_info:extract_module_info_from_ast( BaseAST ),
 
-	trace_utils:notice_fmt( "Base module info: ~s~n",
-			   [ ast_info:module_info_to_string( BaseModuleInfo ) ] ),
+	trace_utils:notice_fmt( "Base module info: ~ts~n",
+			[ ast_info:module_info_to_string( BaseModuleInfo ) ] ),
 
 	FinalModuleInfo = BaseModuleInfo,
 
-	trace_utils:notice_fmt( "Final module info: ~s~n",
-			   [ ast_info:module_info_to_string( FinalModuleInfo ) ] ),
+	trace_utils:notice_fmt( "Final module info: ~ts~n",
+			[ ast_info:module_info_to_string( FinalModuleInfo ) ] ),
 
 	_FinalAST = ast_info:recompose_ast_from_module_info( FinalModuleInfo ),
 
@@ -73,7 +73,7 @@ run() ->
 	TargetSourceFile = "../priv/examples/class_Cat.erl",
 
 	trace_utils:notice_fmt( "Applying the WOOPER parse transform to the "
-							"'~s' source file.", [ TargetSourceFile ] ),
+							"'~ts' source file.", [ TargetSourceFile ] ),
 
 	PreprocessorOptions = [ { includes, [ "../include" ] } ],
 

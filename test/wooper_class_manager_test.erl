@@ -59,8 +59,8 @@ test_with_otp() ->
 
 	TableKey = wooper_class_manager:get_table_key( ?requested_class ),
 
-	test_facilities:display( "Table obtained from ~w for '~s' "
-		"(key: '~p'):~n~s",
+	test_facilities:display( "Table obtained from ~w for '~ts' "
+		"(key: '~p'):~n~ts",
 		[ ManagerPid, ?requested_class, TableKey,
 		  table:to_string( persistent_term:get( TableKey ) ) ] ),
 
@@ -88,8 +88,8 @@ test_without_otp() ->
 	receive
 
 		{ wooper_virtual_table_key, TableKey } ->
-			test_facilities:display( "Table obtained from ~w for '~s' "
-				"(key: '~p'):~n~s",
+			test_facilities:display( "Table obtained from ~w for '~ts' "
+				"(key: '~p'):~n~ts",
 				[ ManagerPid, ?requested_class, TableKey,
 				  table:to_string( persistent_term:get( TableKey ) ) ] )
 

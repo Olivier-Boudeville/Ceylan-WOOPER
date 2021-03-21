@@ -177,7 +177,6 @@
 % Then function definitions:
 
 -include("wooper_classes_functions.hrl").
--include("wooper_creation_functions.hrl").
 -include("wooper_destruction_functions.hrl").
 -include("wooper_execute_functions.hrl").
 -include("wooper_execute_internal_functions.hrl").

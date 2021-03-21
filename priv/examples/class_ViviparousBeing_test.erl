@@ -32,7 +32,7 @@ run( IsDebug ) ->
 	% Allows to support both OTP conventions and ad hoc, automatic ones:
 	wooper_utils:start_for_test(),
 
-	test_facilities:display( "Debug mode: ~s.",
+	test_facilities:display( "Debug mode: ~ts.",
 							 [ class_ViviparousBeing:is_wooper_debug() ] ),
 
 	MyV = class_ViviparousBeing:new_link(),
@@ -55,7 +55,7 @@ run( IsDebug ) ->
 
 		{ wooper_result, [] } ->
 			test_facilities:display( "After constructor, "
-							 "getSuperclasses/1 returned [] as expected." );
+							"getSuperclasses/1 returned [] as expected." );
 
 		{ wooper_result, UnexpectedSuperclasses } ->
 			test_facilities:fail( "wrong superclasses: ~p",
@@ -113,7 +113,7 @@ run( IsDebug ) ->
 			receive
 
 				{ wooper_result, InspectString } ->
-					test_facilities:display( "Instance description: ~s",
+					test_facilities:display( "Instance description: ~ts",
 											 [ InspectString ] )
 			end;
 

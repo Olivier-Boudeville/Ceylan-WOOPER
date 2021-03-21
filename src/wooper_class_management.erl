@@ -23,10 +23,10 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
-% Creation date: Wednesday, December 24, 2014
+% Creation date: Wednesday, December 24, 2014.
 
 
-% Centralizes, on behalf of the WOOPER parse transform, the support for classes,
+% Centralises, on behalf of the WOOPER parse transform, the support for classes,
 % inheritance, etc.
 %
 -module(wooper_class_management).
@@ -59,16 +59,16 @@
 % Regarding WOOPER superclasses.
 %
 % They used to be defined with:
-% '-define( wooper_superclasses, [ class_A, class_B ] ).'.
+% '-define(wooper_superclasses, [class_A, class_B]).'.
 %
 % Now they are either defined with the optional:
 %
-% '-superclasses( [ class_A, class_B ] ).
+% '-superclasses([class_A, class_B]).
 %
 % (which has been finally preferred to '-wooper_superclasses([]).').
 %
 % or with the alternative (optional as well):
-% '-define( superclasses, [ class_A, class_B ] ).'
+% '-define(superclasses, [class_A, class_B]).'
 %
 % This latter form is less interesting than the former, yet it allows to follow
 % the same convention as '-define( class_attributes, [...])', which is more
@@ -90,7 +90,7 @@ check_classname( Name ) when is_atom( Name ) ->
 			Name;
 
 		InvalidName ->
-			wooper_internals:raise_usage_error( "invalid classname ('~s'): "
+			wooper_internals:raise_usage_error( "invalid classname ('~ts'): "
 				"no 'class_' prefix used.", [ InvalidName ] )
 
 	end;

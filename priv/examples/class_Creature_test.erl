@@ -24,7 +24,7 @@ run() ->
 	% Allows to support both OTP conventions and ad hoc, automatic ones:
 	wooper_utils:start_for_test(),
 
-	test_facilities:display( "Debug mode: ~s.",
+	test_facilities:display( "Debug mode: ~ts.",
 							[ class_Creature:is_wooper_debug() ] ),
 
 	test_facilities:display( "Class name is , superclasses are ~w.",

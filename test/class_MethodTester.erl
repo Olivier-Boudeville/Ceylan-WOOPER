@@ -61,7 +61,7 @@ destruct( State ) ->
 
 	trace_utils:info( "destruction" ),
 
-	io:format( "  I am ~s, and I am just destructed.~n", [ ?getAttr(name) ] ),
+	io:format( "  I am ~ts, and I am just destructed.~n", [ ?getAttr(name) ] ),
 	State.
 
 
@@ -79,20 +79,15 @@ getName( State ) ->
 % Sets the name of this instance.
 -spec setName( wooper:state(), name() ) -> oneway_return().
 setName( State, Name ) ->
-
 	trace_utils:info( "setName/2" ),
-
 	NewState = setAttribute( State, name, Name ),
-
 	wooper:return_state( NewState ).
 
 
 % Returns a value established in a static context.
 -spec get_static_info( integer(), integer() ) -> static_return( integer() ).
 get_static_info( A, B ) ->
-
 	trace_utils:info( "get_static_info/2 called" ),
-
 	wooper:return_static( A + B + 10 ).
 
 

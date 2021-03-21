@@ -30,7 +30,7 @@
 % per-module rules (ex: this module shall itself be compiled by the Myriad parse
 % transform).
 %
- -compile( {parse_transform, myriad_parse_transform } ).
+-compile( {parse_transform, myriad_parse_transform } ).
 
 
 % Centralisation of class-level information.
@@ -41,12 +41,11 @@
 -include("wooper_info.hrl").
 
 
-
 -type class_info() :: #class_info{}.
 
 
 % The description of a class:
--type class_description() :: text_utils:ustring().
+-type class_description() :: ustring().
 
 
 % Mother classes (usually direct ones):
@@ -60,7 +59,7 @@
 -type attribute_qualifiers() :: attribute_qualifier()
 							  | [ attribute_qualifier() ].
 
--type attribute_description() :: text_utils:ustring().
+-type attribute_description() :: ustring().
 
 
 % How attributes are to be specified by the user:
@@ -75,7 +74,6 @@
 
 	  | { wooper:attribute_name(), wooper:attribute_type(),
 		  attribute_qualifiers(), attribute_description() }.
-
 
 
 -type attribute_info() :: #attribute_info{}.
@@ -286,7 +284,7 @@ class_info_to_string( ClassInfo, DoIncludeForms ) ->
 % Note: here the location information is dropped for all located definitions.
 %
 -spec class_info_to_string( class_info(), boolean(), indentation_level() ) ->
-								  ustring().
+									ustring().
 class_info_to_string( #class_info{
 						 class=ClassEntry,
 						 superclasses=Superclasses,
@@ -412,8 +410,9 @@ class_info_to_string( #class_info{
 			  ast_info:unhandled_forms_to_string( UnhandledForms,
 							 DoIncludeForms, NextIndentationLevel ) ],
 
-		text_utils:format( "Information about class ~s: ~s", [ ClassnameString,
-				 text_utils:strings_to_string( Infos, IndentationLevel ) ] ).
+		text_utils:format( "Information about class ~ts: ~ts",
+			[ ClassnameString,
+			  text_utils:strings_to_string( Infos, IndentationLevel ) ] ).
 
 
 
@@ -430,27 +429,25 @@ class_entry_to_string( _ClassEntry=undefined, _DoIncludeForms ) ->
 	"(unnamed class)";
 
 class_entry_to_string( _ClassEntry={ ThisClassname, _ClassLocDef },
-						_DoIncludeForms=false ) ->
+					   _DoIncludeForms=false ) ->
 	text_utils:atom_to_string( ThisClassname );
 
 class_entry_to_string( _ClassEntry={ ThisClassname,
-						_ClassLocDef={ _Loc, Form } },
-						_DoIncludeForms=true ) ->
-	text_utils:format( "~s (represented as form '~p')",
+						_ClassLocDef={ _Loc, Form } }, _DoIncludeForms=true ) ->
+	text_utils:format( "~ts (represented as form '~p')",
 					   [ ThisClassname, Form ] ).
 
 
 
 % Returns a textual representation of the specified superclasses.
 -spec superclasses_to_string( superclasses(), boolean(),
-					  indentation_level() ) -> ustring().
+							  indentation_level() ) -> ustring().
 superclasses_to_string( _Superclasses=[], _DoIncludeForms,
 						_IndentationLevel ) ->
 	"no known superclass";
 
 superclasses_to_string( Superclasses, _DoIncludeForms,
 						_NextIndentationLevel ) ->
-
 	text_utils:format( "~B known superclasses: ~p",
 					   [ length( Superclasses ), Superclasses ] ).
 
@@ -458,7 +455,7 @@ superclasses_to_string( Superclasses, _DoIncludeForms,
 
 % Returns a textual representation of the specified class-specific attributes.
 -spec class_specific_attributes_to_string( attribute_table(), boolean(),
-				indentation_level() ) -> ustring().
+										   indentation_level() ) -> ustring().
 class_specific_attributes_to_string( AttributeTable, DoIncludeForms,
 									 IndentationLevel ) ->
 
@@ -473,10 +470,10 @@ class_specific_attributes_to_string( AttributeTable, DoIncludeForms,
 			AttrStrings = [ attribute_info_to_string( AttrInfo, DoIncludeForms )
 							|| AttrInfo <- AttrInfos ],
 
-			text_utils:format( "~B known class-specific attribute(s): ~s",
-							   [ length( AttrInfos ),
-								 text_utils:strings_to_string( AttrStrings,
-														IndentationLevel ) ] )
+			text_utils:format( "~B known class-specific attribute(s): ~ts",
+				[ length( AttrInfos ),
+				  text_utils:strings_to_string( AttrStrings,
+												IndentationLevel ) ] )
 
 	end.
 
@@ -501,18 +498,17 @@ inherited_attributes_to_string( AttributeTable, DoIncludeForms,
 			AttrStrings = [ attribute_info_to_string( AttrInfo, DoIncludeForms )
 							|| AttrInfo <- AttrInfos ],
 
-			text_utils:format( "~B known inherited attribute(s): ~s",
-							   [ length( AttrInfos ),
-								 text_utils:strings_to_string( AttrStrings,
-														 IndentationLevel ) ] )
+			text_utils:format( "~B known inherited attribute(s): ~ts",
+				[ length( AttrInfos ),
+				  text_utils:strings_to_string( AttrStrings,
+												IndentationLevel ) ] )
 
 	end.
 
 
 
 % Returns a textual representation of the specified attribute information.
--spec attribute_info_to_string( attribute_info(), boolean() ) ->
-									  ustring().
+-spec attribute_info_to_string( attribute_info(), boolean() ) -> ustring().
 attribute_info_to_string( _AttributeInfo, _DoIncludeForms ) ->
 	"attribute info".
 
@@ -520,7 +516,7 @@ attribute_info_to_string( _AttributeInfo, _DoIncludeForms ) ->
 
 % Returns a textual representation of the specified constructor information.
 -spec constructors_to_string( constructor_table(), boolean(),
-					  indentation_level() ) -> ustring().
+							  indentation_level() ) -> ustring().
 constructors_to_string( ConstructorTable, DoIncludeForms, IndentationLevel ) ->
 
 	case table:enumerate( ConstructorTable ) of
@@ -539,12 +535,12 @@ constructors_to_string( ConstructorTable, DoIncludeForms, IndentationLevel ) ->
 					FunString = ast_info:function_info_to_string(
 						  ConstructFunInfo, DoIncludeForms, IndentationLevel ),
 
-					text_utils:format( "of arity ~B, implemented as: ~s",
+					text_utils:format( "of arity ~B, implemented as: ~ts",
 									   [ Arity, FunString ] )
 
 				end || { Arity, ConstructFunInfo } <- SortedPairs ] ),
 
-			text_utils:format( "~B constructor(s) defined: ~s",
+			text_utils:format( "~B constructor(s) defined: ~ts",
 							   [ length( SortedPairs ), ConstructString ] )
 
 	end.
@@ -559,15 +555,15 @@ destructor_to_string( _DestructorInfo=undefined, _DoIncludeForms,
 	"no destructor defined";
 
 destructor_to_string( DestructorFunInfo, DoIncludeForms, IndentationLevel ) ->
-	text_utils:format( "following destructor defined: ~s",
-					   [ ast_info:function_info_to_string( DestructorFunInfo,
-								DoIncludeForms, IndentationLevel ) ] ).
+	text_utils:format( "following destructor defined: ~ts",
+		[ ast_info:function_info_to_string( DestructorFunInfo,
+			DoIncludeForms, IndentationLevel ) ] ).
 
 
 
 % Returns a textual representation of the specified information about requests.
--spec requests_to_string( request_table(), boolean(),
-						  indentation_level() ) -> ustring().
+-spec requests_to_string( request_table(), boolean(), indentation_level() ) ->
+								ustring().
 requests_to_string( RequestTable, DoIncludeForms, IndentationLevel ) ->
 
 	case table:values( RequestTable ) of
@@ -582,7 +578,7 @@ requests_to_string( RequestTable, DoIncludeForms, IndentationLevel ) ->
 										|| ReqInfo <- ReqInfos ],
 													  IndentationLevel ),
 
-			text_utils:format( "~B request(s) defined: ~s",
+			text_utils:format( "~B request(s) defined: ~ts",
 							   [ length( ReqInfos ), ReqString ] )
 
 	end.
@@ -599,8 +595,7 @@ request_info_to_string( #request_info{ name=Name,
 									   line=Line,
 									   clauses=Clauses,
 									   spec=LocatedSpec },
-						DoIncludeForms,
-						IndentationLevel ) ->
+						DoIncludeForms, IndentationLevel ) ->
 
 	QualString = case Qualifiers of
 
@@ -638,13 +633,13 @@ request_info_to_string( #request_info{ name=Name,
 	end,
 
 	BaseString = text_utils:format(
-				   "request ~s/~B with ~s defined, ~s and ~s",
+				   "request ~ts/~B with ~ts defined, ~ts and ~ts",
 				   [ Name, Arity, QualString, DefString, SpecString ] ),
 
 	case DoIncludeForms of
 
 		true ->
-			text_utils:format( "~s~n~s",
+			text_utils:format( "~ts~n~ts",
 							   [ BaseString, ast_function:clauses_to_string(
 										  Clauses, IndentationLevel + 1 ) ] );
 
@@ -657,8 +652,8 @@ request_info_to_string( #request_info{ name=Name,
 
 
 % Returns a textual representation of the specified information about oneways.
--spec oneways_to_string( oneway_table(), boolean(),
-						 indentation_level() ) -> ustring().
+-spec oneways_to_string( oneway_table(), boolean(), indentation_level() ) ->
+							   ustring().
 oneways_to_string( OnewayTable, DoIncludeForms, IndentationLevel ) ->
 
 	case table:values( OnewayTable ) of
@@ -673,7 +668,7 @@ oneways_to_string( OnewayTable, DoIncludeForms, IndentationLevel ) ->
 										|| OnwInfo <- OnwInfos ],
 													  IndentationLevel ),
 
-			text_utils:format( "~B oneway(s) defined: ~s",
+			text_utils:format( "~B oneway(s) defined: ~ts",
 							   [ length( OnwInfos ), OnwString ] )
 
 	end.
@@ -681,8 +676,8 @@ oneways_to_string( OnewayTable, DoIncludeForms, IndentationLevel ) ->
 
 
 % Returns a textual representation of the specified oneway information.
--spec oneway_info_to_string( oneway_info(), boolean(),
-							 indentation_level() ) -> ustring().
+-spec oneway_info_to_string( oneway_info(), boolean(), indentation_level() ) ->
+								   ustring().
 oneway_info_to_string( #oneway_info{ name=Name,
 									 arity=Arity,
 									 qualifiers=Qualifiers,
@@ -729,15 +724,15 @@ oneway_info_to_string( #oneway_info{ name=Name,
 	end,
 
 	BaseString = text_utils:format(
-				   "oneway ~s/~B with ~s defined, ~s and ~s",
+				   "oneway ~ts/~B with ~ts defined, ~ts and ~ts",
 				   [ Name, Arity, QualString, DefString, SpecString ] ),
 
 	case DoIncludeForms of
 
 		true ->
-			text_utils:format( "~s~n~s",
-							   [ BaseString, ast_function:clauses_to_string(
-										  Clauses, IndentationLevel + 1 ) ] );
+			text_utils:format( "~ts~n~ts", [ BaseString,
+				ast_function:clauses_to_string( Clauses,
+												IndentationLevel + 1 ) ] );
 
 		false ->
 			BaseString
@@ -765,7 +760,7 @@ static_methods_to_string( StaticTable, DoIncludeForms, IndentationLevel ) ->
 							 IndentationLevel ) || StatInfo <- StatInfos ],
 													   IndentationLevel ),
 
-			text_utils:format( "~B static method(s) defined: ~s",
+			text_utils:format( "~B static method(s) defined: ~ts",
 							   [ length( StatInfos ), StatString ] )
 
 	end.
@@ -821,13 +816,13 @@ static_method_info_to_string( #static_info{ name=Name,
 	end,
 
 	BaseString = text_utils:format(
-				   "static method ~s/~B with ~s defined, ~s and ~s",
+				   "static method ~ts/~B with ~ts defined, ~ts and ~ts",
 				   [ Name, Arity, QualString, DefString, SpecString ] ),
 
 	case DoIncludeForms of
 
 		true ->
-			text_utils:format( "~s~n~s",
+			text_utils:format( "~ts~n~ts",
 							   [ BaseString, ast_function:clauses_to_string(
 										  Clauses, IndentationLevel + 1 ) ] );
 

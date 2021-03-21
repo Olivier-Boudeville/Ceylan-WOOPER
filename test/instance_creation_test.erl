@@ -47,7 +47,7 @@ run() ->
 
 	TestedClass = class_BaseTestClass,
 
-	test_facilities:display( "Testing instance creation for class '~s'.",
+	test_facilities:display( "Testing instance creation for class '~ts'.",
 							 [ TestedClass ] ),
 
 	% We reuse here the conventional naming of the V* new operators introduced
@@ -111,7 +111,7 @@ run() ->
 
 		{ spawn_successful, V6Pid } ->
 			test_facilities:display(
-			  "   (and '~s' (~w) synchronised adequately)",
+			  "   (and '~ts' (~w) synchronised adequately)",
 			  [ V6Name, V6Pid ] )
 
 	end,
@@ -126,7 +126,7 @@ run() ->
 
 		{ spawn_successful, V6LinkPid } ->
 			test_facilities:display(
-			  "   (and '~s' (~w) synchronised adequately)",
+			  "   (and '~ts' (~w) synchronised adequately)",
 			  [ V6LinkName, V6LinkPid ] )
 
 	end,
@@ -145,7 +145,7 @@ run() ->
 
 	V8Name = "created with new_passive",
 	_V8 = TestedClass:new_passive( V8Name, female ),
-	test_facilities:display( " - '~s' created adequately", [ V8Name ] ),
+	test_facilities:display( " - '~ts' created adequately", [ V8Name ] ),
 
 	wooper:delete_synchronously_instances( [ V1Pid, V1LinkPid,
 		V2Pid, V2LinkPid, V3Pid, V3LinkPid, V4Pid, V4LinkPid,
@@ -164,6 +164,6 @@ test_instance( Pid, Name ) ->
 
 		{ wooper_result, Name } ->
 			test_facilities:display(
-			  " - '~s' (~w) alive and answering adequately", [ Name, Pid ] )
+			  " - '~ts' (~w) alive and answering adequately", [ Name, Pid ] )
 
 	end.
