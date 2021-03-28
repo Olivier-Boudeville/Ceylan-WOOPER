@@ -162,6 +162,8 @@
 		  display_msg/1, display_msg/2 ]).
 
 
+% Shorthands:
+-type ustring() :: text_utils:ustring().
 
 
 % Uncomment to activate debug mode:
@@ -171,7 +173,7 @@
 -spec display_state( ?wooper_table_type:?wooper_table_type() ) -> void().
 -spec display_table_creation( basic_utils:module_name() ) -> void().
 
--spec display_msg( string() ) -> void().
+-spec display_msg( ustring() ) -> void().
 -spec display_msg( text_utils:format_string(), text_utils:format_values() ) ->
 						 void().
 
@@ -445,7 +447,7 @@ init( _Args=[] ) ->
 
 % Handling OTP-based requests (gen_server callback, triggered by get_table_key/1
 % in this module):
-%
+
 
 handle_call( { get_table_key, Classname }, _From, _State=Tables ) ->
 
@@ -801,7 +803,7 @@ create_method_table_for( TargetModule ) ->
 % classes are selected, rather than the ones of the mother class.
 %
 -spec update_method_table_with( module_name(),
-		  ?wooper_table_type:?wooper_table_type() ) ->
+			?wooper_table_type:?wooper_table_type() ) ->
 							?wooper_table_type:?wooper_table_type().
 update_method_table_with( Module, Hashtable ) ->
 	?wooper_table_type:merge( Hashtable, create_method_table_for( Module ) ).
@@ -954,7 +956,7 @@ create_local_method_table_for( Module ) ->
 % Returns pong if it could be successfully ping'ed, otherwise returns pang.
 %
 -spec ping( naming_utils:registration_name() | wooper:instance_pid() ) ->
-				  'pong' | 'pang'.
+					'pong' | 'pang'.
 ping( Target ) when is_pid( Target ) ->
 
 	Target ! { ping, self() },

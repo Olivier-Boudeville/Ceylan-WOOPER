@@ -14,8 +14,8 @@
 -module(class_Cat).
 
 
--define( class_description, "Class modelling any kind of cat, "
-							"and there are many." ).
+-define( class_description,
+		 "Class modelling any kind of cat, and there are many." ).
 
 
 % Determines what are the direct mother classes of this class (if any):
@@ -33,6 +33,9 @@
 % Import common types without module prefix:
 -include("ecosystem_types.hrl").
 
+
+% Shorthands:
+-type ustring() :: text_utils:ustring().
 
 
 % Constructs a new Cat.
@@ -85,8 +88,8 @@ canEat( State, _OtherFood ) ->
 	wooper:const_return_result( false ).
 
 
+
 % Returns the whisker color of this cat.
-%
 -spec getWhiskerColor( wooper:state() ) -> const_request_return( color() ).
 getWhiskerColor( State )->
 
@@ -97,7 +100,6 @@ getWhiskerColor( State )->
 
 
 % Requests this cat to terminate, based on specified halting procedure.
-%
 -spec terminate( wooper:state(), 'crash' ) -> const_oneway_return().
 terminate( State, crash ) ->
 	basic_utils:crash(),
@@ -105,7 +107,7 @@ terminate( State, crash ) ->
 
 
 
--spec toString( wooper:state() ) -> const_request_return( string() ).
+-spec toString( wooper:state() ) -> const_request_return( ustring() ).
 toString( State ) ->
 
 	% Would be available only on debug mode:
@@ -122,7 +124,6 @@ toString( State ) ->
 
 
 % Returns the mean life expectancy of a cat, in years.
-%
 -spec get_mean_life_expectancy() -> static_return( age() ).
 get_mean_life_expectancy() ->
 	wooper:return_static( 18 ).

@@ -32,6 +32,9 @@
 -include("ecosystem_types.hrl").
 
 
+% Shorthands:
+-type ustring() :: text_utils:ustring().
+
 
 % Constructs a new Creature.
 -spec construct( wooper:state(), age(), gender() ) -> wooper:state().
@@ -131,8 +134,8 @@ testDirectMethodExecution( State, NewAge ) ->
 %
 -spec testSingleExecution( wooper:state() ) -> oneway_return().
 testSingleExecution( State ) ->
-	wooper:return_state( setAttribute( side_effect_function( State ),
-									   age, 10 ) ).
+	wooper:return_state(
+	  setAttribute( side_effect_function( State ), age, 10 ) ).
 
 
 
@@ -156,6 +159,6 @@ example_fun() ->
 
 
 % This looks like a method, but it is not (returning only a string):
--spec toString( wooper:state() ) -> string().
+-spec toString( wooper:state() ) -> ustring().
 toString( State ) ->
 	table:to_string( State#state_holder.attribute_table ).

@@ -70,6 +70,9 @@
 % For wooper_enable_otp_integration:
 -include("wooper_defines_exports.hrl").
 
+% Shorthands:
+-type ustring() :: text_utils:ustring().
+
 
 
 % Deduces the Erlang equivalent name, according to the WOOPER conventions, of a
@@ -78,8 +81,8 @@
 %
 % Ex: 'MyFoobarExample' resulting in 'class_MyFoobarExample'.
 %
--spec pep8_class_to_wooper_class( python_utils:pep8_classname() | string() )
-								-> wooper:classname().
+-spec pep8_class_to_wooper_class(
+		python_utils:pep8_classname() | ustring() )	-> wooper:classname().
 pep8_class_to_wooper_class( Classname ) when is_atom( Classname ) ->
 	pep8_class_to_wooper_class( text_utils:atom_to_string( Classname ) );
 
@@ -93,7 +96,7 @@ pep8_class_to_wooper_class( ClassnameStr ) ->
 %
 % Ex: "class_MyFoobarExample" resulting in "MyFoobarExample".
 %
--spec wooper_class_to_pep8_class( wooper:classname() | string() ) ->
+-spec wooper_class_to_pep8_class( wooper:classname() | ustring() ) ->
 										python_utils:pep8_classname().
 wooper_class_to_pep8_class( Classname ) when is_atom( Classname ) ->
 	wooper_class_to_pep8_class( text_utils:atom_to_string( Classname ) );
@@ -119,8 +122,8 @@ wooper_class_to_pep8_class( ClassnameString ) ->
 %
 % Ex: 'MyFoobarExample' resulting in 'class_MyFoobarExample'.
 %
--spec java_class_to_wooper_class( java_utils:java_classname() | string() )
-								-> wooper:classname().
+-spec java_class_to_wooper_class(
+		java_utils:java_classname() | ustring() ) -> wooper:classname().
 java_class_to_wooper_class( Classname ) when is_atom( Classname ) ->
 	java_class_to_wooper_class( text_utils:atom_to_string( Classname ) );
 
@@ -152,7 +155,6 @@ wooper_class_to_java_class( Classname ) when is_atom( Classname ) ->
 
 
 
-
 % Returns (as atoms) the Java package (if any) and class that correspond to the
 % specified WOOPER classname.
 %
@@ -177,8 +179,8 @@ get_java_package_and_class_for( WOOPERClassname ) ->
 	SplitElems = string:split( JavaPackageAndClass, _Pattern="__",
 							   _Where=all ),
 
-	{ JavaClassElem, JavaPackageElems } = list_utils:extract_last_element(
-											SplitElems ),
+	{ JavaClassElem, JavaPackageElems } =
+		list_utils:extract_last_element( SplitElems ),
 
 	% Then JavaClass is 'MyExample':
 	JavaClass = text_utils:string_to_atom( JavaClassElem ),
@@ -187,7 +189,7 @@ get_java_package_and_class_for( WOOPERClassname ) ->
 	% 'bigpackage.mypackage':
 	%
 	JavaPackageString = text_utils:join( _Sep=".",
-			   [ text_utils:to_lowercase( E ) || E <- JavaPackageElems ] ),
+				[ text_utils:to_lowercase( E ) || E <- JavaPackageElems ] ),
 
 	case JavaPackageString of
 
@@ -275,7 +277,6 @@ start_for_test() ->
 
 
 -endif. % wooper_enable_otp_integration
-
 
 
 

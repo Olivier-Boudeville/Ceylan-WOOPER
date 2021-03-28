@@ -50,6 +50,9 @@
 -type age() :: non_neg_integer().
 
 
+% Shorthands:
+-type ustring() :: text_utils:ustring().
+
 
 % Constructs a new child test instance.
 -spec construct( wooper:state(), age(), gender() ) -> wooper:state().
@@ -89,13 +92,11 @@ getAge( State ) ->
 	wooper:const_return_result( ?getAttr(age) ).
 
 
-
 % Sets the age of this creature.
 -spec setAge( wooper:state(), age() ) -> oneway_return().
 setAge( State, _NewAge ) ->
 	% Mother implementation chosen faulty to check override:
 	wooper:return_state( setAttribute( State, age, 36 ) ).
-
 
 
 % Increments the age of this creature.
@@ -135,6 +136,7 @@ testDirectMethodExecution( State, NewAge ) ->
 	% Note: the version of setAge called in the context of a Creature sets in on
 	% purpose to a fixed value (36), regardless of the specified age, whereas
 	% the Mammal version of setAge behaves as expected:
+	%
 	NewState = executeOneway( State, setAge, NewAge ),
 
 	% Use this instead to test error management:
@@ -215,7 +217,7 @@ test_multi_clause_non_const_request( State, _X, _Y ) ->
 
 
 -spec test_multi_clause_const_oneway( wooper:state(), integer(),
-								   integer() ) -> const_oneway_return().
+									  integer() ) -> const_oneway_return().
 test_multi_clause_const_oneway( State, _X=1, _Y ) ->
 	% Do some side-effect.
 	wooper:const_return();
@@ -267,6 +269,6 @@ example_fun() ->
 
 
 % This looks like a method, but it is not (returning only a string):
--spec toString( wooper:state() ) -> string().
+-spec toString( wooper:state() ) -> ustring().
 toString( State ) ->
 	table:to_string( State#state_holder.attribute_table ).

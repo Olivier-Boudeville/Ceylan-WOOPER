@@ -48,6 +48,10 @@
 -type gender() :: 'male' | 'female'.
 
 
+% Shorthands:
+-type ustring() :: text_utils:ustring().
+
+
 % Constructs a new Creature.
 -spec construct( wooper:state(), age(), gender() ) -> wooper:state().
 construct( State, Age, Gender ) ->
@@ -123,6 +127,7 @@ testDirectMethodExecution( State, NewAge ) ->
 	% Note: the version of setAge called in the context of a Creature sets in on
 	% purpose to a fixed value (36), regardless of the specified age, whereas
 	% the Mammal version of setAge behaves as expected:
+	%
 	NewState = executeOneway( State, setAge, NewAge ),
 
 	% Use this instead to test error management:
@@ -159,8 +164,8 @@ testDirectMethodExecution( State, NewAge ) ->
 %
 -spec testSingleExecution( wooper:state() ) -> oneway_return().
 testSingleExecution( State ) ->
-	wooper:return_state( setAttribute( side_effect_function( State ),
-									   age, 10 ) ).
+	wooper:return_state(
+	  setAttribute( side_effect_function( State ), age, 10 ) ).
 
 
 
@@ -183,6 +188,6 @@ example_fun() ->
 
 
 % This looks like a method, but it is not (returning only a string):
--spec toString( wooper:state() ) -> string().
+-spec toString( wooper:state() ) -> ustring().
 toString( State ) ->
 	table:to_string( State#state_holder.attribute_table ).
