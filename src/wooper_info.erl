@@ -52,12 +52,16 @@
 -type superclasses() :: [ wooper:classname() ].
 
 
-% Shorthand:
+% Shorthands:
+-type clause_def() :: meta_utils:clause_def().
+-type file_loc() :: ast_base:file_loc().
+
 -type attribute_qualifier() :: wooper:attribute_qualifier().
 
 
--type attribute_qualifiers() :: attribute_qualifier()
-							  | [ attribute_qualifier() ].
+
+-type attribute_qualifiers() ::
+		attribute_qualifier() | [ attribute_qualifier() ].
 
 -type attribute_description() :: ustring().
 
@@ -77,6 +81,7 @@
 
 
 -type attribute_info() :: #attribute_info{}.
+
 
 % Stores all class-level information (i.e. metadata) regarding attributes (class
 % ones, not parse ones).
@@ -107,7 +112,7 @@
 % Quite similar to ast_info:function_export_table().
 %
 -type oneway_export_table() :: table( ast_info:location(),
-						   { ast_base:line(), [ wooper:oneway_id() ] } ).
+								{ ast_base:line(), [ wooper:oneway_id() ] } ).
 
 
 
@@ -116,7 +121,7 @@
 % Quite similar to ast_info:function_export_table().
 %
 -type request_export_table() :: table( ast_info:location(),
-						   { ast_base:line(), [ wooper:request_id() ] } ).
+							{ ast_base:line(), [ wooper:request_id() ] } ).
 
 
 
@@ -125,7 +130,7 @@
 % Quite similar to ast_info:function_export_table().
 %
 -type static_export_table() :: table( ast_info:location(),
-						   { ast_base:line(), [ wooper:static_id() ] } ).
+							{ ast_base:line(), [ wooper:static_id() ] } ).
 
 
 
@@ -139,7 +144,6 @@
 
 
 % Method definition tables.
-
 
 
 % Table storing reference definitions of oneway methods.
@@ -163,7 +167,6 @@
 % Quite similar to ast_info:function_table().
 %
 -type static_table() :: table( wooper:static_id(), static_info() ).
-
 
 
 
@@ -314,7 +317,7 @@ class_info_to_string( #class_info{
 						 statics=StaticTable,
 						 optional_callbacks_defs=OptCallbacksDefs,
 						 debug_mode=IsDebugMode,
-						 last_line=LastLineLocDef,
+						 last_file_location=LastLineLocDef,
 						 markers=MarkerTable,
 						 errors=Errors,
 						 unhandled_forms=UnhandledForms },
@@ -346,21 +349,21 @@ class_info_to_string( #class_info{
 									  NextIndentationLevel ),
 
 			  class_specific_attributes_to_string( AttributeTable,
-									   DoIncludeForms, NextIndentationLevel ),
+										DoIncludeForms, NextIndentationLevel ),
 
 			  inherited_attributes_to_string( InheritedAttributes,
-									   DoIncludeForms, NextIndentationLevel ),
+										DoIncludeForms, NextIndentationLevel ),
 
 			  ast_info:compilation_options_to_string( CompileOpts,
 						CompileOptDefs, DoIncludeForms, NextIndentationLevel ),
 
 			  ast_info:optional_callbacks_to_string( OptCallbacksDefs,
-								   DoIncludeForms, NextIndentationLevel ),
+									DoIncludeForms, NextIndentationLevel ),
 
 			  DebugString,
 
 			  ast_info:parse_attribute_table_to_string( ParseAttributeTable,
-										 DoIncludeForms, NextIndentationLevel ),
+										DoIncludeForms, NextIndentationLevel ),
 
 			  ast_info:remote_spec_definitions_to_string( RemoteSpecDefs,
 										DoIncludeForms, NextIndentationLevel ),
@@ -378,7 +381,7 @@ class_info_to_string( #class_info{
 			  ast_info:records_to_string( RecordTable, NextIndentationLevel ),
 
 			  ast_info:function_imports_to_string( FunctionImportTable,
-				  FunctionImportDefs, DoIncludeForms, NextIndentationLevel ),
+					FunctionImportDefs, DoIncludeForms, NextIndentationLevel ),
 
 			  ast_info:functions_to_string( FunctionTable, DoIncludeForms,
 											NextIndentationLevel ),
@@ -408,12 +411,11 @@ class_info_to_string( #class_info{
 			  ast_info:errors_to_string( Errors, NextIndentationLevel ),
 
 			  ast_info:unhandled_forms_to_string( UnhandledForms,
-							 DoIncludeForms, NextIndentationLevel ) ],
+								DoIncludeForms, NextIndentationLevel ) ],
 
 		text_utils:format( "Information about class ~ts: ~ts",
 			[ ClassnameString,
 			  text_utils:strings_to_string( Infos, IndentationLevel ) ] ).
-
 
 
 
@@ -557,7 +559,7 @@ destructor_to_string( _DestructorInfo=undefined, _DoIncludeForms,
 destructor_to_string( DestructorFunInfo, DoIncludeForms, IndentationLevel ) ->
 	text_utils:format( "following destructor defined: ~ts",
 		[ ast_info:function_info_to_string( DestructorFunInfo,
-			DoIncludeForms, IndentationLevel ) ] ).
+										DoIncludeForms, IndentationLevel ) ] ).
 
 
 
@@ -591,57 +593,26 @@ requests_to_string( RequestTable, DoIncludeForms, IndentationLevel ) ->
 request_info_to_string( #request_info{ name=Name,
 									   arity=Arity,
 									   qualifiers=Qualifiers,
-									   location=_Location,
-									   line=Line,
+									   %ast_location=_ASTLoc,
+									   file_location=FileLoc,
 									   clauses=Clauses,
 									   spec=LocatedSpec },
 						DoIncludeForms, IndentationLevel ) ->
 
-	QualString = case Qualifiers of
-
-	  Q when Q =:= [] orelse Q =:= none ->
-		  "no qualifier";
-
-	  [ SingleQualifier ] ->
-		  text_utils:format( "the ~w qualifier", [ SingleQualifier ] );
-
-	  Qualifiers ->
-		  text_utils:format( "the ~w qualifiers", [ Qualifiers ] )
-
-	end,
-
-	DefString = case Line of
-
-		undefined ->
-			text_utils:format( "with ~B clause(s) defined",
-							   [ length( Clauses ) ] );
-
-		_ ->
-			text_utils:format( "defined from line #~B, with "
-			   "~B clause(s) specified", [ Line, length( Clauses ) ] )
-
-	end,
-
-	SpecString = case LocatedSpec of
-
-		undefined ->
-			"no type specification";
-
-		_ ->
-			"a type specification"
-
-	end,
+	QualString = qualifiers_to_string( Qualifiers ),
+	DefString = definition_to_string( Clauses, FileLoc ),
+	SpecString = located_spec_to_string( LocatedSpec ),
 
 	BaseString = text_utils:format(
-				   "request ~ts/~B with ~ts defined, ~ts and ~ts",
-				   [ Name, Arity, QualString, DefString, SpecString ] ),
+		"request ~ts/~B with ~ts defined, ~ts and ~ts",
+		[ Name, Arity, QualString, DefString, SpecString ] ),
 
 	case DoIncludeForms of
 
 		true ->
-			text_utils:format( "~ts~n~ts",
-							   [ BaseString, ast_function:clauses_to_string(
-										  Clauses, IndentationLevel + 1 ) ] );
+			text_utils:format( "~ts~n~ts", [ BaseString,
+				ast_function:clauses_to_string( Clauses,
+												IndentationLevel+1 ) ] );
 
 		false ->
 			BaseString
@@ -650,10 +621,9 @@ request_info_to_string( #request_info{ name=Name,
 
 
 
-
 % Returns a textual representation of the specified information about oneways.
 -spec oneways_to_string( oneway_table(), boolean(), indentation_level() ) ->
-							   ustring().
+								ustring().
 oneways_to_string( OnewayTable, DoIncludeForms, IndentationLevel ) ->
 
 	case table:values( OnewayTable ) of
@@ -681,58 +651,27 @@ oneways_to_string( OnewayTable, DoIncludeForms, IndentationLevel ) ->
 oneway_info_to_string( #oneway_info{ name=Name,
 									 arity=Arity,
 									 qualifiers=Qualifiers,
-									 location=_Location,
-									 line=Line,
+									 %ast_location=_ASTLoc,
+									 file_location=FileLoc,
 									 clauses=Clauses,
 									 spec=LocatedSpec },
 						DoIncludeForms,
 						IndentationLevel ) ->
 
-	QualString = case Qualifiers of
-
-	  Q when Q =:= [] orelse Q =:= none ->
-		  "no qualifier";
-
-	  [ SingleQualifier ] ->
-		  text_utils:format( "the ~w qualifier", [ SingleQualifier ] );
-
-	  Qualifiers ->
-		  text_utils:format( "the ~w qualifiers", [ Qualifiers ] )
-
-	end,
-
-	DefString = case Line of
-
-		undefined ->
-			text_utils:format( "with ~B clause(s) defined",
-							   [ length( Clauses ) ] );
-
-		_ ->
-			text_utils:format( "defined from line #~B, with "
-			   "~B clause(s) specified", [ Line, length( Clauses ) ] )
-
-	end,
-
-	SpecString = case LocatedSpec of
-
-		undefined ->
-			"no type specification";
-
-		_ ->
-			"a type specification"
-
-	end,
+	QualString = qualifiers_to_string( Qualifiers ),
+	DefString = definition_to_string( Clauses, FileLoc ),
+	SpecString = located_spec_to_string( LocatedSpec ),
 
 	BaseString = text_utils:format(
-				   "oneway ~ts/~B with ~ts defined, ~ts and ~ts",
-				   [ Name, Arity, QualString, DefString, SpecString ] ),
+		"oneway ~ts/~B with ~ts defined, ~ts and ~ts",
+		[ Name, Arity, QualString, DefString, SpecString ] ),
 
 	case DoIncludeForms of
 
 		true ->
 			text_utils:format( "~ts~n~ts", [ BaseString,
 				ast_function:clauses_to_string( Clauses,
-												IndentationLevel + 1 ) ] );
+												IndentationLevel+1 ) ] );
 
 		false ->
 			BaseString
@@ -757,7 +696,7 @@ static_methods_to_string( StaticTable, DoIncludeForms, IndentationLevel ) ->
 
 			StatString = text_utils:strings_to_string( [
 				static_method_info_to_string( StatInfo, DoIncludeForms,
-							 IndentationLevel ) || StatInfo <- StatInfos ],
+								IndentationLevel ) || StatInfo <- StatInfos ],
 													   IndentationLevel ),
 
 			text_utils:format( "~B static method(s) defined: ~ts",
@@ -773,65 +712,32 @@ static_methods_to_string( StaticTable, DoIncludeForms, IndentationLevel ) ->
 static_method_info_to_string( #static_info{ name=Name,
 											arity=Arity,
 											qualifiers=Qualifiers,
-											location=_Location,
-											line=Line,
+											%ast_location=_ASTLoc,
+											file_location=FileLoc,
 											clauses=Clauses,
 											spec=LocatedSpec },
 							  DoIncludeForms,
 							  IndentationLevel ) ->
 
-	QualString = case Qualifiers of
-
-	  Q when Q =:= [] orelse Q =:= none ->
-		  "no qualifier";
-
-	  [ SingleQualifier ] ->
-		  text_utils:format( "the ~w qualifier", [ SingleQualifier ] );
-
-	  Qualifiers ->
-		  text_utils:format( "the ~w qualifiers", [ Qualifiers ] )
-
-	end,
-
-	DefString = case Line of
-
-		undefined ->
-			text_utils:format( "with ~B clause(s) defined",
-							   [ length( Clauses ) ] );
-
-		_ ->
-			text_utils:format( "defined from line #~B, with "
-			   "~B clause(s) specified", [ Line, length( Clauses ) ] )
-
-	end,
-
-	SpecString = case LocatedSpec of
-
-		undefined ->
-			"no type specification";
-
-		_ ->
-			"a type specification"
-
-	end,
+	QualString = qualifiers_to_string( Qualifiers ),
+	DefString = definition_to_string( Clauses, FileLoc ),
+	SpecString = located_spec_to_string( LocatedSpec ),
 
 	BaseString = text_utils:format(
-				   "static method ~ts/~B with ~ts defined, ~ts and ~ts",
-				   [ Name, Arity, QualString, DefString, SpecString ] ),
+		"static method ~ts/~B with ~ts defined, ~ts and ~ts",
+		[ Name, Arity, QualString, DefString, SpecString ] ),
 
 	case DoIncludeForms of
 
 		true ->
-			text_utils:format( "~ts~n~ts",
-							   [ BaseString, ast_function:clauses_to_string(
-										  Clauses, IndentationLevel + 1 ) ] );
+			text_utils:format( "~ts~n~ts", [ BaseString,
+				ast_function:clauses_to_string( Clauses,
+												IndentationLevel+1 ) ] );
 
 		false ->
 			BaseString
 
 	end.
-
-
 
 
 
@@ -964,3 +870,40 @@ get_serialisation_builtins() ->
 	  {post_serialise_hook,3},
 
 	  {pre_deserialise_hook,2} ].
+
+
+
+% Returns a textual description of the specified qualifiers.
+-spec qualifiers_to_string( [ attribute_qualifier() ] ) -> ustring().
+qualifiers_to_string( _Qualifiers=[] ) ->
+	"no qualifier";
+
+qualifiers_to_string( _Qualifiers=none ) ->
+	"no qualifier";
+
+qualifiers_to_string( [ SingleQualifier ] ) ->
+	text_utils:format( "the ~w qualifier", [ SingleQualifier ] );
+
+qualifiers_to_string( Qualifiers ) ->
+	text_utils:format( "the ~w qualifiers", [ Qualifiers ] ).
+
+
+
+% Returns a textual description of the specified method definition.
+-spec definition_to_string( [ clause_def() ], maybe( file_loc() ) ) ->
+									ustring().
+definition_to_string( Clauses, _FileLoc=undefined ) ->
+	text_utils:format( "with ~B clause(s) defined", [ length( Clauses ) ] );
+
+definition_to_string( Clauses, FileLoc ) ->
+	text_utils:format( "defined from ~ts, with ~B clause(s) specified",
+		[ ast_utils:file_loc_to_string( FileLoc ), length( Clauses ) ] ).
+
+
+% Returns a textual description of the specified located method spec.
+-spec located_spec_to_string( maybe( located_method_spec() ) ) -> ustring().
+located_spec_to_string( _LocatedSpec=undefined ) ->
+	"no type specification";
+
+located_spec_to_string( _LocatedSpec ) ->
+	"a type specification".

@@ -268,7 +268,7 @@ apply_wooper_transform( InputAST, Options ) ->
 
 	% This allows to compare input and output ASTs more easily:
 	%ast_utils:write_ast_to_file( lists:sort( InputAST ),
-	%							 "WOOPER-input-AST-sorted.txt" ),
+	%							  "WOOPER-input-AST-sorted.txt" ),
 
 	% First preprocesses the AST based on the Myriad parse transform, in order
 	% to benefit from its corresponding module_info record:
@@ -428,7 +428,7 @@ create_class_info_from(
 							function_exports=FunctionExportTable,
 							functions=FunctionTable,
 							optional_callbacks_defs=OptCallbacksDefs,
-							last_line=LastLine,
+							last_file_location=LastFileLoc,
 							markers=MarkerTable,
 							errors=Errors,
 							unhandled_forms=UnhandledForms } ) ->
@@ -471,7 +471,7 @@ create_class_info_from(
 						  %static_exports
 						  %statics
 						  optional_callbacks_defs=OptCallbacksDefs,
-						  last_line=LastLine,
+						  last_file_location=LastFileLoc,
 						  markers=MarkerTable,
 						  errors=Errors,
 						  unhandled_forms=UnhandledForms },
@@ -491,7 +491,7 @@ create_class_info_from(
 	% We extract elements (ex: constructors) from the function table, yet we do
 	% not modify specifically the other related information (ex: exports).
 
-	% We manage here { FunctionTable, ClassInfo } pairs, in which the first
+	% We manage here {FunctionTable, ClassInfo} pairs, in which the first
 	% element is the reference, most up-to-date version of the function table
 	% that shall be used (extracted-out for convenience) - not any counterpart
 	% that could be found in the second element and that will be updated later
@@ -514,8 +514,8 @@ create_class_info_from(
 
 	_FinalPair = { FinalFunctionTable, FinalClassInfo } = MethodPair,
 
-	ReturnedClassInfo = FinalClassInfo#class_info{
-							functions=FinalFunctionTable },
+	ReturnedClassInfo =
+		FinalClassInfo#class_info{ functions=FinalFunctionTable },
 
 	%trace_utils:debug_fmt( "Recomposed class information: ~ts",
 	%	   [ wooper_info:class_info_to_string( ReturnedClassInfo ) ] ),
@@ -546,7 +546,7 @@ create_class_info_from(
 % For the moment, we stick to requiring a
 % -module(class_XXX) declaration.
 %
-%% get_info( _AST=[ { 'attribute', Line, 'classname', Classname } | T ],
+%% get_info( _AST=[ { 'attribute', FileLoc, 'classname', Classname } | T ],
 %%		  C=#class_info{ class=undefined, class_def=undefined } ) ->
 
 %%	trace_utils:debug_fmt( "Intercepting WOOPER classname declaration for "
@@ -555,7 +555,7 @@ create_class_info_from(
 %%	check_classname( Classname ),
 
 %%	% Transforms that in a standard module definition:
-%%	NewDef = { 'attribute', Line, 'module', Classname },
+%%	NewDef = { 'attribute', FileLoc, 'module', Classname },
 
 %%	get_info( T, C#class_info{ class=Classname, class_def=NewDef } );
 
@@ -563,7 +563,7 @@ create_class_info_from(
 %% % We accept (only) the Erlang-standard, direct '-module(XXX).' declaration
 %% for % now:
 
-%% get_info( _AST=[ F={ 'attribute', _Line, 'module', Classname } | T ],
+%% get_info( _AST=[ F={ 'attribute', _FileLoc, 'module', Classname } | T ],
 %%		  C=#class_info{ class=undefined, class_def=undefined } ) ->
 
 %%	%trace_utils:debug_fmt( "Intercepting module-based classname declaration "
@@ -578,7 +578,7 @@ create_class_info_from(
 %% % forms such as {error,{85,epp,{undefined,'MODULE',none}}} that we want to
 %% % filter-out, as we will introduce a relevant module form afterwards:
 %% %
-%% get_info( _AST=[ F={ 'error',{ _Line, 'epp',
+%% get_info( _AST=[ F={ 'error',{ _FileLoc, 'epp',
 %%								 { 'undefined', 'MODULE', 'none' } } } | T ],
 %%		  C ) ->
 
@@ -601,17 +601,17 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 	FunInfo = case table:lookup_entry( FunId, FunctionTable ) of
 
 		key_not_found ->
-					  % New entry then:
-					  #function_info{ name=Name,
-									  arity=Arity,
-									  location=undefined,
-									  line=undefined,
-									  clauses=Form
-									  % Implicit:
-									  %spec=undefined
-									  %callback=undefined
-									  %exported=[]
-									 };
+			% New entry then:
+			#function_info{ name=Name,
+							arity=Arity,
+							ast_location=undefined,
+							file_location=undefined,
+							clauses=Form
+							% Implicit:
+							%spec=undefined
+							%callback=undefined
+							%exported=[]
+						  };
 
 		{ value, F=#function_info{ clauses=undefined } } ->
 			% Just add the form then:
@@ -620,7 +620,7 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 		% Here a definition was already set:
 		_ ->
 			wooper_internals:raise_usage_error(
-			  "multiple definition for ~ts/~B.", pair:to_list( FunId ) )
+				"multiple definitions for ~ts/~B.", pair:to_list( FunId ) )
 
 	end,
 
@@ -644,8 +644,8 @@ add_request( Name, Arity, Form, RequestTable ) ->
 			#request_info{ name=Name,
 						   arity=Arity,
 						   qualifiers=[],
-						   location=undefined,
-						   line=undefined,
+						   ast_location=undefined,
+						   file_location=undefined,
 						   clauses=Form
 							% Implicit:
 							%spec=undefined
@@ -682,8 +682,8 @@ add_oneway( Name, Arity, Form, OnewayTable ) ->
 			#oneway_info{ name=Name,
 						  arity=Arity,
 						  qualifiers=[],
-						  location=undefined,
-						  line=undefined,
+						  ast_location=undefined,
+						  file_location=undefined,
 						  clauses=Form
 						  % Implicit:
 						  %spec=undefined
@@ -836,7 +836,7 @@ generate_module_info_from( #class_info{
 
 				 optional_callbacks_defs=OptCallbackDefs,
 
-				 last_line=LastLine,
+				 last_file_location=LastFileLoc,
 
 				 markers=MarkerTable,
 
@@ -900,7 +900,7 @@ generate_module_info_from( #class_info{
 	AllFunctionTable = WithMthdFunTable,
 
 	%trace_utils:debug_fmt( "Complete function table: ~ts",
-	%					   [ table:to_string( AllFunctionTable ) ] ),
+	%						[ table:to_string( AllFunctionTable ) ] ),
 
 	% Directly returned (many fields can be copied verbatim):
 	#module_info{
@@ -924,7 +924,7 @@ generate_module_info_from( #class_info{
 		function_exports=AllExportTable,
 		functions=AllFunctionTable,
 		optional_callbacks_defs=OptCallbackDefs,
-		last_line=LastLine,
+		last_file_location=LastFileLoc,
 		markers=MarkerTable,
 		errors=Errors,
 		unhandled_forms=UnhandledForms }.
@@ -936,10 +936,10 @@ generate_module_info_from( #class_info{
 %
 -spec register_functions( [ { meta_utils:function_id(), function_info() } ],
 							function_table() ) -> function_table().
-register_functions( [], FunctionTable ) ->
+register_functions( _FPairs=[], FunctionTable ) ->
 	FunctionTable;
 
-register_functions( [ { FunId, FunInfo } | T ], FunctionTable ) ->
+register_functions( _FPairs=[ { FunId, FunInfo } | T ], FunctionTable ) ->
 	case table:lookup_entry( FunId, FunctionTable ) of
 
 		key_not_found ->
