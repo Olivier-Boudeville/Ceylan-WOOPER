@@ -16,7 +16,7 @@
 
 :raw-html:`<a name="wooper_top"></a>`
 
-:raw-html:`<div class="banner"><p><em>WOOPER 2.0 documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/index.html">browse mirror</a> <a href="Ceylan-WOOPER-Layer-technical-manual-english.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">go to project</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER%202.0]%20Remark">email us</a></p></div>`
+:raw-html:`<div class="banner"><p><em>WOOPER 2.0 documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/index.html">browse mirror</a> <a href="Ceylan-WOOPER-Layer-technical-manual-english.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_toc">go to toc</a> <a href="#wooper_bottom">go to bottom</a> <a href="api-doc/index.html">browse API</a> <a href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">go to project</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER%202.0]%20Remark">email us</a></p></div>`
 
 
 
@@ -35,8 +35,8 @@
 :Organisation: Copyright (C) 2008-2021 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Friday, March 12, 2021
-:Version: 2.0.10
+:Lastly updated: Thursday, May 13, 2021
+:Version: 2.0.11
 :Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
 :Abstract:
 
@@ -51,7 +51,7 @@ The latest version of this documentation is to be found at the `official WOOPER 
 
 :raw-html:`This WOOPER documentation is also available in the PDF format (see <a href="Ceylan-WOOPER-Layer-technical-manual-english.pdf">Ceylan-WOOPER-Layer-technical-manual-english.pdf</a>), and mirrored <a href="http://olivier-boudeville.github.io/Ceylan-WOOPER/">here</a>.`
 
-:raw-latex:`The documentation is also mirrored \href{https://olivier-boudeville.github.io/Ceylan-WOOPER/}{here}.`
+:raw-latex:`This documentation is also mirrored \href{https://olivier-boudeville.github.io/Ceylan-WOOPER/}{here}.`
 
 
 
@@ -59,11 +59,12 @@ The latest version of this documentation is to be found at the `official WOOPER 
 :raw-latex:`\pagebreak`
 
 
+:raw-html:`<a name="wooper_toc"></a>`
 
 .. _`table of contents`:
 
 
-.. contents:: Table of Contents
+.. contents:: **Table of Contents**
   :depth: 3
 
 
@@ -2770,6 +2771,15 @@ For server-like activities, it may be useful to have an instance of a WOOPER cla
 A `supervisor bridge <https://erlang.org/doc/man/supervisor_bridge.html>`_ (i.e. a process in charge of integrating properly such a non-OTP process into an OTP supervision tree) is the tool of choice here.
 
 Rather than declaring the corresponding behaviour and its implemented API directly in the target class (ex: in ``class_Foobar``), we recommend for clarity and separation of concerns to introduce a specific module for that, like done with `traces_bridge_sup <https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/traces_bridge_sup.erl>`_ for `class_TraceAggregator.erl <https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/class_TraceAggregator.erl>`_ or `us_common_config_bridge_sup <https://github.com/Olivier-Boudeville/us-common/blob/master/src/us_common_config_bridge_sup.erl>`_ for `class_USConfigServer.erl <https://github.com/Olivier-Boudeville/us-common/blob/master/src/class_USConfigServer.erl>`_.
+
+
+
+WOOPER API
+----------
+
+One can browse the `WOOPER API documentation <api-doc/index.html>`_.
+
+The next level of information is simply to read the corresponding `source files <https://github.com/Olivier-Boudeville/Ceylan-WOOPER>`_, which are intensely commented and generally straightforward.
 
 
 
