@@ -24,6 +24,7 @@
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
+% Nope: @headerfile "wooper_state_functions.hrl"
 
 % @doc Module containing some <b>general facilities for WOOPER class
 % developers</b>.
@@ -406,6 +407,8 @@
 
 % Tried adding a @headerfile "wooper_state_functions.hrl" tag in various places
 % with no luck (doc tags were always ignored).
+
+% Nope: @headerfile "wooper_state_functions.hrl"
 
 % For getAttribute/2 and al:
 -include("wooper_state_functions.hrl").
@@ -2929,3 +2932,5 @@ check_undefined( AttributeName, State ) ->
 check_all_undefined( AttributeNames, State ) ->
 	[ check_undefined( Attr, State ) || Attr <- AttributeNames ].
 
+
+%% Nope: @headerfile "wooper_state_functions.hrl"
