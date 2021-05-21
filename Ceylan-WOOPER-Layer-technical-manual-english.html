@@ -16,7 +16,7 @@
 
 
 <span class="target" id="top"></span><p><span class="raw-html"><a name="wooper_top"></a></span></p>
-<p><span class="raw-html"><div class="banner"><p><em>WOOPER 2.0 documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/index.html">browse mirror</a> <a href="Ceylan-WOOPER-Layer-technical-manual-english.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_bottom">go to bottom</a> <a href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">go to project</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER%202.0]%20Remark">email us</a></p></div></span></p>
+<p><span class="raw-html"><div class="banner"><p><em>WOOPER 2.0 documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/index.html">browse mirror</a> <a href="Ceylan-WOOPER-Layer-technical-manual-english.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_toc">go to toc</a> <a href="#wooper_bottom">go to bottom</a> <a href="api-doc/index.html">browse API</a> <a href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">go to project</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER%202.0]%20Remark">email us</a></p></div></span></p>
 <p><span class="raw-html"><center><img src="wooper-title.png" width="35%"></img></center></span>
 </p>
 <div class="section" id="wrapper-for-object-oriented-programming-in-erlang">
@@ -31,9 +31,9 @@
 </tr>
 <tr class="field"><th class="field-name">Creation date:</th><td class="field-body">Sunday, August 17, 2008</td>
 </tr>
-<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Friday, March 12, 2021</td>
+<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Thursday, May 13, 2021</td>
 </tr>
-<tr class="field"><th class="field-name">Version:</th><td class="field-body">2.0.10</td>
+<tr class="field"><th class="field-name">Version:</th><td class="field-body">2.0.11</td>
 </tr>
 <tr class="field"><th class="field-name">Dedication:</th><td class="field-body">Users and maintainers of the <tt class="docutils literal">WOOPER</tt> layer, version 2.0.</td>
 </tr>
@@ -45,8 +45,9 @@
 <p><span class="raw-html">This WOOPER documentation is also available in the PDF format (see <a href="Ceylan-WOOPER-Layer-technical-manual-english.pdf">Ceylan-WOOPER-Layer-technical-manual-english.pdf</a>), and mirrored <a href="http://olivier-boudeville.github.io/Ceylan-WOOPER/">here</a>.</span></p>
 <p></p>
 <p></p>
+<p><span class="raw-html"><a name="wooper_toc"></a></span></p>
 <div class="contents topic" id="id1">
-<span id="table-of-contents"></span><p class="topic-title">Table of Contents</p>
+<span id="table-of-contents"></span><p class="topic-title"><strong>Table of Contents</strong></p>
 <ul class="simple">
 <li><a class="reference internal" href="#wrapper-for-object-oriented-programming-in-erlang" id="id62"><em>Wrapper for Object-Oriented Programming in Erlang</em></a><ul>
 <li><a class="reference internal" href="#overview" id="id63">Overview</a></li>
@@ -79,55 +80,56 @@
 <li><a class="reference internal" href="#node-monitors" id="id86">Node Monitors</a></li>
 <li><a class="reference internal" href="#a-bit-of-introspection" id="id87">A bit of Introspection</a></li>
 <li><a class="reference internal" href="#developer-guidelines" id="id88">Developer Guidelines</a></li>
-<li><a class="reference internal" href="#class-developer-cheat-sheet" id="id89">Class Developer Cheat Sheet</a></li>
-<li><a class="reference internal" href="#source-editors" id="id90">Source Editors</a></li>
-<li><a class="reference internal" href="#similarity-with-other-languages" id="id91">Similarity With other Languages</a></li>
-<li><a class="reference internal" href="#wooper-limitations" id="id92">WOOPER limitations</a></li>
+<li><a class="reference internal" href="#wooper-api" id="id89">WOOPER API</a></li>
+<li><a class="reference internal" href="#class-developer-cheat-sheet" id="id90">Class Developer Cheat Sheet</a></li>
+<li><a class="reference internal" href="#source-editors" id="id91">Source Editors</a></li>
+<li><a class="reference internal" href="#similarity-with-other-languages" id="id92">Similarity With other Languages</a></li>
+<li><a class="reference internal" href="#wooper-limitations" id="id93">WOOPER limitations</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#wooper-example" id="id93">WOOPER Example</a><ul>
-<li><a class="reference internal" href="#class-implementations" id="id94">Class implementations</a></li>
-<li><a class="reference internal" href="#tests" id="id95">Tests</a></li>
+<li><a class="reference internal" href="#wooper-example" id="id94">WOOPER Example</a><ul>
+<li><a class="reference internal" href="#class-implementations" id="id95">Class implementations</a></li>
+<li><a class="reference internal" href="#tests" id="id96">Tests</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#good-practices" id="id96">Good Practices</a></li>
-<li><a class="reference internal" href="#troubleshooting" id="id97">Troubleshooting</a><ul>
-<li><a class="reference internal" href="#debug-mode" id="id98">Debug Mode</a></li>
-<li><a class="reference internal" href="#no-attribute-declaration-found-whereas-a-class-attributes-define-exists" id="id99">&quot;No attribute declaration found&quot; whereas a <tt class="docutils literal">class_attributes</tt> define exists</a></li>
-<li><a class="reference internal" href="#compilation-error-pointing-to-wooper-for-classes-hrl" id="id100">Compilation Error Pointing to <tt class="docutils literal">wooper_for_classes.hrl</tt></a></li>
-<li><a class="reference internal" href="#general-case" id="id101">General Case</a></li>
+<li><a class="reference internal" href="#good-practices" id="id97">Good Practices</a></li>
+<li><a class="reference internal" href="#troubleshooting" id="id98">Troubleshooting</a><ul>
+<li><a class="reference internal" href="#debug-mode" id="id99">Debug Mode</a></li>
+<li><a class="reference internal" href="#no-attribute-declaration-found-whereas-a-class-attributes-define-exists" id="id100">&quot;No attribute declaration found&quot; whereas a <tt class="docutils literal">class_attributes</tt> define exists</a></li>
+<li><a class="reference internal" href="#compilation-error-pointing-to-wooper-for-classes-hrl" id="id101">Compilation Error Pointing to <tt class="docutils literal">wooper_for_classes.hrl</tt></a></li>
+<li><a class="reference internal" href="#general-case" id="id102">General Case</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#current-stable-version-download" id="id102">Current Stable Version &amp; Download</a><ul>
-<li><a class="reference internal" href="#prerequisites" id="id103">Prerequisites</a></li>
-<li><a class="reference internal" href="#using-cutting-edge-git" id="id104">Using Cutting-Edge GIT</a></li>
-<li><a class="reference internal" href="#using-otp-related-build-runtime-conventions" id="id105">Using OTP-Related Build/Runtime Conventions</a></li>
-<li><a class="reference internal" href="#using-hex" id="id106">Using Hex</a></li>
-<li><a class="reference internal" href="#testing-wooper" id="id107">Testing WOOPER</a></li>
+<li><a class="reference internal" href="#current-stable-version-download" id="id103">Current Stable Version &amp; Download</a><ul>
+<li><a class="reference internal" href="#prerequisites" id="id104">Prerequisites</a></li>
+<li><a class="reference internal" href="#using-cutting-edge-git" id="id105">Using Cutting-Edge GIT</a></li>
+<li><a class="reference internal" href="#using-otp-related-build-runtime-conventions" id="id106">Using OTP-Related Build/Runtime Conventions</a></li>
+<li><a class="reference internal" href="#using-hex" id="id107">Using Hex</a></li>
+<li><a class="reference internal" href="#testing-wooper" id="id108">Testing WOOPER</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#version-history-changes" id="id108">Version History &amp; Changes</a><ul>
-<li><a class="reference internal" href="#version-2-0-current-stable" id="id109">Version 2.0 [current stable]</a></li>
-<li><a class="reference internal" href="#version-1-x" id="id110">Version 1.x</a></li>
-<li><a class="reference internal" href="#version-1-0" id="id111">Version 1.0</a></li>
-<li><a class="reference internal" href="#version-0-4" id="id112">Version 0.4</a></li>
-<li><a class="reference internal" href="#version-0-3" id="id113">Version 0.3</a></li>
-<li><a class="reference internal" href="#version-0-2" id="id114">Version 0.2</a></li>
-<li><a class="reference internal" href="#version-0-1" id="id115">Version 0.1</a></li>
+<li><a class="reference internal" href="#version-history-changes" id="id109">Version History &amp; Changes</a><ul>
+<li><a class="reference internal" href="#version-2-0-current-stable" id="id110">Version 2.0 [current stable]</a></li>
+<li><a class="reference internal" href="#version-1-x" id="id111">Version 1.x</a></li>
+<li><a class="reference internal" href="#version-1-0" id="id112">Version 1.0</a></li>
+<li><a class="reference internal" href="#version-0-4" id="id113">Version 0.4</a></li>
+<li><a class="reference internal" href="#version-0-3" id="id114">Version 0.3</a></li>
+<li><a class="reference internal" href="#version-0-2" id="id115">Version 0.2</a></li>
+<li><a class="reference internal" href="#version-0-1" id="id116">Version 0.1</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#wooper-inner-workings" id="id116">WOOPER Inner Workings</a><ul>
-<li><a class="reference internal" href="#general-principles" id="id117">General Principles</a></li>
-<li><a class="reference internal" href="#method-virtual-table" id="id118">Method Virtual Table</a></li>
-<li><a class="reference internal" href="#attribute-table" id="id119">Attribute Table</a></li>
+<li><a class="reference internal" href="#wooper-inner-workings" id="id117">WOOPER Inner Workings</a><ul>
+<li><a class="reference internal" href="#general-principles" id="id118">General Principles</a></li>
+<li><a class="reference internal" href="#method-virtual-table" id="id119">Method Virtual Table</a></li>
+<li><a class="reference internal" href="#attribute-table" id="id120">Attribute Table</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#issues-planned-enhancements" id="id120">Issues &amp; Planned Enhancements</a></li>
-<li><a class="reference internal" href="#licence" id="id121">Licence</a></li>
-<li><a class="reference internal" href="#sources-inspirations-alternate-solutions" id="id122">Sources, Inspirations &amp; Alternate Solutions</a></li>
-<li><a class="reference internal" href="#support" id="id123">Support</a></li>
-<li><a class="reference internal" href="#please-react" id="id124">Please React!</a></li>
-<li><a class="reference internal" href="#ending-word" id="id125">Ending Word</a></li>
+<li><a class="reference internal" href="#issues-planned-enhancements" id="id121">Issues &amp; Planned Enhancements</a></li>
+<li><a class="reference internal" href="#licence" id="id122">Licence</a></li>
+<li><a class="reference internal" href="#sources-inspirations-alternate-solutions" id="id123">Sources, Inspirations &amp; Alternate Solutions</a></li>
+<li><a class="reference internal" href="#support" id="id124">Support</a></li>
+<li><a class="reference internal" href="#please-react" id="id125">Please React!</a></li>
+<li><a class="reference internal" href="#ending-word" id="id126">Ending Word</a></li>
 </ul>
 </li>
 </ul>
@@ -326,59 +328,59 @@ This cat could be created and be synchronously deleted, as expected.
 <h2><a class="toc-backref" href="#id69">How to Use WOOPER: Detailed Description &amp; Concept Mappings</a></h2>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#classes" id="id126">Classes</a><ul>
-<li><a class="reference internal" href="#classes-names" id="id127">Classes &amp; Names</a></li>
-<li><a class="reference internal" href="#class-description" id="id128">Class Description</a></li>
-<li><a class="reference internal" href="#inheritance-superclasses" id="id129">Inheritance &amp; Superclasses</a></li>
+<li><a class="reference internal" href="#classes" id="id127">Classes</a><ul>
+<li><a class="reference internal" href="#classes-names" id="id128">Classes &amp; Names</a></li>
+<li><a class="reference internal" href="#class-description" id="id129">Class Description</a></li>
+<li><a class="reference internal" href="#inheritance-superclasses" id="id130">Inheritance &amp; Superclasses</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#instances" id="id130">Instances</a><ul>
-<li><a class="reference internal" href="#instance-mapping" id="id131">Instance Mapping</a></li>
-<li><a class="reference internal" href="#instance-state" id="id132">Instance State</a></li>
+<li><a class="reference internal" href="#instances" id="id131">Instances</a><ul>
+<li><a class="reference internal" href="#instance-mapping" id="id132">Instance Mapping</a></li>
+<li><a class="reference internal" href="#instance-state" id="id133">Instance State</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#methods" id="id133">Methods</a><ul>
-<li><a class="reference internal" href="#method-declaration" id="id134">Method Declaration</a></li>
-<li><a class="reference internal" href="#method-invocation" id="id135">Method Invocation</a></li>
-<li><a class="reference internal" href="#method-name" id="id136">Method Name</a></li>
-<li><a class="reference internal" href="#method-parameters" id="id137">Method Parameters</a></li>
-<li><a class="reference internal" href="#two-kinds-of-member-methods" id="id138">Two Kinds of Member Methods</a></li>
-<li><a class="reference internal" href="#method-results" id="id139">Method Results</a></li>
-<li><a class="reference internal" href="#method-definition" id="id140">Method Definition</a></li>
-<li><a class="reference internal" href="#requests-in-general" id="id141">Requests in general</a></li>
-<li><a class="reference internal" href="#const-requests" id="id142">Const Requests</a></li>
-<li><a class="reference internal" href="#sender-pid" id="id143">Sender PID</a></li>
-<li><a class="reference internal" href="#request-type-specifications" id="id144">Request Type Specifications</a></li>
-<li><a class="reference internal" href="#oneways-in-general" id="id145">Oneways in general</a></li>
-<li><a class="reference internal" href="#const-oneways" id="id146">Const Oneways</a></li>
-<li><a class="reference internal" href="#oneway-type-specifications" id="id147">Oneway Type Specifications</a></li>
-<li><a class="reference internal" href="#self-invocation-calling-a-method-from-the-instance-itself" id="id148">Self-Invocation: Calling a Method From the Instance Itself</a></li>
-<li><a class="reference internal" href="#static-methods" id="id149">Static Methods</a></li>
+<li><a class="reference internal" href="#methods" id="id134">Methods</a><ul>
+<li><a class="reference internal" href="#method-declaration" id="id135">Method Declaration</a></li>
+<li><a class="reference internal" href="#method-invocation" id="id136">Method Invocation</a></li>
+<li><a class="reference internal" href="#method-name" id="id137">Method Name</a></li>
+<li><a class="reference internal" href="#method-parameters" id="id138">Method Parameters</a></li>
+<li><a class="reference internal" href="#two-kinds-of-member-methods" id="id139">Two Kinds of Member Methods</a></li>
+<li><a class="reference internal" href="#method-results" id="id140">Method Results</a></li>
+<li><a class="reference internal" href="#method-definition" id="id141">Method Definition</a></li>
+<li><a class="reference internal" href="#requests-in-general" id="id142">Requests in general</a></li>
+<li><a class="reference internal" href="#const-requests" id="id143">Const Requests</a></li>
+<li><a class="reference internal" href="#sender-pid" id="id144">Sender PID</a></li>
+<li><a class="reference internal" href="#request-type-specifications" id="id145">Request Type Specifications</a></li>
+<li><a class="reference internal" href="#oneways-in-general" id="id146">Oneways in general</a></li>
+<li><a class="reference internal" href="#const-oneways" id="id147">Const Oneways</a></li>
+<li><a class="reference internal" href="#oneway-type-specifications" id="id148">Oneway Type Specifications</a></li>
+<li><a class="reference internal" href="#self-invocation-calling-a-method-from-the-instance-itself" id="id149">Self-Invocation: Calling a Method From the Instance Itself</a></li>
+<li><a class="reference internal" href="#static-methods" id="id150">Static Methods</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#id25" id="id150">State Management</a><ul>
-<li><a class="reference internal" href="#principles" id="id151">Principles</a></li>
-<li><a class="reference internal" href="#state-implementation-details" id="id152">State Implementation Details</a></li>
-<li><a class="reference internal" href="#managing-the-state-of-an-instance" id="id153">Managing the State of an Instance</a></li>
+<li><a class="reference internal" href="#id25" id="id151">State Management</a><ul>
+<li><a class="reference internal" href="#principles" id="id152">Principles</a></li>
+<li><a class="reference internal" href="#state-implementation-details" id="id153">State Implementation Details</a></li>
+<li><a class="reference internal" href="#managing-the-state-of-an-instance" id="id154">Managing the State of an Instance</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#multiple-inheritance-polymorphism" id="id154">Multiple Inheritance &amp; Polymorphism</a><ul>
-<li><a class="reference internal" href="#the-general-case" id="id155">The General Case</a></li>
-<li><a class="reference internal" href="#the-special-case-of-diamond-shaped-inheritance" id="id156">The Special Case of Diamond-Shaped Inheritance</a></li>
+<li><a class="reference internal" href="#multiple-inheritance-polymorphism" id="id155">Multiple Inheritance &amp; Polymorphism</a><ul>
+<li><a class="reference internal" href="#the-general-case" id="id156">The General Case</a></li>
+<li><a class="reference internal" href="#the-special-case-of-diamond-shaped-inheritance" id="id157">The Special Case of Diamond-Shaped Inheritance</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#life-cycle" id="id157">Life-Cycle</a><ul>
-<li><a class="reference internal" href="#instance-creation-new-new-link-and-construct" id="id158">Instance Creation: <tt class="docutils literal">new</tt>/<tt class="docutils literal">new_link</tt> and <tt class="docutils literal">construct</tt></a></li>
-<li><a class="reference internal" href="#instance-deletion" id="id159">Instance Deletion</a></li>
+<li><a class="reference internal" href="#life-cycle" id="id158">Life-Cycle</a><ul>
+<li><a class="reference internal" href="#instance-creation-new-new-link-and-construct" id="id159">Instance Creation: <tt class="docutils literal">new</tt>/<tt class="docutils literal">new_link</tt> and <tt class="docutils literal">construct</tt></a></li>
+<li><a class="reference internal" href="#instance-deletion" id="id160">Instance Deletion</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#passive-instances" id="id160">Passive Instances</a></li>
+<li><a class="reference internal" href="#passive-instances" id="id161">Passive Instances</a></li>
 </ul>
 </div>
 <div class="section" id="classes">
-<h3><a class="toc-backref" href="#id126">Classes</a></h3>
+<h3><a class="toc-backref" href="#id127">Classes</a></h3>
 <div class="section" id="classes-names">
-<h4><a class="toc-backref" href="#id127">Classes &amp; Names</a></h4>
+<h4><a class="toc-backref" href="#id128">Classes &amp; Names</a></h4>
 <p>A class is a blueprint to create objects, a common scheme describing the state and behaviour of its instances, i.e. the attributes and methods that all objects created from that class shall support.</p>
 <p>With WOOPER, each class has a unique name, such as <tt class="docutils literal">class_Cat</tt>.</p>
 <p>To allow for <strong>encapsulation</strong>, a WOOPER class is mapped to an Erlang module, whose name is by convention made from the <tt class="docutils literal">class_</tt> prefix followed by the class name, in the so-called <a class="reference external" href="http://en.wikipedia.org/wiki/CamelCase">CamelCase</a>: all words are spelled in lower-case except their first letter, and there are no separators between words, like in: <tt class="docutils literal">ThisIsAnExample</tt>.</p>
@@ -388,7 +390,7 @@ This cat could be created and be synchronously deleted, as expected.
 <p>For example <tt class="docutils literal">PinkFlamingo</tt> can be understood as a shorthand for the actual classname, <tt class="docutils literal">class_PinkFlamingo</tt>.</p>
 </div>
 <div class="section" id="class-description">
-<h4><a class="toc-backref" href="#id128">Class Description</a></h4>
+<h4><a class="toc-backref" href="#id129">Class Description</a></h4>
 <p>A class should not be implemented without adding at least a short description of it. Rather than describing it through a mere in-code comment (hence only addressed to the class maintainer), a better approach is to used the <tt class="docutils literal">class_description</tt> define, like in:</p>
 <pre class="code erlang literal-block">
 <span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_description</span><span class="p">,</span><span class="s">&quot;Class in charge of implementing the &quot;</span>
@@ -403,7 +405,7 @@ This cat could be created and be synchronously deleted, as expected.
 </table>
 </div>
 <div class="section" id="inheritance-superclasses">
-<h4><a class="toc-backref" href="#id129">Inheritance &amp; Superclasses</a></h4>
+<h4><a class="toc-backref" href="#id130">Inheritance &amp; Superclasses</a></h4>
 <p>A WOOPER class can inherit from other classes, in which case the state and behaviour defined in the mother classes will be readily available to this child class.</p>
 <p>Being in a <strong>multiple inheritance</strong> context, a given class can have any number (<tt class="docutils literal"><span class="pre">[0..n]</span></tt>) of direct mother classes, which themselves may have their mother classes, and so on. This is to lead to a class hierarchy that forms a direct, acyclic graph.</p>
 <p>The direct mother classes (and only them) are to be declared in WOOPER thanks to the <tt class="docutils literal">superclasses</tt> define. For example, a class with no mother class should specify, once having declared its module:</p>
@@ -435,9 +437,9 @@ This cat could be created and be synchronously deleted, as expected.
 </div>
 </div>
 <div class="section" id="instances">
-<h3><a class="toc-backref" href="#id130">Instances</a></h3>
+<h3><a class="toc-backref" href="#id131">Instances</a></h3>
 <div class="section" id="instance-mapping">
-<h4><a class="toc-backref" href="#id131">Instance Mapping</a></h4>
+<h4><a class="toc-backref" href="#id132">Instance Mapping</a></h4>
 <p>With WOOPER, which focuses on multi-agent systems, all <strong>active instances</strong> of a class are mapped to Erlang processes (one WOOPER instance is exactly one Erlang process).</p>
 <p>They are therefore, in UML parlance, <em>active objects</em> (each has its own thread of execution, they may apparently &quot;live&quot; simultaneously <a class="footnote-reference" href="#id12" id="id11">[5]</a>).</p>
 <table class="docutils footnote" frame="void" id="id12" rules="none">
@@ -451,14 +453,14 @@ This cat could be created and be synchronously deleted, as expected.
 <p>Such an instance process simply loops over its state forever, waiting for incoming method calls and processing them one after the other.</p>
 </div>
 <div class="section" id="instance-state">
-<h4><a class="toc-backref" href="#id132">Instance State</a></h4>
+<h4><a class="toc-backref" href="#id133">Instance State</a></h4>
 <p>Another common OOP need is to rely on <strong>state management</strong> and <strong>encapsulation</strong>: each instance should be stateful, have its state fully private, and be able to inherit automatically the data members defined by its mother classes.</p>
 <p>In WOOPER, this is obtained thanks to a per-instance associative table, whose keys are the names of attributes and whose values are the attribute values. This will be detailed in the <a class="reference internal" href="#state-management">state management</a> section.</p>
 <p></p>
 </div>
 </div>
 <div class="section" id="methods">
-<h3><a class="toc-backref" href="#id133">Methods</a></h3>
+<h3><a class="toc-backref" href="#id134">Methods</a></h3>
 <p>They can be either:</p>
 <ul class="simple">
 <li><strong>member methods</strong>: they applies to a specific <em>instance</em> (of a given class), like in: <tt class="docutils literal">MyCatPid ! declareBirthday</tt></li>
@@ -477,7 +479,7 @@ This cat could be created and be synchronously deleted, as expected.
 <p>Declaring a birthday is not cat-specific, nor mammal-specific: we can consider it being creature-specific. Cat instances should then inherit this method, preferably indirectly from the <tt class="docutils literal">class_Creature</tt> class, in all cases without having to specify anything, since the <tt class="docutils literal">superclasses</tt> define already implies it (implying one time for all that cats <em>are</em> creatures and thus, unless specified otherwise, are and behave as such). Of course this inherited method may be overridden at will anywhere in the class hierarchy.</p>
 <p>We will discuss the <em>definition</em> of these methods later, but for the moment let's determine their signatures and declarations, and how we are expected to <em>call</em> them.</p>
 <div class="section" id="method-declaration">
-<h4><a class="toc-backref" href="#id134">Method Declaration</a></h4>
+<h4><a class="toc-backref" href="#id135">Method Declaration</a></h4>
 <p>All cat-specific methods (member or static ones) are to be defined in the context of <tt class="docutils literal">class_Cat</tt> (defined, as mentioned, in <tt class="docutils literal">class_Cat.erl</tt>). Defining a method automatically declares it, so no method should be explicitly exported (knowing WOOPER is to take care of it).</p>
 <p>The arity of member methods should be equal to the number of parameters they should be called with, plus one that is automatically managed by WOOPER and that corresponds to the (strictly private, never exported or sent to anyone) state of that instance.</p>
 <p>This <tt class="docutils literal">State</tt> variable defined by WOOPER can be somehow compared to the <tt class="docutils literal">self</tt> parameter of Python, or to the <tt class="docutils literal">this</tt> hidden pointer of C++. That state is automatically kept by WOOPER instances in their main loop, and automatically prepended, as first element, to the parameters of incoming method calls.</p>
@@ -487,7 +489,7 @@ This cat could be created and be synchronously deleted, as expected.
 </div>
 </div>
 <div class="section" id="method-invocation">
-<h4><a class="toc-backref" href="#id135">Method Invocation</a></h4>
+<h4><a class="toc-backref" href="#id136">Method Invocation</a></h4>
 <p>Let's suppose that the <tt class="docutils literal">MyCat</tt> variable designates an (active) instance of <tt class="docutils literal">class_Cat</tt>. Then this <tt class="docutils literal">MyCat</tt> reference is actually just the PID of the Erlang process hosting this instance; so it may be named <tt class="docutils literal">MyCatPid</tt> instead for additional clarity.</p>
 <p>All member methods (regardless of whether they are defined directly by the actual class or inherited) are to be called from outside this class thanks to a properly formatted Erlang message, sent to the targeted instance via its PID.</p>
 <p>When the method is expected to return a result (i.e. when it is a request), the caller must specify in the corresponding message its own PID, so that the instance knows to whom the result should be sent.</p>
@@ -526,7 +528,7 @@ This cat could be created and be synchronously deleted, as expected.
 </pre>
 </div>
 <div class="section" id="method-name">
-<h4><a class="toc-backref" href="#id136">Method Name</a></h4>
+<h4><a class="toc-backref" href="#id137">Method Name</a></h4>
 <p>Methods are designated by their name (as an atom), i.e. the one specified when defining them (ex: <tt class="docutils literal">canEat</tt>).</p>
 <p>We recommend that their name is spelled in CamelCase and remains short and descriptive, and start with a verb, like in: <tt class="docutils literal">getColor</tt>, <tt class="docutils literal">computeSum</tt>, <tt class="docutils literal">registerDefaultSettings</tt>, etc.</p>
 <p>Some method names are reserved for WOOPER; notably no user-defined method should have its name prefixed with <tt class="docutils literal">wooper</tt> or with <tt class="docutils literal">onWOOPER</tt>.</p>
@@ -542,7 +544,7 @@ This cat could be created and be synchronously deleted, as expected.
 <p>The method name is always the first information given when calling it (typically in the method call tuple).</p>
 </div>
 <div class="section" id="method-parameters">
-<h4><a class="toc-backref" href="#id137">Method Parameters</a></h4>
+<h4><a class="toc-backref" href="#id138">Method Parameters</a></h4>
 <p>All methods are free to change the state of their instance and possibly to trigger any side-effect (ex: sending a message, writing a file, kidnapping Santa Claus, etc.).</p>
 <p>As detailed below, there are two kinds of member methods:</p>
 <ul class="simple">
@@ -561,7 +563,7 @@ This cat could be created and be synchronously deleted, as expected.
 </div>
 </div>
 <div class="section" id="two-kinds-of-member-methods">
-<h4><a class="toc-backref" href="#id138">Two Kinds of Member Methods</a></h4>
+<h4><a class="toc-backref" href="#id139">Two Kinds of Member Methods</a></h4>
 <div class="section" id="request-methods">
 <h5>Request Methods</h5>
 <p>A <strong>request</strong> is a member method that returns a result to the caller.</p>
@@ -608,7 +610,7 @@ This cat could be created and be synchronously deleted, as expected.
 </div>
 </div>
 <div class="section" id="method-results">
-<h4><a class="toc-backref" href="#id139">Method Results</a></h4>
+<h4><a class="toc-backref" href="#id140">Method Results</a></h4>
 <div class="section" id="execution-success-wooper-result-actualresult">
 <h5>Execution Success: <tt class="docutils literal">{wooper_result,ActualResult}</tt></h5>
 <p>If the execution of a method succeeded, and if the method is a request, then <tt class="docutils literal">{wooper_result,ActualResult}</tt> will be sent back to the caller (precisely: to the process whose PID was specified in the call triplet).</p>
@@ -761,7 +763,7 @@ Therefore one could make use of that information, as in:</p>
 </div>
 </div>
 <div class="section" id="method-definition">
-<h4><a class="toc-backref" href="#id140">Method Definition</a></h4>
+<h4><a class="toc-backref" href="#id141">Method Definition</a></h4>
 <p>Here we reverse the point of view: instead of <strong>calling</strong> a method, we are in the process of <strong>implementing</strong> a callable one.</p>
 <p>A method signature has always for first parameter the state of the instance, for example: <tt class="docutils literal">getAge(State) <span class="pre">-&gt;</span> <span class="pre">[..]</span></tt>, or <tt class="docutils literal">getCoordinate(State,Index) <span class="pre">-&gt;</span> <span class="pre">[..]</span></tt>.</p>
 <p>For the sake of clarity, this variable should always be named <tt class="docutils literal">State</tt> exactly (implying it shall not be named for example <tt class="docutils literal">MyState</tt>, or muted as <tt class="docutils literal">_State</tt> <a class="footnote-reference" href="#id20" id="id19">[9]</a>). This convention is now enforced at compile-time.</p>
@@ -791,7 +793,7 @@ Therefore one could make use of that information, as in:</p>
 </div>
 </div>
 <div class="section" id="requests-in-general">
-<h4><a class="toc-backref" href="#id141">Requests in general</a></h4>
+<h4><a class="toc-backref" href="#id142">Requests in general</a></h4>
 <p>Requests will use <tt class="docutils literal">wooper:return_state_result(NewState,Result)</tt> to terminate their clauses: the new state will be kept by the instance, whereas the result will be sent to the caller. Hence <tt class="docutils literal">wooper:return_state_result/2</tt> means that the method returns a state <strong>and</strong> a result.</p>
 <p>For example:</p>
 <pre class="code erlang literal-block">
@@ -816,7 +818,7 @@ Therefore one could make use of that information, as in:</p>
 </pre>
 </div>
 <div class="section" id="const-requests">
-<h4><a class="toc-backref" href="#id142">Const Requests</a></h4>
+<h4><a class="toc-backref" href="#id143">Const Requests</a></h4>
 <p>Some clauses of a request may return an unchanged state. It is then a <tt class="docutils literal">const</tt> clause, and rather than using the  <tt class="docutils literal">wooper:return_state_result/2</tt> request terminator, it shall use the <tt class="docutils literal">wooper:const_return_result/1</tt> one.</p>
 <p>A request whose clauses are all <tt class="docutils literal">const</tt> is itself a const request.</p>
 <p>For example, instead of:</p>
@@ -832,7 +834,7 @@ Therefore one could make use of that information, as in:</p>
 <p>Note that <tt class="docutils literal">State</tt> can be used as always, and that even there it is not reported as unused (so one should not attempt to mute it, for example as <tt class="docutils literal">_State</tt>).</p>
 </div>
 <div class="section" id="sender-pid">
-<h4><a class="toc-backref" href="#id143">Sender PID</a></h4>
+<h4><a class="toc-backref" href="#id144">Sender PID</a></h4>
 <p>Requests can access to one more information than oneways: the PID of the caller that sent the request. As WOOPER takes care automatically of sending back the result to the caller, having the request know explicitly the caller is usually not useful, thus the caller PID does not appear explicitly in request signatures, among the actual parameters.</p>
 <p>However WOOPER keeps track of this information, which remains available to requests, and may be useful for some of them.</p>
 <p>From a request body, the caller PID can indeed be retrieved by using the <tt class="docutils literal">getSender</tt> macro, which is automatically managed by WOOPER:</p>
@@ -858,7 +860,7 @@ Therefore one could make use of that information, as in:</p>
 </ul>
 </div>
 <div class="section" id="request-type-specifications">
-<h4><a class="toc-backref" href="#id144">Request Type Specifications</a></h4>
+<h4><a class="toc-backref" href="#id145">Request Type Specifications</a></h4>
 <p>Using them is not mandatory, yet is very much recommended, and WOOPER provides suitable constructs for that.</p>
 <p>As mentioned, a request is to return a new state and a result. The former is always <tt class="docutils literal">wooper:state()</tt>, so it may be made implicit. The latter can be any type <tt class="docutils literal">T()</tt>. So a request may be considered as returning the WOOPER <tt class="docutils literal"><span class="pre">request_return(T())</span></tt> type.</p>
 <p>As for const requests, they shall be considered returning the <tt class="docutils literal"><span class="pre">const_request_return(T())</span></tt> type.</p>
@@ -884,7 +886,7 @@ Therefore one could make use of that information, as in:</p>
 </div>
 </div>
 <div class="section" id="oneways-in-general">
-<h4><a class="toc-backref" href="#id145">Oneways in general</a></h4>
+<h4><a class="toc-backref" href="#id146">Oneways in general</a></h4>
 <p>Oneways will use <tt class="docutils literal">wooper:return_state(NewState)</tt> to terminate their clauses: the new state will be kept by the instance, and no result will be returned to the caller (which is not even known - hence no <tt class="docutils literal"><span class="pre">?getSender</span></tt> macro applies to oneways either).</p>
 <p>For example:</p>
 <pre class="code erlang literal-block">
@@ -898,7 +900,7 @@ Therefore one could make use of that information, as in:</p>
 </pre>
 </div>
 <div class="section" id="const-oneways">
-<h4><a class="toc-backref" href="#id146">Const Oneways</a></h4>
+<h4><a class="toc-backref" href="#id147">Const Oneways</a></h4>
 <p>Even if it is less frequent than for requests, oneways may also be <tt class="docutils literal">const</tt>, i.e. may leave the state unchanged, and consequently are only called for side-effects; for example, rather than specifying:</p>
 <pre class="code erlang literal-block">
 <span class="nf">displayAge</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
@@ -914,7 +916,7 @@ Therefore one could make use of that information, as in:</p>
 <p>A oneway whose clauses are all <tt class="docutils literal">const</tt> is itself a const oneway.</p>
 </div>
 <div class="section" id="oneway-type-specifications">
-<h4><a class="toc-backref" href="#id147">Oneway Type Specifications</a></h4>
+<h4><a class="toc-backref" href="#id148">Oneway Type Specifications</a></h4>
 <p>The type specification of a oneway should rely, for its return type, either on <tt class="docutils literal">oneway_return()</tt> or on <tt class="docutils literal">const_oneway_return()</tt>, depending on its constness (no result to account for in either case).</p>
 <p>Making the previous examples more complete:</p>
 <pre class="code erlang literal-block">
@@ -966,7 +968,7 @@ Therefore one could make use of that information, as in:</p>
 </div>
 </div>
 <div class="section" id="self-invocation-calling-a-method-from-the-instance-itself">
-<h4><a class="toc-backref" href="#id148">Self-Invocation: Calling a Method From the Instance Itself</a></h4>
+<h4><a class="toc-backref" href="#id149">Self-Invocation: Calling a Method From the Instance Itself</a></h4>
 <p>When implementing a method of a class, one may want to call other methods <strong>of that same class</strong> (have they been overridden or not).</p>
 <p>For example, when developing the <tt class="docutils literal">declareBirthday/1</tt> oneway of <tt class="docutils literal">class_Mammal</tt> (which, among other things, is expected to increment the mammal age), one may want to perform a call to its <tt class="docutils literal">setAge/2</tt> oneway (possibly introduced by an ancestor class like <tt class="docutils literal">class_Creature</tt>, or possibly overridden directly in <tt class="docutils literal">class_Mammal</tt>) on the current instance.</p>
 <p>One <em>could</em> refer to this method respectively as a function exported by that ancestor (ex: called as <tt class="docutils literal"><span class="pre">class_Creature:setAge(...)</span></tt>) or that is local to the current module (a direct <tt class="docutils literal"><span class="pre">setAge(...)</span></tt> local call designating then <tt class="docutils literal">class_Mammal:setAge/2</tt>).</p>
@@ -1057,7 +1059,7 @@ Color = executeConstRequestAs(MyState,class_Vehicle,
 </div>
 </div>
 <div class="section" id="static-methods">
-<span id="static-method"></span><h4><a class="toc-backref" href="#id149">Static Methods</a></h4>
+<span id="static-method"></span><h4><a class="toc-backref" href="#id150">Static Methods</a></h4>
 <p>Static methods, as opposed to member methods, do not target specifically an instance, they are defined at the class level.</p>
 <p>They thus do not operate on a specified process or PID, they are just to be called thanks to their module name, exactly as any exported standard function.</p>
 <p>In order to further separate them from member methods, we recommend that the names of static methods obey the <tt class="docutils literal">snake_case</tt> convention (as opposed to <tt class="docutils literal">CamelCase</tt> one): a static method may for example be named <tt class="docutils literal">get_default_settings</tt> (rather than <tt class="docutils literal">getDefaultSettings</tt>).</p>
@@ -1088,9 +1090,9 @@ Color = executeConstRequestAs(MyState,class_Vehicle,
 </div>
 </div>
 <div class="section" id="id25">
-<span id="state-management"></span><h3><a class="toc-backref" href="#id150">State Management</a></h3>
+<span id="state-management"></span><h3><a class="toc-backref" href="#id151">State Management</a></h3>
 <div class="section" id="principles">
-<h4><a class="toc-backref" href="#id151">Principles</a></h4>
+<h4><a class="toc-backref" href="#id152">Principles</a></h4>
 <p>We are discussing here about how an instance is to manage its inner state.</p>
 <p>Its state is only directly accessible from inside the instance, i.e. from the body of its methods, whether they are inherited or not: the state of an instance is <strong>private</strong> (local to its process), and the outside can <em>only</em> access it through the methods defined by its class.</p>
 <p>The state of an instance (corresponding to the one that is given by WOOPER as first parameter of all its methods, thanks to a variable conventionally named <tt class="docutils literal">State</tt>) is simply defined as a <strong>set of attributes</strong>.</p>
@@ -1101,7 +1103,7 @@ Color = executeConstRequestAs(MyState,class_Vehicle,
 </pre>
 </div>
 <div class="section" id="state-implementation-details">
-<h4><a class="toc-backref" href="#id152">State Implementation Details</a></h4>
+<h4><a class="toc-backref" href="#id153">State Implementation Details</a></h4>
 <div class="section" id="instance-attributes">
 <h5>Instance Attributes</h5>
 <div class="section" id="declaring-them">
@@ -1209,7 +1211,7 @@ setFurColor(State,FurColor) -&gt;
 </div>
 </div>
 <div class="section" id="managing-the-state-of-an-instance">
-<h4><a class="toc-backref" href="#id153">Managing the State of an Instance</a></h4>
+<h4><a class="toc-backref" href="#id154">Managing the State of an Instance</a></h4>
 <p>A set of WOOPER-provided functions allows to operate on these state variables, notably to read and write the attributes that they contain.</p>
 <p>As seen in the various examples, method implementations will access (read/write) attributes stored in the instance state, whose original version (i.e. the state of the instance at the method beginning) is always specified as their first parameter, conventionally named <tt class="docutils literal">State</tt>.</p>
 <p>This current state can be then modified in the method, and a final state (usually an updated version of the initial one) will be returned locally to WOOPER, thanks to a method terminator.</p>
@@ -1378,9 +1380,9 @@ NewState = deleteFromAttribute(State,AttributeName,
 </div>
 </div>
 <div class="section" id="multiple-inheritance-polymorphism">
-<h3><a class="toc-backref" href="#id154">Multiple Inheritance &amp; Polymorphism</a></h3>
+<h3><a class="toc-backref" href="#id155">Multiple Inheritance &amp; Polymorphism</a></h3>
 <div class="section" id="the-general-case">
-<h4><a class="toc-backref" href="#id155">The General Case</a></h4>
+<h4><a class="toc-backref" href="#id156">The General Case</a></h4>
 <p>Both multiple inheritance and polymorphism are automatically managed by WOOPER: even if our cat class does not define a <tt class="docutils literal">getAge/1</tt> request, it can nevertheless readily be called on a cat instance, as it is inherited from its mother classes (here from <tt class="docutils literal">class_Creature</tt>, an indirect mother class).</p>
 <p>Therefore all creature instances can be handled the same, regardless of their actual classes:</p>
 <pre class="code erlang literal-block">
@@ -1413,7 +1415,7 @@ This is a 9 year old creature.
 <p>The point here is that the implementer does not have to know what are the actual classes of the instances that are interacted with, provided that they share a common ancestor; polymorphism allows to handle them transparently.</p>
 </div>
 <div class="section" id="the-special-case-of-diamond-shaped-inheritance">
-<h4><a class="toc-backref" href="#id156">The Special Case of Diamond-Shaped Inheritance</a></h4>
+<h4><a class="toc-backref" href="#id157">The Special Case of Diamond-Shaped Inheritance</a></h4>
 <p>In the case of a <a class="reference external" href="http://en.wikipedia.org/wiki/Diamond_problem">diamond-shaped inheritance</a>, as the method table is constructed in the order specified in the declaration of the superclasses, like in:</p>
 <pre class="code erlang literal-block">
 <span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">superclasses</span><span class="p">,[</span><span class="n">class_X</span><span class="p">,</span><span class="n">class_Y</span><span class="p">,...]).</span>
@@ -1431,14 +1433,14 @@ This is a 9 year old creature.
 </div>
 </div>
 <div class="section" id="life-cycle">
-<h3><a class="toc-backref" href="#id157">Life-Cycle</a></h3>
+<h3><a class="toc-backref" href="#id158">Life-Cycle</a></h3>
 <p>Basically, creation and destruction of instances are managed respectively thanks to the <tt class="docutils literal">new</tt>/<tt class="docutils literal">new_link</tt> and the <tt class="docutils literal">delete</tt> operators (all these operators are WOOPER-reserved function names, for all arities, and are automatically generated), like in:</p>
 <pre class="code erlang literal-block">
 <span class="nv">MyCat</span> <span class="o">=</span> <span class="nn">class_Cat</span><span class="p">:</span><span class="nf">new</span><span class="p">(</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">,</span><span class="nv">FurColor</span><span class="p">,</span><span class="nv">WhiskerColor</span><span class="p">),</span>
 <span class="nv">MyCat</span> <span class="o">!</span> <span class="n">delete</span><span class="p">.</span>
 </pre>
 <div class="section" id="instance-creation-new-new-link-and-construct">
-<h4><a class="toc-backref" href="#id158">Instance Creation: <tt class="docutils literal">new</tt>/<tt class="docutils literal">new_link</tt> and <tt class="docutils literal">construct</tt></a></h4>
+<h4><a class="toc-backref" href="#id159">Instance Creation: <tt class="docutils literal">new</tt>/<tt class="docutils literal">new_link</tt> and <tt class="docutils literal">construct</tt></a></h4>
 <div class="section" id="role-of-a-new-construct-pair">
 <h5>Role of a  <tt class="docutils literal">new</tt> /<tt class="docutils literal">construct</tt> Pair</h5>
 <p>Whereas the purpose of the <tt class="docutils literal">new</tt> / <tt class="docutils literal">new_link</tt> operators is to <em>create</em> a working (active) instance on the user's behalf, the role of <tt class="docutils literal">construct</tt> is to <em>initialise</em> an instance of that class (regardless of how it was created, i.e. of which <tt class="docutils literal">new</tt> variation was triggered), while being able to be chained for inheritance, as explained later.</p>
@@ -1612,7 +1614,7 @@ This is a 9 year old creature.
 </div>
 </div>
 <div class="section" id="instance-deletion">
-<h4><a class="toc-backref" href="#id159">Instance Deletion</a></h4>
+<h4><a class="toc-backref" href="#id160">Instance Deletion</a></h4>
 <div class="section" id="automatic-chaining-of-destructors">
 <h5>Automatic Chaining Of Destructors</h5>
 <p>We saw that, when implementing a constructor (<tt class="docutils literal">construct/N</tt>), like in all other OOP approaches the constructors of the direct mother classes have to be explicitly called, so that they can be given the proper parameters, as determined by the class developer.</p>
@@ -1665,7 +1667,7 @@ This is a 9 year old creature.
 </div>
 </div>
 <div class="section" id="passive-instances">
-<span id="passive-instance"></span><h3><a class="toc-backref" href="#id160">Passive Instances</a></h3>
+<span id="passive-instance"></span><h3><a class="toc-backref" href="#id161">Passive Instances</a></h3>
 <p>A passive instance is an instance of a WOOPER class that is not powered by a dedicated (Erlang) process: it is just a mere (opaque) term, a pure data-structure that holds the state <a class="footnote-reference" href="#id36" id="id35">[16]</a> of that instance, and that is returned to the process having created that instance (which can then do whatever it wants with it - most probably store it as a &quot;super attribute&quot;).</p>
 <table class="docutils footnote" frame="void" id="id36" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -1998,8 +2000,13 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <p>Rather than declaring the corresponding behaviour and its implemented API directly in the target class (ex: in <tt class="docutils literal">class_Foobar</tt>), we recommend for clarity and separation of concerns to introduce a specific module for that, like done with <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/traces_bridge_sup.erl">traces_bridge_sup</a> for <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/class_TraceAggregator.erl">class_TraceAggregator.erl</a> or <a class="reference external" href="https://github.com/Olivier-Boudeville/us-common/blob/master/src/us_common_config_bridge_sup.erl">us_common_config_bridge_sup</a> for <a class="reference external" href="https://github.com/Olivier-Boudeville/us-common/blob/master/src/class_USConfigServer.erl">class_USConfigServer.erl</a>.</p>
 </div>
 </div>
+<div class="section" id="wooper-api">
+<h3><a class="toc-backref" href="#id89">WOOPER API</a></h3>
+<p>One can browse the <a class="reference external" href="api-doc/index.html">WOOPER API documentation</a>.</p>
+<p>The next level of information is simply to read the corresponding <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">source files</a>, which are intensely commented and generally straightforward.</p>
+</div>
 <div class="section" id="class-developer-cheat-sheet">
-<h3><a class="toc-backref" href="#id89">Class Developer Cheat Sheet</a></h3>
+<h3><a class="toc-backref" href="#id90">Class Developer Cheat Sheet</a></h3>
 <p>When specifying a <strong>class</strong>: <tt class="docutils literal"><span class="pre">-module(class_Foobar).</span></tt></p>
 <p>Any <strong>description</strong> thereof: <tt class="docutils literal"><span class="pre">-define(class_description,&quot;Class</span> <span class="pre">for...&quot;).</span></tt></p>
 <p>When specifying its <strong>superclasses</strong>: <tt class="docutils literal"><span class="pre">-define(superclasses,[A,B]).</span></tt></p>
@@ -2032,16 +2039,16 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <p>A mnemonic could be that a spec return type designates a returned <em>term</em> (hence for example a <tt class="docutils literal">request_return/1</tt> - more generally such types always end with <tt class="docutils literal">_return</tt>) whereas a method terminator designates an <em>action</em> (returning a state and a result, hence to <tt class="docutils literal">wooper:return_state_result/2</tt> for example).</p>
 </div>
 <div class="section" id="source-editors">
-<h3><a class="toc-backref" href="#id90">Source Editors</a></h3>
+<h3><a class="toc-backref" href="#id91">Source Editors</a></h3>
 <p>We use <tt class="docutils literal">Emacs</tt> but of course any editor will be fine.</p>
 <p>For Nedit users, a WOOPER-aware <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-Myriad/blob/master/conf/nedit.rc">nedit.rc</a> configuration file for syntax highlighting (on black backgrounds), inspired from Daniel Solaz's <a class="reference external" href="http://www.trapexit.org/forum/viewtopic.php?p=30189">Erlang Nedit mode</a>, is available.</p>
 </div>
 <div class="section" id="similarity-with-other-languages">
-<h3><a class="toc-backref" href="#id91">Similarity With other Languages</a></h3>
+<h3><a class="toc-backref" href="#id92">Similarity With other Languages</a></h3>
 <p>WOOPER is in some ways adding features quite similar to the ones available with other languages, including Python (simple multiple inheritance, implied <tt class="docutils literal">self/State</tt> parameter, attribute dictionaries/associative tables, etc.) while still offering the major strengths of Erlang (concurrency, distribution, functional paradigm) and not hurting too much the overall performances (mainly thanks to the prebuilt attribute and method tables).</p>
 </div>
 <div class="section" id="wooper-limitations">
-<h3><a class="toc-backref" href="#id92">WOOPER limitations</a></h3>
+<h3><a class="toc-backref" href="#id93">WOOPER limitations</a></h3>
 <p>Actually no significant implementation shortcoming has been identified.</p>
 <p>The main limitations that existed beforehand were (from the most recently alleviated to the earlier ones):</p>
 <ul class="simple">
@@ -2055,12 +2062,12 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 </div>
 </div>
 <div class="section" id="wooper-example">
-<h2><a class="toc-backref" href="#id93">WOOPER Example</a></h2>
+<h2><a class="toc-backref" href="#id94">WOOPER Example</a></h2>
 <p>We defined a small set of classes in order to serve as an example and demonstrate multiple inheritance:</p>
 <p><span class="raw-html"><center><img src="wooper-example.png" width="70%" alt="WOOPER Example"></img></center></span>
 </p>
 <div class="section" id="class-implementations">
-<h3><a class="toc-backref" href="#id94">Class implementations</a></h3>
+<h3><a class="toc-backref" href="#id95">Class implementations</a></h3>
 <ul class="simple">
 <li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Creature.erl">class_Creature.erl</a></li>
 <li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_ViviparousBeing.erl">class_ViviparousBeing.erl</a></li>
@@ -2072,7 +2079,7 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 </ul>
 </div>
 <div class="section" id="tests">
-<h3><a class="toc-backref" href="#id95">Tests</a></h3>
+<h3><a class="toc-backref" href="#id96">Tests</a></h3>
 <p>Here are a few examples of tests:</p>
 <ul class="simple">
 <li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Creature_test.erl">class_Creature_test.erl</a></li>
@@ -2088,7 +2095,7 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 </div>
 </div>
 <div class="section" id="good-practices">
-<h2><a class="toc-backref" href="#id96">Good Practices</a></h2>
+<h2><a class="toc-backref" href="#id97">Good Practices</a></h2>
 <p>When using WOOPER, the following conventions are deemed useful to respect (even if they are not mandatory).</p>
 <p>No <strong>warning</strong> should be tolerated in code using WOOPER, as we <em>never</em> found useless notifications.</p>
 <p>All <strong>attributes</strong> of an instance should better be defined <strong>from the constructor</strong>, instead of being dynamically added during the life of the instance; otherwise the methods would have to deal with some attributes that may, or may not, be defined; if no proper value exists for an attribute at the creation of an instance, then its value should just be set to the atom <tt class="docutils literal">undefined</tt>; its type should then go from <tt class="docutils literal">T()</tt> to <tt class="docutils literal"><span class="pre">maybe(T())</span></tt>.</p>
@@ -2107,14 +2114,14 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <p></p>
 </div>
 <div class="section" id="troubleshooting">
-<h2><a class="toc-backref" href="#id97">Troubleshooting</a></h2>
+<h2><a class="toc-backref" href="#id98">Troubleshooting</a></h2>
 <div class="section" id="debug-mode">
-<h3><a class="toc-backref" href="#id98">Debug Mode</a></h3>
+<h3><a class="toc-backref" href="#id99">Debug Mode</a></h3>
 <p>We recommend that, as a WOOPER user, one enables its debug mode when developing (ensure in <tt class="docutils literal">GNUmakevars.inc</tt> that <tt class="docutils literal">ENABLE_DEBUG</tt> has been set to true - which is the case by default), as it may catch various user errors more easily (not only WOOPER-internal errors, but also, and most importantly, any user-originating mistake).</p>
 <p>Then only, once one's code is mature enough, this debug mode may be disabled in order to obtain best performances.</p>
 </div>
 <div class="section" id="no-attribute-declaration-found-whereas-a-class-attributes-define-exists">
-<h3><a class="toc-backref" href="#id99">&quot;No attribute declaration found&quot; whereas a <tt class="docutils literal">class_attributes</tt> define exists</a></h3>
+<h3><a class="toc-backref" href="#id100">&quot;No attribute declaration found&quot; whereas a <tt class="docutils literal">class_attributes</tt> define exists</a></h3>
 <p>Most probably that your <tt class="docutils literal"><span class="pre">-define(class_attributes,[...]).</span></tt> define happens <em>after</em> the WOOPER header include.</p>
 <p>The correct order is:</p>
 <pre class="code erlang literal-block">
@@ -2129,12 +2136,12 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 </pre>
 </div>
 <div class="section" id="compilation-error-pointing-to-wooper-for-classes-hrl">
-<h3><a class="toc-backref" href="#id100">Compilation Error Pointing to <tt class="docutils literal">wooper_for_classes.hrl</tt></a></h3>
+<h3><a class="toc-backref" href="#id101">Compilation Error Pointing to <tt class="docutils literal">wooper_for_classes.hrl</tt></a></h3>
 <p>As the comment in <tt class="docutils literal">wooper_get_class_attributes/0</tt> (in said header file) hints, the <tt class="docutils literal">class_attributes</tt> define in the class at hand is most probably incorrect (syntax error).</p>
 <p>The compilation error message should help; if it is <tt class="docutils literal">syntax error before: '|'</tt>, a union type for an attribute must have been defined with <tt class="docutils literal">|</tt>, instead of with the <tt class="docutils literal">union</tt> variadic pseudo-operator. See the section about <a class="reference internal" href="#attribute-declaration">attribute declaration</a> for more details.</p>
 </div>
 <div class="section" id="general-case">
-<h3><a class="toc-backref" href="#id101">General Case</a></h3>
+<h3><a class="toc-backref" href="#id102">General Case</a></h3>
 <div class="section" id="compilation-warnings">
 <h4>Compilation Warnings</h4>
 <p>A basic rule of thumb in all languages is to enable all warnings and eradicate them before even trying to test a program.</p>
@@ -2191,9 +2198,9 @@ if a method takes only one parameter and if this parameter is a list, then in a 
 </div>
 </div>
 <div class="section" id="current-stable-version-download">
-<h2><a class="toc-backref" href="#id102">Current Stable Version &amp; Download</a></h2>
+<h2><a class="toc-backref" href="#id103">Current Stable Version &amp; Download</a></h2>
 <div class="section" id="prerequisites">
-<h3><a class="toc-backref" href="#id103">Prerequisites</a></h3>
+<h3><a class="toc-backref" href="#id104">Prerequisites</a></h3>
 <p>This OOP layer, <tt class="docutils literal"><span class="pre">Ceylan-WOOPER</span></tt>, relies (only) on:</p>
 <ul class="simple">
 <li><a class="reference external" href="http://www.erlang.org/">Erlang</a></li>
@@ -2203,7 +2210,7 @@ if a method takes only one parameter and if this parameter is a list, then in a 
 <p>Refer to the corresponding <a class="reference external" href="http://myriad.esperide.org#prerequisites">Myriad prerequisite section</a>  for more precise guidelines, knowing that Ceylan-WOOPER does not need modules with conditional support such as <tt class="docutils literal">crypto</tt> or <tt class="docutils literal">wx</tt>.</p>
 </div>
 <div class="section" id="using-cutting-edge-git">
-<h3><a class="toc-backref" href="#id104">Using Cutting-Edge GIT</a></h3>
+<h3><a class="toc-backref" href="#id105">Using Cutting-Edge GIT</a></h3>
 <p>This is the installation method that we use and recommend; the WOOPER <tt class="docutils literal">master</tt> branch is meant to stick to the latest stable version: we try to ensure that this main line always stays functional (sorry for the pun). Evolutions are to take place in feature branches and to be merged only when ready.</p>
 <p>As a result, once a proper Erlang version is available, the <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-Myriad">Ceylan-Myriad repository</a> should be cloned and built, before doing the same with the <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">Ceylan-WOOPER repository</a>, like in:</p>
 <pre class="code bash literal-block">
@@ -2215,7 +2222,7 @@ $ <span class="nb">cd</span> wooper <span class="o">&amp;&amp;</span> make all
 <p><span class="raw-html"><a name="otp"></a></span></p>
 </div>
 <div class="section" id="using-otp-related-build-runtime-conventions">
-<span id="otp-build"></span><h3><a class="toc-backref" href="#id105">Using OTP-Related Build/Runtime Conventions</a></h3>
+<span id="otp-build"></span><h3><a class="toc-backref" href="#id106">Using OTP-Related Build/Runtime Conventions</a></h3>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Over the years, we slowly migrated from our custom, make-based build to integrate more closely to the OTP ecosystem (using applications, releases; then rebar3, hex).
@@ -2292,7 +2299,7 @@ Successful end of <span class="nb">test</span> of the WOOPER application.
 </div>
 </div>
 <div class="section" id="using-hex">
-<h3><a class="toc-backref" href="#id106">Using Hex</a></h3>
+<h3><a class="toc-backref" href="#id107">Using Hex</a></h3>
 <p><a class="reference external" href="https://hex.pm/packages/wooper">Hex packages for WOOPER</a> used to be published for most versions, yet finally our workflow does not rely on Hex, so we do not update the Hex packages anymore. Just drop us an email if needing a recent one.</p>
 <p>For more details, one may have a look at:</p>
 <ul class="simple">
@@ -2302,7 +2309,7 @@ Successful end of <span class="nb">test</span> of the WOOPER application.
 </ul>
 </div>
 <div class="section" id="testing-wooper">
-<h3><a class="toc-backref" href="#id107">Testing WOOPER</a></h3>
+<h3><a class="toc-backref" href="#id108">Testing WOOPER</a></h3>
 <p>Once <a class="reference external" href="https://myriad.esperide.org">Myriad</a> and WOOPER itself have been built (for that refer to either <a class="reference internal" href="#using-cutting-edge-git">Using Cutting-Edge GIT</a> or <a class="reference internal" href="#using-rebar3">Using Rebar3</a>), just run from the root directory of WOOPER:</p>
 <pre class="code bash literal-block">
 $ make <span class="nb">test</span>
@@ -2317,9 +2324,9 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 </div>
 </div>
 <div class="section" id="version-history-changes">
-<h2><a class="toc-backref" href="#id108">Version History &amp; Changes</a></h2>
+<h2><a class="toc-backref" href="#id109">Version History &amp; Changes</a></h2>
 <div class="section" id="version-2-0-current-stable">
-<h3><a class="toc-backref" href="#id109">Version 2.0 [current stable]</a></h3>
+<h3><a class="toc-backref" href="#id110">Version 2.0 [current stable]</a></h3>
 <p>Released officially on Sunday, February 3, 2019.</p>
 <p>It has been a large rewriting of this layer, with much improvements notably:</p>
 <ul class="simple">
@@ -2336,18 +2343,18 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 <p>Although this version does not share any code with the various experiments and candidate 2.0 versions that had been previously developed (thanks at least to Ulf and Nicolas in 2010, and to Enrique and Roland in 2013, both operating at that time on the so-called <em>Zero-Overhead WOOPER</em> version), these preliminary works surely helped defining the API that we deem suitable now, and that we implemented in the current version.</p>
 </div>
 <div class="section" id="version-1-x">
-<h3><a class="toc-backref" href="#id110">Version 1.x</a></h3>
+<h3><a class="toc-backref" href="#id111">Version 1.x</a></h3>
 <p>Since 2016 we switched back to a &quot;rolling version&quot;, not really defining specific release milestones.</p>
 <p>Many minor improvements integrated, API enriched in a backward compatible manner.</p>
 <p>These versions have been pretty stable very soon, and did the job for nearly a decade (2008-2018), during which various attempts of radical improvements were performed.</p>
 </div>
 <div class="section" id="version-1-0">
-<h3><a class="toc-backref" href="#id111">Version 1.0</a></h3>
+<h3><a class="toc-backref" href="#id112">Version 1.0</a></h3>
 <p>Countless improvements have been integrated in the course of the use of WOOPER, which has been now been stable for years.</p>
 <p>The main change since the 0.4 version is the use of the newly-introduced <tt class="docutils literal">map</tt> Erlang datatype, resulting in the <tt class="docutils literal">hashtable</tt> module being replaced by the <tt class="docutils literal">map_hashtable</tt>. They obey to the same API and the <tt class="docutils literal">table</tt> pseudo-type abstracts out the actual choice in that matter (it is transparently parse-transformed into the currently-retained datatype).</p>
 </div>
 <div class="section" id="version-0-4">
-<h3><a class="toc-backref" href="#id112">Version 0.4</a></h3>
+<h3><a class="toc-backref" href="#id113">Version 0.4</a></h3>
 <p>It is mainly a BFO (<em>Bug Fixes Only</em>) version, as functional coverage is pretty complete already.</p>
 <p>Main changes are:</p>
 <ul class="simple">
@@ -2360,7 +2367,7 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 </ul>
 </div>
 <div class="section" id="version-0-3">
-<h3><a class="toc-backref" href="#id113">Version 0.3</a></h3>
+<h3><a class="toc-backref" href="#id114">Version 0.3</a></h3>
 <p>Released on Wednesday, March 25, 2009.</p>
 <p>Main changes are:</p>
 <ul class="simple">
@@ -2374,7 +2381,7 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 </ul>
 </div>
 <div class="section" id="version-0-2">
-<h3><a class="toc-backref" href="#id114">Version 0.2</a></h3>
+<h3><a class="toc-backref" href="#id115">Version 0.2</a></h3>
 <p>Released on Friday, December 21, 2007. Still fully functional!</p>
 <p>Main changes are:</p>
 <ul class="simple">
@@ -2388,15 +2395,15 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 </ul>
 </div>
 <div class="section" id="version-0-1">
-<h3><a class="toc-backref" href="#id115">Version 0.1</a></h3>
+<h3><a class="toc-backref" href="#id116">Version 0.1</a></h3>
 <p>Released on Sunday, July 22, 2007. Already fully functional!</p>
 <p></p>
 </div>
 </div>
 <div class="section" id="wooper-inner-workings">
-<h2><a class="toc-backref" href="#id116">WOOPER Inner Workings</a></h2>
+<h2><a class="toc-backref" href="#id117">WOOPER Inner Workings</a></h2>
 <div class="section" id="general-principles">
-<h3><a class="toc-backref" href="#id117">General Principles</a></h3>
+<h3><a class="toc-backref" href="#id118">General Principles</a></h3>
 <div class="section" id="understanding-compilation">
 <h4>Understanding Compilation</h4>
 <p>WOOPER is the second level of a software stack beginning with Erlang and then Myriad.</p>
@@ -2419,7 +2426,7 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 </div>
 </div>
 <div class="section" id="method-virtual-table">
-<h3><a class="toc-backref" href="#id118">Method Virtual Table</a></h3>
+<h3><a class="toc-backref" href="#id119">Method Virtual Table</a></h3>
 <div class="section" id="general-principle">
 <h4>General Principle</h4>
 <p>This associative table allows, for a given class, to determine which module implements actually each supported method.</p>
@@ -2450,7 +2457,7 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 </div>
 </div>
 <div class="section" id="attribute-table">
-<h3><a class="toc-backref" href="#id119">Attribute Table</a></h3>
+<h3><a class="toc-backref" href="#id120">Attribute Table</a></h3>
 <p>This is another associative table, this time necessarily per-instance.</p>
 <p>Keys are attribute names of that instance, values are the corresponding attribute values.</p>
 <p>It allows a simple, seamless yet efficient access to all data members, including inherited ones.</p>
@@ -2458,7 +2465,7 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 </div>
 </div>
 <div class="section" id="issues-planned-enhancements">
-<h2><a class="toc-backref" href="#id120">Issues &amp; Planned Enhancements</a></h2>
+<h2><a class="toc-backref" href="#id121">Issues &amp; Planned Enhancements</a></h2>
 <ul class="simple">
 <li>test the impact of using HiPE by default / wait for the upcoming JIT compilation</li>
 <li>integrate automatic persistent storage of instance states, for example in Mnesia databases</li>
@@ -2474,7 +2481,7 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 <p></p>
 </div>
 <div class="section" id="licence">
-<span id="free-software"></span><h2><a class="toc-backref" href="#id121">Licence</a></h2>
+<span id="free-software"></span><h2><a class="toc-backref" href="#id122">Licence</a></h2>
 <p>Ceylan-WOOPER is licensed by its author (Olivier Boudeville) under a disjunctive tri-license, giving you the choice of one of the three following sets of free software/open source licensing terms:</p>
 <ul class="simple">
 <li>the <a class="reference external" href="http://www.mozilla.org/MPL/MPL-1.1.html">Mozilla Public License</a> (MPL), version 1.1 or later (very close to the former <a class="reference external" href="http://www.erlang.org/EPLICENSE">Erlang Public License</a>, except aspects regarding Ericsson and/or the Swedish law)</li>
@@ -2487,7 +2494,7 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 <p></p>
 </div>
 <div class="section" id="sources-inspirations-alternate-solutions">
-<h2><a class="toc-backref" href="#id122">Sources, Inspirations &amp; Alternate Solutions</a></h2>
+<h2><a class="toc-backref" href="#id123">Sources, Inspirations &amp; Alternate Solutions</a></h2>
 <ul class="simple">
 <li><strong>Concurrent Programming in Erlang</strong>, Joe Armstrong, Robert Virding, Claes Wikström et Mike Williams. Chapter 18, page 299: Object-oriented Programming. This book describes a simple way of implementing multiple inheritance, without virtual table, at the expense of a (probably slow) systematic method look-up (at each method call). No specific state management is supported</li>
 <li>Chris Rathman's <a class="reference external" href="http://www.angelfire.com/tx4/cus/shapes/erlang.html">approach</a> to life cycle management and polymorphism ; inheritance not supported</li>
@@ -2508,15 +2515,15 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 <p></p>
 </div>
 <div class="section" id="support">
-<h2><a class="toc-backref" href="#id123">Support</a></h2>
+<h2><a class="toc-backref" href="#id124">Support</a></h2>
 <p>Bugs, questions, remarks, patches, requests for enhancements, etc. are to be reported to the <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">project interface</a> (typically <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/issues">issues</a>) or directly at the email address mentioned at the beginning of this longer document.</p>
 </div>
 <div class="section" id="please-react">
-<h2><a class="toc-backref" href="#id124">Please React!</a></h2>
+<h2><a class="toc-backref" href="#id125">Please React!</a></h2>
 <p>If you have information more detailed or more recent than those presented in this document, if you noticed errors, neglects or points insufficiently discussed, drop us a line! (for that, follow the <a class="reference internal" href="#support">Support</a> guidelines).</p>
 </div>
 <div class="section" id="ending-word">
-<h2><a class="toc-backref" href="#id125">Ending Word</a></h2>
+<h2><a class="toc-backref" href="#id126">Ending Word</a></h2>
 <p>Have fun with Ceylan-WOOPER!</p>
 <p><span class="raw-html"><center><img src="wooper-title.png" width="25%"></img></center></span>
 </p>
