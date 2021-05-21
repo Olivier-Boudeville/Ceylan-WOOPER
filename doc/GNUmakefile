@@ -86,7 +86,7 @@ export-doc-to-official: create-links $(DOC_GENERATED_FILES)
 
 export-doc-to-mirror: create-links $(DOC_GENERATED_FILES)
 	@echo "   Exporting WOOPER documentation to mirror website in $(WOOPER_WEB_MIRROR_BRANCH)"
-	@/bin/cp -f $(WEB_CONTENT) $(WOOPER_WEB_MIRROR_BRANCH) && cd $(WOOPER_WEB_MIRROR_BRANCH) && git add . && git merge -s ours && git commit -m "WOOPER doc updated." && git push && git pull --ff-only
+	@/bin/cp -rf $(WEB_CONTENT) $(WOOPER_WEB_MIRROR_BRANCH) && cd $(WOOPER_WEB_MIRROR_BRANCH) && git add . && git merge -s ours && git commit -m "WOOPER doc updated." && git push && git pull --ff-only
 
 
 
