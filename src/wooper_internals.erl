@@ -26,7 +26,7 @@
 % Creation date: Friday, April 13, 2018.
 
 
-% Gathering of internal helpers.
+% @doc Gathering of <b>WOOPER-internal</b> helpers.
 -module(wooper_internals).
 
 
@@ -70,9 +70,9 @@
 
 
 
-% Raises a (compile-time, rather ad hoc) technical, internal error when applying
-% this parse transform, to stop the build on failure and report the actual
-% error.
+% @doc Raises a (compile-time, rather ad hoc) technical, internal error when
+% applying this parse transform, to stop the build on failure and report the
+% actual error.
 %
 -spec raise_error( term() ) -> no_return().
 raise_error( ErrorTerm ) ->
@@ -80,7 +80,7 @@ raise_error( ErrorTerm ) ->
 
 
 
-% Raises a (compile-time, rather ad hoc) technical, internal error, with
+% @doc Raises a (compile-time, rather ad hoc) technical, internal error, with
 % specified source context, when applying this parse transform, to stop the
 % build on failure and report the actual error.
 %
@@ -90,18 +90,18 @@ raise_error( ErrorTerm, Context ) ->
 
 
 
-% Raises a (compile-time, rather ad hoc) user-related error (when no specific
-% source context is available), when applying this parse transform, to stop the
-% build on failure and report adequately the actual error to the user.
+% @doc Raises a (compile-time, rather ad hoc) user-related error (when no
+% specific source context is available), when applying this parse transform, to
+% stop the build on failure and report adequately the actual error to the user.
 %
 -spec raise_usage_error( ustring() ) -> no_return().
 raise_usage_error( ErrorString ) ->
 	raise_usage_error( ErrorString, _ErrorFormatValues=[] ).
 
 
-% Raises a (compile-time, rather ad hoc) user-related error (when no specific
-% source context is available), when applying this parse transform, to stop the
-% build on failure and report adequately the actual error to the user.
+% @doc Raises a (compile-time, rather ad hoc) user-related error (when no
+% specific source context is available), when applying this parse transform, to
+% stop the build on failure and report adequately the actual error to the user.
 %
 -spec raise_usage_error( format_string(), format_values() ) -> no_return().
 raise_usage_error( ErrorFormatString, ErrorFormatValues ) ->
@@ -112,7 +112,7 @@ raise_usage_error( ErrorFormatString, ErrorFormatValues ) ->
 	halt( 6 ).
 
 
-% Raises a (compile-time, rather ad hoc) user-related error, with specified
+% @doc Raises a (compile-time, rather ad hoc) user-related error, with specified
 % source context, when applying this parse transform, to stop the build on
 % failure and report adequately the actual error to the user.
 %
@@ -162,7 +162,7 @@ raise_usage_error( ErrorFormatString, ErrorFormatValues, Classname ) ->
 
 
 
-% Raises a (compile-time, rather ad hoc) user-related error, with specified
+% @doc Raises a (compile-time, rather ad hoc) user-related error, with specified
 % source context, when applying this parse transform, to stop the build on
 % failure and report the actual error.
 %
@@ -174,8 +174,8 @@ raise_usage_error( ErrorFormatString, ErrorValues, TransformsOrClass, Line ) ->
 
 
 
-% Notifies a (compile-time, rather ad hoc) warning, with no specific context,
-% when applying this parse transform.
+% @doc Notifies a (compile-time, rather ad hoc) warning, with no specific
+% context, when applying this parse transform.
 %
 % Does not stop the build.
 %
@@ -184,8 +184,8 @@ notify_warning( Elements ) ->
 	notify_warning( Elements, _Context=undefined ).
 
 
-% Notifies a (compile-time, rather ad hoc) warning, with specified context, when
-% applying this parse transform.
+% @doc Notifies a (compile-time, rather ad hoc) warning, with specified context,
+% when applying this parse transform.
 %
 % Does not stop the build.
 %

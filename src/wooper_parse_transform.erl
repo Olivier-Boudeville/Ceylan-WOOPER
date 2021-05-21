@@ -33,7 +33,7 @@
 -compile({parse_transform, myriad_parse_transform}).
 
 
-% Overall parse transform for the WOOPER layer.
+% @doc The <b>overall parse transform</b> for the WOOPER layer.
 %
 % It is meant to be applied to ASTs describing (WOOPER) classes (not standard
 % modules).
@@ -124,8 +124,8 @@
 %       -static_spec get_mean_count(foo()) -> count().
 
 
-% Used for iterated (re)composition of class information:
 -type compose_pair() :: { ast_info:function_table(), class_info() }.
+% Used for iterated (re)composition of class information.
 
 
 % For clarity:
@@ -189,8 +189,8 @@
 
 
 
-% Runs the WOOPER parse transform defined here in a standalone way (i.e. without
-% being triggered by the usual, integrated compilation process), with no
+% @doc Runs the WOOPER parse transform defined here in a standalone way (that is
+% without being triggered by the usual, integrated compilation process), with no
 % specific preprocessor option.
 %
 % This allows to benefit from all compilation error and warning messages,
@@ -204,9 +204,9 @@ run_standalone( FileToTransform ) ->
 
 
 
-% Runs the WOOPER parse transform defined here in a standalone way (i.e. without
-% being triggered by the usual, integrated compilation process), with specified
-% preprocessor options.
+% @doc Runs the WOOPER parse transform defined here in a standalone way (that is
+% without being triggered by the usual, integrated compilation process), with
+% specified preprocessor options.
 %
 % This allows to benefit from all compilation error and warning messages,
 % whereas they are seldom available from a code directly run as a parse
@@ -224,9 +224,9 @@ run_standalone( FileToTransform, PreprocessorOptions ) ->
 
 
 
-% The parse transform itself, transforming the specified (WOOPER-based) Abstract
-% Format code first into a Myriad-based information being itself converted in
-% turn into an Erlang-compliant Abstract Format code.
+% @doc The parse transform itself, transforming the specified (WOOPER-based)
+% Abstract Format code first into a Myriad-based information being itself
+% converted in turn into an Erlang-compliant Abstract Format code.
 %
 -spec parse_transform( ast(), parse_transform_options() ) -> ast().
 parse_transform( InputAST, Options ) ->
@@ -250,7 +250,7 @@ parse_transform( InputAST, Options ) ->
 
 
 
-% Transforms specified AST for WOOPER.
+% @doc Transforms specified AST for WOOPER.
 %
 % Depending on the nature of the AST (WOOPER class or mere module), returns a
 % class information or a module information.
@@ -365,8 +365,8 @@ apply_wooper_transform( InputAST, Options ) ->
 
 
 
-% Tells whether the specified module_info corresponds to a WOOPER class or to a
-% standard module.
+% @doc Tells whether the specified module_info corresponds to a WOOPER class or
+% to a standard module.
 %
 -spec is_wooper_class( module_info() ) -> boolean().
 is_wooper_class( #module_info{  module={ ModuleName, _LocForm } } ) ->
@@ -383,7 +383,7 @@ is_wooper_class( #module_info{  module={ ModuleName, _LocForm } } ) ->
 
 
 
-% Returns the class-level information that were gathered from the specified
+% @doc Returns the class-level information that were gathered from the specified
 % module-level ones.
 %
 % (reciprocal of generate_module_info_from/1)
@@ -402,7 +402,7 @@ generate_class_info_from( ModuleInfo ) ->
 
 
 
-% Recomposes (WOOPER) class information from (Myriad) module-level ones.
+% @doc Recomposes (WOOPER) class information from (Myriad) module-level ones.
 %
 % The goal is to pick the relevant WOOPER-level information (from the module
 % info), to transform them and to populate the specified class information with
@@ -589,7 +589,7 @@ create_class_info_from(
 
 
 
-% Adds specified function into the corresponding table.
+% @doc Adds specified function into the corresponding table.
 -spec add_function( meta_utils:function_name(), arity(), form(),
 					function_table() ) -> function_table().
 add_function( Name, Arity, Form, FunctionTable ) ->
@@ -628,7 +628,7 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 
 
 
-% Adds specified request into the corresponding table.
+% @doc Adds specified request into the corresponding table.
 -spec add_request( wooper:request_name(), arity(), form(), request_table() ) ->
 							request_table().
 add_request( Name, Arity, Form, RequestTable ) ->
@@ -666,7 +666,7 @@ add_request( Name, Arity, Form, RequestTable ) ->
 
 
 
-% Adds specified oneway into the corresponding table.
+% @doc Adds specified oneway into the corresponding table.
 -spec add_oneway( wooper:oneway_name(), arity(), form(), oneway_table() ) ->
 						oneway_table().
 add_oneway( Name, Arity, Form, OnewayTable ) ->
@@ -704,7 +704,7 @@ add_oneway( Name, Arity, Form, OnewayTable ) ->
 
 
 
-% Adds specified static method into the corresponding table.
+% @doc Adds specified static method into the corresponding table.
 -spec add_static_method( wooper:static_name(), arity(), form(),
 						 static_table() ) -> static_table().
 add_static_method( Name, Arity, Form, StaticTable ) ->
@@ -739,9 +739,9 @@ add_static_method( Name, Arity, Form, StaticTable ) ->
 
 
 
-% Ensures that the described class respects appropriate constraints for WOOPER
-% generation, besides the ones checked during the AST exploration and the ones
-% that will be checked by the compiler.
+% @doc Ensures that the described class respects appropriate constraints for
+% WOOPER generation, besides the ones checked during the AST exploration and the
+% ones that will be checked by the compiler.
 %
 -spec check_class_info( class_info() ) -> void().
 check_class_info( #class_info{ class={ Classname, _LocForm },
@@ -764,9 +764,9 @@ check_class_info( #class_info{ class={ Classname, _LocForm },
 
 
 
-% Returns a list of the names of the class_X:*new* operators that are generated
-% by WOOPER to branch on the construct/N and thus shall not be defined by the
-% user.
+% @doc Returns a list of the names of the class_X:*new* operators that are
+% generated by WOOPER to branch on the construct/N and thus shall not be defined
+% by the user.
 %
 get_new_variation_names() ->
 	[ new_link, synchronous_new, synchronous_new_link, synchronous_timed_new,
@@ -777,7 +777,7 @@ get_new_variation_names() ->
 
 
 
-% Transforms (at the WOOPER level) specified class information.
+% @doc Transforms (at the WOOPER level) specified class information.
 -spec transform_class_info( class_info() ) -> class_info().
 transform_class_info( ClassInfo ) ->
 	% Nothing specific done currently!
@@ -785,7 +785,7 @@ transform_class_info( ClassInfo ) ->
 
 
 
-% Generates back (Myriad-level) module-level information from specified
+% @doc Generates back (Myriad-level) module-level information from specified
 % class-level information.
 %
 % (reciprocal of generate_class_info_from/1)
@@ -931,7 +931,7 @@ generate_module_info_from( #class_info{
 
 
 
-% Registers specified functions in specified (function) table, detecting
+% @doc Registers specified functions in specified (function) table, detecting
 % properly any clash.
 %
 -spec register_functions( [ { meta_utils:function_id(), function_info() } ],

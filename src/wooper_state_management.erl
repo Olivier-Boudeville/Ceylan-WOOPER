@@ -26,8 +26,8 @@
 % Creation date: Wednesday, December 24, 2014.
 
 
-% Centralises, on behalf of the WOOPER parse transform, the support for the
-% state management, including instance attributes.
+% @doc Centralises, on behalf of the WOOPER parse transform, the support for the
+% <b>state management, including instance attributes</b>.
 %
 -module(wooper_state_management).
 
@@ -80,7 +80,7 @@
 % As a result, finally, both use defines instead of parse attributes.
 
 
-% Processes the class-specific attributes.
+% @doc Processes the class-specific attributes.
 -spec manage_attributes( class_info() ) -> class_info().
 manage_attributes( ClassInfo=#class_info{ class={ Classname, _LocForm },
 										  attributes=AttributeTable,
@@ -199,7 +199,8 @@ manage_attributes( ClassInfo=#class_info{ class={ Classname, _LocForm },
 
 
 
-% Registers (and checks) specified attributes.
+% @doc Registers (and checks) specified attributes.
+%
 % (helper)
 %
 register_attributes_from_form( AttrListForm, AttributeTable, Classname ) ->
@@ -219,7 +220,6 @@ register_attributes_from_form( AttrListForm, AttributeTable, Classname ) ->
 	%						[ AttrFormList ] ),
 
 	register_helper( AttrFormList, AttributeTable, Classname ).
-
 
 
 
@@ -328,7 +328,7 @@ register_attribute( AttrNameForm, TypeForm, QualifiersForm, DescriptionForm,
 
 
 
-% Returns a clause that is compilable, a list of {AttrName, AttrType,
+% @doc Returns a clause that is compilable, a list of {AttrName, AttrType,
 % AttrQualifier, AttrDescription} quadruplets.
 %
 % Currently:
@@ -370,7 +370,8 @@ filter_attribute_forms( _ListForm=[], Acc ) ->
 
 
 % Just with an attribute name specified (match to distinguish from a tuple):
-filter_attribute_forms( _ListForm=[ Name={ atom, _FileLoc, _Name } | T ], Acc ) ->
+filter_attribute_forms( _ListForm=[ Name={ atom, _FileLoc, _Name } | T ],
+						Acc ) ->
 
 	AttrName = filter_name( Name ),
 
@@ -449,8 +450,8 @@ filter_name( OtherNameForm ) ->
 
 
 
-% TO-DO: adopt a type language (ex: a type foo( integer(), bar() ) could be
-% translated as { foo, [ { integer, [] }, { bar, [] } ] }, i.e. a type T
+% TO-DO: adopt a type language (ex: a type foo(integer(), bar()) could be
+% translated as {foo, [{ integer, []}, {bar, []} ] }, i.e. a type T
 % depending on types T1, T2, ..., Tn would be described in terms of
 % data-structure as a {T,[T1,T2,..,Tn]} pair.
 %
@@ -479,33 +480,38 @@ filter_qualifier( _Qualifier ) ->
 
 
 
-% Filters the specified form corresponding to an attribute description.
+% @doc Filters the specified form corresponding to an attribute description.
 filter_description( AttrDescription={ string, FileLoc, _DescString } ) ->
 	% Returning a binary version thereof:
-	{ bin, FileLoc, [ { bin_element, FileLoc, AttrDescription, default, default } ] };
+	{ bin, FileLoc,
+	  [ { bin_element, FileLoc, AttrDescription, default, default } ] };
 
 filter_description( UnexpectedAttrDescription ) ->
 	throw( { unexpected_attribute_description, UnexpectedAttrDescription } ).
 
 
 
-% Returns a form element corresponding to 'undefined':
+% @doc Returns a form element corresponding to 'undefined'.
 get_undefined_form() ->
 	{ atom, _FileLoc=0, 'undefined' }.
 
 
 
-% Returns a form element corresponding to the default type:
+% @doc Returns a form element corresponding to the default type (if not
+% user-specified).
+%
 get_default_type_ast() ->
 
 	FileLoc = 0,
 
-	% Default is any(), encoded as a term as { any, [] }, whose AST is:
+	% Default is any(), encoded as a term as {any, []}, whose AST is:
 	{ tuple, FileLoc, [ { atom, FileLoc, any }, { nil, FileLoc } ] }.
 
 
 
-% Returns a form element corresponding to the default qualifiers:
+% Returns a form element corresponding to the default qualifiers (if not
+% user-specified).
+%
 get_default_qualifiers_ast() ->
 	% Default is []:
 	{ nil, _FileLoc=0 }.
@@ -513,21 +519,22 @@ get_default_qualifiers_ast() ->
 
 
 
-% Converts specified quadruplet into the proper AST form of an attribute_info
-% record, knowing that the tuple elements are already in an AST form.
+% @doc Converts specified quadruplet into the proper AST form of an
+% attribute_info record, knowing that the tuple elements are already in an AST
+% form.
 %
 convert_to_attribute_info_form( ASTName, ASTType, ASTQualifier,
 								ASTDescription ) ->
 	FileLoc = 0,
-	{ tuple, FileLoc, [ _Tag={ atom, FileLoc, attribute_info }, ASTName, ASTType,
-					 ASTQualifier, ASTDescription ] }.
+	{ tuple, FileLoc, [ _Tag={ atom, FileLoc, attribute_info }, ASTName,
+						ASTType, ASTQualifier, ASTDescription ] }.
 
 
 
 % Checks of attribute meta-data:
 
 
-% Vetting specified attribute name:
+% @doc Vets specified attribute name.
 handle_attribute_name( NameForm={ atom, _, _AtomName }, _Classname ) ->
 	NameForm;
 
@@ -537,7 +544,7 @@ handle_attribute_name( _OtherForm, Classname ) ->
 
 
 
-% Vetting specified attribute type.
+% @doc Vets specified attribute type.
 %
 % Currently, for any future use, we store the user-specified type in its
 % abstract form; for example, if having declared an attribute of type 'color()',
@@ -561,7 +568,7 @@ handle_attribute_type( _TypeForm, Classname, AttrName ) ->
 
 
 
-% Vetting specified attribute qualifier(s):
+% @doc Vets specified attribute qualifiers.
 handle_attribute_qualifiers( _Qualifiers=undefined, _Classname, _AttrName ) ->
 	[];
 
@@ -584,7 +591,7 @@ handle_attribute_qualifiers( Qualifier, Classname, AttrName ) ->
 
 
 
-% Vetting specified attribute qualifier:
+% @doc Vets specified attribute qualifier.
 handle_attribute_qualifier( {atom,_,public}, _Classname, _AttrName ) ->
 	public;
 
@@ -624,7 +631,7 @@ handle_attribute_qualifier( _UnexpectedForm, Classname, AttrName ) ->
 
 
 
-% Vetting specified attribute description:
+% @doc Vets specified attribute description.
 handle_attribute_description( _DescriptionForm=undefined, _Classname,
 							  _AttrName ) ->
 	undefined;
@@ -640,7 +647,7 @@ handle_attribute_description( _DescriptionForm, Classname, AttrName ) ->
 
 
 
-% Returns a textual description of specified attribute table.
+% @doc Returns a textual description of specified attribute table.
 -spec attributes_to_string( attribute_table() ) -> text_utils:ustring().
 attributes_to_string( AttributeTable ) ->
 
@@ -662,7 +669,7 @@ attributes_to_string( AttributeTable ) ->
 
 
 
-% Returns a textual description of specified attribute information.
+% @doc Returns a textual description of specified attribute information.
 -spec attribute_to_string( wooper_info:attribute_info() ) ->
 								 text_utils:ustring().
 attribute_to_string( #attribute_info{ name=Name,

@@ -26,8 +26,8 @@
 % Creation date: Wednesday, December 24, 2014.
 
 
-% Centralises, on behalf of the WOOPER parse transform, the support for instance
-% construction.
+% @doc Centralises, on behalf of the WOOPER parse transform, the support for
+% <b>instance construction</b>.
 %
 -module(wooper_instance_construction).
 
@@ -58,7 +58,7 @@
 
 
 
-% Extracts the constructors found in the specified function table, and
+% @doc Extracts the constructors found in the specified function table, and
 % interprets them to enrich the specified class information.
 %
 % Returns an updated pair thereof.
@@ -102,8 +102,8 @@ manage_constructors( { FunctionTable, ClassInfo } ) ->
 
 
 
-% Returns a list of {arity(), function_info()} pairs and the shrunk function
-% table from which they were extracted.
+% @doc Returns a list of {arity(), function_info()} pairs and the shrunk
+% function table from which they were extracted.
 %
 % (helper)
 %
@@ -145,7 +145,7 @@ filter_constructors( _FunIdInfos=[ Other | T ], Classname, AccPairs,
 
 
 
-% Adds the new operators and all their relevant variations for each of the
+% @doc Adds the new operators and all their relevant variations for each of the
 % specified constructors construct/N.
 %
 % Returns {NewFunctionTable, NewClassInfo}.
@@ -232,7 +232,7 @@ manage_new_operators( _ConstructPairs=[ { Arity, FunInfo } | T ], FunctionTable,
 
 
 
-% Adds the V1 operators, i.e. new/N-1 and new_link/N-1, by updating the
+% @doc Adds the V1 operators, that is new/N-1 and new_link/N-1, by updating the
 % specified operator table.
 %
 -spec add_v1_operators( classname(), arity(), form_location(),
@@ -268,7 +268,7 @@ add_v1_operators( Classname, Arity, ExportASTLocation, DefinitionASTLoc,
 	% Preparing the form elements involved:
 
 
-	% For the header of the new function, i.e. for 'new( A, B ) ->'.
+	% For the header of the new function, that is for 'new( A, B ) ->'.
 	%
 	% Ex: [ {var,0,'Myriad_Param_1'}, {var,0,'Myriad_Param_2'} ]
 	%
@@ -280,7 +280,7 @@ add_v1_operators( Classname, Arity, ExportASTLocation, DefinitionASTLoc,
 	RunCall = get_run_call( FileGenLoc ),
 
 	% For the application of the parameters to the later function,
-	% i.e. for 'wooper:construct_and_run( class_Foo, [ A, B ] )'.
+	% that is for 'wooper:construct_and_run( class_Foo, [ A, B ] )'.
 	%
 	% Ex: [ {atom,0,class_Foo}, { cons, 0, {var,0,'Myriad_Param_1'},
 	% { cons, 0, {var,0,'Myriad_Param_2'}, {nil,0} } } ].
@@ -370,9 +370,9 @@ add_v1_operators( Classname, Arity, ExportASTLocation, DefinitionASTLoc,
 
 
 
-% Adds the V2 operators, i.e. synchronous_new/N-1 and synchronous_new_link/N-1,
-% by updating the specified operator table; they correspond roughly to the V1
-% ones, augmented with a receive clause.
+% @doc Adds the V2 operators, that is synchronous_new/N-1 and
+% synchronous_new_link/N-1, by updating the specified operator table; they
+% correspond roughly to the V1 ones, augmented with a receive clause.
 %
 -spec add_v2_operators( classname(), arity(), form_location(),
 			form_location(), boolean(), operator_table() ) -> operator_table().
@@ -499,7 +499,7 @@ add_v2_operators( Classname, Arity, ExportASTLocation, DefinitionASTLoc,
 
 
 
-% Adds the V3 operators, i.e. synchronous_timed_new/N-1 and
+% @doc Adds the V3 operators, that is synchronous_timed_new/N-1 and
 % synchronous_timed_new_link/N-1, by updating the specified operator table; they
 % correspond roughly to the V2 ones, augmented with an after clause.
 %
@@ -632,9 +632,9 @@ add_v3_operators( Classname, Arity, ExportASTLocation, DefinitionASTLoc,
 
 
 
-% Adds the V4 operators, i.e. remote_new/N and remote_new_link/N by updating the
-% specified operator table; they correspond roughly to the V1 ones, augmented
-% with a node specification at the spawn call.
+% @doc Adds the V4 operators, that is remote_new/N and remote_new_link/N by
+% updating the specified operator table; they correspond roughly to the V1 ones,
+% augmented with a node specification at the spawn call.
 %
 -spec add_v4_operators( classname(), arity(), form_location(),
 			form_location(), boolean(), operator_table() ) -> operator_table().
@@ -755,7 +755,7 @@ add_v4_operators( Classname, Arity, ExportASTLocation, DefinitionASTLoc,
 
 
 
-% Adds the V5 operators, i.e. remote_synchronous_new/N and
+% @doc Adds the V5 operators, that is remote_synchronous_new/N and
 % remote_synchronous_new_link/N, by updating the specified operator table; they
 % correspond roughly to the V4 ones, augmented with a synchronous variant and a
 % receive clause.
@@ -898,7 +898,7 @@ add_v5_operators( Classname, Arity, ExportASTLocation, DefinitionASTLoc,
 
 
 
-% Adds the V6 operators, i.e. remote_synchronisable_new/N and
+% @doc Adds the V6 operators, that is remote_synchronisable_new/N and
 % remote_synchronisable_new_link/N, by updating the specified operator table;
 % they correspond roughly to the V5 ones, except there is no integrated receive,
 % as it is left at the hand of the user.
@@ -1030,7 +1030,7 @@ add_v6_operators( Classname, Arity, ExportASTLocation, DefinitionASTLoc,
 
 
 
-% Adds the V7 operators, i.e. remote_synchronous_timed_new/N and
+% @doc Adds the V7 operators, that is remote_synchronous_timed_new/N and
 % remote_synchronous_timed_new/N, by updating the specified operator table; they
 % correspond roughly to a version of V5 with an additional after clause.
 %
@@ -1171,7 +1171,9 @@ add_v7_operators( Classname, Arity, ExportASTLocation, DefinitionASTLoc,
 
 
 
-% Adds the V8 operator, i.e. new_passive/N-1 (no other variation makes sense).
+% @doc Adds the V8 operator, that is new_passive/N-1 (no other variation makes
+% sense).
+%
 -spec add_v8_operators( classname(), arity(), form_location(),
 			form_location(), boolean(), operator_table() ) -> operator_table().
 add_v8_operators( Classname, Arity, ExportASTLocation, DefinitionASTLoc,
@@ -1237,26 +1239,26 @@ add_v8_operators( Classname, Arity, ExportASTLocation, DefinitionASTLoc,
 
 
 
-% Returns the form element corresponding to pid().
+% @doc Returns the form element corresponding to pid().
 forge_pid_type() ->
 	ast_type:forge_pid_type().
 
 
-% Returns the form element corresponding to net_utils:atom_node_name().
+% @doc Returns the form element corresponding to net_utils:atom_node_name().
 forge_node_type( FileGenLoc ) ->
 	% Corresponds to node():
 	ast_type:forge_remote_type( _ModuleName=net_utils, _TypeName=atom_node_name,
 								_TypeVars=[], FileGenLoc ).
 
 
-% Returns the form element corresponding to wooper:passive_instance().
+% @doc Returns the form element corresponding to wooper:passive_instance().
 forge_passive_instance_type( FileGenLoc ) ->
 	ast_type:forge_remote_type( _ModuleName=wooper, _TypeName=passive_instance,
 								_TypeVars=[], FileGenLoc ).
 
 
 
-% Returns the form element corresponding to wooper:construct_and_run/2.
+% @doc Returns the form element corresponding to wooper:construct_and_run/2.
 -spec get_run_call( file_loc() ) -> form_element().
 get_run_call( FileGenLoc ) ->
 	{ remote, FileGenLoc, {atom,FileGenLoc,wooper},
@@ -1264,7 +1266,7 @@ get_run_call( FileGenLoc ) ->
 
 
 
-% Returns the form element corresponding to
+% @doc Returns the form element corresponding to
 % wooper:construct_and_run_synchronous/2.
 %
 -spec get_sync_run_call( file_loc() ) -> form_element().
@@ -1274,14 +1276,17 @@ get_sync_run_call( FileGenLoc ) ->
 
 
 
-% Returns the form element corresponding to:
+% @doc Returns the form element corresponding to a receive.
 %
-% receive
+% Like:
+% ```
+%receive
 %
 %	{spawn_successful, SpawnedPid} ->
 %		SpawnedPid
 %
 % end
+% '''
 %
 -spec get_receive( file_loc() ) -> form_element().
 get_receive( FileGenLoc ) ->
@@ -1293,8 +1298,10 @@ get_receive( FileGenLoc ) ->
 
 
 
-% Returns the form element corresponding to:
+% @doc Returns the form element corresponding to a fixed-timed receive.
 %
+% Like:
+% ```
 % receive
 %
 %	{spawn_successful, SpawnedPid} ->
@@ -1305,6 +1312,7 @@ get_receive( FileGenLoc ) ->
 %	throw( { synchronous_time_out, ?MODULE } )
 %
 % end
+% '''
 %
 -spec get_local_receive_with_after( basic_utils:module_name(),
 						time_utils:time_out(), file_loc() ) -> form_element().
@@ -1325,18 +1333,22 @@ get_local_receive_with_after( ModuleName, IsDebugMode, FileGenLoc ) ->
 
 
 
-% Returns the form element corresponding to:
+% @doc Returns the form element corresponding to a user-defined timed receive.
+%
+% Like:
+% ```
 %
 % receive
 %
 %	{spawn_successful, SpawnedPid} ->
 %		SpawnedPid
 %
-% afterTimeOut  ->
+% after TimeOut  ->
 %
 %	throw( {remote_synchronous_time_out, node(), ?MODULE})
 %
 % end
+% '''
 %
 -spec get_remote_receive_with_after( basic_utils:module_name(),
 		time_utils:time_out(), file_loc() ) -> form_element().
@@ -1358,9 +1370,8 @@ get_remote_receive_with_after( ModuleName, IsDebugMode, FileGenLoc ) ->
 
 
 
-
-% Returns a list of adequate types for the specified number of construction
-% parameters, i.e. of type wooper:construction_parameter().
+% @doc Returns a list of adequate types for the specified number of construction
+% parameters, that is of type wooper:construction_parameter().
 %
 -spec get_construction_types( basic_utils:count(), file_loc() ) ->
 									form_element().
@@ -1371,9 +1382,9 @@ get_construction_types( Count, FileGenLoc ) ->
 
 
 
-% Returns the spawn expression corresponding to the execution mode (target is
-% either development or production, resulting in debug mode being activated or
-% not).
+% @doc Returns the spawn expression corresponding to the execution mode (target
+% is either development or production, resulting in debug mode being activated
+% or not).
 %
 % Corresponds to Myriad's spawn_utils.hrl (the myriad_spawn* macros).
 %
@@ -1398,9 +1409,9 @@ get_spawn_expression_for( _IsDebugMode=false, FileGenLoc ) ->
 
 
 
-% Returns the spawn_link expression corresponding to the execution mode (target
-% is either development or production, resulting in debug mode being activated
-% or not).
+% @doc Returns the spawn_link expression corresponding to the execution mode
+% (target is either development or production, resulting in debug mode being
+% activated or not).
 %
 % Corresponds to Myriad's spawn_utils.hrl (the myriad_spawn* macros).
 %
