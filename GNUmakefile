@@ -7,7 +7,7 @@ WOOPER_TOP = .
 		release release-zip release-bz2 release-xz                     \
 		prepare-release clean-release clean-archive stats              \
 		info-paths info-compile info-parse-transform info-conditionals \
-		info-deps
+		info-deps info-doc
 
 
 MODULES_DIRS = src doc conf test priv
@@ -147,6 +147,11 @@ info-conditionals:
 
 info-deps:
 	@echo "MYRIAD_TOP = $(MYRIAD_TOP) (i.e. $$(realpath $(MYRIAD_TOP)))"
+
+
+info-doc:
+	@echo "API_DOC_ROOT = $(API_DOC_ROOT)"
+	@echo "EDOC_OPTS = $(EDOC_OPTS)"
 
 
 include $(WOOPER_TOP)/GNUmakesettings.inc

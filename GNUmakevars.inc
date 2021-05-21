@@ -105,9 +105,15 @@ ifndef PROJECT_NAME
 endif
 
 
+# PROJECT_SHORT_NAME should be defined on a per-project basis.
+ifndef PROJECT_SHORT_NAME
+	PROJECT_SHORT_NAME := wooper
+endif
+
+
 # PROJECT_NAME_FOR_REBAR should be defined on a per-project basis.
 ifndef PROJECT_NAME_FOR_REBAR
-	PROJECT_NAME_FOR_REBAR := wooper
+	PROJECT_NAME_FOR_REBAR := $(PROJECT_SHORT_NAME)
 endif
 
 
@@ -319,6 +325,12 @@ ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER = \
 ifndef ERLANG_COMPILER_PARSE_TRANSFORM_OPT
 	ERLANG_COMPILER_PARSE_TRANSFORM_OPT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER)
 endif
+
+
+ifndef EDOC_OPTS
+	EDOC_OPTS = '[{dir,"$(API_DOC_ROOT)"}, {def,{vsn,"$(PROJECT_VERSION)"}}, {preprocess,true}, {includes,["$(LAYER_TOP)/include", "$(MYRIAD_TOP)/.."]}, {overview, "$(LAYER_TOP)/overview.edoc"}]'
+endif
+
 
 
 # Variable defined to be re-usable by upper layers, so that compiling their own
