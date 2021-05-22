@@ -38,6 +38,7 @@ GITHUB_PAGES_BASE := $(shell basename "$(WOOPER_WEB_MIRROR_BRANCH)")
 		clean clean-doc clean-links info info-web
 
 
+
 # Default do-nothing target:
 all:
 	@echo "  Run 'make full-doc' to generate the manual of the 'WOOPER' layer."
@@ -103,7 +104,13 @@ clean-links:
 	-@/bin/rm -f index.html
 
 
-info: info-web
+
+info: info-doc info-web
+
+
+info-doc:
+	@echo "OVERALL_DOCUMENT_SOURCE = $(OVERALL_DOCUMENT_SOURCE)"
+	@echo "DOC_TRACKER = $(DOC_TRACKER)"
 
 
 info-web:
