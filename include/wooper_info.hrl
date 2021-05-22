@@ -1,4 +1,4 @@
-% Copyright (C) 2003-2021 Olivier Boudeville
+% Copyright (C) 2007-2021 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -23,7 +23,6 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
-
 
 
 
@@ -487,6 +486,5 @@
 		% '{error,{LineNumber,erl_parse, ["syntax error before: ","')'"]}}''.
 		%
 		unhandled_forms = [] :: [ ast_info:located_form() ]
-
 
 } ).

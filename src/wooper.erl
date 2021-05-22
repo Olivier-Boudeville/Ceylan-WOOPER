@@ -401,14 +401,13 @@
 -include_lib("myriad/include/utils/basic_utils.hrl").
 
 
-
 % Now, function definitions:
 
 
 % Tried adding a @headerfile "wooper_state_functions.hrl" tag in various places
 % with no luck (doc tags were always ignored).
 
-% Nope: @headerfile "wooper_state_functions.hrl"
+% % @headerfile "wooper_state_functions.hrl"
 
 % For getAttribute/2 and al:
 -include("wooper_state_functions.hrl").
