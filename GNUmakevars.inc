@@ -327,12 +327,6 @@ ifndef ERLANG_COMPILER_PARSE_TRANSFORM_OPT
 endif
 
 
-ifndef EDOC_OPTS
-	EDOC_OPTS = '[{dir,"$(API_DOC_ROOT)"}, {def,{vsn,"$(PROJECT_VERSION)"}}, {preprocess,true}, {includes,["$(LAYER_TOP)/include", "$(MYRIAD_TOP)/.."]}, {overview, "$(LAYER_TOP)/overview.edoc"}]'
-endif
-
-
-
 # Variable defined to be re-usable by upper layers, so that compiling their own
 # parse transforms can take advantage of the WOOPER one:
 #
@@ -350,6 +344,16 @@ WOOPER_PLT_FILE := $(WOOPER_TOP)/Ceylan-WOOPER.plt
 ifndef PREDECESSOR_PLT
 	PREDECESSOR_PLT = $(MYRIAD_PLT_FILE)
 endif
+
+
+
+# Documentation section.
+
+
+ifndef EDOC_OPTS
+	EDOC_OPTS = '[{dir,"$(API_DOC_ROOT)"}, {def,{vsn,"$(PROJECT_VERSION)"}}, {preprocess,true}, {includes,["$(LAYER_TOP)/include", "$(MYRIAD_TOP)/.."]}, {overview, "$(LAYER_TOP)/overview.edoc"}]'
+endif
+
 
 
 # We define the path to the Myriad layer (possibly available as a symbolic
