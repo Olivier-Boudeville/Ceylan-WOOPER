@@ -25,6 +25,6 @@
 
 @reference In terms of dependency, for additional information one may refer to:
 <ul>
-  <li>the <a href="http://myriad.esperide.org" target="_blank">Myriad</a> official website or <a href="https://olivier-boudeville.github.io/Ceylan-Myriad/index.html" target="_blank">its mirror</a></li>
-  <li>to the <a href="http://erlang.org" target="_blank">Erlang</a> official website, notably its <a href="https://erlang.org/doc/man_index.html">API documentation</a></li>
+  <li>the <a href="http://myriad.esperide.org" target="_blank">Myriad</a> official website or <a href="https://olivier-boudeville.github.io/Ceylan-Myriad/index.html" target="_blank">its mirror</a>, notably its <a href="https://myriad.esperide.org/api-doc/index.html" target="_blank">API documentation</a></li>
+  <li>the <a href="http://erlang.org" target="_blank">Erlang</a> official website, notably its <a href="https://erlang.org/doc/man_index.html">API documentation</a></li>
 </ul>
