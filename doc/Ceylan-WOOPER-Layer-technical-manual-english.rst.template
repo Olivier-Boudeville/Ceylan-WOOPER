@@ -1,8 +1,7 @@
-
 .. _Top:
 
 
-.. title:: Welcome to the Ceylan-WOOPER 2.0 documentation
+.. title:: Welcome to the Ceylan-WOOPER documentation
 
 .. comment stylesheet specified through GNUmakefile
 
@@ -16,7 +15,7 @@
 
 :raw-html:`<a name="wooper_top"></a>`
 
-:raw-html:`<div class="banner"><p><em>WOOPER 2.0 documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/index.html">browse mirror</a> <a href="Ceylan-WOOPER-Layer-technical-manual-english.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_toc">go to toc</a> <a href="#wooper_bottom">go to bottom</a> <a href="api-doc/index.html">browse API</a> <a href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">go to project</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER%202.0]%20Remark">email us</a></p></div>`
+:raw-html:`<div class="banner"><p><em>WOOPER documentation</em> <a href="http://wooper.esperide.org">browse latest</a> <a href="https://olivier-boudeville.github.io/Ceylan-WOOPER/index.html">browse mirror</a> <a href="Ceylan-WOOPER-Layer-technical-manual-english.pdf">get PDF</a> <a href="#wooper_top">go to top</a> <a href="#wooper_toc">go to toc</a> <a href="#wooper_bottom">go to bottom</a> <a href="api-doc/index.html">browse API</a> <a href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">go to project</a> <a href="mailto:about(dash)wooper(at)esperide(dot)com?subject=[Ceylan-WOOPER]%20Remark">email us</a></p></div>`
 
 
 
@@ -35,9 +34,9 @@
 :Organisation: Copyright (C) 2008-2021 Olivier Boudeville
 :Contact: about (dash) wooper (at) esperide (dot) com
 :Creation date: Sunday, August 17, 2008
-:Lastly updated: Saturday, May 22, 2021
-:Version: 2.0.11
-:Dedication: Users and maintainers of the ``WOOPER`` layer, version 2.0.
+:Lastly updated: GENERATION_DATE
+:Version: PROJECT_VERSION
+:Dedication: Users and maintainers of the ``WOOPER`` layer.
 :Abstract:
 
 	The role of the ``WOOPER`` layer is to provide free software object-oriented facilities to the Erlang language.
@@ -78,7 +77,7 @@ Overview
 
 WOOPER, which stands for *Wrapper for Object-Oriented Programming in Erlang*, is a `free software`_ lightweight layer on top of the `Erlang <http://erlang.org>`__ language that provides constructs dedicated to `Object-Oriented Programming <http://en.wikipedia.org/wiki/Object-oriented_programming>`_ (OOP).
 
-This documentation applies to the WOOPER 2.0 version.
+.. This documentation applies to the WOOPER 2.0 version.
 
 WOOPER is a rather autonomous part of the `Ceylan <https://github.com/Olivier-Boudeville/Ceylan>`_ project (yet it uses `Myriad <https://github.com/Olivier-Boudeville/Ceylan-Myriad>`_ and is used by `Traces <https://github.com/Olivier-Boudeville/Ceylan-Traces>`_).
 
