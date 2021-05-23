@@ -20,7 +20,7 @@ body {
   color: #000000;
   background-color: #ffffff;
   font-family: Verdana, Arial, Helvetica, sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   margin-left: 3%;
 }
 
@@ -270,6 +270,28 @@ td a {
 
 
 a.index {
+  text-decoration: underline;
+}
+
+
+a:link {
+  color:#910909;
+  background: transparent;
+  font-weight: bold;
+  text-decoration: none;
+  /*font-size: 110%;  */
+}
+
+
+a:visited {
+  color: #945f5f;
+  background: transparent;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+
+a:hover {
   text-decoration: underline;
 }
 
