@@ -384,7 +384,7 @@ else
 		ifneq ($(wildcard $(WOOPER_TOP)/_build/default/lib/myriad/.),)
 			MYRIAD_TOP = $(WOOPER_TOP)/_build/default/lib/myriad
 		else
-			FORCE_EVAL := $(error Unable to find the build root of Ceylan-Myriad from $(realpath .).)
+			FORCE_EVAL := $(error Unable to find the build root of Ceylan-Myriad from '$(realpath .)'.)
 		endif
 	endif
 endif
