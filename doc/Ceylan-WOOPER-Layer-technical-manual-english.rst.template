@@ -86,6 +86,8 @@ The project repository is located `here <https://github.com/Olivier-Boudeville/C
 
 At least a basic knowledge of Erlang is expected in order to use WOOPER.
 
+Seasoned WOOPER users may directly bookmark this always useful `cheat sheet`_.
+
 
 
 Understanding WOOPER in Two Steps
@@ -2781,6 +2783,8 @@ One can browse the `WOOPER API documentation <api-doc/index.html>`_.
 
 The next level of information is simply to read the corresponding `source files <https://github.com/Olivier-Boudeville/Ceylan-WOOPER>`_, which are intensely commented and generally straightforward.
 
+
+.. _`cheat sheet`:
 
 
 Class Developer Cheat Sheet
