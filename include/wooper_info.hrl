@@ -228,9 +228,9 @@
 } ).
 
 
-
-% Description of the class name:
 -type class_entry() :: maybe( { wooper:classname(), ast_info:located_form() } ).
+% Description of the class name.
+
 
 
 % Stores and centralises WOOPER-level information gathered about a given class.
