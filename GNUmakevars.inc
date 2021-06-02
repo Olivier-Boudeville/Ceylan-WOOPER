@@ -274,17 +274,8 @@ ifndef ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_STANDARD_MODULES
 endif
 
 
-# Conditionally defined so that upper layer may update these settings (ex:
-# adding pz directories):
-#
-ifndef ERLANG_COMPILER_OPT_FOR_STANDARD_MODULES
+ERLANG_COMPILER_EXTRA_OPTS += $(ENABLE_WOOPER_DEBUG_OPT)
 
-	ERLANG_COMPILER_OPT_FOR_STANDARD_MODULES =                      \
-		$(ERLANG_COMPILER_OPT_BASE)                                 \
-		$(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_STANDARD_MODULES) \
-		$(ENABLE_WOOPER_DEBUG_OPT)
-
-endif
 
 
 ## Parse-transform related section.
