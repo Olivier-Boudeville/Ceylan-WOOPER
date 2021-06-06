@@ -7,7 +7,7 @@ WOOPER_TOP = .
 		release release-zip release-bz2 release-xz                     \
 		prepare-release clean-release clean-archive stats              \
 		info-context info-versions info-paths info-compile             \
-		info-parse-transform info-conditionals info-deps info-doc
+		info-parse-transform info-conditionals info-deps
 
 
 MODULES_DIRS = src doc conf test priv
@@ -113,7 +113,7 @@ stats:
 
 
 # Typically useful to know the software context for continuous integration:
-info-context: info-platform info-versions
+info-context: info-platform info-versions info-source-layout
 
 
 info-versions:
@@ -156,11 +156,6 @@ info-conditionals:
 
 info-deps:
 	@echo "MYRIAD_TOP = $(MYRIAD_TOP) (i.e. $$(realpath $(MYRIAD_TOP)))"
-
-
-info-doc:
-	@echo "API_DOC_ROOT = $(API_DOC_ROOT)"
-	@echo "EDOC_OPTS = $(EDOC_OPTS)"
 
 
 include $(WOOPER_TOP)/GNUmakesettings.inc
