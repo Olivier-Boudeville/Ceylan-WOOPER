@@ -6,8 +6,8 @@ WOOPER_TOP = .
 		add-prerequisite-plts link-plt                                 \
 		release release-zip release-bz2 release-xz                     \
 		prepare-release clean-release clean-archive stats              \
-		info-paths info-compile info-parse-transform info-conditionals \
-		info-deps info-doc
+		info-context info-versions info-paths info-compile             \
+		info-parse-transform info-conditionals info-deps info-doc
 
 
 MODULES_DIRS = src doc conf test priv
@@ -110,6 +110,15 @@ clean-archive:
 
 stats:
 	@$(MAKE_CODE_STATS) $(WOOPER_TOP)
+
+
+# Typically useful to know the software context for continuous integration:
+info-context: info-platform info-versions
+
+
+info-versions:
+	@echo "MYRIAD_VERSION = $(MYRIAD_VERSION)"
+	@echo "WOOPER_VERSION = $(WOOPER_VERSION)"
 
 
 info-paths:
