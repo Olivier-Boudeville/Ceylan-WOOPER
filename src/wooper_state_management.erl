@@ -117,13 +117,23 @@ manage_attributes( ClassInfo=#class_info{ class={ Classname, _LocForm },
 	% (even if no class_attributes define was specified), the getter shall be
 	% defined (possibly just as an empty list):
 	%
-	{ #function_info{
+	{ AttrListForm, ExportLocs, ShrunkFunTable } =
+			case table:extract_entry( AttrTempFunKey, FunctionTable ) of
 
-		 clauses=[ { clause, _FileLoc, _Patterns=[], _Guards=[],
-					 _Body=[ AttrListForm ] } ],
-		 exported=ExportLocs },
+		{ #function_info{
 
-	  ShrunkFunTable } = table:extract_entry( AttrTempFunKey, FunctionTable ),
+			 clauses=[ { clause, _FileLoc, _Patterns=[], _Guards=[],
+						 _Body=[ AttrsForm ] } ],
+			 exported=ExportLcs }, ShrkFunTable } ->
+			{ AttrsForm, ExportLcs, ShrkFunTable };
+
+		{ OtherFunInfo, _SomeTable } ->
+			trace_utils:error_fmt( "Unexpected function info: ~ts.",
+				[ ast_info:function_info_to_string( OtherFunInfo ) ] ),
+
+			throw( { unexpected_fun_info, OtherFunInfo } )
+
+	end,
 
 	NewFunExportTable = ast_info:ensure_function_not_exported( AttrTempFunKey,
 										ExportLocs, FunExportTable ),
