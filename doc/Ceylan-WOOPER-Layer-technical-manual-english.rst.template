@@ -19,7 +19,7 @@
 
 
 
-:raw-html:`<center><img src="wooper-title.png" width="35%"></img></center>`
+:raw-html:`<center><img src="wooper-title.png" id="responsive-image-small"></img></center>`
 :raw-latex:`\centering \includegraphics[scale=0.28]{wooper-title.png}`
 
 .. comment Note: this is the latest, current version of the WOOPER 2.x documentation, directly obtained from the one of WOOPER 1.x.
@@ -2880,7 +2880,7 @@ WOOPER Example
 We defined a small set of classes in order to serve as an example and demonstrate multiple inheritance:
 
 
-:raw-html:`<center><img src="wooper-example.png" width="70%" alt="WOOPER Example"></img></center>`
+:raw-html:`<center><img src="wooper-example.png" id="responsive-image-large" alt="WOOPER Example"></img></center>`
 :raw-latex:`\includegraphics[scale=0.34]{wooper-example.png}`
 
 
@@ -3721,7 +3721,7 @@ Ending Word
 
 Have fun with Ceylan-WOOPER!
 
-:raw-html:`<center><img src="wooper-title.png" width="25%"></img></center>`
+:raw-html:`<center><img src="wooper-title.png" id="responsive-image-small"></img></center>`
 :raw-latex:`\begin{figure}[h] \centering \includegraphics[scale=0.15]{wooper-title.png} \end{figure}`
 
 :raw-html:`<a name="wooper_bottom"></a>`
