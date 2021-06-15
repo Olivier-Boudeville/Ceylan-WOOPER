@@ -14,7 +14,7 @@
 <p>This website presents the documentation of the API (<em>Application Programming Interface</em>) of WOOPER version PROJECT_VERSION (as of GENERATION_DATE).
 </p>
 
-<p>Note though that WOOPER is closer to being a language than to being a library, and thus users should refer primarily to its <a href="http://wooper.esperide.org" target="_blank">main documentation</a>.
+<p>Note though that WOOPER is closer to being a language than to being a library; thus this API documentation exists mostly for reference purpose and does not teach much about the use of WOOPER. Users should therefore refer primarily to its <a href="http://wooper.esperide.org" target="_blank">main documentation</a>.
 </p>
 
 <p>Ceylan-WOOPER relies on the <a href="http://myriad.esperide.org" target="_blank">Myriad layer</a>, a generic Erlang toolbox.
