@@ -1282,8 +1282,8 @@ clause_transformer(
 
 	NewClause = { clause, FileLoc, Params, Guards, NewBody },
 
-	UpdatedTransforms = update_transformation_state( Transforms,
-													 BodyTransforms, FileLoc ),
+	UpdatedTransforms =
+		update_transformation_state( Transforms, BodyTransforms, FileLoc ),
 
 	{ NewClause, UpdatedTransforms }.
 
@@ -1323,8 +1323,8 @@ body_transformer( _BodyExprs=[], Transforms, _FileLoc ) ->
 
 	?trace( "Transforming for WOOPER empty body." ),
 
-	%UpdatedTransforms = update_transformation_state( Transforms,
-	%												 Transforms, FileLoc ),
+	%UpdatedTransforms =
+	%    update_transformation_state( Transforms, Transforms, FileLoc ),
 
 	{ _Exprs=[], Transforms };
 
@@ -1391,8 +1391,8 @@ body_transformer( BodyExprs, Transforms, FileLoc ) ->
 
 	end,
 
-	UpdatedTransforms = update_transformation_state( Transforms,
-													 NewTransforms, FileLoc ),
+	UpdatedTransforms =
+		update_transformation_state( Transforms, NewTransforms, FileLoc ),
 
 	?trace_fmt( "Nature after body transformation: ~p", [ element( 1,
 					UpdatedTransforms#ast_transforms.transformation_state ) ] ),
@@ -2204,8 +2204,8 @@ catch_transformer( FileLoc, Expression, Transforms ) ?rec_guard ->
 	{ [ NewExpression ], NewTransforms } =
 		ast_expression:transform_expression( Expression, ResetTransforms ),
 
-	UpdatedTransforms = update_transformation_state( Transforms,
-													 NewTransforms, FileLoc ),
+	UpdatedTransforms =
+			update_transformation_state( Transforms, NewTransforms, FileLoc ),
 
 	NewExpr = { 'catch', FileLoc, NewExpression },
 
@@ -2360,9 +2360,9 @@ update_transformation_state(
   _InitialTransforms=#ast_transforms{ transformation_state={ InitialNature,
 						InitialQualifiers, _WOOPERExportSet } },
   NewTransforms=#ast_transforms{
-				   transformed_function_identifier=FunId,
-				   transformation_state={ NewRawNature, NewQualifiers,
-										  WOOPERExportSet } },
+					transformed_function_identifier=FunId,
+					transformation_state={ NewRawNature, NewQualifiers,
+										   WOOPERExportSet } },
   FileLoc ) ->
 
 	% As soon as we return from the transformation whereas the nature is still
@@ -2442,9 +2442,10 @@ update_transformation_state(
 				_ ->
 					wooper_internals:raise_usage_error(
 					  "the ~ts/~B function was "
-					  "detected as a ~ts, yet the clause at line #~B indicates "
+					  "detected as a ~ts, yet the clause at ~ts indicates "
 					  "it is a ~ts.", pair:to_list( FunId ) ++ [
-							function_nature_to_string( InitialNature ), FileLoc,
+							function_nature_to_string( InitialNature ),
+							ast_utils:file_loc_to_line_string( FileLoc ),
 							function_nature_to_string( NewActualNature ) ],
 					  NewTransforms, FileLoc )
 
@@ -2452,9 +2453,9 @@ update_transformation_state(
 
 	end,
 
-	?debug_fmt( "Nature of ~ts/~B: initial=~p, new raw=~p, "
-		"new actual=~p, final=~p.", pair:to_list( FunId ) ++
-		[ InitialNature, NewRawNature, NewActualNature, ResultingNature ] ),
+	%debug_fmt( "Nature of ~ts/~B: initial=~p, new raw=~p, "
+	%	"new actual=~p, final=~p.", pair:to_list( FunId ) ++
+	%	[ InitialNature, NewRawNature, NewActualNature, ResultingNature ] ),
 
 	NewTransforms#ast_transforms{ transformation_state={ ResultingNature,
 								ResultingQualifiers, WOOPERExportSet } }.
