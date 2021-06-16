@@ -46,7 +46,8 @@
 -type format_string() :: text_utils:format_string().
 -type format_values() :: text_utils:format_values().
 
--type line() :: ast_base:line().
+
+-type file_loc() :: ast_utils:file_loc().
 
 -type ast_transforms() :: ast_transform:ast_transforms().
 
@@ -116,32 +117,37 @@ raise_usage_error( ErrorFormatString, ErrorFormatValues ) ->
 % source context, when applying this parse transform, to stop the build on
 % failure and report adequately the actual error to the user.
 %
--spec raise_usage_error( ustring(), ast_transforms(), line() ) -> no_return();
-					   ( ustring(), classname(), line() ) -> no_return();
+-spec raise_usage_error( ustring(), ast_transforms(), maybe( file_loc() ) ) ->
+							   no_return();
+					   ( ustring(), classname(), maybe( file_loc() ) ) ->
+							   no_return();
 					   ( format_string(), format_values(), classname() ) ->
 								no_return().
 raise_usage_error( ErrorString,
 				   #ast_transforms{ transformed_module_name=Classname },
-				   Line ) ->
+				   FileLoc ) ->
 
 	ExpectedSrcFile = wooper:get_class_filename( Classname ),
 
 	% Finally not used, as we do not need here to specify the layer or to print
 	% a stacktrace:
 	%
-	%ast_utils:raise_error( ErrorString, _Context={ ExpectedModFile, Line },
-	%					   ?origin_layer ).
-	io:format( "~ts:~B: ~ts~n", [ ExpectedSrcFile, Line, ErrorString ] ),
+	%ast_utils:raise_error( ErrorString, _Context={ ExpectedModFile, FileLoc },
+	%						?origin_layer ).
+	io:format( "~ts:~ts: ~ts~n", [ ExpectedSrcFile,
+						ast_utils:format_file_loc( FileLoc ), ErrorString ] ),
 
 	% Almost the only way to stop the processing of the AST:
 	halt( 6 );
 
 
-raise_usage_error( ErrorString, Classname, Line ) when is_atom( Classname ) ->
+raise_usage_error( ErrorString, Classname, FileLoc )
+							when is_atom( Classname ) ->
 
 	ExpectedSrcFile = wooper:get_class_filename( Classname ),
 
-	io:format( "~ts:~B: ~ts~n", [ ExpectedSrcFile, Line, ErrorString ] ),
+	io:format( "~ts:~ts: ~ts~n", [ ExpectedSrcFile,
+						ast_utils:format_file_loc( FileLoc ), ErrorString ] ),
 
 	% Almost the only way to stop the processing of the AST:
 	halt( 6 );
@@ -152,10 +158,11 @@ raise_usage_error( ErrorFormatString, ErrorFormatValues, Classname ) ->
 	ExpectedSrcFile = wooper:get_class_filename( Classname ),
 
 	% Cannot target better:
-	Line = 0,
+	FileLoc = 0,
 
-	io:format( "~ts:~B: " ++ ErrorFormatString ++ "~n",
-			   [ ExpectedSrcFile, Line | ErrorFormatValues ] ),
+	io:format( "~ts:~ts: " ++ ErrorFormatString ++ "~n",
+		[ ExpectedSrcFile, ast_utils:format_file_loc( FileLoc )
+			| ErrorFormatValues ] ),
 
 	% Almost the only way to stop the processing of the AST:
 	halt( 6 ).
@@ -167,10 +174,11 @@ raise_usage_error( ErrorFormatString, ErrorFormatValues, Classname ) ->
 % failure and report the actual error.
 %
 -spec raise_usage_error( format_string(), format_values(),
-			ast_transforms() | classname(), line() ) -> no_return().
-raise_usage_error( ErrorFormatString, ErrorValues, TransformsOrClass, Line ) ->
+			ast_transforms() | classname(), file_loc() ) -> no_return().
+raise_usage_error( ErrorFormatString, ErrorValues, TransformsOrClass,
+				   FileLoc ) ->
 	ErrorString = text_utils:format( ErrorFormatString, ErrorValues ),
-	raise_usage_error( ErrorString, TransformsOrClass, Line ).
+	raise_usage_error( ErrorString, TransformsOrClass, FileLoc ).
 
 
 
