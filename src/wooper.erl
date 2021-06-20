@@ -1379,7 +1379,7 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 		Other ->
 
-			log_error( "~nWOOPER error for PID ~w of class ~ts: "
+			log_error( "WOOPER error for PID ~w of class ~ts: "
 				"constructor did not return a state, but returned '~p' "
 				"instead. Construction parameters were:~n~p.",
 				[ self(), Classname, Other, ConstructionParameters ] ),
@@ -1487,7 +1487,7 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 
 		Other ->
 
-			log_error( "~nWOOPER error for PID ~w of class ~ts: "
+			log_error( "WOOPER error for PID ~w of class ~ts: "
 				"constructor did not return a state, but returned '~p' "
 				"instead. Construction parameters were:~n~p.~n",
 				[ self(), Classname, Other, ConstructionParameters ] ),
@@ -1869,7 +1869,7 @@ trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
 
 	LocString = get_location_string( Loc, NextCalls ),
 
-	log_error( "~nWOOPER error for PID ~w, "
+	log_error( "WOOPER error for PID ~w, "
 		"constructor (~ts:construct/~B) failed due to an 'undef' "
 		"call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts.",
 		[ self(), Classname, Arity, ModuleName, FunctionName,
@@ -1890,7 +1890,7 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
 	%trace_bridge:info_fmt( "Construction failed for ~ts:construct/~B.",
 	%					   [ Classname, Arity ] ),
 
-	log_error( "~nWOOPER error for PID ~w, "
+	log_error( "WOOPER error for PID ~w, "
 		"constructor (~ts:construct/~B) failed (cause: ~p):~n~n"
 		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first):~n~ts~n"
@@ -2226,7 +2226,7 @@ log_error( Message ) ->
 log_error( FormatString, ValueList ) ->
 
 	Str = text_utils:format(
-			FormatString ++ "~n=END OF WOOPER ERROR REPORT FOR ~w ===~n",
+			FormatString ++ "=END OF WOOPER ERROR REPORT FOR ~w ===~n",
 			ValueList ++ [ self() ] ),
 
 	%trace_bridge:debug_fmt( "Error message: ~p.", [ Str ] ),
