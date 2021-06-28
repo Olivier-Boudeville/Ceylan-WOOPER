@@ -367,8 +367,8 @@
 % Shorthands:
 
 -type count() :: basic_utils:count().
--type error_type() :: basic_utils:error_type().
--type error_term() :: basic_utils:error_term().
+-type exception_class() :: basic_utils:exception_class().
+-type exception_term() :: basic_utils:exception_term().
 -type exit_reason() :: basic_utils:exit_reason().
 
 -type ustring() :: text_utils:ustring().
@@ -1390,8 +1390,8 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 	catch
 
-		Reason:ErrorTerm:Stacktrace ->
-			trigger_error( Reason, ErrorTerm, Classname,
+		ExceptionClass:ExceptionTerm:Stacktrace ->
+			trigger_error( ExceptionClass, ExceptionTerm, Classname,
 						   ConstructionParameters, Stacktrace )
 
 	end.
@@ -1411,8 +1411,8 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 	catch
 
-		Reason:ErrorTerm:Stacktrace ->
-			trigger_error( Reason, ErrorTerm, Classname,
+		ExceptionClass:ExceptionTerm:Stacktrace ->
+			trigger_error( ExceptionClass, ExceptionTerm, Classname,
 						   ConstructionParameters, Stacktrace )
 
 	end,
@@ -1498,8 +1498,8 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 
 	catch
 
-		Reason:ErrorTerm:Stacktrace ->
-			trigger_error( Reason, ErrorTerm, Classname,
+		ExceptionClass:ExceptionTerm:Stacktrace ->
+			trigger_error( ExceptionClass, ExceptionTerm, Classname,
 						   ConstructionParameters, Stacktrace )
 
 	end.
@@ -1522,8 +1522,8 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 
 	catch
 
-		Reason:ErrorTerm:Stacktrace ->
-			trigger_error( Reason, ErrorTerm, Classname,
+		ExceptionClass:ExceptionTerm:Stacktrace ->
+			trigger_error( ExceptionClass, ExceptionTerm, Classname,
 						   ConstructionParameters, Stacktrace )
 
 	end,
@@ -1588,8 +1588,8 @@ construct_passive( Classname, ConstructionParameters ) ->
 
 	catch
 
-		Reason:ErrorTerm:Stacktrace ->
-			trigger_error( Reason, ErrorTerm, Classname,
+		ExceptionClass:ExceptionTerm:Stacktrace ->
+			trigger_error( ExceptionClass, ExceptionTerm, Classname,
 						   ConstructionParameters, Stacktrace )
 
 	end.
@@ -1845,9 +1845,10 @@ retrieve_virtual_table_key( Classname ) ->
 %
 % (helper)
 %
--spec trigger_error( basic_utils:exception_class(), term(), classname(),
+-spec trigger_error( exception_class(), exception_term(), classname(),
 			[ method_arguments() ], stack_trace() ) -> no_return().
-trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
+trigger_error( _ExceptionClass, _ExceptionTerm=undef, Classname,
+	   ConstructionParameters,
 	   _Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
 					 | NextCalls ] ) ->
 
@@ -1861,8 +1862,8 @@ trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
 	UndefArity = length( UndefArgs ),
 
 	%trace_bridge:info_fmt( "Construction failed (undef) in ~ts:construct/~B, "
-	%           "for ~ts:~ts/~B.",
-	%			[ Classname, Arity, ModuleName, FunctionName, UndefArity ] ),
+	%   "for ~ts:~ts/~B.",
+	%   [ Classname, Arity, ModuleName, FunctionName, UndefArity ] ),
 
 	Diagnosis = code_utils:interpret_undef_exception( ModuleName, FunctionName,
 													  UndefArity ),
@@ -1879,7 +1880,7 @@ trigger_error( _Reason, _ErrorTerm=undef, Classname, ConstructionParameters,
 			 { undef, { ModuleName, FunctionName, UndefArity } } } );
 
 
-trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
+trigger_error( ExceptionClass, ExceptionTerm, Classname, ConstructionParameters,
 			   Stacktrace ) ->
 
 	% Construction failed:
@@ -1890,17 +1891,21 @@ trigger_error( Reason, ErrorTerm, Classname, ConstructionParameters,
 	%trace_bridge:info_fmt( "Construction failed for ~ts:construct/~B.",
 	%					   [ Classname, Arity ] ),
 
+	%trace_utils:debug_fmt( "ExceptionClass: ~p, ExceptionTerm: ~p, "
+	%   "Stacktrace:~n ~p.",
+	%   [ ExceptionClass, ExceptionTerm, Stacktrace ] ),
+
 	log_error( "WOOPER error for PID ~w, "
-		"constructor (~ts:construct/~B) failed (cause: ~p):~n~n"
+		"constructor (~ts:construct/~B) failed (exception class: ~p):~n~n"
 		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first):~n~ts~n"
 		" - for construction parameters:~n  ~p~n",
-		[ self(), Classname, Arity, Reason, ErrorTerm,
-		  code_utils:interpret_stacktrace( Stacktrace ),
+		[ self(), Classname, Arity, ExceptionClass, ExceptionTerm,
+		  code_utils:interpret_stacktrace( Stacktrace, ExceptionTerm ),
 		  ConstructionParameters ] ),
 
 	throw( { wooper_constructor_failed, self(), Classname, Arity,
-			 ConstructionParameters, ErrorTerm } ).
+			 ConstructionParameters, ExceptionTerm } ).
 
 
 
@@ -2280,11 +2285,12 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 % and to the caller, and have the process instance exit.
 %
 -spec on_failed_request( request_name(), method_arguments(), pid(),
-	error_type(), error_term(), stack_trace(), wooper:state() ) -> no_return().
-on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType,
-	ErrorTerm=undef,
+	exception_class(), exception_term(), stack_trace(), wooper:state() ) ->
+								no_return().
+on_failed_request( RequestName, ArgumentList, CallerPid, ExceptionClass,
+	ExceptionTerm=undef,
 	_Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
-				  | NextCalls ], State ) ->
+					| NextCalls ], State ) ->
 
 	Arity = length( ArgumentList ) + 1,
 
@@ -2308,7 +2314,7 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType,
 
 	% ArgumentList and actual method module not propagated back to the caller:
 	ErrorReason = { request_failed, State#state_holder.actual_class,
-					self(), RequestName, { ErrorType, ErrorTerm } },
+					self(), RequestName, { ExceptionClass, ExceptionTerm } },
 
 	CallerPid ! { wooper_error, ErrorReason },
 
@@ -2323,26 +2329,26 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType,
 	exit( request_failed );
 
 
-on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType, ErrorTerm,
-				   Stacktrace, State ) ->
+on_failed_request( RequestName, ArgumentList, CallerPid, ExceptionClass,
+				   ExceptionTerm, Stacktrace, State ) ->
 
 	Arity = length( ArgumentList ) + 1,
 
 	ModulePrefix = lookup_method_prefix( RequestName, Arity, State ),
 
-	log_error( "request ~ts~ts/~B failed (cause: ~ts):~n~n"
+	log_error( "request ~ts~ts/~B failed (exception class: ~ts):~n~n"
 		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first):~n~ts~n"
 		" - caller being process ~w~n~n"
 		" - for request parameters:~n  ~p~n",
-		[ ModulePrefix, RequestName, Arity, ErrorType, ErrorTerm,
-		  code_utils:interpret_stacktrace( Stacktrace ), CallerPid,
-		  ArgumentList ],
+		[ ModulePrefix, RequestName, Arity, ExceptionClass, ExceptionTerm,
+		  code_utils:interpret_stacktrace( Stacktrace, ExceptionTerm ),
+		  CallerPid, ArgumentList ],
 		State ),
 
 	% ArgumentList and actual method module not propagated back to the caller:
 	ErrorReason = { request_failed, State#state_holder.actual_class,
-					self(), RequestName, { ErrorType, ErrorTerm } },
+					self(), RequestName, { ExceptionClass, ExceptionTerm } },
 
 	CallerPid ! { wooper_error, ErrorReason },
 
@@ -2361,11 +2367,12 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ErrorType, ErrorTerm,
 % @doc Called by WOOPER whenever a oneway fails, to report it on the console and
 % to the caller, and have the process instance exit.
 %
--spec on_failed_oneway( oneway_name(), method_arguments(),
-	error_type(), error_term(), stack_trace(), wooper:state() ) -> no_return().
-on_failed_oneway( OnewayName, ArgumentList, _ErrorType, _ErrorTerm=undef,
-	   _Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
-					 | NextCalls ], State ) ->
+-spec on_failed_oneway( oneway_name(), method_arguments(), exception_class(),
+			exception_term(), stack_trace(), wooper:state() ) -> no_return().
+on_failed_oneway( OnewayName, ArgumentList, _ExceptionClass,
+	_ExceptionTerm=undef,
+	_Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
+					| NextCalls ], State ) ->
 
 	Arity = length( ArgumentList ) + 1,
 
@@ -2393,20 +2400,21 @@ on_failed_oneway( OnewayName, ArgumentList, _ErrorType, _ErrorTerm=undef,
 	%
 	exit( oneway_failed );
 
-on_failed_oneway( OnewayName, ArgumentList, ErrorType, ErrorTerm, Stacktrace,
-				  State ) ->
+on_failed_oneway( OnewayName, ArgumentList, ExceptionClass, ExceptionTerm,
+				  Stacktrace, State ) ->
 
 	Arity = length( ArgumentList ) + 1,
 
 	ModulePrefix = lookup_method_prefix( OnewayName, Arity, State ),
 
 	% PID managed by log_error:
-	log_error( "oneway ~ts~ts/~B failed (cause: ~ts):~n~n"
+	log_error( "oneway ~ts~ts/~B failed (exception class: ~ts):~n~n"
 		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first):~n~ts~n"
 		" - for oneway parameters:~n  ~p~n",
-		[ ModulePrefix, OnewayName, Arity, ErrorType, ErrorTerm,
-		  code_utils:interpret_stacktrace( Stacktrace ), ArgumentList ],
+		[ ModulePrefix, OnewayName, Arity, ExceptionClass, ExceptionTerm,
+		  code_utils:interpret_stacktrace( Stacktrace, ExceptionTerm ),
+		  ArgumentList ],
 		State ),
 
 	% No caller to notify, for oneways.
