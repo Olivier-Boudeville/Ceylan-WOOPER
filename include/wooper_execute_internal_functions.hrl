@@ -541,11 +541,11 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 
 	catch
 
-		Reason:ErrorTerm:Stacktrace ->
+		ExceptionClass:ExceptionTerm:Stacktrace ->
 
 			% Reports it (to console and caller), and exits:
 			wooper:on_failed_request( RequestAtom, ArgumentList, CallerPid,
-									  Reason, ErrorTerm, Stacktrace, State )
+				ExceptionClass, ExceptionTerm, Stacktrace, State )
 
 	end,
 
@@ -576,11 +576,11 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 
 	catch
 
-		Reason:ErrorTerm:StackTrace ->
+		ExceptionClass:ExceptionTerm:Stacktrace ->
 
 			% Reports it (to console and caller), and exits:
 			wooper:on_failed_request( RequestAtom, ArgumentList, CallerPid,
-									  Reason, ErrorTerm, StackTrace, State )
+				ExceptionClass, ExceptionTerm, StackTrace, State )
 
 	end,
 
@@ -833,11 +833,11 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 
 	catch
 
-		Reason:ErrorTerm:StackTrace ->
+		ExceptionClass:ExceptionTerm:StackTrace ->
 
 			% Reports it to console and exits:
-			wooper:on_failed_oneway( OnewayAtom, ArgumentList, Reason,
-									 ErrorTerm, StackTrace, State )
+			wooper:on_failed_oneway( OnewayAtom, ArgumentList, ExceptionClass,
+									 ExceptionTerm, StackTrace, State )
 
 	end,
 
@@ -866,11 +866,11 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 
 	 catch
 
-		 Reason:ErrorTerm:Stacktrace ->
+		ExceptionClass:ExceptionTerm:Stacktrace ->
 
 			% Reports it to console and exits:
-			 wooper:on_failed_oneway( OnewayAtom, ArgumentList, Reason,
-									  ErrorTerm, Stacktrace, State )
+			wooper:on_failed_oneway( OnewayAtom, ArgumentList, ExceptionClass,
+									 ExceptionTerm, Stacktrace, State )
 
 	end,
 
