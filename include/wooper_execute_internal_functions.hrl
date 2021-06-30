@@ -197,7 +197,7 @@ wooper_execute_method( MethodAtom, Parameters, State )
 					% is displayed as a list:
 					%
 					wooper:log_error(
-					  "oneway ~ts:~ts/~B not found, parameters were:~n~p~n",
+					  "Oneway ~ts:~ts/~B not found, parameters were:~n~p~n",
 					  [ Classname, MethodAtom, MethodArity, Parameters ],
 					  State ),
 
@@ -212,7 +212,7 @@ wooper_execute_method( MethodAtom, Parameters, State )
 					% send back a relevant answer):
 					%
 					wooper:log_error(
-					  "request ~ts:~ts/~B not found, parameters were:~n~p~n",
+					  "Request ~ts:~ts/~B not found, parameters were:~n~p~n",
 					  [ Classname, MethodAtom, MethodArity, Parameters ],
 					  State ),
 
@@ -245,8 +245,8 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 		{ value, LocatedModule } ->
 
 			%trace_utils:debug_fmt( "wooper_execute_method: executing ~ts:~ts"
-			% "(~w) from ~ts.",
-			% [ ?MODULE, MethodAtom, Parameters, LocatedModule ] ),
+			%    "(~w) from ~ts.",
+			%    [ ?MODULE, MethodAtom, Parameters, LocatedModule ] ),
 
 			wooper_effective_method_execution( LocatedModule, MethodAtom,
 											   State, Parameters );
@@ -267,7 +267,7 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 					% as a list:
 					%
 					wooper:log_error(
-					  "oneway ~ts:~ts/~B not found, parameters were:~n~p",
+					  "Oneway ~ts:~ts/~B not found, parameters were:~n~p",
 					  [ Classname, MethodAtom, MethodArity, Parameters ] ),
 
 					throw( { wooper_oneway_not_found, self(), Classname,
@@ -281,7 +281,7 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 					% back a relevant answer):
 					%
 					wooper:log_error(
-					  "request ~ts:~ts/~B not found, parameters were:~n~p~n",
+					  "Request ~ts:~ts/~B not found, parameters were:~n~p~n",
 					  [ Classname, MethodAtom, MethodArity, Parameters ] ),
 
 					throw( { wooper_request_not_found, self(), Classname,
@@ -399,10 +399,11 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 				undefined ->
 
 					% This is a oneway, so log and crash:
-					wooper:log_error( "oneway ~ts:~ts/~B made a faulty return "
-					  "'~p', parameters were:~n~p",
-					  [ SelectedModule, MethodAtom, MethodArity, Other,
-						Parameters ] ),
+					wooper:log_error( "Oneway ~ts:~ts/~B made a faulty "
+						"return, which is:~n  ~p~n"
+						"  while its parameters were:~n    ~p",
+						[ SelectedModule, MethodAtom, MethodArity, Other,
+						  Parameters ] ),
 
 					throw( { wooper_oneway_faulty_return, self(),
 							 SelectedModule, MethodAtom, MethodArity,
@@ -413,10 +414,11 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 					% This is a request, log and throw, the try/catch clause of
 					% the main loop will intercept it, log and rethrow:
 					%
-					wooper:log_error( "request ~ts:~ts/~B made a faulty return "
-					  "'~p', parameters were:~n~p",
-					  [ SelectedModule, MethodAtom, MethodArity, Other,
-						Parameters ] ),
+					wooper:log_error( "Request ~ts:~ts/~B made a faulty "
+						"return, which is:~n  ~p~n"
+						"  while its parameters were:~n    ~p",
+						[ SelectedModule, MethodAtom, MethodArity, Other,
+						  Parameters ] ),
 
 					% We do not include anymore 'Other', as it is best kept
 					% internal (and not sent back to the caller):
@@ -439,7 +441,7 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 								   Parameters ) ->
 
 	%trace_utils:debug_fmt( "WOOPER: effective execution of ~p:~p.~n",
-	%					   [ SelectedModule, MethodAtom ] ),
+	%						[ SelectedModule, MethodAtom ] ),
 
 	case apply( SelectedModule, MethodAtom, [ State | Parameters ] ) of
 
@@ -518,7 +520,7 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 			ExecState;
 
 		{ _ExecState, wooper_method_returns_void } ->
-			wooper:log_error( "method ~ts:~ts/~B, which was called (by ~w) "
+			wooper:log_error( "Method ~ts:~ts/~B, which was called (by ~w) "
 				"with parameters ~p, did not return a result whereas, "
 				"according to its call, it was expected to be a request.~n"
 				"Either the request implementation is incorrect or it is a "
@@ -631,7 +633,7 @@ wooper_handle_local_request_execution( RequestAtom, State, ArgumentList ) ->
 			R;
 
 		wooper_method_returns_void ->
-			wooper:log_error( "method ~ts/~B, which was called with "
+			wooper:log_error( "Method ~ts/~B, which was called with "
 				"parameters ~p, did not return a result whereas, according to "
 				"its call, it was expected to be a request.~n"
 				"Either the request implementation is incorrect or it is a "
@@ -715,7 +717,7 @@ wooper_handle_local_request_execution_as( RequestAtom, State, ArgumentList,
 			R;
 
 		wooper_method_returns_void ->
-			wooper:log_error( "method explicitly called as ~ts:~ts/~B, "
+			wooper:log_error( "Method explicitly called as ~ts:~ts/~B, "
 				"which was called with parameters ~p, "
 				"did not return a result whereas, according to "
 				"its call, it was expected to be a request.~n"
@@ -818,7 +820,7 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 			Class = State#state_holder.actual_class,
 			Arity = length( ArgumentList ) + 1,
 
-			wooper:log_error( "method ~ts:~ts/~B, which was called with "
+			wooper:log_error( "Method ~ts:~ts/~B, which was called with "
 				"following parameters:~n~p~n returned a result (~p) whereas, "
 				"according to its call, it was expected to be a oneway.~n"
 				"So either the oneway implementation of ~ts:~ts/~B is "
@@ -920,7 +922,7 @@ wooper_handle_local_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 		% This is a oneway/request mismatch apparently:
 		{ _OnewayState, { wooper_result, UnexpectedResult } } ->
 
-			wooper:log_error( "method ~ts/~B, which was called with "
+			wooper:log_error( "Method ~ts/~B, which was called with "
 				"parameters ~p, returned a result (~p) whereas, according to "
 				"its call, it was expected to be a oneway.~n"
 				"Either the oneway implementation is incorrect "
@@ -1004,7 +1006,7 @@ wooper_handle_local_oneway_execution_as( OnewayAtom, State, ArgumentList,
 
 		% This is a oneway/request mismatch apparently:
 		{ _OnewayState, { wooper_result, UnexpectedResult } } ->
-			wooper:log_error( "method explicitly called as ~ts:~ts/~B, "
+			wooper:log_error( "Method explicitly called as ~ts:~ts/~B, "
 				"which was called with parameters ~p, "
 				"returned a result (~p) whereas, according to "
 				"its call, it was expected to be a oneway.~n"
