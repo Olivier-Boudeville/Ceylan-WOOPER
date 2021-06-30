@@ -2231,7 +2231,7 @@ log_error( Message ) ->
 log_error( FormatString, ValueList ) ->
 
 	Str = text_utils:format(
-			FormatString ++ "=END OF WOOPER ERROR REPORT FOR ~w ===~n",
+			FormatString ++ "~n=END OF WOOPER ERROR REPORT FOR ~w ===",
 			ValueList ++ [ self() ] ),
 
 	%trace_bridge:debug_fmt( "Error message: ~p.", [ Str ] ),
