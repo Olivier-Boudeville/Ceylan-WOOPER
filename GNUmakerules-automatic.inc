@@ -59,7 +59,7 @@ class_%.beam: class_%.erl class_%.hrl
 # Most frequently-used rule for classes:
 class_%.beam: class_%.erl
 	@echo "		Compiling WOOPER no-dependency class $<"
-	@echo $(ERLANG_COMPILER) $(COMPILER_OPT_FOR_WOOPER_CLASSES) -o $@ $<
+	@#echo $(ERLANG_COMPILER) $(COMPILER_OPT_FOR_WOOPER_CLASSES) -o $@ $<
 	@$(ERLANG_COMPILER) $(COMPILER_OPT_FOR_WOOPER_CLASSES) -o $@ $<
 
 
