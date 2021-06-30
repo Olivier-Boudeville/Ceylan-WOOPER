@@ -493,10 +493,10 @@ execute_request( PassiveInstance, RequestName )
 % (public helper, as a convenience wrapper for passive instances)
 %
 -spec execute_request( instance_pid(), request_name(), method_arguments() ) ->
-							 request_result();
+							request_result();
 					 ( passive_instance(), request_name(),
 					   method_arguments() ) ->
-							 { passive_instance(), method_internal_result() }.
+							{ passive_instance(), method_internal_result() }.
 execute_request( TargetInstancePID, RequestName, RequestArgs )
   when is_pid( TargetInstancePID ) andalso is_atom( RequestName ) ->
 
@@ -1643,7 +1643,7 @@ execute_oneway( PassiveInstance, OnewayName, OnewayArgs )
 		andalso is_atom( OnewayName ) andalso is_list( OnewayArgs ) ->
 
 	%trace_bridge:info_fmt( "Executing oneway ~ts/~B on passive instance",
-	%					   [ OnewayName, length( OnewayArgs ) ] ),
+	%						[ OnewayName, length( OnewayArgs ) ] ),
 
 	{ NewPassiveInstance, wooper_method_returns_void } =
 		wooper_execute_method( OnewayName, OnewayArgs, PassiveInstance ),
@@ -1656,7 +1656,7 @@ execute_oneway( PassiveInstance, OnewayName, OnewayArg )
 		andalso is_atom( OnewayName ) ->
 
 	%trace_bridge:info_fmt( "Executing oneway ~ts on passive instance",
-	%					   [ OnewayName ] ),
+	%						[ OnewayName ] ),
 
 	{ NewPassiveInstance, wooper_method_returns_void } =
 		wooper_execute_method( OnewayName, [ OnewayArg ], PassiveInstance ),
@@ -2167,7 +2167,7 @@ declare_beam_dirs_for_wooper() ->
 -spec log_info( ustring() ) -> void().
 log_info( String ) ->
 	logger:info(
-	  text_utils:ellipse( String, ?ellipse_length ) ++ "\n" ).
+		text_utils:ellipse( String, ?ellipse_length ) ++ "\n" ).
 
 
 % @doc Reports (on a best-effort basis) the specified information to the user,
@@ -2260,9 +2260,9 @@ log_error( FormatString, ValueList, State )
 
 	% Node information would be uselessly distracting:
 	%log_error( "WOOPER error for ~ts instance of PID ~w on node ~ts: "
-	%		   ++ FormatString,
-	%		   [ State#state_holder.actual_class, self(),
-	%            node() | ValueList ] );
+	%			++ FormatString,
+	%			[ State#state_holder.actual_class, self(),
+	%             node() | ValueList ] );
 	log_error( "WOOPER error for ~ts instance of PID ~w: " ++ FormatString,
 			   [ State#state_holder.actual_class, self() | ValueList ] );
 
@@ -2272,8 +2272,8 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 
 	% Node information would be uselessly distracting:
 	%log_error( "WOOPER error for instance of PID ~w on node ~ts triggered "
-	%		   "in module ~ts: " ++ FormatString,
-	%		   [ self(), ModuleName, node() | ValueList ] ).
+	%			"in module ~ts: " ++ FormatString,
+	%			[ self(), ModuleName, node() | ValueList ] ).
 	log_error( "WOOPER error for instance of PID ~w triggered "
 		"in module ~ts: " ++ FormatString,
 		[ self(), ModuleName | ValueList ] ).
@@ -2484,9 +2484,9 @@ send_and_listen( InstancePid, RequestName, Arguments ) ->
 		Anything ->
 
 			%trace_bridge:debug_fmt(
-			% "Answer to call to '~w' with arguments '~w': ~ts",
-			%   [ RequestName, Arguments,
-			%     text_utils:term_to_string( Anything ) ] ),
+			%    "Answer to call to '~w' with arguments '~w': ~ts",
+			%    [ RequestName, Arguments,
+			%      text_utils:term_to_string( Anything ) ] ),
 
 			Anything
 
@@ -2598,7 +2598,7 @@ delete_synchronously_any_instance_referenced_in( Attributes, State ) ->
 	[ attribute_name() ] | attribute_name(), wooper:state() ) -> wooper:state().
 safe_delete_synchronously_any_instance_referenced_in( Attributes, State ) ->
 	delete_synchronously_any_instance_referenced_in( Attributes,
-										 _PreTestLiveliness=true, State ).
+										_PreTestLiveliness=true, State ).
 
 
 
@@ -2633,7 +2633,7 @@ delete_synchronously_any_instance_referenced_in( Attributes, PreTestLiveliness,
 	%  " - PIDs are: ~p~n"
 	%  " - time-out is ~p (ms), i.e. ~ts",
 	%  [ TargetAttributes, TargetPids, ?synchronous_time_out,
-	%	time_utils:duration_to_string( ?synchronous_time_out ) ] ),
+	%	 time_utils:duration_to_string( ?synchronous_time_out ) ] ),
 
 	% Waits for their completion:
 	wait_for_deletion_ack( TargetPids ),
@@ -2694,13 +2694,13 @@ delete_pid_from( [ Attr | T ], DeleteMessage, PreTestLiveliness, State,
 				% Only case where no deletion oneway shall be sent:
 				true ->
 					%trace_bridge:debug_fmt(
-					%  "(PID ~w was already dead, nothing done)", [ Pid ] ),
+					%    "(PID ~w was already dead, nothing done)", [ Pid ] ),
 					delete_pid_from( T, DeleteMessage, PreTestLiveliness,
 									 State, [ Attr | AccAttr ], AccPid );
 
 				false ->
 					%trace_bridge:debug_fmt( "Sending sync delete now ~ts "
-					%                       "(PID: ~w).", [ Attr, Pid ] ),
+					%                        "(PID: ~w).", [ Attr, Pid ] ),
 					Pid ! DeleteMessage,
 					delete_pid_from( T, DeleteMessage, PreTestLiveliness,
 							 State, [ Attr | AccAttr ], [ Pid | AccPid ] )
@@ -2719,7 +2719,7 @@ delete_pid_from( [ Attr | T ], DeleteMessage, PreTestLiveliness, State,
 delete_synchronously_instance( InstancePid ) ->
 
 	%trace_bridge:debug_fmt( "delete_synchronously_instance for ~w.",
-	%                       [ InstancePid ] ),
+	%                        [ InstancePid ] ),
 
 	InstancePid ! { synchronous_delete, self() },
 
@@ -2727,7 +2727,7 @@ delete_synchronously_instance( InstancePid ) ->
 
 		{ deleted, InstancePid } ->
 			%trace_bridge:debug_fmt( "Synchronous deletion of ~w confirmed.",
-			%						[ Pid ] ),
+			%						 [ Pid ] ),
 			ok
 
 	end.
@@ -2745,7 +2745,7 @@ delete_synchronously_instance( InstancePid ) ->
 delete_synchronously_instances( InstanceList ) ->
 
 	%trace_bridge:debug_fmt( "delete_synchronously_instances for ~p.",
-	%                       [ InstanceList ] ),
+	%                        [ InstanceList ] ),
 
 	DeleteMessage = { synchronous_delete, self() },
 
@@ -2817,8 +2817,8 @@ examine_waited_deletions( _WaitedPids=[ Pid | T ], Acc ) ->
 
 		false ->
 			trace_bridge:debug_fmt(
-			  "Stopped waiting for the deletion of instance "
-			  "whose PID is ~p: not found alive.", [ Pid ] ),
+				"Stopped waiting for the deletion of instance "
+				"whose PID is ~p: not found alive.", [ Pid ] ),
 
 			examine_waited_deletions( T, Acc )
 
