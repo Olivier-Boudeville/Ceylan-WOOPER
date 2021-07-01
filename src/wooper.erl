@@ -375,7 +375,7 @@
 -type format_string() :: text_utils:format_string().
 
 -type stack_trace() :: code_utils:stack_trace().
--type stack_location() :: code_utils:stack_location().
+-type stack_info() :: code_utils:stack_info().
 -type stack_item() :: code_utils:stack_item().
 
 
@@ -1912,9 +1912,9 @@ trigger_error( ExceptionClass, ExceptionTerm, Classname, ConstructionParameters,
 % @doc Returns the description of the best location found from specified
 % stacktrace excerpts.
 %
--spec get_location_string( stack_location(), stack_item() ) -> ustring().
+-spec get_location_string( stack_info(), stack_item() ) -> ustring().
 get_location_string( _Loc=[], _NextCalls=[ { _M, _F, _A, NextLoc } | _ ] ) ->
-	LocStr = code_utils:stack_location_to_string( NextLoc ),
+	LocStr = code_utils:stack_info_to_string( NextLoc ),
 	text_utils:format( " (call location: ~ts)", [ LocStr ] );
 
 % Includes _NextCalls=[] and any unexpected pattern:
@@ -1923,7 +1923,7 @@ get_location_string( _Loc=[], NextCalls ) ->
 	%"";
 
 get_location_string( Loc, _NextCalls ) ->
-	LocStr = code_utils:stack_location_to_string( Loc ),
+	LocStr = code_utils:stack_info_to_string( Loc ),
 	text_utils:format( " (call location: ~ts)", [ LocStr ] ).
 
 
