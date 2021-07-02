@@ -1425,10 +1425,11 @@ get_spawn_link_expression_for( _IsDebugMode=true, FileGenLoc ) ->
 	%{ remote, FileGenLoc, { atom, FileGenLoc, proc_lib },
 	%  { atom, FileGenLoc, spawn_link } };
 
-	% We switched back to a basic spawn (see Myriad's spawn_utils.hrl), as we
-	% felt the extra information in error messages was counter-productive:
+	% Some time ago, for dubious reasons, we had switched back to a basic
+	% spawn_link (see Myriad's spawn_utils.hrl), as we felt that the extra
+	% information in error messages was counter-productive.
 	%
-	{ atom, FileGenLoc, spawn };
+	{ atom, FileGenLoc, spawn_link };
 
 
 get_spawn_link_expression_for( _IsDebugMode=false, FileGenLoc ) ->
