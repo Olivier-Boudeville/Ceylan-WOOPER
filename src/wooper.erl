@@ -373,6 +373,7 @@
 
 -type ustring() :: text_utils:ustring().
 -type format_string() :: text_utils:format_string().
+-type format_values() :: text_utils:format_values().
 
 -type stack_trace() :: code_utils:stack_trace().
 -type stack_info() :: code_utils:stack_info().
@@ -1347,8 +1348,8 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 construct_and_run( Classname, ConstructionParameters ) ->
 
 	%trace_bridge:debug_fmt( "wooper:construct_and_run for class ~p "
-	%   "and following parameters:~n ~p",
-	%   [ Classname, ConstructionParameters ] ),
+	%	"and following parameters:~n ~p (in debug mode)",
+	%	[ Classname, ConstructionParameters ] ),
 
 	%check_classname_and_arity( Classname, ConstructionParameters ),
 
@@ -1403,6 +1404,10 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 construct_and_run( Classname, ConstructionParameters ) ->
 
+	%trace_bridge:debug_fmt( "wooper:construct_and_run for class ~p "
+	%	"and following parameters:~n ~p (in non-debug mode)",
+	%	[ Classname, ConstructionParameters ] ),
+
 	BlankState = get_blank_state( Classname ),
 
 	ConstructState = try
@@ -1452,6 +1457,10 @@ construct_and_run( Classname, ConstructionParameters ) ->
 construct_and_run_synchronous( Classname, ConstructionParameters,
 							   SpawnerPid ) ->
 
+	%trace_bridge:debug_fmt( "wooper:construct_and_run_synchronous "
+	%   "for class ~p and following parameters:~n ~p (in debug mode)",
+	%   [ Classname, ConstructionParameters ] ),
+
 	%check_classname_and_arity( Classname, ConstructionParameters ),
 
 	BlankState = get_blank_state( Classname ),
@@ -1484,9 +1493,7 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 			Classname:wooper_main_loop( ReadyState );
 
 
-
 		Other ->
-
 			log_error( "WOOPER error for PID ~w of class ~ts: "
 				"constructor did not return a state, but returned '~p' "
 				"instead. Construction parameters were:~n~p.~n",
@@ -1511,6 +1518,10 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 
 construct_and_run_synchronous( Classname, ConstructionParameters,
 							   SpawnerPid ) ->
+
+	%trace_bridge:debug_fmt( "wooper:construct_and_run_synchronous "
+	%   "for class ~p and following parameters:~n ~p (in non-debug mode)",
+	%   [ Classname, ConstructionParameters ] ),
 
 	BlankState = get_blank_state( Classname ),
 
@@ -1850,7 +1861,7 @@ retrieve_virtual_table_key( Classname ) ->
 trigger_error( _ExceptionClass, _ExceptionTerm=undef, Classname,
 	   ConstructionParameters,
 	   _Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
-					 | NextCalls ] ) ->
+						| NextCalls ] ) ->
 
 	%trace_bridge:debug_fmt( "NextCalls: ~p", [ NextCalls ] ),
 
@@ -1872,7 +1883,7 @@ trigger_error( _ExceptionClass, _ExceptionTerm=undef, Classname,
 
 	log_error( "WOOPER error for PID ~w, "
 		"constructor (~ts:construct/~B) failed due to an 'undef' "
-		"call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts.",
+		"call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts",
 		[ self(), Classname, Arity, ModuleName, FunctionName,
 		  UndefArity, Diagnosis, LocString ] ),
 
@@ -2173,7 +2184,7 @@ log_info( String ) ->
 % @doc Reports (on a best-effort basis) the specified information to the user,
 % typically by displaying an information report on the console.
 %
--spec log_info( format_string(), [ term() ] ) -> void().
+-spec log_info( format_string(), format_values() ) -> void().
 log_info( FormatString, ValueList ) ->
 	Str = text_utils:format( FormatString, ValueList ),
 	logger:info( text_utils:ellipse( Str, ?ellipse_length ) ++ "\n" ).
@@ -2307,7 +2318,7 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ExceptionClass,
 	LocString = get_location_string( Loc, NextCalls ),
 
 	log_error( "request ~ts~ts/~B failed due to an 'undef' "
-		"call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts.",
+		"call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts",
 		[ ModulePrefix, RequestName, Arity, ModuleName, FunctionName,
 		  UndefArity, Diagnosis, LocString ],
 		State ),
@@ -2389,7 +2400,7 @@ on_failed_oneway( OnewayName, ArgumentList, _ExceptionClass,
 	LocString = get_location_string( Loc, NextCalls ),
 
 	log_error( "oneway ~ts~ts/~B failed due to an 'undef' "
-		"call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts.",
+		"call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts",
 		[ ModulePrefix, OnewayName, Arity, ModuleName, FunctionName,
 		  UndefArity, Diagnosis, LocString ], State ),
 
