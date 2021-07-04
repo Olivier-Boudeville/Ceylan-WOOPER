@@ -24,16 +24,16 @@
 <p><tt>classname() = <a href="wooper.html#type-classname">wooper:classname()</a></tt></p>
 
 
+<h3 class="typedecl"><a name="type-file_loc">file_loc()</a></h3>
+<p><tt>file_loc() = <a href="ast_utils.html#type-file_loc">ast_utils:file_loc()</a></tt></p>
+
+
 <h3 class="typedecl"><a name="type-format_string">format_string()</a></h3>
 <p><tt>format_string() = <a href="text_utils.html#type-format_string">text_utils:format_string()</a></tt></p>
 
 
 <h3 class="typedecl"><a name="type-format_values">format_values()</a></h3>
 <p><tt>format_values() = <a href="text_utils.html#type-format_values">text_utils:format_values()</a></tt></p>
-
-
-<h3 class="typedecl"><a name="type-line">line()</a></h3>
-<p><tt>line() = <a href="ast_base.html#type-line">ast_base:line()</a></tt></p>
 
 
 <h3 class="typedecl"><a name="type-ustring">ustring()</a></h3>
@@ -125,7 +125,7 @@ when applying this parse transform.</p>
 
 <h3 class="function"><a name="raise_usage_error-3">raise_usage_error/3</a></h3>
 <div class="spec">
-<p><tt>raise_usage_error(ErrorString::<a href="#type-ustring">ustring()</a>, Ast_transforms::<a href="#type-ast_transforms">ast_transforms()</a>, Line::<a href="#type-line">line()</a>) -&gt; no_return()</tt><br></p><p><tt>raise_usage_error(ErrorString::<a href="#type-ustring">ustring()</a>, Ast_transforms::<a href="#type-classname">classname()</a>, Line::<a href="#type-line">line()</a>) -&gt; no_return()</tt><br></p><p><tt>raise_usage_error(ErrorString::<a href="#type-format_string">format_string()</a>, Ast_transforms::<a href="#type-format_values">format_values()</a>, Line::<a href="#type-classname">classname()</a>) -&gt; no_return()</tt><br></p>
+<p><tt>raise_usage_error(ErrorString::<a href="#type-ustring">ustring()</a>, Ast_transforms::<a href="#type-ast_transforms">ast_transforms()</a>, FileLoc::<a href="#type-maybe">maybe</a>(<a href="#type-file_loc">file_loc()</a>)) -&gt; no_return()</tt><br></p><p><tt>raise_usage_error(ErrorString::<a href="#type-ustring">ustring()</a>, Ast_transforms::<a href="#type-classname">classname()</a>, FileLoc::<a href="#type-maybe">maybe</a>(<a href="#type-file_loc">file_loc()</a>)) -&gt; no_return()</tt><br></p><p><tt>raise_usage_error(ErrorString::<a href="#type-format_string">format_string()</a>, Ast_transforms::<a href="#type-format_values">format_values()</a>, FileLoc::<a href="#type-classname">classname()</a>) -&gt; no_return()</tt><br></p>
 <p> </p>
 <p> </p>
 <p> </p>
@@ -136,7 +136,7 @@ when applying this parse transform.</p>
 
 <h3 class="function"><a name="raise_usage_error-4">raise_usage_error/4</a></h3>
 <div class="spec">
-<p><tt>raise_usage_error(ErrorFormatString::<a href="#type-format_string">format_string()</a>, ErrorValues::<a href="#type-format_values">format_values()</a>, TransformsOrClass::<a href="#type-ast_transforms">ast_transforms()</a> | <a href="#type-classname">classname()</a>, Line::<a href="#type-line">line()</a>) -&gt; no_return()</tt><br></p>
+<p><tt>raise_usage_error(ErrorFormatString::<a href="#type-format_string">format_string()</a>, ErrorValues::<a href="#type-format_values">format_values()</a>, TransformsOrClass::<a href="#type-ast_transforms">ast_transforms()</a> | <a href="#type-classname">classname()</a>, FileLoc::<a href="#type-file_loc">file_loc()</a>) -&gt; no_return()</tt><br></p>
 <p> </p>
 </div><p>Raises a (compile-time, rather ad hoc) user-related error, with specified
  source context, when applying this parse transform, to stop the build on

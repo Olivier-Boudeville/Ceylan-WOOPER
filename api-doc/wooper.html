@@ -84,12 +84,12 @@
 <p><tt>count() = <a href="basic_utils.html#type-count">basic_utils:count()</a></tt></p>
 
 
-<h3 class="typedecl"><a name="type-error_term">error_term()</a></h3>
-<p><tt>error_term() = <a href="basic_utils.html#type-error_term">basic_utils:error_term()</a></tt></p>
+<h3 class="typedecl"><a name="type-exception_class">exception_class()</a></h3>
+<p><tt>exception_class() = <a href="basic_utils.html#type-exception_class">basic_utils:exception_class()</a></tt></p>
 
 
-<h3 class="typedecl"><a name="type-error_type">error_type()</a></h3>
-<p><tt>error_type() = <a href="basic_utils.html#type-error_type">basic_utils:error_type()</a></tt></p>
+<h3 class="typedecl"><a name="type-exception_term">exception_term()</a></h3>
+<p><tt>exception_term() = <a href="basic_utils.html#type-exception_term">basic_utils:exception_term()</a></tt></p>
 
 
 <h3 class="typedecl"><a name="type-exit_reason">exit_reason()</a></h3>
@@ -98,6 +98,10 @@
 
 <h3 class="typedecl"><a name="type-format_string">format_string()</a></h3>
 <p><tt>format_string() = <a href="text_utils.html#type-format_string">text_utils:format_string()</a></tt></p>
+
+
+<h3 class="typedecl"><a name="type-format_values">format_values()</a></h3>
+<p><tt>format_values() = <a href="text_utils.html#type-format_values">text_utils:format_values()</a></tt></p>
 
 
 <h3 class="typedecl"><a name="type-function_export_set">function_export_set()</a></h3>
@@ -1004,7 +1008,7 @@ but have different arities).</p>
 
 <h3 class="function"><a name="log_info-2">log_info/2</a></h3>
 <div class="spec">
-<p><tt>log_info(FormatString::<a href="#type-format_string">format_string()</a>, ValueList::[term()]) -&gt; <a href="#type-void">void()</a></tt><br></p>
+<p><tt>log_info(FormatString::<a href="#type-format_string">format_string()</a>, ValueList::<a href="#type-format_values">format_values()</a>) -&gt; <a href="#type-void">void()</a></tt><br></p>
 <p> </p>
 </div><p>Reports (on a best-effort basis) the specified information to the user,
  typically by displaying an information report on the console.
@@ -1055,7 +1059,7 @@ sender.</p>
 
 <h3 class="function"><a name="on_failed_oneway-6">on_failed_oneway/6</a></h3>
 <div class="spec">
-<p><tt>on_failed_oneway(OnewayName::<a href="#type-oneway_name">oneway_name()</a>, ArgumentList::<a href="#type-method_arguments">method_arguments()</a>, ErrorType::<a href="#type-error_type">error_type()</a>, ErrorTerm::<a href="#type-error_term">error_term()</a>, Stacktrace::<a href="#type-stack_trace">stack_trace()</a>, State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; no_return()</tt><br></p>
+<p><tt>on_failed_oneway(OnewayName::<a href="#type-oneway_name">oneway_name()</a>, ArgumentList::<a href="#type-method_arguments">method_arguments()</a>, ExceptionClass::<a href="#type-exception_class">exception_class()</a>, ExceptionTerm::<a href="#type-exception_term">exception_term()</a>, Stacktrace::<a href="#type-stack_trace">stack_trace()</a>, State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; no_return()</tt><br></p>
 <p> </p>
 </div><p>Called by WOOPER whenever a oneway fails, to report it on the console and
  to the caller, and have the process instance exit.
@@ -1063,7 +1067,7 @@ sender.</p>
 
 <h3 class="function"><a name="on_failed_request-7">on_failed_request/7</a></h3>
 <div class="spec">
-<p><tt>on_failed_request(RequestName::<a href="#type-request_name">request_name()</a>, ArgumentList::<a href="#type-method_arguments">method_arguments()</a>, CallerPid::pid(), ErrorType::<a href="#type-error_type">error_type()</a>, ErrorTerm::<a href="#type-error_term">error_term()</a>, Stacktrace::<a href="#type-stack_trace">stack_trace()</a>, State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; no_return()</tt><br></p>
+<p><tt>on_failed_request(RequestName::<a href="#type-request_name">request_name()</a>, ArgumentList::<a href="#type-method_arguments">method_arguments()</a>, CallerPid::pid(), ExceptionClass::<a href="#type-exception_class">exception_class()</a>, ExceptionTerm::<a href="#type-exception_term">exception_term()</a>, Stacktrace::<a href="#type-stack_trace">stack_trace()</a>, State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; no_return()</tt><br></p>
 <p> </p>
 </div><p>Called by WOOPER whenever a request fails, to report it on the console
  and to the caller, and have the process instance exit.
