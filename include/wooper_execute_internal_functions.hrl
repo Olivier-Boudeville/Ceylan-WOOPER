@@ -582,7 +582,7 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 
 			% Reports it (to console and caller), and exits:
 			wooper:on_failed_request( RequestAtom, ArgumentList, CallerPid,
-				ExceptionClass, ExceptionTerm, StackTrace, State )
+				ExceptionClass, ExceptionTerm, Stacktrace, State )
 
 	end,
 
