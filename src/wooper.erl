@@ -2206,7 +2206,7 @@ log_warning( String ) ->
 % @doc Reports (on a best-effort basis) the specified warning to the user,
 % typically by displaying a warning report on the console.
 %
--spec log_warning( format_string(), [ term() ] ) -> void().
+-spec log_warning( format_string(), format_values() ) -> void().
 log_warning( FormatString, ValueList ) ->
 
 	Str = text_utils:format( FormatString, ValueList ),
@@ -2227,7 +2227,7 @@ log_error( Message ) ->
 
 	% Never ellipsing for errors now:
 	%logger:error( text_utils:ellipse( Message, ?ellipse_length ) ++ "\n" ),
-	logger:error( Message ++ "\n" ),
+	logger:error_fmt( "WOOPER error: ~ts~n", [ Message ] ),
 
 	% Wait a bit, as logger (at least former error_logger) seems asynchronous:
 	system_utils:await_output_completion( ?wooper_error_display_waiting ).
@@ -2238,14 +2238,14 @@ log_error( Message ) ->
 % notification) the specified error to the user, typically by displaying an
 % error report on the console (non-halting function, ex: no exception thrown).
 %
--spec log_error( format_string(), [ term() ] ) -> void().
+-spec log_error( format_string(), format_values() ) -> void().
 log_error( FormatString, ValueList ) ->
 
-	Str = text_utils:format(
-			FormatString ++ "~n= END OF WOOPER ERROR REPORT FOR ~w ===",
-			ValueList ++ [ self() ] ),
+	Str = text_utils:format( "WOOPER error: " ++ FormatString
+		++ "~n= END OF WOOPER ERROR REPORT FOR ~w ===",
+		ValueList ++ [ self() ] ),
 
-	%trace_bridge:debug_fmt( "Error message: ~p.", [ Str ] ),
+	%trace_bridge:debug( Str ),
 
 	% Never ellipsing for errors now:
 	%logger:error( text_utils:ellipse( Str, ?ellipse_length ) ),
@@ -2262,7 +2262,7 @@ log_error( FormatString, ValueList ) ->
 % so with fewer information) to the user, typically by displaying an error
 % report on the console (non-halting function, ex: no exception thrown).
 %
--spec log_error( format_string(), [ term() ],
+-spec log_error( format_string(), format_values(),
 				 wooper:state() | basic_utils:module_name() ) -> void().
 log_error( FormatString, ValueList, State )
   when is_record( State, state_holder ) ->
@@ -2271,8 +2271,8 @@ log_error( FormatString, ValueList, State )
 
 	% Node information would be uselessly distracting:
 	%log_error( "WOOPER error for ~ts instance of PID ~w on node ~ts: "
-	%			++ FormatString,
-	%			[ State#state_holder.actual_class, self(),
+	%           ++ FormatString,
+	%           [ State#state_holder.actual_class, self(),
 	%             node() | ValueList ] );
 	log_error( "WOOPER error for ~ts instance of PID ~w: " ++ FormatString,
 			   [ State#state_holder.actual_class, self() | ValueList ] );
@@ -2283,8 +2283,8 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 
 	% Node information would be uselessly distracting:
 	%log_error( "WOOPER error for instance of PID ~w on node ~ts triggered "
-	%			"in module ~ts: " ++ FormatString,
-	%			[ self(), ModuleName, node() | ValueList ] ).
+	%           "in module ~ts: " ++ FormatString,
+	%           [ self(), ModuleName, node() | ValueList ] ).
 	log_error( "WOOPER error for instance of PID ~w triggered "
 		"in module ~ts: " ++ FormatString,
 		[ self(), ModuleName | ValueList ] ).
