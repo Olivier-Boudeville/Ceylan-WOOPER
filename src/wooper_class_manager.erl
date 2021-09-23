@@ -305,7 +305,7 @@ start_link( MaybeClientPid ) ->
 
 		Success={ ok, ManagerPid } ->
 			%trace_utils:debug_fmt( "WOOPER class manager created, as ~w.",
-			%					   [ ManagerPid ] ),
+			%                       [ ManagerPid ] ),
 			case MaybeClientPid of
 
 				undefined ->
