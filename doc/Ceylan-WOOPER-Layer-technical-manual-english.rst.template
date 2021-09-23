@@ -2773,9 +2773,14 @@ For server-like activities, it may be useful to have instances of WOOPER classes
 
 Exactly like by default any Erlang process is not able to readily take part to an OTP supervision tree [#]_, a WOOPER instance must specifically support such an integration.
 
-.. [#] For that such process has to comply with a relevant applicative protocol in order to properly interact with its supervisor, either directly by itself or through its implementation of an OTP behaviour like `gen_server <https://erlang.org/doc/man/gen_server.html>`_.
+.. [#] For that, such process has to comply with a relevant applicative protocol in order to properly interact with its supervisor, either directly by itself or through its implementation of a worker-compliant OTP behaviour like `gen_server <https://erlang.org/doc/man/gen_server.html>`_.
 
-A `supervisor bridge <https://erlang.org/doc/man/supervisor_bridge.html>`_ (i.e. a process in charge of integrating properly such a non-OTP process into an OTP supervision tree) is the tool of choice here.
+A `supervisor bridge <https://erlang.org/doc/man/supervisor_bridge.html>`_ (i.e. a process in charge of integrating properly such a non-OTP process into an OTP supervision tree) is the tool of choice here [#]_.
+
+.. [#] Otherwise, as we understand it, should WOOPER instances be directly declared in a supervision tree as mere workers, they would have to implement typically the ``gen_server`` behaviour, which implies relying on ``handle_{call,cast,info}`` functions and on a behaviour-specific main loop - rather than on the counterpart method-based facilities offered by WOOPER.
+
+	   A consequence is the need for an extra, mostly idle process sitting between such a supervised WOOPER instance and its supervisor. In some cases (ex: a webserver processing each request based on a WOOPER instance), this overhead would be excessive; then defining a WOOPER-specific supervisor, able to handle directly its WOOPER instances as workers, could be devised.
+
 
 Rather than declaring the corresponding behaviour and its implemented API directly in the target class (ex: in ``class_Foobar``), we recommend for *clarity* (as, even if the bridge was declared in the same module, it would be still an intermediate, autonomous process sitting between the OTP supervisor and the WOOPER instance of interest) and for *separation of concerns* (leaving an OTP integration as an optional feature) to introduce a specific module for that, like done with `traces_bridge_sup <https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/traces_bridge_sup.erl>`_ for `class_TraceAggregator.erl <https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/class_TraceAggregator.erl>`_ or `us_common_config_bridge_sup <https://github.com/Olivier-Boudeville/us-common/blob/master/src/us_common_config_bridge_sup.erl>`_ for `class_USConfigServer.erl <https://github.com/Olivier-Boudeville/us-common/blob/master/src/class_USConfigServer.erl>`_.
 
