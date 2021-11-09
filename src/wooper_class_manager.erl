@@ -449,6 +449,9 @@ init( _Args=[] ) ->
 
 	% Registering already done by gen_server:start*.
 
+	% Should this manager be overwhelmed by instance creations:
+	erlang:process_flag( message_queue_data, off_heap ),
+
 	% Infinite time-out:
 	{ ok, get_initial_state() }.
 
