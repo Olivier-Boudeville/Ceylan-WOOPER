@@ -82,7 +82,7 @@ WOOPER, which stands for *Wrapper for Object-Oriented Programming in Erlang*, is
 
 .. This documentation applies to the WOOPER 2.0 version.
 
-WOOPER is a rather autonomous part of the `Ceylan <https://github.com/Olivier-Boudeville/Ceylan>`_ project (yet it uses `Myriad <https://github.com/Olivier-Boudeville/Ceylan-Myriad>`_ and is used by `Traces <https://github.com/Olivier-Boudeville/Ceylan-Traces>`_).
+WOOPER is a rather autonomous part of the `Ceylan <https://github.com/Olivier-Boudeville/Ceylan>`_ project (yet it uses `Myriad <https://github.com/Olivier-Boudeville/Ceylan-Myriad>`_ and is used by `Traces <https://github.com/Olivier-Boudeville/Ceylan-Traces>`_). WOOPER can be readily built and run on most Unices (including of course GNU/Linux) and on Windows.
 
 The project repository is located `here <https://github.com/Olivier-Boudeville/Ceylan-WOOPER>`_.
 
@@ -2920,6 +2920,7 @@ WOOPER is in some ways adding features quite similar to the ones available with 
 
 
 
+
 WOOPER limitations
 ------------------
 
@@ -3041,6 +3042,17 @@ Some more general (mostly unrelated) **Erlang-level conventions** that we like:
 
 
 :raw-latex:`\pagebreak`
+
+
+
+Supported Platforms
+===================
+
+WOOPER can be readily built and run on most Unices (including of course GNU/Linux) and on Windows.
+
+Refer to `the Myriad counterpart section <http://myriad.esperide.org/#supported-platforms>`_ for more details.
+
+
 
 Troubleshooting
 ===============
