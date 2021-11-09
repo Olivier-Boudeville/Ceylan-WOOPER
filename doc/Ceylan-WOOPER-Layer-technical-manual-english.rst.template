@@ -273,8 +273,9 @@ Examples of this kind of systems are multi-agent simulations. If they often need
 
 The example_ mentioned through the current guide is an illustration [#]_ of the interacting lives of numerous animals of various species. Obviously, they have to share behaviours (ex: all ovoviviparous beings may lay eggs, all creatures can live and die, all have an age, etc.), which cannot be mapped easily (read: automatically) to Erlang concepts without adding some generic constructs.
 
-.. [#] This example is not a *simulation*, it is just a multi-agent system. For real, massive, discrete-time simulations of complex systems in Erlang (using WOOPER), one may refer to `Sim-Diasca <http://www.sim-diasca.com>`_ instead (a free software simulation engine).
+.. [#] This example is not a *simulation*, it is just a multi-agent system. For real, massive, discrete-time simulations of complex systems in Erlang (using WOOPER), one may refer to `Sim-Diasca <https://github.com/Olivier-Boudeville-EDF/Sim-Diasca>`_ instead (a free software discrete-time simulation engine).
 
+.. one may refer to `Sim-Diasca <http://www.sim-diasca.com>`_ instead (a free software simulation engine).
 
 WOOPER, which stands for *Wrapper for OOP in Erlang*, is a lightweight yet effective (performance-wise, but also regarding the user-side  developing efforts) means of making these constructs available, notably in terms of state management and multiple inheritance.
 
