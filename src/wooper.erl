@@ -737,10 +737,10 @@ execute_const_oneway( PassiveInstance, OnewayName, OnewayArgs )
 							[ instance_pid() ] ) -> [ request_result() ].
 send_request_in_turn( RequestName, RequestArgs, TargetInstancePIDs ) ->
 
-	trace_utils:debug_fmt( "Sending request '~ts' (no time-out) in turn to ~B "
-		"instances (~p), with arguments ~p .",
-		[ RequestName, length( TargetInstancePIDs ), TargetInstancePIDs,
-		  RequestArgs ] ),
+	%trace_bridge:debug_fmt( "Sending request '~ts' (no time-out) in turn "
+	%   "to ~B instances (~p), with arguments ~p.",
+	%   [ RequestName, length( TargetInstancePIDs ), TargetInstancePIDs,
+	%     RequestArgs ] ),
 
 	send_request_in_turn( RequestName, RequestArgs, TargetInstancePIDs,
 						  _AccRes=[], _Timeout=infinity ).
@@ -757,10 +757,10 @@ send_request_in_turn( RequestName, RequestArgs, TargetInstancePIDs ) ->
 		[ instance_pid() ], time_out() ) -> [ request_result() ].
 send_request_in_turn( RequestName, RequestArgs, TargetInstancePIDs, Timeout ) ->
 
-	trace_utils:debug_fmt( "Sending request '~ts', with a ~ts, in turn "
-		"to ~B instances (~p), with arguments ~p.",
-		[ RequestName, time_utils:time_out_to_string( Timeout ),
-		  length( TargetInstancePIDs ), TargetInstancePIDs, RequestArgs ] ),
+	%trace_bridge:debug_fmt( "Sending request '~ts', with a ~ts, in turn "
+	%  "to ~B instances (~p), with arguments ~p.",
+	%   [ RequestName, time_utils:time_out_to_string( Timeout ),
+	%     length( TargetInstancePIDs ), TargetInstancePIDs, RequestArgs ] ),
 
 	send_request_in_turn( RequestName, RequestArgs, TargetInstancePIDs,
 						  _AccRes=[], Timeout ).
@@ -776,20 +776,20 @@ send_request_in_turn( RequestName, RequestArgs,
 
 	InstancePid ! { RequestName, RequestArgs, self() },
 
-	trace_utils:debug_fmt( "Sent request '~ts' to ~w, waiting for result.",
-						   [ RequestName, InstancePid ] ),
+	%trace_bridge:debug_fmt( "Sent request '~ts' to ~w, waiting for result.",
+	%                       [ RequestName, InstancePid ] ),
 
 	receive
 
 		{ wooper_result, R } ->
-			trace_utils:debug_fmt( "For request '~ts' sent to ~w, "
-				"got following result: ~p.", [ RequestName, InstancePid, R ] ),
+			%trace_bridge:debug_fmt( "For request '~ts' sent to ~w, "
+			%   "got following result: ~p.", [ RequestName, InstancePid, R ] ),
 			send_request_in_turn( RequestName, RequestArgs, H, [ R | AccRes ],
 								  Timeout )
 
 	after Timeout ->
 
-		trace_utils:error_fmt( "Time-out reached (~ts) for call of "
+		trace_bridge:error_fmt( "Time-out reached (~ts) for call of "
 			"request '~ts' with arguments ~p to instance ~w.",
 			[ time_utils:time_out_to_string( Timeout ), RequestName,
 			  RequestArgs, InstancePid ] ),
@@ -874,8 +874,8 @@ send_acknowledged_oneway_in_turn( OnewayName, OnewayArgs, TargetInstancePIDs,
 	Res = send_acked_oneway_in_turn_helper( OnewayCall, TargetInstancePIDs,
 											Timeout, AckTerm, _FailedAcc=[] ),
 
-	trace_bridge:debug_fmt( "For oneway call ~p, failed instances were ~p.",
-							[ OnewayCall, Res ] ),
+	%trace_bridge:debug_fmt( "For oneway call ~p, failed instances were ~p.",
+	%                        [ OnewayCall, Res ] ),
 
 	Res.
 
@@ -889,8 +889,8 @@ send_acked_oneway_in_turn_helper( _OnewayCall, _TargetInstancePIDs=[], _Timeout,
 send_acked_oneway_in_turn_helper( OnewayCall,
 	  _TargetInstancePIDs=[ InstancePid | T ], Timeout, AckTerm, FailedAcc ) ->
 
-	trace_bridge:debug_fmt( "Sending oneway call ~p to ~w, to be acknowledged "
-		"with the term '~p'.", [ OnewayCall, InstancePid, AckTerm ] ),
+	%trace_bridge:debug_fmt( "Sending oneway call ~p to ~w, to be acknowledged "
+	%   "with the term '~p'.", [ OnewayCall, InstancePid, AckTerm ] ),
 
 	InstancePid ! OnewayCall,
 
@@ -898,8 +898,8 @@ send_acked_oneway_in_turn_helper( OnewayCall,
 
 		{ AckTerm, InstancePid } ->
 
-			trace_bridge:debug_fmt( "Received ack term '~p' for ~w.",
-									[ AckTerm, InstancePid ] ),
+			%trace_bridge:debug_fmt( "Received ack term '~p' for ~w.",
+			%                        [ AckTerm, InstancePid ] ),
 
 			send_acked_oneway_in_turn_helper( OnewayCall, T, Timeout, AckTerm,
 											  FailedAcc )
@@ -1009,7 +1009,7 @@ wait_for_request_answers( RequestedPids, InitialTimestamp, Timeout,
 		{ wooper_result, { AckTerm, SenderPid } } ->
 
 			NewPids = list_utils:delete_existing( SenderPid,
-													 RequestedPids ),
+												  RequestedPids ),
 
 			wait_for_request_answers( NewPids, InitialTimestamp, Timeout,
 									  PollDuration, AckTerm )
@@ -1208,7 +1208,7 @@ wait_request_series( WaitCount, Acc ) ->
 % links it to the caller and to the specified process.
 %
 -spec create_hosting_process( net_utils:node_name(), pid() ) ->
-									instance_pid().
+											  instance_pid().
 create_hosting_process( Node, ToLinkWithPid ) ->
 
 	WaitFun = fun() ->
@@ -1572,8 +1572,7 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 construct_passive( Classname, ConstructionParameters ) ->
 
 	%trace_bridge:debug_fmt( "wooper:construct_passive for class ~ts "
-	%					   "and parameters ~p.",
-	%					   [ Classname, ConstructionParameters ] ),
+	%   "and parameters ~p.", [ Classname, ConstructionParameters ] ),
 
 	cond_utils:if_defined( wooper_debug_mode,
 			check_classname_and_arity( Classname, ConstructionParameters ) ),
@@ -1821,7 +1820,7 @@ default_node_down_handler( Node, MonitorNodeInfo, State ) ->
 retrieve_virtual_table_key( Classname ) ->
 
 	%trace_bridge:debug_fmt( "Retrieving the OTP-way the virtual table "
-	%						"key for '~ts'.", [ Classname ] ),
+	%                        "key for '~ts'.", [ Classname ] ),
 
 	% The OTP way, through a gen_server:call/2:
 	wooper_class_manager:get_table_key( Classname ).
@@ -1833,8 +1832,8 @@ retrieve_virtual_table_key( Classname ) ->
 retrieve_virtual_table_key( Classname ) ->
 
 	%trace_bridge:debug_fmt(
-	%  "Retrieving classically (non-OTP way) the virtual table key for '~ts'.",
-	%  [ Classname ] ),
+	%   "Retrieving classically (non-OTP way) the virtual table key for '~ts'.",
+	%   [ Classname ] ),
 
 	% For per-instance virtual table: wooper_create_method_table_for(?MODULE).
 
@@ -1902,7 +1901,7 @@ trigger_error( ExceptionClass, ExceptionTerm, Classname, ConstructionParameters,
 	%trace_bridge:info_fmt( "Construction failed for ~ts:construct/~B.",
 	%					   [ Classname, Arity ] ),
 
-	%trace_utils:debug_fmt( "ExceptionClass: ~p, ExceptionTerm: ~p, "
+	%trace_bridge:debug_fmt( "ExceptionClass: ~p, ExceptionTerm: ~p, "
 	%   "Stacktrace:~n ~p.",
 	%   [ ExceptionClass, ExceptionTerm, Stacktrace ] ),
 
@@ -2639,12 +2638,12 @@ delete_synchronously_any_instance_referenced_in( Attributes, PreTestLiveliness,
 		delete_pid_from( Attributes, PreTestLiveliness, State ),
 
 	%trace_bridge:debug_fmt(
-	%  "delete_synchronously_any_instance_referenced_in:~n"
-	%  " - attributes are: ~p~n"
-	%  " - PIDs are: ~p~n"
-	%  " - time-out is ~p (ms), i.e. ~ts",
-	%  [ TargetAttributes, TargetPids, ?synchronous_time_out,
-	%	 time_utils:duration_to_string( ?synchronous_time_out ) ] ),
+	%   "delete_synchronously_any_instance_referenced_in:~n"
+	%   " - attributes are: ~p~n"
+	%   " - PIDs are: ~p~n"
+	%   " - time-out is ~p (ms), i.e. ~ts",
+	%   [ TargetAttributes, TargetPids, ?synchronous_time_out,
+	%     time_utils:duration_to_string( ?synchronous_time_out ) ] ),
 
 	% Waits for their completion:
 	wait_for_deletion_ack( TargetPids ),
@@ -2705,7 +2704,7 @@ delete_pid_from( [ Attr | T ], DeleteMessage, PreTestLiveliness, State,
 				% Only case where no deletion oneway shall be sent:
 				true ->
 					%trace_bridge:debug_fmt(
-					%    "(PID ~w was already dead, nothing done)", [ Pid ] ),
+					%   "(PID ~w was already dead, nothing done)", [ Pid ] ),
 					delete_pid_from( T, DeleteMessage, PreTestLiveliness,
 									 State, [ Attr | AccAttr ], AccPid );
 
@@ -2799,9 +2798,11 @@ wait_for_deletion_ack( WaitedPids ) ->
 				ok;
 
 			NewWaitedPids ->
-				trace_bridge:debug_fmt(
-				  "(still waiting for the synchronous deletion of "
-				  "following live WOOPER instance(s): ~p)", [ NewWaitedPids ] ),
+				% Useful:
+				%trace_bridge:debug_fmt(
+				%   "(still waiting for the synchronous deletion of "
+				%   "following live WOOPER instance(s): ~p)",
+				%   [ NewWaitedPids ] ),
 
 				% Warns, but does not trigger failures:
 				wait_for_deletion_ack( NewWaitedPids )
@@ -2827,9 +2828,9 @@ examine_waited_deletions( _WaitedPids=[ Pid | T ], Acc ) ->
 			examine_waited_deletions( T, [ Pid | Acc ] );
 
 		false ->
-			trace_bridge:debug_fmt(
-				"Stopped waiting for the deletion of instance "
-				"whose PID is ~p: not found alive.", [ Pid ] ),
+			%trace_bridge:debug_fmt(
+			%   "Stopped waiting for the deletion of instance "
+			%   "whose PID is ~p: not found alive.", [ Pid ] ),
 
 			examine_waited_deletions( T, Acc )
 
