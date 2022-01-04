@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+<meta name="generator" content="Docutils 0.16: http://docutils.sourceforge.net/" />
 <title>Welcome to the Ceylan-WOOPER documentation</title>
 <meta content="WOOPER, OOP, inheritance, object-oriented, Erlang" name="keywords" />
 <link rel="stylesheet" href="pygments-default.css" type="text/css" />
@@ -23,15 +23,15 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Organisation:</th><td class="field-body">Copyright (C) 2008-2021 Olivier Boudeville</td>
+<tr class="field"><th class="field-name">Organisation:</th><td class="field-body">Copyright (C) 2008-2022 Olivier Boudeville</td>
 </tr>
 <tr class="field"><th class="field-name">Contact:</th><td class="field-body">about (dash) wooper (at) esperide (dot) com</td>
 </tr>
 <tr class="field"><th class="field-name">Creation date:</th><td class="field-body">Sunday, August 17, 2008</td>
 </tr>
-<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Tuesday, November 9, 2021</td>
+<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Tuesday, January 4, 2022</td>
 </tr>
-<tr class="field"><th class="field-name">Version:</th><td class="field-body">2.0.14</td>
+<tr class="field"><th class="field-name">Version:</th><td class="field-body">2.0.15</td>
 </tr>
 <tr class="field"><th class="field-name">Status:</th><td class="field-body">Stable</td>
 </tr>
@@ -269,68 +269,68 @@
 <p>It shows <tt class="docutils literal">new/delete</tt> operators, method calling (both request and oneway), and inheritance.</p>
 <p>A cat is here a viviparous mammal, as defined below (this is a variation of our more complete <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Cat.erl">class_Cat.erl</a> example):</p>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">module</span><span class="p">(</span><span class="n">class_Cat</span><span class="p">).</span>
+<span class="p">-</span><span class="ni">module</span><span class="p">(</span><span class="n">class_Cat</span><span class="p">).</span><span class="w">
 
-<span class="c">% Optional:
-</span><span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_description</span><span class="p">,</span><span class="s">&quot;Models a domestic cat&quot;</span><span class="p">).</span>
+</span><span class="c">% Optional:</span><span class="w">
+</span><span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_description</span><span class="p">,</span><span class="s">&quot;Models a domestic cat&quot;</span><span class="p">).</span><span class="w">
 
-<span class="c">% Determines what are the direct mother classes of this class (if any):
-</span><span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">superclasses</span><span class="p">,[</span><span class="n">class_Mammal</span><span class="p">,</span><span class="n">class_ViviparousBeing</span><span class="p">]).</span>
+</span><span class="c">% Determines what are the direct mother classes of this class (if any):</span><span class="w">
+</span><span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">superclasses</span><span class="p">,[</span><span class="n">class_Mammal</span><span class="p">,</span><span class="n">class_ViviparousBeing</span><span class="p">]).</span><span class="w">
 
-<span class="c">% Declaration of class-specific attributes:
-% (optional, yet recommended for clarity)
-</span><span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_attributes</span><span class="p">,[</span>
-          <span class="p">{</span><span class="n">meow_style</span><span class="p">,</span><span class="n">style</span><span class="p">(),</span><span class="n">const</span><span class="p">,</span><span class="s">&quot;the kind of meow to expect&quot;</span><span class="p">},</span>
-          <span class="p">{</span><span class="n">whisker_color</span><span class="p">,</span><span class="s">&quot;the color of this cat's whiskers&quot;</span><span class="p">}]).</span>
+</span><span class="c">% Declaration of class-specific attributes:</span><span class="w">
+</span><span class="c">% (optional, yet recommended for clarity)</span><span class="w">
+</span><span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_attributes</span><span class="p">,[</span><span class="w">
+          </span><span class="p">{</span><span class="n">meow_style</span><span class="p">,</span><span class="n">style</span><span class="p">(),</span><span class="n">const</span><span class="p">,</span><span class="s">&quot;the kind of meow to expect&quot;</span><span class="p">},</span><span class="w">
+          </span><span class="p">{</span><span class="n">whisker_color</span><span class="p">,</span><span class="s">&quot;the color of this cat's whiskers&quot;</span><span class="p">}]).</span><span class="w">
 
-<span class="c">% Allows to define WOOPER base variables and methods for that class:
-</span><span class="p">-</span><span class="ni">include</span><span class="p">(</span><span class="s">&quot;wooper.hrl&quot;</span><span class="p">).</span>
+</span><span class="c">% Allows to define WOOPER base variables and methods for that class:</span><span class="w">
+</span><span class="p">-</span><span class="ni">include</span><span class="p">(</span><span class="s">&quot;wooper.hrl&quot;</span><span class="p">).</span><span class="w">
 
-<span class="c">% No need to export constructors, destructor or methods.
-% Type specifications remain optional (yet are recommended).
-</span>
-<span class="c">% Constructs a new Cat.
-</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">,</span><span class="nv">FurColor</span><span class="p">,</span><span class="nv">WhiskerColor</span><span class="p">)</span> <span class="o">-&gt;</span>
-   <span class="c">% First the direct mother classes:
-</span>   <span class="nv">MammalState</span> <span class="o">=</span> <span class="nn">class_Mammal</span><span class="p">:</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">,</span><span class="nv">FurColor</span><span class="p">),</span>
-   <span class="nv">ViviparousMammalState</span> <span class="o">=</span> <span class="nn">class_ViviparousBeing</span><span class="p">:</span><span class="nf">construct</span><span class="p">(</span><span class="nv">MammalState</span><span class="p">),</span>
-   <span class="c">% Then the class-specific attributes; returns an updated state:
-</span>   <span class="n">setAttribute</span><span class="p">(</span><span class="nv">ViviparousMammalState</span><span class="p">,</span><span class="n">whisker_color</span><span class="p">,</span><span class="nv">WhiskerColor</span><span class="p">).</span>
+</span><span class="c">% No need to export constructors, destructor or methods.</span><span class="w">
+</span><span class="c">% Type specifications remain optional (yet are recommended).</span><span class="w">
 
-<span class="nf">destruct</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-   <span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span> <span class="s">&quot;Deleting cat </span><span class="si">~w</span><span class="s">! (overridden destructor)</span><span class="si">~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">self</span><span class="p">()]</span> <span class="p">),</span>
-   <span class="nv">State</span><span class="p">.</span>
+</span><span class="c">% Constructs a new Cat.</span><span class="w">
+</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">,</span><span class="nv">FurColor</span><span class="p">,</span><span class="nv">WhiskerColor</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+   </span><span class="c">% First the direct mother classes:</span><span class="w">
+   </span><span class="nv">MammalState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">class_Mammal</span><span class="p">:</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">,</span><span class="nv">FurColor</span><span class="p">),</span><span class="w">
+   </span><span class="nv">ViviparousMammalState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">class_ViviparousBeing</span><span class="p">:</span><span class="nf">construct</span><span class="p">(</span><span class="nv">MammalState</span><span class="p">),</span><span class="w">
+   </span><span class="c">% Then the class-specific attributes; returns an updated state:</span><span class="w">
+   </span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">ViviparousMammalState</span><span class="p">,</span><span class="n">whisker_color</span><span class="p">,</span><span class="nv">WhiskerColor</span><span class="p">).</span><span class="w">
 
-<span class="c">% Member methods.
-</span>
-<span class="c">% A cat-specific request, supposing the developer missed the fact
-% that it is a const one (no problem):
-</span><span class="nf">getWhiskerColor</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="o">-&gt;</span>
-   <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">whisker_color</span><span class="p">)).</span>
+</span><span class="nf">destruct</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+   </span><span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="w"> </span><span class="s">&quot;Deleting cat </span><span class="si">~w</span><span class="s">! (overridden destructor)</span><span class="si">~n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="n">self</span><span class="p">()]</span><span class="w"> </span><span class="p">),</span><span class="w">
+   </span><span class="nv">State</span><span class="p">.</span><span class="w">
 
-<span class="c">% A (non-const) oneway, with a spec:
-</span><span class="p">-</span><span class="ni">spec</span> <span class="n">setWhiskerColor</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="nn">foo</span><span class="p">:</span><span class="nf">color</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">oneway_return</span><span class="p">().</span>
-<span class="nf">setWhiskerColor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">NewColor</span><span class="p">)</span><span class="o">-&gt;</span>
-   <span class="nv">NewState</span> <span class="o">=</span> <span class="n">setAttribute</span><span class="p">(</span> <span class="nv">State</span><span class="p">,</span> <span class="n">whisker_color</span><span class="p">,</span> <span class="nv">NewColor</span> <span class="p">),</span>
-   <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state</span><span class="p">(</span><span class="nv">NewState</span><span class="p">).</span>
+</span><span class="c">% Member methods.</span><span class="w">
 
-<span class="c">% Overrides any request method defined in the Mammal class:
-% (const request)
-</span><span class="nf">canEat</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">soup</span><span class="p">)</span> <span class="o">-&gt;</span>
-   <span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="n">true</span><span class="p">);</span>
+</span><span class="c">% A cat-specific request, supposing the developer missed the fact</span><span class="w">
+</span><span class="c">% that it is a const one (no problem):</span><span class="w">
+</span><span class="nf">getWhiskerColor</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="o">-&gt;</span><span class="w">
+   </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">whisker_color</span><span class="p">)).</span><span class="w">
 
-<span class="nf">canEat</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">croquette</span><span class="p">)</span> <span class="o">-&gt;</span>
-   <span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="n">true</span><span class="p">);</span>
+</span><span class="c">% A (non-const) oneway, with a spec:</span><span class="w">
+</span><span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">setWhiskerColor</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="nn">foo</span><span class="p">:</span><span class="nf">color</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">oneway_return</span><span class="p">().</span><span class="w">
+</span><span class="nf">setWhiskerColor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">NewColor</span><span class="p">)</span><span class="o">-&gt;</span><span class="w">
+   </span><span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">setAttribute</span><span class="p">(</span><span class="w"> </span><span class="nv">State</span><span class="p">,</span><span class="w"> </span><span class="n">whisker_color</span><span class="p">,</span><span class="w"> </span><span class="nv">NewColor</span><span class="w"> </span><span class="p">),</span><span class="w">
+   </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state</span><span class="p">(</span><span class="nv">NewState</span><span class="p">).</span><span class="w">
 
-<span class="nf">canEat</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">meat</span><span class="p">)</span> <span class="o">-&gt;</span>
-   <span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="n">true</span><span class="p">);</span>
+</span><span class="c">% Overrides any request method defined in the Mammal class:</span><span class="w">
+</span><span class="c">% (const request)</span><span class="w">
+</span><span class="nf">canEat</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">soup</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+   </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="n">true</span><span class="p">);</span><span class="w">
 
-<span class="nf">canEat</span><span class="p">(</span><span class="nv">State</span><span class="p">,_</span><span class="nv">OtherFood</span><span class="p">)</span> <span class="o">-&gt;</span>
-   <span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="n">false</span><span class="p">).</span>
+</span><span class="nf">canEat</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">croquette</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+   </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="n">true</span><span class="p">);</span><span class="w">
 
-<span class="c">% Static method:
-</span><span class="nf">get_default_whisker_color</span><span class="p">()</span> <span class="o">-&gt;</span>
-   <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_static</span><span class="p">(</span><span class="n">white</span><span class="p">).</span>
+</span><span class="nf">canEat</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">meat</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+   </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="n">true</span><span class="p">);</span><span class="w">
+
+</span><span class="nf">canEat</span><span class="p">(</span><span class="nv">State</span><span class="p">,_</span><span class="nv">OtherFood</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+   </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="n">false</span><span class="p">).</span><span class="w">
+
+</span><span class="c">% Static method:</span><span class="w">
+</span><span class="nf">get_default_whisker_color</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+   </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_static</span><span class="p">(</span><span class="n">white</span><span class="p">).</span>
 </pre>
 <p>Straightforward, isn't it? We will discuss it in-depth, though.</p>
 <p>To test this class (provided that <tt class="docutils literal">GNU make</tt> and the latest stable version of <tt class="docutils literal">Erlang</tt> are available in one's environment, see <a class="reference internal" href="#prerequisites">Prerequisites</a> for more information), one can easily install <tt class="docutils literal"><span class="pre">Ceylan-WOOPER</span></tt>, which depends on <a class="reference external" href="http://myriad.esperide.org">Ceylan-Myriad</a>, hence is to be installed first:</p>
@@ -374,7 +374,7 @@ This cat could be created and be synchronously deleted, as expected.
 <table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id3">[1]</a></td><td>This example is not a <em>simulation</em>, it is just a multi-agent system. For real, massive, discrete-time simulations of complex systems in Erlang (using WOOPER), one may refer to <a class="reference external" href="http://www.sim-diasca.com">Sim-Diasca</a> instead (a free software simulation engine).</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id3">[1]</a></td><td>This example is not a <em>simulation</em>, it is just a multi-agent system. For real, massive, discrete-time simulations of complex systems in Erlang (using WOOPER), one may refer to <a class="reference external" href="https://github.com/Olivier-Boudeville-EDF/Sim-Diasca">Sim-Diasca</a> instead (a free software discrete-time simulation engine).</td></tr>
 </tbody>
 </table>
 <p>WOOPER, which stands for <em>Wrapper for OOP in Erlang</em>, is a lightweight yet effective (performance-wise, but also regarding the user-side  developing efforts) means of making these constructs available, notably in terms of state management and multiple inheritance.</p>
@@ -446,8 +446,8 @@ This cat could be created and be synchronously deleted, as expected.
 <h3><a class="toc-backref" href="#id169">Class Description</a></h3>
 <p>A class should not be implemented without adding at least a short description of it. Rather than describing it through a mere in-code comment (hence only addressed to the class maintainer), a better approach is to used the <tt class="docutils literal">class_description</tt> define, like in:</p>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_description</span><span class="p">,</span><span class="s">&quot;Class in charge of implementing the &quot;</span>
-                            <span class="s">&quot;Foobar service.&quot;</span><span class="p">).</span>
+<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_description</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Class in charge of implementing the &quot;</span><span class="w">
+                           </span><span class="s">&quot;Foobar service.&quot;</span><span class="p">).</span>
 </pre>
 <p>Doing so allows that information to be available to humans and tools alike <a class="footnote-reference" href="#id6" id="id5">[2]</a>.</p>
 <table class="docutils footnote" frame="void" id="id6" rules="none">
@@ -463,12 +463,12 @@ This cat could be created and be synchronously deleted, as expected.
 <p>Being in a <strong>multiple inheritance</strong> context, a given class can have any number (<tt class="docutils literal"><span class="pre">[0..n]</span></tt>) of direct mother classes, which themselves may have their mother classes, and so on. This is to lead to a class hierarchy that forms a direct, acyclic graph.</p>
 <p>The direct mother classes (and only them) are to be declared in WOOPER thanks to the <tt class="docutils literal">superclasses</tt> define. For example, a class with no mother class should specify, once having declared its module:</p>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">superclasses</span><span class="p">,[]).</span>
+<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">superclasses</span><span class="p">,</span><span class="w"> </span><span class="p">[]).</span>
 </pre>
 <p>In this particular case, with no mother class to be declared, this <tt class="docutils literal">superclasses</tt> define could be omitted as a whole (yet this would be probably less obvious to the reader).</p>
 <p>As for our cat, this superb animal could be modelled both as a mammal (itself a specialised creature) and a viviparous being <a class="footnote-reference" href="#id8" id="id7">[3]</a>. Hence its direct inheritance could be defined as:</p>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">superclasses</span><span class="p">,[</span><span class="n">class_Mammal</span><span class="p">,</span><span class="n">class_ViviparousBeing</span><span class="p">]).</span>
+<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">superclasses</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="n">class_Mammal</span><span class="p">,</span><span class="n">class_ViviparousBeing</span><span class="p">]).</span>
 </pre>
 <table class="docutils footnote" frame="void" id="id8" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -478,8 +478,8 @@ This cat could be created and be synchronously deleted, as expected.
 </table>
 <p>The superclasses (direct mother classes) of a given class can be known thanks to its <tt class="docutils literal">get_superclasses/0</tt> static method <a class="footnote-reference" href="#id10" id="id9">[4]</a> (automatically defined by WOOPER):</p>
 <pre class="code erlang literal-block">
-<span class="o">&gt;</span> <span class="nn">class_Cat</span><span class="p">:</span><span class="nf">get_superclasses</span><span class="p">().</span>
-<span class="p">[</span><span class="n">class_Mammal</span><span class="p">,</span><span class="n">class_ViviparousBeing</span><span class="p">]</span>
+<span class="o">&gt;</span><span class="w"> </span><span class="nn">class_Cat</span><span class="p">:</span><span class="nf">get_superclasses</span><span class="p">().</span><span class="w">
+</span><span class="p">[</span><span class="n">class_Mammal</span><span class="p">,</span><span class="n">class_ViviparousBeing</span><span class="p">]</span>
 </pre>
 <table class="docutils footnote" frame="void" id="id10" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -556,28 +556,28 @@ This cat could be created and be synchronously deleted, as expected.
 <p>Therefore the <tt class="docutils literal">self()</tt> parameter in the call tuples for requests below corresponds to the PID <em>of the caller</em>, while <tt class="docutils literal">MyCat</tt> is bound to the PID <em>of the target instance</em>.</p>
 <p>The three methods previously discussed would indeed be called that way:</p>
 <pre class="code erlang literal-block">
-<span class="c">% Calling the canEat request of our cat instance:
-</span><span class="nv">MyCat</span> <span class="o">!</span> <span class="p">{</span><span class="n">canEat</span><span class="p">,</span><span class="n">soup</span><span class="p">,</span><span class="n">self</span><span class="p">()},</span>
-<span class="k">receive</span>
-    <span class="p">{</span><span class="n">wooper_result</span><span class="p">,</span><span class="n">true</span><span class="p">}</span> <span class="o">-&gt;</span>
-      <span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;This cat likes soup!!!&quot;</span><span class="p">);</span>
+<span class="c">% Calling the canEat request of our cat instance:</span><span class="w">
+</span><span class="nv">MyCat</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">canEat</span><span class="p">,</span><span class="n">soup</span><span class="p">,</span><span class="n">self</span><span class="p">()},</span><span class="w">
+</span><span class="k">receive</span><span class="w">
+    </span><span class="p">{</span><span class="n">wooper_result</span><span class="p">,</span><span class="n">true</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+      </span><span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;This cat likes soup!!!&quot;</span><span class="p">);</span><span class="w">
 
-    <span class="p">{</span><span class="n">wooper_result</span><span class="p">,</span><span class="n">false</span><span class="p">}</span> <span class="o">-&gt;</span>
-      <span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;This cat does not seem omnivorous.&quot;</span><span class="p">)</span>
-<span class="k">end</span><span class="p">,</span>
+    </span><span class="p">{</span><span class="n">wooper_result</span><span class="p">,</span><span class="n">false</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+      </span><span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;This cat does not seem omnivorous.&quot;</span><span class="p">)</span><span class="w">
+</span><span class="k">end</span><span class="p">,</span><span class="w">
 
-<span class="c">% A parameter-less request:
-</span><span class="nv">MyCat</span> <span class="o">!</span> <span class="p">{</span><span class="n">getWhiskersColor</span><span class="p">,[],</span><span class="n">self</span><span class="p">()},</span>
-<span class="k">receive</span>
-    <span class="p">{</span><span class="n">wooper_result</span><span class="p">,</span><span class="n">white</span><span class="p">}</span> <span class="o">-&gt;</span>
-      <span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;This cat has normal whiskers.&quot;</span><span class="p">);</span>
+</span><span class="c">% A parameter-less request:</span><span class="w">
+</span><span class="nv">MyCat</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">getWhiskersColor</span><span class="p">,[],</span><span class="n">self</span><span class="p">()},</span><span class="w">
+</span><span class="k">receive</span><span class="w">
+    </span><span class="p">{</span><span class="n">wooper_result</span><span class="p">,</span><span class="n">white</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+      </span><span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;This cat has normal whiskers.&quot;</span><span class="p">);</span><span class="w">
 
-    <span class="p">{</span><span class="n">wooper_result</span><span class="p">,</span><span class="n">blue</span><span class="p">}</span> <span class="o">-&gt;</span>
-      <span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;What a weird cat...&quot;</span><span class="p">)</span>
-<span class="k">end</span><span class="p">,</span>
+    </span><span class="p">{</span><span class="n">wooper_result</span><span class="p">,</span><span class="n">blue</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+      </span><span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;What a weird cat...&quot;</span><span class="p">)</span><span class="w">
+</span><span class="k">end</span><span class="p">,</span><span class="w">
 
-<span class="c">% A parameter-less oneway:
-</span><span class="nv">MyCat</span> <span class="o">!</span> <span class="n">declareBirthday</span><span class="p">.</span>
+</span><span class="c">% A parameter-less oneway:</span><span class="w">
+</span><span class="nv">MyCat</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="n">declareBirthday</span><span class="p">.</span>
 </pre>
 </div>
 <div class="section" id="method-name">
@@ -626,25 +626,25 @@ This cat could be created and be synchronously deleted, as expected.
 <p>If only one parameter is to be sent, and if that parameter is not a list, then this can become <tt class="docutils literal">{request_name, Arg, <span class="pre">self()}</span></tt>.</p>
 <p>For example:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyCat</span> <span class="o">!</span> <span class="p">{</span><span class="n">getAge</span><span class="p">,[],</span><span class="n">self</span><span class="p">()}.</span>
+<span class="nv">MyCat</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">getAge</span><span class="p">,[],</span><span class="n">self</span><span class="p">()}.</span>
 </pre>
 <p>or:</p>
 <pre class="code erlang literal-block">
-<span class="nv">Douglas</span> <span class="o">!</span> <span class="p">{</span><span class="n">askQuestionWithHint</span><span class="p">,</span> <span class="p">[{</span><span class="n">meaning_of</span><span class="p">,</span><span class="s">&quot;Life&quot;</span><span class="p">},{</span><span class="n">maybe</span><span class="p">,</span><span class="mi">42</span><span class="p">}],</span> <span class="n">self</span><span class="p">()}.</span>
+<span class="nv">Douglas</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">askQuestionWithHint</span><span class="p">,</span><span class="w"> </span><span class="p">[{</span><span class="n">meaning_of</span><span class="p">,</span><span class="s">&quot;Life&quot;</span><span class="p">},{</span><span class="n">maybe</span><span class="p">,</span><span class="mi">42</span><span class="p">}],</span><span class="w"> </span><span class="n">self</span><span class="p">()}.</span>
 </pre>
 <p>or:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyCalculator</span> <span class="o">!</span> <span class="p">{</span><span class="n">sum</span><span class="p">,[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">]],</span><span class="n">self</span><span class="p">()}.</span>
+<span class="nv">MyCalculator</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">sum</span><span class="p">,[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">]],</span><span class="n">self</span><span class="p">()}.</span>
 </pre>
 <p>The actual result <tt class="docutils literal">R</tt>, as determined by the method, is sent back as an Erlang message, which is a <tt class="docutils literal">{wooper_result,R}</tt> pair, to help the caller pattern-matching the WOOPER messages in its mailbox.</p>
 <p><tt class="docutils literal">receive</tt> should then be used by the caller to retrieve the request result, like in the case of this example of a 2D point instance:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyPoint</span> <span class="o">!</span> <span class="p">{</span><span class="n">getCoordinates</span><span class="p">,[],</span><span class="n">self</span><span class="p">()},</span>
-<span class="k">receive</span>
-   <span class="p">{</span><span class="n">wooper_result</span><span class="p">,[</span><span class="nv">X</span><span class="p">,</span><span class="nv">Y</span><span class="p">]}</span> <span class="o">-&gt;</span>
-       <span class="p">[..]</span>
-<span class="k">end</span><span class="p">,</span>
-<span class="p">[..]</span>
+<span class="nv">MyPoint</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">getCoordinates</span><span class="p">,[],</span><span class="n">self</span><span class="p">()},</span><span class="w">
+</span><span class="k">receive</span><span class="w">
+   </span><span class="p">{</span><span class="n">wooper_result</span><span class="p">,[</span><span class="nv">X</span><span class="p">,</span><span class="nv">Y</span><span class="p">]}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+       </span><span class="p">[..]</span><span class="w">
+</span><span class="k">end</span><span class="p">,</span><span class="w">
+</span><span class="p">[..]</span>
 </pre>
 </div>
 <div class="section" id="oneway-methods">
@@ -773,38 +773,38 @@ So a reader in a hurry may want to skip these considerations and directly jump t
 <p>As we can see, errors can be better discriminated if needed, on the caller side.
 Therefore one could make use of that information, as in:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyPoint</span> <span class="o">!</span> <span class="p">{</span><span class="n">getCoordinates</span><span class="p">,[],</span><span class="n">self</span><span class="p">()},</span>
-<span class="k">receive</span>
-   <span class="p">{</span><span class="n">wooper_result</span><span class="p">,[</span><span class="nv">X</span><span class="p">,</span><span class="nv">Y</span><span class="p">]}</span><span class="o">-&gt;</span>
-       <span class="p">[..];</span>
-   <span class="p">{</span><span class="n">wooper_method_not_found</span><span class="p">,</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Class</span><span class="p">,</span><span class="nv">Method</span><span class="p">,</span><span class="nv">Arity</span><span class="p">,</span><span class="nv">Params</span><span class="p">}</span><span class="o">-&gt;</span>
-       <span class="p">[..];</span>
-   <span class="p">{</span><span class="n">wooper_method_failed</span><span class="p">,</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Class</span><span class="p">,</span><span class="nv">Method</span><span class="p">,</span><span class="nv">Arity</span><span class="p">,</span><span class="nv">Params</span><span class="p">,</span>
-         <span class="nv">ErrorTerm</span><span class="p">}</span><span class="o">-&gt;</span>
-       <span class="p">[..];</span>
-   <span class="c">% Error term can be a {Pid,Error} tuple as well, depending
-</span>   <span class="c">% on the exit:
-</span>   <span class="p">{</span><span class="n">wooper_method_failed</span><span class="p">,</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Class</span><span class="p">,</span><span class="nv">Method</span><span class="p">,</span><span class="nv">Arity</span><span class="p">,</span><span class="nv">Params</span><span class="p">,</span>
-         <span class="p">{</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Error</span><span class="p">}}</span><span class="o">-&gt;</span>
-       <span class="p">[..];</span>
-   <span class="p">{</span><span class="n">wooper_method_faulty_return</span><span class="p">,</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Class</span><span class="p">,</span><span class="nv">Method</span><span class="p">,</span><span class="nv">Arity</span><span class="p">,</span><span class="nv">Params</span><span class="p">,</span>
-                <span class="nv">UnexpectedTerm</span><span class="p">}</span><span class="o">-&gt;</span>
-       <span class="p">[..];</span>
-   <span class="n">wooper_method_returns_void</span><span class="o">-&gt;</span>
-       <span class="p">[..];</span>
-     <span class="nv">OtherError</span> <span class="o">-&gt;</span>
-       <span class="c">% Should never happen:
-</span>       <span class="p">[..]</span>
-<span class="k">end</span><span class="p">.</span>
+<span class="nv">MyPoint</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">getCoordinates</span><span class="p">,[],</span><span class="n">self</span><span class="p">()},</span><span class="w">
+</span><span class="k">receive</span><span class="w">
+   </span><span class="p">{</span><span class="n">wooper_result</span><span class="p">,[</span><span class="nv">X</span><span class="p">,</span><span class="nv">Y</span><span class="p">]}</span><span class="o">-&gt;</span><span class="w">
+       </span><span class="p">[..];</span><span class="w">
+   </span><span class="p">{</span><span class="n">wooper_method_not_found</span><span class="p">,</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Class</span><span class="p">,</span><span class="nv">Method</span><span class="p">,</span><span class="nv">Arity</span><span class="p">,</span><span class="nv">Params</span><span class="p">}</span><span class="o">-&gt;</span><span class="w">
+       </span><span class="p">[..];</span><span class="w">
+   </span><span class="p">{</span><span class="n">wooper_method_failed</span><span class="p">,</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Class</span><span class="p">,</span><span class="nv">Method</span><span class="p">,</span><span class="nv">Arity</span><span class="p">,</span><span class="nv">Params</span><span class="p">,</span><span class="w">
+         </span><span class="nv">ErrorTerm</span><span class="p">}</span><span class="o">-&gt;</span><span class="w">
+       </span><span class="p">[..];</span><span class="w">
+   </span><span class="c">% Error term can be a {Pid,Error} tuple as well, depending</span><span class="w">
+   </span><span class="c">% on the exit:</span><span class="w">
+   </span><span class="p">{</span><span class="n">wooper_method_failed</span><span class="p">,</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Class</span><span class="p">,</span><span class="nv">Method</span><span class="p">,</span><span class="nv">Arity</span><span class="p">,</span><span class="nv">Params</span><span class="p">,</span><span class="w">
+         </span><span class="p">{</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Error</span><span class="p">}}</span><span class="o">-&gt;</span><span class="w">
+       </span><span class="p">[..];</span><span class="w">
+   </span><span class="p">{</span><span class="n">wooper_method_faulty_return</span><span class="p">,</span><span class="nv">Pid</span><span class="p">,</span><span class="nv">Class</span><span class="p">,</span><span class="nv">Method</span><span class="p">,</span><span class="nv">Arity</span><span class="p">,</span><span class="nv">Params</span><span class="p">,</span><span class="w">
+                </span><span class="nv">UnexpectedTerm</span><span class="p">}</span><span class="o">-&gt;</span><span class="w">
+       </span><span class="p">[..];</span><span class="w">
+   </span><span class="n">wooper_method_returns_void</span><span class="o">-&gt;</span><span class="w">
+       </span><span class="p">[..];</span><span class="w">
+     </span><span class="nv">OtherError</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+       </span><span class="c">% Should never happen:</span><span class="w">
+       </span><span class="p">[..]</span><span class="w">
+</span><span class="k">end</span><span class="p">.</span>
 </pre>
 <p>However defensive development is not really favoured in Erlang, one may let the caller crash on unexpected return instead. Therefore generally one may rely simply on matching the message sent in case of success <a class="footnote-reference" href="#id18" id="id17">[8]</a>:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyPoint</span> <span class="o">!</span> <span class="p">{</span><span class="n">getCoordinates</span><span class="p">,[],</span><span class="n">self</span><span class="p">()},</span>
-<span class="k">receive</span>
-     <span class="p">{</span><span class="n">wooper_result</span><span class="p">,</span> <span class="p">[</span><span class="nv">X</span><span class="p">,</span><span class="nv">Y</span><span class="p">]</span> <span class="p">}</span> <span class="o">-&gt;</span>
-       <span class="p">[..]</span>
-<span class="k">end</span><span class="p">,</span>
-<span class="p">[..]</span>
+<span class="nv">MyPoint</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">getCoordinates</span><span class="p">,[],</span><span class="n">self</span><span class="p">()},</span><span class="w">
+</span><span class="k">receive</span><span class="w">
+     </span><span class="p">{</span><span class="n">wooper_result</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">X</span><span class="p">,</span><span class="nv">Y</span><span class="p">]</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+       </span><span class="p">[..]</span><span class="w">
+</span><span class="k">end</span><span class="p">,</span><span class="w">
+</span><span class="p">[..]</span>
 </pre>
 <table class="docutils footnote" frame="void" id="id18" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -849,9 +849,9 @@ Therefore one could make use of that information, as in:</p>
 <p>Requests will use <tt class="docutils literal">wooper:return_state_result(NewState,Result)</tt> to terminate their clauses: the new state will be kept by the instance, whereas the result will be sent to the caller. Hence <tt class="docutils literal">wooper:return_state_result/2</tt> means that the method returns a state <strong>and</strong> a result.</p>
 <p>For example:</p>
 <pre class="code erlang literal-block">
-<span class="nf">declareSettings</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Settings</span><span class="p">)</span> <span class="o">-&gt;</span>
-    <span class="nv">NewState</span> <span class="o">=</span> <span class="n">register_settings</span><span class="p">(</span><span class="nv">Settings</span><span class="p">,</span><span class="nv">State</span><span class="p">),</span>
-    <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="n">settings_declared</span><span class="p">).</span>
+<span class="nf">declareSettings</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Settings</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">register_settings</span><span class="p">(</span><span class="nv">Settings</span><span class="p">,</span><span class="nv">State</span><span class="p">),</span><span class="w">
+    </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="n">settings_declared</span><span class="p">).</span>
 </pre>
 <p>Two remarks there:</p>
 <ul class="simple">
@@ -861,12 +861,12 @@ Therefore one could make use of that information, as in:</p>
 <p>All methods are of course called with the parameters that were specified in their call tuple.</p>
 <p>For example, if we declare following request:</p>
 <pre class="code erlang literal-block">
-<span class="nf">giveBirth</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">NumberOfMaleChildren</span><span class="p">,</span><span class="nv">NumberOfFemaleChildren</span><span class="p">)</span> <span class="o">-&gt;</span>
-   <span class="p">[..]</span>
+<span class="nf">giveBirth</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">NumberOfMaleChildren</span><span class="p">,</span><span class="nv">NumberOfFemaleChildren</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+   </span><span class="p">[..]</span>
 </pre>
 <p>Then we may call it, in the case of a cat having 2 male kitten and 3 female ones, with:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyCat</span> <span class="o">!</span> <span class="p">{</span><span class="n">giveBirth</span><span class="p">,[_</span><span class="nv">Male</span><span class="o">=</span><span class="mi">2</span><span class="p">,_</span><span class="nv">Female</span><span class="o">=</span><span class="mi">3</span><span class="p">],</span><span class="n">self</span><span class="p">()}.</span>
+<span class="nv">MyCat</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">giveBirth</span><span class="p">,[_</span><span class="nv">Male</span><span class="o">=</span><span class="mi">2</span><span class="p">,_</span><span class="nv">Female</span><span class="o">=</span><span class="mi">3</span><span class="p">],</span><span class="n">self</span><span class="p">()}.</span>
 </pre>
 </div>
 <div class="section" id="const-requests">
@@ -875,13 +875,13 @@ Therefore one could make use of that information, as in:</p>
 <p>A request whose clauses are all <tt class="docutils literal">const</tt> is itself a const request.</p>
 <p>For example, instead of:</p>
 <pre class="code erlang literal-block">
-<span class="nf">getWhiskerColor</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-   <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">whisker_color</span><span class="p">)).</span>
+<span class="nf">getWhiskerColor</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+   </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">whisker_color</span><span class="p">)).</span>
 </pre>
 <p>one should prefer writing this const request as (and WOOPER will enforce it):</p>
 <pre class="code erlang literal-block">
-<span class="nf">getWhiskerColor</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-   <span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">whisker_color</span><span class="p">)).</span>
+<span class="nf">getWhiskerColor</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+   </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">whisker_color</span><span class="p">)).</span>
 </pre>
 <p>Note that <tt class="docutils literal">State</tt> can be used as always, and that even there it is not reported as unused (so one should not attempt to mute it, for example as <tt class="docutils literal">_State</tt>).</p>
 </div>
@@ -891,18 +891,18 @@ Therefore one could make use of that information, as in:</p>
 <p>However WOOPER keeps track of this information, which remains available to requests, and may be useful for some of them.</p>
 <p>From a request body, the caller PID can indeed be retrieved by using the <tt class="docutils literal">getSender</tt> macro, which is automatically managed by WOOPER:</p>
 <pre class="code erlang literal-block">
-<span class="nf">giveBirth</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">NumberOfMaleChildren</span><span class="p">,</span><span class="nv">NumberOfFemaleChildren</span><span class="p">)</span> <span class="o">-&gt;</span>
-    <span class="p">[..]</span>
-    <span class="nv">CallerPID</span> <span class="o">=</span> <span class="o">?</span><span class="n">getSender</span><span class="p">(),</span>
-    <span class="p">[..]</span>
+<span class="nf">giveBirth</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">NumberOfMaleChildren</span><span class="p">,</span><span class="nv">NumberOfFemaleChildren</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="p">[..]</span><span class="w">
+    </span><span class="nv">CallerPID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">?</span><span class="n">getSender</span><span class="p">(),</span><span class="w">
+    </span><span class="p">[..]</span>
 </pre>
 <p>Thus a request has natively access to its caller PID, i.e. with no need to specify it in the parameters as well as in the third element of the call tuple; so, instead of having to define:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyCat</span> <span class="o">!</span> <span class="p">{</span><span class="n">giveBirth</span><span class="p">,[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">self</span><span class="p">()],</span><span class="n">self</span><span class="p">()}</span>
+<span class="nv">MyCat</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">giveBirth</span><span class="p">,[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">self</span><span class="p">()],</span><span class="n">self</span><span class="p">()}</span>
 </pre>
 <p>one can rely on only:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyCat</span> <span class="o">!</span> <span class="p">{</span><span class="n">giveBirth</span><span class="p">,[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span><span class="n">self</span><span class="p">()}</span>
+<span class="nv">MyCat</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">giveBirth</span><span class="p">,[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span><span class="n">self</span><span class="p">()}</span>
 </pre>
 <p>while still letting the possibility for the called request (here <tt class="docutils literal">giveBirth/3</tt>, for a state and two parameters) to access the caller PID thanks to the <tt class="docutils literal">getSender</tt> macro, and maybe store it for a later use or do anything appropriate with it.</p>
 <p>Note that:</p>
@@ -918,16 +918,16 @@ Therefore one could make use of that information, as in:</p>
 <p>As for const requests, they shall be considered returning the <tt class="docutils literal"><span class="pre">const_request_return(T())</span></tt> type.</p>
 <p>Making the previous examples more complete:</p>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">spec</span> <span class="n">declareSettings</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="n">settings</span><span class="p">())</span> <span class="o">-&gt;</span>
-               <span class="n">request_return</span><span class="p">(</span><span class="n">'settings_declared'</span><span class="p">).</span>
-<span class="nf">declareSettings</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Settings</span><span class="p">)</span> <span class="o">-&gt;</span>
-    <span class="nv">NewState</span> <span class="o">=</span> <span class="n">register_settings</span><span class="p">(</span><span class="nv">Settings</span><span class="p">,</span><span class="nv">State</span><span class="p">),</span>
-    <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="n">settings_declared</span><span class="p">).</span>
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">declareSettings</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="n">settings</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+               </span><span class="n">request_return</span><span class="p">(</span><span class="n">'settings_declared'</span><span class="p">).</span><span class="w">
+</span><span class="nf">declareSettings</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Settings</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">register_settings</span><span class="p">(</span><span class="nv">Settings</span><span class="p">,</span><span class="nv">State</span><span class="p">),</span><span class="w">
+    </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="n">settings_declared</span><span class="p">).</span><span class="w">
 
-<span class="p">-</span><span class="ni">spec</span> <span class="n">getWhiskerColor</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">())</span> <span class="o">-&gt;</span>
-               <span class="n">const_request_return</span><span class="p">(</span><span class="n">color</span><span class="p">()).</span>
-<span class="nf">getWhiskerColor</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-   <span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">whisker_color</span><span class="p">)).</span>
+</span><span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">getWhiskerColor</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+               </span><span class="n">const_request_return</span><span class="p">(</span><span class="n">color</span><span class="p">()).</span><span class="w">
+</span><span class="nf">getWhiskerColor</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+   </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">whisker_color</span><span class="p">)).</span>
 </pre>
 <p>(of course the developer is responsible for the definition of the <tt class="docutils literal">settings()</tt> and <tt class="docutils literal">color()</tt> types here)</p>
 <p>Note that we prefer surrounding atoms in single quotes when specified as a type.</p>
@@ -942,28 +942,28 @@ Therefore one could make use of that information, as in:</p>
 <p>Oneways will use <tt class="docutils literal">wooper:return_state(NewState)</tt> to terminate their clauses: the new state will be kept by the instance, and no result will be returned to the caller (which is not even known - hence no <tt class="docutils literal"><span class="pre">?getSender</span></tt> macro applies to oneways either).</p>
 <p>For example:</p>
 <pre class="code erlang literal-block">
-<span class="nf">setAge</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">NewAge</span><span class="p">)</span> <span class="o">-&gt;</span>
-    <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state</span><span class="p">(</span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">age</span><span class="p">,</span><span class="nv">NewAge</span><span class="p">)).</span>
+<span class="nf">setAge</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">NewAge</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state</span><span class="p">(</span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">age</span><span class="p">,</span><span class="nv">NewAge</span><span class="p">)).</span>
 </pre>
 <p>This oneway can be called that way:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyCat</span> <span class="o">!</span> <span class="p">{</span><span class="n">setAge</span><span class="p">,</span><span class="mi">4</span><span class="p">}.</span>
-<span class="c">% No result to expect.</span>
+<span class="nv">MyCat</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">setAge</span><span class="p">,</span><span class="mi">4</span><span class="p">}.</span><span class="w">
+</span><span class="c">% No result to expect.</span>
 </pre>
 </div>
 <div class="section" id="const-oneways">
 <h4>Const Oneways</h4>
 <p>Even if it is less frequent than for requests, oneways may also be <tt class="docutils literal">const</tt>, i.e. may leave the state unchanged, and consequently are only called for side-effects; for example, rather than specifying:</p>
 <pre class="code erlang literal-block">
-<span class="nf">displayAge</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-    <span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;My age is </span><span class="si">~B~n</span><span class="s">.&quot;</span><span class="p">,[</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">age</span><span class="p">)]),</span>
-    <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state</span><span class="p">(</span><span class="nv">State</span><span class="p">).</span>
+<span class="nf">displayAge</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;My age is </span><span class="si">~B~n</span><span class="s">.&quot;</span><span class="p">,[</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">age</span><span class="p">)]),</span><span class="w">
+    </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state</span><span class="p">(</span><span class="nv">State</span><span class="p">).</span>
 </pre>
 <p>WOOPER will ensure that, in this case, <tt class="docutils literal">wooper:const_return/0</tt> is preferred to <tt class="docutils literal">wooper:return_state/1</tt>:</p>
 <pre class="code erlang literal-block">
-<span class="nf">displayAge</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-    <span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;My age is </span><span class="si">~B~n</span><span class="s">.&quot;</span><span class="p">,[</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">age</span><span class="p">)]),</span>
-    <span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return</span><span class="p">().</span>
+<span class="nf">displayAge</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;My age is </span><span class="si">~B~n</span><span class="s">.&quot;</span><span class="p">,[</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">age</span><span class="p">)]),</span><span class="w">
+    </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return</span><span class="p">().</span>
 </pre>
 <p>A oneway whose clauses are all <tt class="docutils literal">const</tt> is itself a const oneway.</p>
 </div>
@@ -972,14 +972,14 @@ Therefore one could make use of that information, as in:</p>
 <p>The type specification of a oneway should rely, for its return type, either on <tt class="docutils literal">oneway_return()</tt> or on <tt class="docutils literal">const_oneway_return()</tt>, depending on its constness (no result to account for in either case).</p>
 <p>Making the previous examples more complete:</p>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">spec</span> <span class="n">setAge</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="n">state</span><span class="p">,</span><span class="n">age</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">oneway_return</span><span class="p">().</span>
-<span class="nf">setAge</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">NewAge</span><span class="p">)</span> <span class="o">-&gt;</span>
-    <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state</span><span class="p">(</span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">age</span><span class="p">,</span><span class="nv">NewAge</span><span class="p">)).</span>
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">setAge</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="n">state</span><span class="p">,</span><span class="n">age</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">oneway_return</span><span class="p">().</span><span class="w">
+</span><span class="nf">setAge</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">NewAge</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state</span><span class="p">(</span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">age</span><span class="p">,</span><span class="nv">NewAge</span><span class="p">)).</span><span class="w">
 
-<span class="p">-</span><span class="ni">spec</span> <span class="n">displayAge</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="n">state</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">const_oneway_return</span><span class="p">().</span>
-<span class="nf">displayAge</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-    <span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;My age is </span><span class="si">~B~n</span><span class="s">.&quot;</span><span class="p">,[</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">age</span><span class="p">)]),</span>
-    <span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return</span><span class="p">().</span>
+</span><span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">displayAge</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="n">state</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">const_oneway_return</span><span class="p">().</span><span class="w">
+</span><span class="nf">displayAge</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;My age is </span><span class="si">~B~n</span><span class="s">.&quot;</span><span class="p">,[</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">age</span><span class="p">)]),</span><span class="w">
+    </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return</span><span class="p">().</span>
 </pre>
 </div>
 </div>
@@ -991,32 +991,32 @@ Therefore one could make use of that information, as in:</p>
 <p>More precisely, as mentioned, all clauses of a method must directly end with a call to its corresponding WOOPER method terminator.</p>
 <p>For example, the following extract is correct:</p>
 <pre class="code erlang literal-block">
-<span class="c">% Returns the name of this instance.
-</span><span class="p">-</span><span class="ni">spec</span> <span class="n">getName</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">request_return</span><span class="p">(</span><span class="n">name</span><span class="p">()).</span>
-<span class="nf">getName</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="nv">Name</span> <span class="o">=</span> <span class="n">nested_in_request</span><span class="p">(</span><span class="nv">State</span><span class="p">),</span>
-  <span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="nv">Name</span><span class="p">).</span>
+<span class="c">% Returns the name of this instance.</span><span class="w">
+</span><span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">getName</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">request_return</span><span class="p">(</span><span class="n">name</span><span class="p">()).</span><span class="w">
+</span><span class="nf">getName</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="nv">Name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nested_in_request</span><span class="p">(</span><span class="nv">State</span><span class="p">),</span><span class="w">
+  </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="nv">Name</span><span class="p">).</span><span class="w">
 
-<span class="c">% (helper)
-</span><span class="nf">nested_in_request</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">name</span><span class="p">).</span>
+</span><span class="c">% (helper)</span><span class="w">
+</span><span class="nf">nested_in_request</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">name</span><span class="p">).</span>
 </pre>
 <p>Whereas the next one is wrong, as <tt class="docutils literal">getName/1</tt> would be identified as a unexported plain function (instead of as a const request), and the other way round for <tt class="docutils literal">nested_in_request/1</tt>:</p>
 <pre class="code erlang literal-block">
-<span class="c">% Returns the name of this instance.
-</span><span class="p">-</span><span class="ni">spec</span> <span class="n">getName</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">request_return</span><span class="p">(</span><span class="n">name</span><span class="p">()).</span>
-<span class="nf">getName</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="n">nested_in_request</span><span class="p">(</span><span class="nv">State</span><span class="p">).</span>
+<span class="c">% Returns the name of this instance.</span><span class="w">
+</span><span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">getName</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">request_return</span><span class="p">(</span><span class="n">name</span><span class="p">()).</span><span class="w">
+</span><span class="nf">getName</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="n">nested_in_request</span><span class="p">(</span><span class="nv">State</span><span class="p">).</span><span class="w">
 
-<span class="c">% (helper)
-</span><span class="nf">nested_in_request</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">name</span><span class="p">)).</span>
+</span><span class="c">% (helper)</span><span class="w">
+</span><span class="nf">nested_in_request</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">name</span><span class="p">)).</span>
 </pre>
 <p>Defining <tt class="docutils literal">nested_in_request/1</tt> as shown below would not help either of course:</p>
 <pre class="code erlang literal-block">
-<span class="c">% (helper)
-</span><span class="nf">nested_in_request</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">name</span><span class="p">).</span>
+<span class="c">% (helper)</span><span class="w">
+</span><span class="nf">nested_in_request</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">name</span><span class="p">).</span>
 </pre>
 <p>So, should a method be reported as unused, most probably that no method terminator was used (hence it was not identified as such, and thus not auto-exported, and thus may be reported as unused).</p>
 </div>
@@ -1037,21 +1037,21 @@ Therefore one could make use of that information, as in:</p>
 <p><tt class="docutils literal">executeRequest</tt> returns a pair made of the new state and of the result.</p>
 <p>For example, for a request taking more than one parameter, or one list parameter:</p>
 <pre class="code erlang literal-block">
-<span class="p">{</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Result</span><span class="p">}</span> <span class="o">=</span> <span class="n">executeRequest</span><span class="p">(</span><span class="nv">CurrentState</span><span class="p">,</span><span class="n">myRequestName</span><span class="p">,</span>
-                               <span class="p">[</span><span class="s">&quot;hello&quot;</span><span class="p">,</span><span class="mi">42</span><span class="p">])</span>
+<span class="p">{</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Result</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">executeRequest</span><span class="p">(</span><span class="nv">CurrentState</span><span class="p">,</span><span class="n">myRequestName</span><span class="p">,</span><span class="w">
+                               </span><span class="p">[</span><span class="s">&quot;hello&quot;</span><span class="p">,</span><span class="mi">42</span><span class="p">])</span>
 </pre>
 <p>For a request taking exactly one, non-list, parameter:</p>
 <pre class="code erlang literal-block">
-<span class="p">{</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">NewCounter</span><span class="p">}</span> <span class="o">=</span> <span class="n">executeRequest</span><span class="p">(</span><span class="nv">CurrentState</span><span class="p">,</span>
-                               <span class="n">addToCurrentCounter</span><span class="p">,</span><span class="mi">78</span><span class="p">)</span>
+<span class="p">{</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">NewCounter</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">executeRequest</span><span class="p">(</span><span class="nv">CurrentState</span><span class="p">,</span><span class="w">
+                               </span><span class="n">addToCurrentCounter</span><span class="p">,</span><span class="mi">78</span><span class="p">)</span>
 </pre>
 <p>For a request taking no parameter:</p>
 <pre class="code erlang literal-block">
-<span class="p">{</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Sentence</span><span class="p">}</span> <span class="o">=</span> <span class="n">executeRequest</span><span class="p">(</span><span class="nv">CurrentState</span><span class="p">,</span><span class="n">getLastSentence</span><span class="p">)</span>
+<span class="p">{</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Sentence</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">executeRequest</span><span class="p">(</span><span class="nv">CurrentState</span><span class="p">,</span><span class="n">getLastSentence</span><span class="p">)</span>
 </pre>
 <p>Const requests can be called <a class="footnote-reference" href="#id22" id="id21">[10]</a> as well, like in:</p>
 <pre class="code erlang literal-block">
-<span class="nv">Color</span> <span class="o">=</span> <span class="n">executeConstRequest</span><span class="p">(</span><span class="nv">CurrentState</span><span class="p">,</span><span class="n">getColor</span><span class="p">)</span>
+<span class="nv">Color</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">executeConstRequest</span><span class="p">(</span><span class="nv">CurrentState</span><span class="p">,</span><span class="n">getColor</span><span class="p">)</span>
 </pre>
 <table class="docutils footnote" frame="void" id="id22" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -1063,15 +1063,15 @@ Therefore one could make use of that information, as in:</p>
 <p><tt class="docutils literal">executeOneway</tt> returns the new state.</p>
 <p>For example, a oneway taking more than one parameter, or one list parameter:</p>
 <pre class="code erlang literal-block">
-<span class="nv">NewState</span> <span class="o">=</span> <span class="n">executeOneway</span><span class="p">(</span><span class="nv">CurrentState</span><span class="p">,</span><span class="n">say</span><span class="p">,[</span> <span class="s">&quot;hello&quot;</span><span class="p">,</span> <span class="mi">42</span> <span class="p">])</span>
+<span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">executeOneway</span><span class="p">(</span><span class="nv">CurrentState</span><span class="p">,</span><span class="n">say</span><span class="p">,[</span><span class="w"> </span><span class="s">&quot;hello&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">42</span><span class="w"> </span><span class="p">])</span>
 </pre>
 <p>For a oneway taking exactly one (non-list) parameter:</p>
 <pre class="code erlang literal-block">
-<span class="nv">NewState</span> <span class="o">=</span> <span class="n">executeOneway</span><span class="p">(</span><span class="nv">CurrentState</span><span class="p">,</span><span class="n">setAge</span><span class="p">,</span><span class="mi">78</span><span class="p">)</span>
+<span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">executeOneway</span><span class="p">(</span><span class="nv">CurrentState</span><span class="p">,</span><span class="n">setAge</span><span class="p">,</span><span class="mi">78</span><span class="p">)</span>
 </pre>
 <p>For a oneway taking no parameter:</p>
 <pre class="code erlang literal-block">
-<span class="nv">NewState</span> <span class="o">=</span> <span class="n">executeOneway</span><span class="p">(</span><span class="nv">CurrentState</span><span class="p">,</span><span class="n">declareBirthday</span><span class="p">)</span>
+<span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">executeOneway</span><span class="p">(</span><span class="nv">CurrentState</span><span class="p">,</span><span class="n">declareBirthday</span><span class="p">)</span>
 </pre>
 <p>Const oneways can also be called <a class="footnote-reference" href="#id24" id="id23">[11]</a> as well, like in:</p>
 <pre class="code erlang literal-block">
@@ -1101,7 +1101,7 @@ Therefore one could make use of that information, as in:</p>
 </div>
 <p>In our example, we should thus use simply:</p>
 <pre class="code erlang literal-block">
-<span class="nv">AgeState</span> <span class="o">=</span> <span class="n">executeOnewayAs</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">class_Creature</span><span class="p">,</span><span class="n">setAge</span><span class="p">,</span><span class="nv">NewAge</span><span class="p">)</span>
+<span class="nv">AgeState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">executeOnewayAs</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">class_Creature</span><span class="p">,</span><span class="n">setAge</span><span class="p">,</span><span class="nv">NewAge</span><span class="p">)</span>
 </pre>
 <p>in order to call the <tt class="docutils literal">class_Creature</tt> version of the <tt class="docutils literal">setAge/2</tt> oneway.</p>
 <p>Finally, as one could expect, these functions have their const counterparts, namely: <tt class="docutils literal"><span class="pre">executeConstRequestAs/{3,4}</span></tt> and <tt class="docutils literal"><span class="pre">executeConstOnewayAs/{3,4}</span></tt>, whose usage offers no surprise, like in:</p>
@@ -1120,21 +1120,21 @@ Color = executeConstRequestAs(MyState,class_Vehicle,
 <p>The same applies to their result type in terms of type specification, which is to be expressed using <tt class="docutils literal"><span class="pre">static_return(T())</span></tt>.</p>
 <p>Here are a few examples of rather straightforward static methods, with or without type specifications:</p>
 <pre class="code erlang literal-block">
-<span class="nf">get_default_whisker_color</span><span class="p">()</span> <span class="o">-&gt;</span>
-    <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_static</span><span class="p">(</span><span class="n">black</span><span class="p">).</span>
+<span class="nf">get_default_whisker_color</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_static</span><span class="p">(</span><span class="n">black</span><span class="p">).</span><span class="w">
 
-<span class="p">-</span><span class="ni">spec</span> <span class="n">determine_croquette_appeal</span><span class="p">(</span><span class="n">cat_name</span><span class="p">())</span> <span class="o">-&gt;</span>
-           <span class="n">static_return</span><span class="p">(</span><span class="n">'strong'</span><span class="p">|</span><span class="n">'moderate'</span><span class="p">|</span><span class="n">'weak'</span><span class="p">).</span>
-<span class="nf">determine_croquette_appeal</span><span class="p">(_</span><span class="nv">CatName</span><span class="o">=</span><span class="s">&quot;Tortilla&quot;</span><span class="p">)</span> <span class="o">-&gt;</span>
-    <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_static</span><span class="p">(</span><span class="n">strong</span><span class="p">);</span>
+</span><span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">determine_croquette_appeal</span><span class="p">(</span><span class="n">cat_name</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+           </span><span class="n">static_return</span><span class="p">(</span><span class="n">'strong'</span><span class="p">|</span><span class="n">'moderate'</span><span class="p">|</span><span class="n">'weak'</span><span class="p">).</span><span class="w">
+</span><span class="nf">determine_croquette_appeal</span><span class="p">(_</span><span class="nv">CatName</span><span class="o">=</span><span class="s">&quot;Tortilla&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_static</span><span class="p">(</span><span class="n">strong</span><span class="p">);</span><span class="w">
 
-<span class="nf">determine_croquette_appeal</span><span class="p">(_</span><span class="nv">CatName</span><span class="o">=</span><span class="s">&quot;Abysse&quot;</span><span class="p">)</span> <span class="o">-&gt;</span>
-    <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_static</span><span class="p">(</span><span class="n">moderate</span><span class="p">).</span>
+</span><span class="nf">determine_croquette_appeal</span><span class="p">(_</span><span class="nv">CatName</span><span class="o">=</span><span class="s">&quot;Abysse&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_static</span><span class="p">(</span><span class="n">moderate</span><span class="p">).</span>
 </pre>
 <p>An example of use:</p>
 <pre class="code erlang literal-block">
-<span class="nv">PossibleColor</span> <span class="o">=</span> <span class="nn">class_Cat</span><span class="p">:</span><span class="nf">get_default_whisker_color</span><span class="p">(),</span>
-<span class="p">[..]</span>
+<span class="nv">PossibleColor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">class_Cat</span><span class="p">:</span><span class="nf">get_default_whisker_color</span><span class="p">(),</span><span class="w">
+</span><span class="p">[..]</span>
 </pre>
 <p>See also the section about <a class="reference internal" href="#methods-not-returning-anything-of-interest">Methods Not Returning Anything of Interest</a>, which may apply to static methods notably.</p>
 <p>Finally, having static methods leaves little interest to defining and exporting one's standard, plain (helper) functions; when doing so, one should wonder whether a static method could not be a solution at least as good.</p>
@@ -1152,7 +1152,7 @@ Color = executeConstRequestAs(MyState,class_Vehicle,
 <p>Each attribute is designated by a name, defined as an atom (we recommend using <tt class="docutils literal">camel_case</tt> for them), and is associated to a mutable value, which can be any Erlang term.</p>
 <p>The current state of an instance can be thought as a list of <tt class="docutils literal">{attribute_name,attribute_value}</tt> pairs, like in:</p>
 <pre class="code erlang literal-block">
-<span class="p">[{</span><span class="n">color</span><span class="p">,</span><span class="n">black</span><span class="p">},</span> <span class="p">{</span><span class="n">fur_color</span><span class="p">,</span><span class="n">sand</span><span class="p">},</span> <span class="p">{</span><span class="n">age</span><span class="p">,</span><span class="mi">13</span><span class="p">},</span> <span class="p">{</span><span class="n">name</span><span class="p">,</span><span class="s">&quot;Tortilla&quot;</span><span class="p">}].</span>
+<span class="p">[{</span><span class="n">color</span><span class="p">,</span><span class="n">black</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="n">fur_color</span><span class="p">,</span><span class="n">sand</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="n">age</span><span class="p">,</span><span class="mi">13</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="n">name</span><span class="p">,</span><span class="s">&quot;Tortilla&quot;</span><span class="p">}].</span>
 </pre>
 </div>
 <div class="section" id="state-implementation-details">
@@ -1171,14 +1171,14 @@ Color = executeConstRequestAs(MyState,class_Vehicle,
 </table>
 <p>To do so, the <tt class="docutils literal">class_attributes</tt> define must be set (prior to including the WOOPER header) to a list of attribute declarations, like in:</p>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_attributes</span><span class="p">,[</span>
-            <span class="nv">ATTR_DECL1</span><span class="p">,</span>
-            <span class="nv">ATTR_DECL2</span><span class="p">,</span>
-            <span class="p">[...]</span>
-            <span class="nv">ATTR_DECLN</span><span class="p">]).</span>
-<span class="p">[...]</span>
-<span class="p">-</span><span class="ni">include</span><span class="p">(</span><span class="s">&quot;wooper.hrl&quot;</span><span class="p">).</span>
-<span class="p">[...]</span>
+<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_attributes</span><span class="p">,[</span><span class="w">
+            </span><span class="nv">ATTR_DECL1</span><span class="p">,</span><span class="w">
+            </span><span class="nv">ATTR_DECL2</span><span class="p">,</span><span class="w">
+            </span><span class="p">[...]</span><span class="w">
+            </span><span class="nv">ATTR_DECLN</span><span class="p">]).</span><span class="w">
+</span><span class="p">[...]</span><span class="w">
+</span><span class="p">-</span><span class="ni">include</span><span class="p">(</span><span class="s">&quot;wooper.hrl&quot;</span><span class="p">).</span><span class="w">
+</span><span class="p">[...]</span>
 </pre>
 <p>These declarations are to relate only to the <strong>class-specific</strong> attributes, i.e. the ones specifically introduced by the class at hand, regardless of the ones inherited from the mother classes.</p>
 <p>The most general form of an <strong>attribute declaration</strong> includes the following four information:</p>
@@ -1243,12 +1243,12 @@ setFurColor(State,FurColor) -&gt;
 <p>(and, of course, any number of attributes may not be specified at all)</p>
 <p>Finally, a full example of the declaration of class attributes can be:</p>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_attributes</span><span class="p">,[</span>
-          <span class="n">name</span><span class="p">,</span>
-          <span class="p">{</span><span class="n">age</span><span class="p">,</span><span class="n">integer</span><span class="p">(),{</span><span class="n">initial</span><span class="p">,</span><span class="mi">18</span><span class="p">},</span>
-               <span class="s">&quot;stores the current age of this creature&quot;</span><span class="p">},</span>
-          <span class="n">birth_date</span><span class="p">,</span>
-          <span class="p">{</span><span class="n">weight</span><span class="p">,</span><span class="s">&quot;total weight measured&quot;</span><span class="p">}]).</span>
+<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_attributes</span><span class="p">,[</span><span class="w">
+          </span><span class="n">name</span><span class="p">,</span><span class="w">
+          </span><span class="p">{</span><span class="n">age</span><span class="p">,</span><span class="n">integer</span><span class="p">(),{</span><span class="n">initial</span><span class="p">,</span><span class="mi">18</span><span class="p">},</span><span class="w">
+               </span><span class="s">&quot;stores the current age of this creature&quot;</span><span class="p">},</span><span class="w">
+          </span><span class="n">birth_date</span><span class="p">,</span><span class="w">
+          </span><span class="p">{</span><span class="n">weight</span><span class="p">,</span><span class="s">&quot;total weight measured&quot;</span><span class="p">}]).</span>
 </pre>
 </div>
 <div class="section" id="storing-them">
@@ -1274,7 +1274,7 @@ setFurColor(State,FurColor) -&gt;
 <h5>The <tt class="docutils literal">setAttribute/3</tt> function</h5>
 <p>Setting an attribute (creating <a class="footnote-reference" href="#id30" id="id29">[13]</a> and/or modifying it) should be done with the <tt class="docutils literal">setAttribute/3</tt> function:</p>
 <pre class="code erlang literal-block">
-<span class="nv">NewState</span> <span class="o">=</span> <span class="n">setAttribute</span><span class="p">(</span><span class="nv">AState</span><span class="p">,</span><span class="nv">AttributeName</span><span class="p">,</span><span class="nv">NewAttributeValue</span><span class="p">)</span>
+<span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">AState</span><span class="p">,</span><span class="nv">AttributeName</span><span class="p">,</span><span class="nv">NewAttributeValue</span><span class="p">)</span>
 </pre>
 <table class="docutils footnote" frame="void" id="id30" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -1289,8 +1289,8 @@ setFurColor(State,FurColor) -&gt;
 <p>A better solution is to use the <tt class="docutils literal">setAttributes/2</tt> function (note the plural) to set a list of attribute name/attribute value pairs in a row.</p>
 <p>For example:</p>
 <pre class="code erlang literal-block">
-<span class="nv">ConstructedState</span> <span class="o">=</span> <span class="n">setAttributes</span><span class="p">(</span><span class="nv">MyState</span><span class="p">,</span>
-         <span class="p">[{</span><span class="n">age</span><span class="p">,</span><span class="mi">3</span><span class="p">},{</span><span class="n">whisker_color</span><span class="p">,</span><span class="n">white</span><span class="p">}])</span>
+<span class="nv">ConstructedState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">setAttributes</span><span class="p">(</span><span class="nv">MyState</span><span class="p">,</span><span class="w">
+         </span><span class="p">[{</span><span class="n">age</span><span class="p">,</span><span class="mi">3</span><span class="p">},{</span><span class="n">whisker_color</span><span class="p">,</span><span class="n">white</span><span class="p">}])</span>
 </pre>
 <p>will return a new state, exact copy of <tt class="docutils literal">MyState</tt> but for the listed attributes, set to their respective specified value.</p>
 </div>
@@ -1298,7 +1298,7 @@ setFurColor(State,FurColor) -&gt;
 <h5>The <tt class="docutils literal">swapInAttribute/3</tt> function</h5>
 <p>This function allows to swap, in the specified state, the current value of the specified attribute with the specified value; for example:</p>
 <pre class="code erlang literal-block">
-<span class="p">{</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">PastColor</span><span class="p">}</span> <span class="o">=</span> <span class="n">swapInAttribute</span><span class="p">(</span><span class="nv">AState</span><span class="p">,</span><span class="n">fur_color</span><span class="p">,_</span><span class="nv">NewValue</span><span class="o">=</span><span class="n">black</span><span class="p">)</span>
+<span class="p">{</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">PastColor</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">swapInAttribute</span><span class="p">(</span><span class="nv">AState</span><span class="p">,</span><span class="n">fur_color</span><span class="p">,_</span><span class="nv">NewValue</span><span class="o">=</span><span class="n">black</span><span class="p">)</span>
 </pre>
 </div>
 <div class="section" id="the-removeattribute-2-function">
@@ -1330,7 +1330,7 @@ setFurColor(State,FurColor) -&gt;
 <h5>The <tt class="docutils literal">getAttribute/2</tt> function</h5>
 <p>Getting the value of an attribute is to be done with the <tt class="docutils literal">getAttribute/2</tt> function:</p>
 <pre class="code erlang literal-block">
-<span class="nv">AttributeValue</span> <span class="o">=</span> <span class="n">getAttribute</span><span class="p">(</span><span class="nv">AState</span><span class="p">,</span><span class="nv">AttributeName</span><span class="p">)</span>
+<span class="nv">AttributeValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getAttribute</span><span class="p">(</span><span class="nv">AState</span><span class="p">,</span><span class="nv">AttributeName</span><span class="p">)</span>
 </pre>
 <p>For example, <tt class="docutils literal">MyColor = getAttribute(State,whisker_color)</tt> returns the value of the attribute <tt class="docutils literal">whisker_color</tt> from state <tt class="docutils literal">State</tt>.</p>
 <p>The requested attribute may not exist in the specified state. In this case, a runtime error is issued.</p>
@@ -1356,11 +1356,11 @@ setFurColor(State,FurColor) -&gt;
 <p>When having a numerical attribute, <tt class="docutils literal">addToAttribute/3</tt> adds the specified number to the attribute.</p>
 <p>To be used like in:</p>
 <pre class="code erlang literal-block">
-<span class="nv">NewState</span> <span class="o">=</span> <span class="n">addToAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">AttributeName</span><span class="p">,</span><span class="nv">Value</span><span class="p">)</span>
+<span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">addToAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">AttributeName</span><span class="p">,</span><span class="nv">Value</span><span class="p">)</span>
 </pre>
 <p>For example:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyState</span> <span class="o">=</span> <span class="n">addToAttribute</span><span class="p">(</span><span class="nv">FirstState</span><span class="p">,</span><span class="n">a_numerical_attribute</span><span class="p">,</span><span class="mi">6</span><span class="p">)</span>
+<span class="nv">MyState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">addToAttribute</span><span class="p">(</span><span class="nv">FirstState</span><span class="p">,</span><span class="n">a_numerical_attribute</span><span class="p">,</span><span class="mi">6</span><span class="p">)</span>
 </pre>
 <p>In <tt class="docutils literal">MyState</tt>, the value of attribute <tt class="docutils literal">a_numerical_attribute</tt> is increased of 6, compared to the one in <tt class="docutils literal">FirstState</tt>.</p>
 <p>Calling <tt class="docutils literal">addToAttribute/3</tt> on a non-existing attribute will trigger a runtime error (<tt class="docutils literal">{key_not_found,AttributeName}</tt>).</p>
@@ -1371,11 +1371,11 @@ setFurColor(State,FurColor) -&gt;
 <p>When having a numerical attribute, <tt class="docutils literal">subtractFromAttribute/3</tt> subtracts the specified number from the attribute.</p>
 <p>To be used like in:</p>
 <pre class="code erlang literal-block">
-<span class="nv">NewState</span> <span class="o">=</span> <span class="n">subtractFromAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">AttributeName</span><span class="p">,</span><span class="nv">Value</span><span class="p">)</span>
+<span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subtractFromAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">AttributeName</span><span class="p">,</span><span class="nv">Value</span><span class="p">)</span>
 </pre>
 <p>For example:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyState</span> <span class="o">=</span> <span class="n">subtractFromAttribute</span><span class="p">(</span><span class="nv">FirstState</span><span class="p">,</span><span class="n">a_numerical_attribute</span><span class="p">,</span><span class="mi">7</span><span class="p">)</span>
+<span class="nv">MyState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subtractFromAttribute</span><span class="p">(</span><span class="nv">FirstState</span><span class="p">,</span><span class="n">a_numerical_attribute</span><span class="p">,</span><span class="mi">7</span><span class="p">)</span>
 </pre>
 <p>In <tt class="docutils literal">MyState</tt>, the value of attribute <tt class="docutils literal">a_numerical_attribute</tt> is decreased of 7, compared to the one in <tt class="docutils literal">FirstState</tt>.</p>
 <p>Calling <tt class="docutils literal">subtractFromAttribute/3</tt> on a non-existing attribute will trigger a runtime error (<tt class="docutils literal">{key_not_found,AttributeName}</tt>).
@@ -1386,11 +1386,11 @@ If the attribute exists, but no subtraction can be performed on it (meaningless 
 <p>Flips the value of the specified (supposedly boolean) attribute: when having a boolean attribute, whose value is either <tt class="docutils literal">true</tt> or <tt class="docutils literal">false</tt>, sets the opposite logical value to the current one.</p>
 <p>To be used like in:</p>
 <pre class="code erlang literal-block">
-<span class="nv">NewState</span> <span class="o">=</span> <span class="n">toggleAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">BooleanAttributeName</span><span class="p">)</span>
+<span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toggleAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">BooleanAttributeName</span><span class="p">)</span>
 </pre>
 <p>For example:</p>
 <pre class="code erlang literal-block">
-<span class="nv">NewState</span> <span class="o">=</span> <span class="n">toggleAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">a_boolean_attribute</span><span class="p">)</span>
+<span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toggleAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">a_boolean_attribute</span><span class="p">)</span>
 </pre>
 <p>Calling <tt class="docutils literal">toggleAttribute/2</tt> on a non-existing attribute will trigger a runtime error (<tt class="docutils literal">{key_not_found,AttributeName}</tt>). If the attribute exists, but has not a boolean value, a <tt class="docutils literal">badarith</tt> runtime error will be issued.</p>
 </div>
@@ -1437,25 +1437,25 @@ NewState = deleteFromAttribute(State,AttributeName,
 <p>Both multiple inheritance and polymorphism are automatically managed by WOOPER: even if our cat class does not define a <tt class="docutils literal">getAge/1</tt> request, it can nevertheless readily be called on a cat instance, as it is inherited from its mother classes (here from <tt class="docutils literal">class_Creature</tt>, an indirect mother class).</p>
 <p>Therefore all creature instances can be handled the same, regardless of their actual classes:</p>
 <pre class="code erlang literal-block">
-<span class="c">% Inherited methods work exactly the same as methods defined
-% directly in the class:
-</span><span class="nv">MyCat</span> <span class="o">!</span> <span class="p">{</span><span class="n">getAge</span><span class="p">,[],</span><span class="n">self</span><span class="p">()},</span>
-<span class="k">receive</span>
-  <span class="p">{</span><span class="n">wooper_result</span><span class="p">,</span><span class="nv">Age</span><span class="p">}</span> <span class="o">-&gt;</span>
-    <span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span> <span class="s">&quot;This is a </span><span class="si">~B</span><span class="s"> year old cat.&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nv">Age</span><span class="p">]</span> <span class="p">)</span>
-<span class="k">end</span><span class="p">,</span>
+<span class="c">% Inherited methods work exactly the same as methods defined</span><span class="w">
+</span><span class="c">% directly in the class:</span><span class="w">
+</span><span class="nv">MyCat</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">getAge</span><span class="p">,[],</span><span class="n">self</span><span class="p">()},</span><span class="w">
+</span><span class="k">receive</span><span class="w">
+  </span><span class="p">{</span><span class="n">wooper_result</span><span class="p">,</span><span class="nv">Age</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="w"> </span><span class="s">&quot;This is a </span><span class="si">~B</span><span class="s"> year old cat.&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">Age</span><span class="p">]</span><span class="w"> </span><span class="p">)</span><span class="w">
+</span><span class="k">end</span><span class="p">,</span><span class="w">
 
-<span class="c">% Polymorphism is immediate:
-% (class_Platypus inheriting too from class_Mammal,
-% hence from class_Creature).
-</span><span class="nv">MyPetList</span> <span class="o">=</span> <span class="p">[</span><span class="nv">MyCat</span><span class="p">,</span><span class="nv">MyPlatypus</span><span class="p">],</span>
-<span class="p">[</span> <span class="k">begin</span>
-    <span class="nv">PetPid</span> <span class="o">!</span> <span class="p">{</span><span class="n">getAge</span><span class="p">,[],</span><span class="n">self</span><span class="p">()},</span>
-    <span class="k">receive</span>
-      <span class="p">{</span><span class="n">wooper_result</span><span class="p">,</span><span class="nv">Age</span><span class="p">}</span> <span class="o">-&gt;</span>
-        <span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;This is a </span><span class="si">~B</span><span class="s"> year old creature.&quot;</span><span class="p">,[</span><span class="nv">Age</span><span class="p">])</span>
-    <span class="k">end</span>
-  <span class="k">end</span> <span class="p">||</span> <span class="nv">PetPid</span> <span class="o">&lt;-</span> <span class="nv">MyPetList</span> <span class="p">].</span>
+</span><span class="c">% Polymorphism is immediate:</span><span class="w">
+</span><span class="c">% (class_Platypus inheriting too from class_Mammal,</span><span class="w">
+</span><span class="c">% hence from class_Creature).</span><span class="w">
+</span><span class="nv">MyPetList</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nv">MyCat</span><span class="p">,</span><span class="nv">MyPlatypus</span><span class="p">],</span><span class="w">
+</span><span class="p">[</span><span class="w"> </span><span class="k">begin</span><span class="w">
+    </span><span class="nv">PetPid</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">getAge</span><span class="p">,[],</span><span class="n">self</span><span class="p">()},</span><span class="w">
+    </span><span class="k">receive</span><span class="w">
+      </span><span class="p">{</span><span class="n">wooper_result</span><span class="p">,</span><span class="nv">Age</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+        </span><span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;This is a </span><span class="si">~B</span><span class="s"> year old creature.&quot;</span><span class="p">,[</span><span class="nv">Age</span><span class="p">])</span><span class="w">
+    </span><span class="k">end</span><span class="w">
+  </span><span class="k">end</span><span class="w"> </span><span class="p">||</span><span class="w"> </span><span class="nv">PetPid</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nv">MyPetList</span><span class="w"> </span><span class="p">].</span>
 </pre>
 <p>Running this code should output something like:</p>
 <pre class="literal-block">
@@ -1487,8 +1487,8 @@ This is a 9 year old creature.
 <h2><a class="toc-backref" href="#id194">Life-Cycle</a></h2>
 <p>Basically, creation and destruction of instances are managed respectively thanks to the <tt class="docutils literal">new</tt>/<tt class="docutils literal">new_link</tt> and the <tt class="docutils literal">delete</tt> operators (all these operators are WOOPER-reserved function names, for all arities, and are automatically generated), like in:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyCat</span> <span class="o">=</span> <span class="nn">class_Cat</span><span class="p">:</span><span class="nf">new</span><span class="p">(</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">,</span><span class="nv">FurColor</span><span class="p">,</span><span class="nv">WhiskerColor</span><span class="p">),</span>
-<span class="nv">MyCat</span> <span class="o">!</span> <span class="n">delete</span><span class="p">.</span>
+<span class="nv">MyCat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">class_Cat</span><span class="p">:</span><span class="nf">new</span><span class="p">(</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">,</span><span class="nv">FurColor</span><span class="p">,</span><span class="nv">WhiskerColor</span><span class="p">),</span><span class="w">
+</span><span class="nv">MyCat</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="n">delete</span><span class="p">.</span>
 </pre>
 <div class="section" id="instance-creation-new-new-link-and-construct">
 <h3><a class="toc-backref" href="#id195">Instance Creation: <tt class="docutils literal">new</tt>/<tt class="docutils literal">new_link</tt> and <tt class="docutils literal">construct</tt></a></h3>
@@ -1510,9 +1510,9 @@ This is a 9 year old creature.
 <p><tt class="docutils literal">construct</tt> operators may not be exported explicitly by the class developer, as WOOPER will automatically take care of that if necessary.</p>
 <p>For example:</p>
 <pre class="code erlang literal-block">
-<span class="c">% If having defined class_Dog:construct/{1,3}:
-</span><span class="nv">MyFirstDog</span>  <span class="o">=</span> <span class="nn">class_Dog</span><span class="p">:</span><span class="nf">new</span><span class="p">(),</span>
-<span class="nv">MySecondDog</span> <span class="o">=</span> <span class="nn">class_Dog</span><span class="p">:</span><span class="nf">new</span><span class="p">(_</span><span class="nv">Weight</span><span class="o">=</span><span class="mi">4</span><span class="p">.</span><span class="mi">4</span><span class="p">,_</span><span class="nv">Colors</span><span class="o">=</span><span class="p">[</span><span class="n">sand</span><span class="p">,</span><span class="n">white</span><span class="p">]).</span>
+<span class="c">% If having defined class_Dog:construct/{1,3}:</span><span class="w">
+</span><span class="nv">MyFirstDog</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="nn">class_Dog</span><span class="p">:</span><span class="nf">new</span><span class="p">(),</span><span class="w">
+</span><span class="nv">MySecondDog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">class_Dog</span><span class="p">:</span><span class="nf">new</span><span class="p">(_</span><span class="nv">Weight</span><span class="o">=</span><span class="mi">4</span><span class="p">.</span><span class="mi">4</span><span class="p">,_</span><span class="nv">Colors</span><span class="o">=</span><span class="p">[</span><span class="n">sand</span><span class="p">,</span><span class="n">white</span><span class="p">]).</span>
 </pre>
 </div>
 <div class="section" id="the-various-ways-of-creating-an-instance">
@@ -1573,8 +1573,8 @@ This is a 9 year old creature.
 <p>To do so, the <tt class="docutils literal">remote_*new*</tt> variations shall be used. They behave exactly like their local counterparts, except that they take an additional information, as first parameter: the node on which the specified instance must be created.</p>
 <p>For example:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyCat</span> <span class="o">=</span> <span class="nn">class_Cat</span><span class="p">:</span><span class="nf">remote_new</span><span class="p">(</span><span class="nv">TargetNode</span><span class="p">,</span> <span class="nv">Age</span><span class="p">,</span> <span class="nv">Gender</span><span class="p">,</span>
-                             <span class="nv">FurColor</span><span class="p">,</span> <span class="nv">WhiskerColor</span><span class="p">).</span>
+<span class="nv">MyCat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">class_Cat</span><span class="p">:</span><span class="nf">remote_new</span><span class="p">(</span><span class="nv">TargetNode</span><span class="p">,</span><span class="w"> </span><span class="nv">Age</span><span class="p">,</span><span class="w"> </span><span class="nv">Gender</span><span class="p">,</span><span class="w">
+                             </span><span class="nv">FurColor</span><span class="p">,</span><span class="w"> </span><span class="nv">WhiskerColor</span><span class="p">).</span>
 </pre>
 <p>Of course:</p>
 <ul class="simple">
@@ -1589,21 +1589,21 @@ This is a 9 year old creature.
 <h4>Some Examples of Instance Creation</h4>
 <p>Knowing that a cat can be created here out of four parameters (<tt class="docutils literal">Age</tt>, <tt class="docutils literal">Gender</tt>, <tt class="docutils literal">FurColor</tt>, <tt class="docutils literal">WhiskerColor</tt>), various cat (active) instances could be created thanks to:</p>
 <pre class="code erlang literal-block">
-<span class="c">% Local asynchronous creation:
-</span><span class="nv">MyFirstCat</span> <span class="o">=</span> <span class="nn">class_Cat</span><span class="p">:</span><span class="nf">new</span><span class="p">(_</span><span class="nv">Age</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">male</span><span class="p">,</span><span class="n">brown</span><span class="p">,</span><span class="n">white</span><span class="p">),</span>
+<span class="c">% Local asynchronous creation:</span><span class="w">
+</span><span class="nv">MyFirstCat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">class_Cat</span><span class="p">:</span><span class="nf">new</span><span class="p">(_</span><span class="nv">Age</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">male</span><span class="p">,</span><span class="n">brown</span><span class="p">,</span><span class="n">white</span><span class="p">),</span><span class="w">
 
-<span class="c">% The same, but a crash of this cat will crash the current
-% process too:
-</span><span class="nv">MySecondCat</span> <span class="o">=</span> <span class="nn">class_Cat</span><span class="p">:</span><span class="nf">new_link</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">female</span><span class="p">,</span><span class="n">black</span><span class="p">,</span><span class="n">white</span><span class="p">),</span>
+</span><span class="c">% The same, but a crash of this cat will crash the current</span><span class="w">
+</span><span class="c">% process too:</span><span class="w">
+</span><span class="nv">MySecondCat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">class_Cat</span><span class="p">:</span><span class="nf">new_link</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">female</span><span class="p">,</span><span class="n">black</span><span class="p">,</span><span class="n">white</span><span class="p">),</span><span class="w">
 
-<span class="c">% This cat will be created on OtherNode, and the call will
-% return only once it is up and running or once the creation
-% failed. As moreover the cat instance is linked to the
-% instance process, it may crash this calling process
-% (unless it traps EXIT signals):
-</span><span class="nv">MyThirdCat</span> <span class="o">=</span> <span class="nn">class_Cat</span><span class="p">:</span><span class="nf">remote_synchronous_timed_new_link</span><span class="p">(</span>
-                               <span class="nv">OtherNode</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">male</span><span class="p">,</span><span class="n">grey</span><span class="p">,</span><span class="n">black</span><span class="p">),</span>
-<span class="p">[...]</span>
+</span><span class="c">% This cat will be created on OtherNode, and the call will</span><span class="w">
+</span><span class="c">% return only once it is up and running or once the creation</span><span class="w">
+</span><span class="c">% failed. As moreover the cat instance is linked to the</span><span class="w">
+</span><span class="c">% instance process, it may crash this calling process</span><span class="w">
+</span><span class="c">% (unless it traps EXIT signals):</span><span class="w">
+</span><span class="nv">MyThirdCat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">class_Cat</span><span class="p">:</span><span class="nf">remote_synchronous_timed_new_link</span><span class="p">(</span><span class="w">
+                               </span><span class="nv">OtherNode</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">male</span><span class="p">,</span><span class="n">grey</span><span class="p">,</span><span class="n">black</span><span class="p">),</span><span class="w">
+</span><span class="p">[...]</span>
 </pre>
 </div>
 <div class="section" id="definition-of-the-construct-operator">
@@ -1617,42 +1617,42 @@ This is a 9 year old creature.
 <p>Hence they always take the current state of the instance being created as a starting base, and returns it once updated, first from the direct mother classes, then by this class itself.</p>
 <p>For example, let's suppose <tt class="docutils literal">class_Cat</tt> inherits directly both from <tt class="docutils literal">class_Mammal</tt> and from <tt class="docutils literal">class_ViviparousBeing</tt>, has only one attribute (<tt class="docutils literal">whisker_color)</tt> of its own, and that a new cat is to be created out of four pieces of information:</p>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">superclasses</span><span class="p">,[</span><span class="n">class_Mammal</span><span class="p">,</span><span class="n">class_ViviparousBeing</span><span class="p">]).</span>
+<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">superclasses</span><span class="p">,[</span><span class="n">class_Mammal</span><span class="p">,</span><span class="n">class_ViviparousBeing</span><span class="p">]).</span><span class="w">
 
-<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_attributes</span><span class="p">,[</span><span class="n">whisker_color</span><span class="p">]).</span>
+</span><span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_attributes</span><span class="p">,[</span><span class="n">whisker_color</span><span class="p">]).</span><span class="w">
 
-<span class="c">% Constructs a new Cat.
-</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">,</span><span class="nv">FurColor</span><span class="p">,</span><span class="nv">WhiskerColor</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="c">% First the (chained) direct mother classes:
-</span>  <span class="nv">MammalState</span> <span class="o">=</span> <span class="nn">class_Mammal</span><span class="p">:</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">,</span>
-                                       <span class="nv">FurColor</span><span class="p">),</span>
-  <span class="nv">ViviparousMammalState</span> <span class="o">=</span>
-      <span class="nn">class_ViviparousBeing</span><span class="p">:</span><span class="nf">construct</span><span class="p">(</span><span class="nv">MammalState</span><span class="p">),</span>
-  <span class="c">% Then the class-specific attributes:
-</span>  <span class="n">setAttribute</span><span class="p">(</span><span class="nv">ViviparousMammalState</span><span class="p">,</span><span class="n">whisker_color</span><span class="p">,</span>
-               <span class="nv">WhiskerColor</span><span class="p">).</span>
+</span><span class="c">% Constructs a new Cat.</span><span class="w">
+</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">,</span><span class="nv">FurColor</span><span class="p">,</span><span class="nv">WhiskerColor</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="c">% First the (chained) direct mother classes:</span><span class="w">
+  </span><span class="nv">MammalState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">class_Mammal</span><span class="p">:</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">,</span><span class="w">
+                                       </span><span class="nv">FurColor</span><span class="p">),</span><span class="w">
+  </span><span class="nv">ViviparousMammalState</span><span class="w"> </span><span class="o">=</span><span class="w">
+      </span><span class="nn">class_ViviparousBeing</span><span class="p">:</span><span class="nf">construct</span><span class="p">(</span><span class="nv">MammalState</span><span class="p">),</span><span class="w">
+  </span><span class="c">% Then the class-specific attributes:</span><span class="w">
+  </span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">ViviparousMammalState</span><span class="p">,</span><span class="n">whisker_color</span><span class="p">,</span><span class="w">
+               </span><span class="nv">WhiskerColor</span><span class="p">).</span>
 </pre>
 <p>The fact that the <tt class="docutils literal">Mammal</tt> class itself inherits from the <tt class="docutils literal">Creature</tt> class does not have to appear here: it is to be managed directly by <tt class="docutils literal">class_Mammal:construct/4</tt> (at any given inheritance level, only direct mother classes must be taken into account).</p>
 <p>One should ensure that, in constructors, the successive states are always built from the last updated one, unlike this case (where no mother class has been declared):</p>
 <pre class="code erlang literal-block">
-<span class="c">% WRONG, the age update is lost:
-</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="nv">AgeState</span> <span class="o">=</span> <span class="n">setAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">age</span><span class="p">,</span><span class="nv">Age</span><span class="p">),</span>
-  <span class="c">% AgeState should be used here, not State:
-</span>  <span class="n">setAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">gender</span><span class="p">,</span><span class="nv">Gender</span><span class="p">),</span>
+<span class="c">% WRONG, the age update is lost:</span><span class="w">
+</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="nv">AgeState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">age</span><span class="p">,</span><span class="nv">Age</span><span class="p">),</span><span class="w">
+  </span><span class="c">% AgeState should be used here, not State:</span><span class="w">
+  </span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">gender</span><span class="p">,</span><span class="nv">Gender</span><span class="p">),</span>
 </pre>
 <p>This would be correct:</p>
 <pre class="code erlang literal-block">
-<span class="c">% RIGHT but a bit clumsy:
-</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="nv">AgeState</span> <span class="o">=</span> <span class="n">setAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">age</span><span class="p">,</span><span class="nv">Age</span><span class="p">),</span>
-  <span class="n">setAttribute</span><span class="p">(</span><span class="nv">AgeState</span><span class="p">,</span><span class="n">gender</span><span class="p">,</span><span class="nv">Gender</span><span class="p">).</span>
+<span class="c">% RIGHT but a bit clumsy:</span><span class="w">
+</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="nv">AgeState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">age</span><span class="p">,</span><span class="nv">Age</span><span class="p">),</span><span class="w">
+  </span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">AgeState</span><span class="p">,</span><span class="n">gender</span><span class="p">,</span><span class="nv">Gender</span><span class="p">).</span>
 </pre>
 <p>Recommended form:</p>
 <pre class="code erlang literal-block">
-<span class="c">% BEST:
-</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="n">setAttributes</span><span class="p">(</span><span class="nv">State</span><span class="p">,[{</span><span class="n">age</span><span class="p">,</span><span class="nv">Age</span><span class="p">},{</span><span class="n">gender</span><span class="p">,</span><span class="nv">Gender</span><span class="p">}]).</span>
+<span class="c">% BEST:</span><span class="w">
+</span><span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Age</span><span class="p">,</span><span class="nv">Gender</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="n">setAttributes</span><span class="p">(</span><span class="nv">State</span><span class="p">,[{</span><span class="n">age</span><span class="p">,</span><span class="nv">Age</span><span class="p">},{</span><span class="n">gender</span><span class="p">,</span><span class="nv">Gender</span><span class="p">}]).</span>
 </pre>
 <p>The WOOPER defaults would imply that, in the first case, at compilation time the <tt class="docutils literal">AgeState</tt> variable would be reported as unused, and this warning would be considered as a fatal error.</p>
 <div class="admonition note">
@@ -1683,11 +1683,11 @@ This is a 9 year old creature.
 </pre>
 <p>More precisely, either the class implementer does not define at all a <tt class="docutils literal">destruct/1</tt> operator (and therefore uses the default do-nothing destructor), or it defines it explicitly, like in:</p>
 <pre class="code erlang literal-block">
-<span class="nf">destruct</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-    <span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;An instance of class </span><span class="si">~w</span><span class="s"> is being deleted now!&quot;</span><span class="p">,[</span><span class="o">?</span><span class="nv">MODULE</span><span class="p">]),</span>
-    <span class="c">% Quite often the destructor does not need to modify the state of
-</span>    <span class="c">% the instance:
-</span>    <span class="nv">State</span><span class="p">.</span>
+<span class="nf">destruct</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;An instance of class </span><span class="si">~w</span><span class="s"> is being deleted now!&quot;</span><span class="p">,[</span><span class="o">?</span><span class="nv">MODULE</span><span class="p">]),</span><span class="w">
+    </span><span class="c">% Quite often the destructor does not need to modify the state of</span><span class="w">
+    </span><span class="c">% the instance:</span><span class="w">
+    </span><span class="nv">State</span><span class="p">.</span>
 </pre>
 <p>In both cases (default or user-defined destructor), when the instance will be deleted (ex: <tt class="docutils literal">MyInstance ! delete</tt> is issued), WOOPER will take care of:</p>
 <ul class="simple">
@@ -1700,12 +1700,12 @@ This is a 9 year old creature.
 <h4>Synchronous Destruction: using <tt class="docutils literal">synchronous_delete/1</tt></h4>
 <p>WOOPER automatically defines as well a way of deleting <em>synchronously</em> a given instance: a caller can request a synchronous (blocking) deletion of that instance so that, once notified of the deletion, it knows for sure the instance does not exist anymore, like in:</p>
 <pre class="code erlang literal-block">
-<span class="nv">InstanceToDelete</span> <span class="o">!</span> <span class="p">{</span><span class="n">synchronous_delete</span><span class="p">,</span><span class="n">self</span><span class="p">()},</span>
-<span class="c">% Then the caller can block as long as the deletion did not occur:
-</span><span class="k">receive</span>
-  <span class="p">{</span><span class="n">deleted</span><span class="p">,</span><span class="nv">InstanceToDelete</span><span class="p">}</span> <span class="o">-&gt;</span>
-      <span class="n">doSomething</span><span class="p">()</span>
-<span class="k">end</span><span class="p">.</span>
+<span class="nv">InstanceToDelete</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">synchronous_delete</span><span class="p">,</span><span class="n">self</span><span class="p">()},</span><span class="w">
+</span><span class="c">% Then the caller can block as long as the deletion did not occur:</span><span class="w">
+</span><span class="k">receive</span><span class="w">
+  </span><span class="p">{</span><span class="n">deleted</span><span class="p">,</span><span class="nv">InstanceToDelete</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+      </span><span class="n">doSomething</span><span class="p">()</span><span class="w">
+</span><span class="k">end</span><span class="p">.</span>
 </pre>
 <p>The class implementer does not have to do anything to support this feature, as the synchronous deletion is automatically built by WOOPER on top of the usual asynchronous one (both thus rely on <tt class="docutils literal">destruct/1</tt>).</p>
 <p>For a more concise way of doing the same, see also:</p>
@@ -1775,42 +1775,42 @@ wooper:delete_passive(RedCat).
 <p>Sometimes, defining a clause based on the result of another one (of the same function) proves convenient. With methods, there are different ways to do so, some better than others.</p>
 <p>For example, let's suppose we defined this (non-const) request:</p>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">spec</span> <span class="n">getPriceFor</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="n">string</span><span class="p">())</span> <span class="o">-&gt;</span>
-        <span class="n">request_return</span><span class="p">(</span><span class="n">price</span><span class="p">()).</span>
-<span class="nf">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">ArticleStringDescription</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="p">{</span><span class="nv">Price</span><span class="p">,</span><span class="nv">NewState</span><span class="p">}</span> <span class="o">=</span> <span class="p">[...</span><span class="n">some</span> <span class="n">code</span><span class="p">...]</span>
-  <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Price</span><span class="p">).</span>
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">getPriceFor</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="n">string</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+        </span><span class="n">request_return</span><span class="p">(</span><span class="n">price</span><span class="p">()).</span><span class="w">
+</span><span class="nf">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">ArticleStringDescription</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="p">{</span><span class="nv">Price</span><span class="p">,</span><span class="nv">NewState</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[...</span><span class="n">some</span><span class="w"> </span><span class="n">code</span><span class="p">...]</span><span class="w">
+  </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Price</span><span class="p">).</span>
 </pre>
 <p>Now, we would like to support article descriptions being also possibly binary strings, without having to bother introducing a new price-establishing intermediary function (such as the <tt class="docutils literal">foo/2</tt> one, below) that would be common to the two corresponding clauses, like in:</p>
 <pre class="code erlang literal-block">
-<span class="nf">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">ArticleStringDescription</span><span class="p">)</span> <span class="o">-&gt;</span>
-       <span class="k">when</span> <span class="nb">is_list</span><span class="p">(</span><span class="nv">ArticleStringDescription</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="p">{</span><span class="nv">Price</span><span class="p">,</span><span class="nv">NewState</span><span class="p">}</span> <span class="o">=</span> <span class="n">foo</span><span class="p">(</span><span class="nv">ArticleStringDescription</span><span class="p">,</span><span class="nv">State</span><span class="p">),</span>
-  <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Price</span><span class="p">);</span>
+<span class="nf">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">ArticleStringDescription</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+       </span><span class="k">when</span><span class="w"> </span><span class="nb">is_list</span><span class="p">(</span><span class="nv">ArticleStringDescription</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="p">{</span><span class="nv">Price</span><span class="p">,</span><span class="nv">NewState</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="p">(</span><span class="nv">ArticleStringDescription</span><span class="p">,</span><span class="nv">State</span><span class="p">),</span><span class="w">
+  </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Price</span><span class="p">);</span><span class="w">
 
-<span class="nf">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">ArticleBinDescription</span><span class="p">)</span>
-       <span class="k">when</span> <span class="nb">is_binary</span><span class="p">(</span><span class="nv">ArticleBinDescription</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="p">{</span><span class="nv">Price</span><span class="p">,</span><span class="nv">NewState</span><span class="p">}</span> <span class="o">=</span> <span class="n">foo</span><span class="p">(</span><span class="nb">binary_to_list</span><span class="p">(</span><span class="nv">ArticleBinDescription</span><span class="p">),</span>
-                         <span class="nv">State</span><span class="p">),</span>
-  <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Price</span><span class="p">).</span>
+</span><span class="nf">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">ArticleBinDescription</span><span class="p">)</span><span class="w">
+       </span><span class="k">when</span><span class="w"> </span><span class="nb">is_binary</span><span class="p">(</span><span class="nv">ArticleBinDescription</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="p">{</span><span class="nv">Price</span><span class="p">,</span><span class="nv">NewState</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">foo</span><span class="p">(</span><span class="nb">binary_to_list</span><span class="p">(</span><span class="nv">ArticleBinDescription</span><span class="p">),</span><span class="w">
+                         </span><span class="nv">State</span><span class="p">),</span><span class="w">
+  </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Price</span><span class="p">).</span><span class="w">
 
-<span class="c">% Too cumbersome to define an extra function such as:
-</span><span class="nf">foo</span><span class="p">(</span><span class="nv">ArticleStringDescription</span><span class="p">,</span><span class="nv">State</span><span class="p">)</span><span class="o">-&gt;</span>
-  <span class="p">[...</span><span class="n">some</span> <span class="n">code</span><span class="p">...]</span>
+</span><span class="c">% Too cumbersome to define an extra function such as:</span><span class="w">
+</span><span class="nf">foo</span><span class="p">(</span><span class="nv">ArticleStringDescription</span><span class="p">,</span><span class="nv">State</span><span class="p">)</span><span class="o">-&gt;</span><span class="w">
+  </span><span class="p">[...</span><span class="n">some</span><span class="w"> </span><span class="n">code</span><span class="p">...]</span>
 </pre>
 <p>So our first impulse would be to write instead something like:</p>
 <pre class="code erlang literal-block">
-<span class="c">% (same clause)
-</span><span class="nf">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">ArticleStringDescription</span><span class="p">)</span> <span class="o">-&gt;</span>
-       <span class="k">when</span> <span class="nb">is_list</span><span class="p">(</span><span class="nv">ArticleStringDescription</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="p">{</span><span class="nv">Price</span><span class="p">,</span><span class="nv">NewState</span><span class="p">}</span> <span class="o">=</span> <span class="p">[...</span><span class="n">some</span> <span class="n">code</span><span class="p">...]</span>
-  <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Price</span><span class="p">);</span>
+<span class="c">% (same clause)</span><span class="w">
+</span><span class="nf">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">ArticleStringDescription</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+       </span><span class="k">when</span><span class="w"> </span><span class="nb">is_list</span><span class="p">(</span><span class="nv">ArticleStringDescription</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="p">{</span><span class="nv">Price</span><span class="p">,</span><span class="nv">NewState</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[...</span><span class="n">some</span><span class="w"> </span><span class="n">code</span><span class="p">...]</span><span class="w">
+  </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Price</span><span class="p">);</span><span class="w">
 
-<span class="c">% Added clause:
-</span><span class="nf">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">ArticleBinDescription</span><span class="p">)</span> <span class="o">-&gt;</span>
-       <span class="k">when</span> <span class="nb">is_binary</span><span class="p">(</span><span class="nv">ArticleBinDescription</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="n">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span>
-      <span class="nb">binary_to_list</span><span class="p">(</span><span class="nv">ArticleBinDescription</span><span class="p">)).</span>
+</span><span class="c">% Added clause:</span><span class="w">
+</span><span class="nf">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">ArticleBinDescription</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+       </span><span class="k">when</span><span class="w"> </span><span class="nb">is_binary</span><span class="p">(</span><span class="nv">ArticleBinDescription</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="n">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="w">
+      </span><span class="nb">binary_to_list</span><span class="p">(</span><span class="nv">ArticleBinDescription</span><span class="p">)).</span>
 </pre>
 <p>However this would not be correct, as the second clause lacks a terminator, and WOOPER does not accept that (it might be the sign that the developer believes he is writing an helper function).</p>
 <p>So we would like to use <tt class="docutils literal">wooper:return_state_result/2</tt> for the second clause as well, however we shall then have a state and a price to feed this terminator. How can we obtain them from the presumably opaque term returned by the <tt class="docutils literal">wooper:return_state_result/2</tt> call of the first clause?</p>
@@ -1818,18 +1818,18 @@ wooper:delete_passive(RedCat).
 <p>So a terminator taking only a state as parameter is replaced literally by this state (ex: <tt class="docutils literal">wooper:return_state(FooState)</tt> is actually <tt class="docutils literal">FooState</tt>), while one taking two returns a pair (ex: <tt class="docutils literal">wooper:return_state_result(FooState,Res)</tt> is actually <tt class="docutils literal">{FooState,Res}</tt>). No black magic here!</p>
 <p>Therefore the implementation we target could be best <a class="footnote-reference" href="#id40" id="id39">[18]</a> written as:</p>
 <pre class="code erlang literal-block">
-<span class="c">% (same clause)
-</span><span class="nf">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">ArticleStringDescription</span><span class="p">)</span> <span class="o">-&gt;</span>
-        <span class="k">when</span> <span class="nb">is_list</span><span class="p">(</span><span class="nv">ArticleStringDescription</span><span class="p">)</span> <span class="o">-&gt;</span>
-   <span class="p">{</span><span class="nv">Price</span><span class="p">,</span><span class="nv">NewState</span><span class="p">}</span> <span class="o">=</span> <span class="p">[...</span><span class="n">some</span> <span class="n">code</span><span class="p">...]</span>
-   <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Price</span><span class="p">);</span>
+<span class="c">% (same clause)</span><span class="w">
+</span><span class="nf">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">ArticleStringDescription</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+        </span><span class="k">when</span><span class="w"> </span><span class="nb">is_list</span><span class="p">(</span><span class="nv">ArticleStringDescription</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+   </span><span class="p">{</span><span class="nv">Price</span><span class="p">,</span><span class="nv">NewState</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[...</span><span class="n">some</span><span class="w"> </span><span class="n">code</span><span class="p">...]</span><span class="w">
+   </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Price</span><span class="p">);</span><span class="w">
 
- <span class="c">% Added clause:
-</span> <span class="n">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">ArticleBinDescription</span><span class="p">)</span>
-        <span class="k">when</span> <span class="nb">is_binary</span><span class="p">(</span><span class="nv">ArticleBinDescription</span><span class="p">)</span> <span class="o">-&gt;</span>
-   <span class="p">{</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Price</span><span class="p">}</span> <span class="o">=</span> <span class="n">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span>
-       <span class="nb">binary_to_list</span><span class="p">(</span><span class="nv">ArticleBinDescription</span><span class="p">)),</span>
-   <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Price</span><span class="p">).</span>
+ </span><span class="c">% Added clause:</span><span class="w">
+ </span><span class="n">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">ArticleBinDescription</span><span class="p">)</span><span class="w">
+        </span><span class="k">when</span><span class="w"> </span><span class="nb">is_binary</span><span class="p">(</span><span class="nv">ArticleBinDescription</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+   </span><span class="p">{</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Price</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="w">
+       </span><span class="nb">binary_to_list</span><span class="p">(</span><span class="nv">ArticleBinDescription</span><span class="p">)),</span><span class="w">
+   </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Price</span><span class="p">).</span>
 </pre>
 <table class="docutils footnote" frame="void" id="id40" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -1882,10 +1882,10 @@ wooper:delete_passive(RedCat).
 <p>Should one need a value of the <tt class="docutils literal">void/0</tt> type, we recommend using the <tt class="docutils literal">void</tt> atom.</p>
 <p>As a result (pun!), one may define:</p>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">spec</span> <span class="n">stop</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">static_return</span><span class="p">(</span><span class="n">void</span><span class="p">()).</span>
-<span class="nf">stop</span><span class="p">()</span> <span class="o">-&gt;</span>
-  <span class="p">[...]</span> <span class="c">% Do some side-effects
-</span>  <span class="nn">wooper</span><span class="p">:</span><span class="nf">return_static</span><span class="p">(</span><span class="n">void</span><span class="p">).</span>
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">stop</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">static_return</span><span class="p">(</span><span class="n">void</span><span class="p">()).</span><span class="w">
+</span><span class="nf">stop</span><span class="p">()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="p">[...]</span><span class="w"> </span><span class="c">% Do some side-effects</span><span class="w">
+  </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_static</span><span class="p">(</span><span class="n">void</span><span class="p">).</span>
 </pre>
 <p>Introducing specific method terminators to convey that meaning would have been possible, yet multiplying the syntactical constructs would probably hurt the terseness of the underlying language.</p>
 <p>However, as, fairly frequently, static methods have nothing meaningful to return, the <tt class="docutils literal">wooper:return_static_void/0</tt> method terminator and its spec-level counterpart <tt class="docutils literal">static_void_return()</tt> type have been introduced <a class="footnote-reference" href="#id45" id="id44">[20]</a>.</p>
@@ -1903,51 +1903,51 @@ wooper:delete_passive(RedCat).
 <p>Otherwise (all clauses always throw), the class developer will have to give a hint about the actual nature of that function - thanks to a type specification.</p>
 <p>For example, if defining the API of an abstract class (say, an <tt class="docutils literal">AbstractShape</tt> class) whereas, for a given method signature (ex: <tt class="docutils literal">getArea/1</tt>), there is no meaningful default implementation, one may for example write:</p>
 <pre class="code erlang literal-block">
-<span class="nf">getArea</span><span class="p">(_</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-    <span class="c">% For an abstract shape, no possible definition;
-</span>    <span class="c">% so catching any child class not overriding it,
-</span>    <span class="c">% thanks to:
-</span>    <span class="c">%
-</span>    <span class="n">throw</span><span class="p">(</span><span class="n">not_overridden</span><span class="p">).</span>
+<span class="nf">getArea</span><span class="p">(_</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="c">% For an abstract shape, no possible definition;</span><span class="w">
+    </span><span class="c">% so catching any child class not overriding it,</span><span class="w">
+    </span><span class="c">% thanks to:</span><span class="w">
+    </span><span class="c">%</span><span class="w">
+    </span><span class="n">throw</span><span class="p">(</span><span class="n">not_overridden</span><span class="p">).</span>
 </pre>
 <p>However, from the point of view of WOOPER, <tt class="docutils literal">getArea/1</tt>, short of using any method terminator, can be of any nature (for example a method or an helper function). WOOPER will then request the developer to clarify this ambiguity by adding a type spec, such as:</p>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">spec</span> <span class="n">getArea</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">const_request_return</span><span class="p">(</span><span class="n">area</span><span class="p">()).</span>
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">getArea</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">const_request_return</span><span class="p">(</span><span class="n">area</span><span class="p">()).</span>
 </pre>
 <p>This will be sufficient for WOOPER.</p>
 <p>In other related cases, it may be convenient instead to centralise the management of a range of failures in specific <strong>helper functions that always throw</strong> (such a function never returns), like in:</p>
 <pre class="code erlang literal-block">
-<span class="nf">manage_foobar_failure</span><span class="p">(</span><span class="nv">X</span><span class="p">,</span><span class="nv">Y</span><span class="p">)</span> <span class="o">-&gt;</span>
-    <span class="p">[...]</span>
-    <span class="n">throw</span><span class="p">({</span><span class="n">foobar_failed</span><span class="p">,{</span><span class="nv">X</span><span class="p">,</span><span class="nv">Y</span><span class="p">}}).</span>
+<span class="nf">manage_foobar_failure</span><span class="p">(</span><span class="nv">X</span><span class="p">,</span><span class="nv">Y</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="p">[...]</span><span class="w">
+    </span><span class="n">throw</span><span class="p">({</span><span class="n">foobar_failed</span><span class="p">,{</span><span class="nv">X</span><span class="p">,</span><span class="nv">Y</span><span class="p">}}).</span>
 </pre>
 <p>Writing a method relying on such an helper function could be:</p>
 <pre class="code erlang literal-block">
-<span class="nf">doSomething</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">A</span><span class="p">)</span> <span class="o">-&gt;</span>
-    <span class="k">case</span> <span class="n">foobar</span><span class="p">(</span><span class="nv">A</span><span class="p">,</span><span class="nv">State</span><span class="p">)</span> <span class="k">of</span>
+<span class="nf">doSomething</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">A</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="k">case</span><span class="w"> </span><span class="n">foobar</span><span class="p">(</span><span class="nv">A</span><span class="p">,</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="k">of</span><span class="w">
 
-       <span class="p">{</span><span class="n">value</span><span class="p">,</span><span class="nv">Result</span><span class="p">}</span> <span class="o">-&gt;</span>
-           <span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="nv">Result</span><span class="p">);</span>
+       </span><span class="p">{</span><span class="n">value</span><span class="p">,</span><span class="nv">Result</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+           </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="nv">Result</span><span class="p">);</span><span class="w">
 
-       <span class="p">{</span><span class="n">error</span><span class="p">,</span><span class="nv">Error</span><span class="p">}</span> <span class="o">-&gt;</span>
-           <span class="n">manage_foobar_failure</span><span class="p">(</span><span class="nv">A</span><span class="p">,</span><span class="nv">Error</span><span class="p">)</span>
+       </span><span class="p">{</span><span class="n">error</span><span class="p">,</span><span class="nv">Error</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+           </span><span class="n">manage_foobar_failure</span><span class="p">(</span><span class="nv">A</span><span class="p">,</span><span class="nv">Error</span><span class="p">)</span><span class="w">
 
-    <span class="k">end</span><span class="p">.</span>
+    </span><span class="k">end</span><span class="p">.</span>
 </pre>
 <p>The problem is that this call to <tt class="docutils literal">manage_foobar_failure/2</tt> does not include a method terminator, and thus this branch would be, from the WOOPER point of view, the one of an helper function, thus clashing with the other branches (here telling it is a const request).</p>
 <p>A solution could be to write instead:</p>
 <pre class="code erlang literal-block">
-<span class="p">[...]</span>
-        <span class="p">{</span><span class="n">error</span><span class="p">,</span><span class="nv">Error</span><span class="p">}</span> <span class="o">-&gt;</span>
-            <span class="nv">Dummy</span> <span class="o">=</span> <span class="n">manage_foobar_failure</span><span class="p">(</span><span class="nv">A</span><span class="p">,</span><span class="nv">Error</span><span class="p">),</span>
-            <span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="nv">Dummy</span><span class="p">)</span>
+<span class="p">[...]</span><span class="w">
+        </span><span class="p">{</span><span class="n">error</span><span class="p">,</span><span class="nv">Error</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+            </span><span class="nv">Dummy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">manage_foobar_failure</span><span class="p">(</span><span class="nv">A</span><span class="p">,</span><span class="nv">Error</span><span class="p">),</span><span class="w">
+            </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="nv">Dummy</span><span class="p">)</span>
 </pre>
 <p>but that resulting code would not be that satisfactory (a bit ugly, not so readable).</p>
 <p>So, instead, WOOPER introduced the <tt class="docutils literal">throwing/1</tt> method terminator, allowing the following, clearer, more elegant, code:</p>
 <pre class="code erlang literal-block">
-<span class="p">[...]</span>
-        <span class="p">{</span><span class="n">error</span><span class="p">,</span><span class="nv">Error</span><span class="p">}</span> <span class="o">-&gt;</span>
-            <span class="nn">wooper</span><span class="p">:</span><span class="nf">throwing</span><span class="p">(</span> <span class="n">manage_foobar_failure</span><span class="p">(</span><span class="nv">A</span><span class="p">,</span><span class="nv">Error</span><span class="p">)</span> <span class="p">)</span>
+<span class="p">[...]</span><span class="w">
+        </span><span class="p">{</span><span class="n">error</span><span class="p">,</span><span class="nv">Error</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+            </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">throwing</span><span class="p">(</span><span class="w"> </span><span class="n">manage_foobar_failure</span><span class="p">(</span><span class="nv">A</span><span class="p">,</span><span class="nv">Error</span><span class="p">)</span><span class="w"> </span><span class="p">)</span>
 </pre>
 </div>
 <div class="section" id="delete-any-instance-referenced-in-2">
@@ -1961,9 +1961,9 @@ wooper:delete_passive(RedCat).
 </ul>
 <p>and if the instance at hand that shall be deleted took ownership of these instances, then:</p>
 <pre class="code erlang literal-block">
-<span class="nf">delete</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-    <span class="nv">TempState</span> <span class="o">=</span> <span class="nn">wooper</span><span class="p">:</span><span class="nf">delete_any_instance_referenced_in</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">my_pid</span><span class="p">),</span>
-    <span class="nn">wooper</span><span class="p">:</span><span class="nf">delete_any_instance_referenced_in</span><span class="p">(</span><span class="nv">TempState</span><span class="p">,</span><span class="n">my_pids</span><span class="p">).</span>
+<span class="nf">delete</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nv">TempState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">delete_any_instance_referenced_in</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">my_pid</span><span class="p">),</span><span class="w">
+    </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">delete_any_instance_referenced_in</span><span class="p">(</span><span class="nv">TempState</span><span class="p">,</span><span class="n">my_pids</span><span class="p">).</span>
 </pre>
 <p>will automatically delete all these instances (if any) and return an updated state.</p>
 <p>Then the destructors of the mother classes can be chained by WOOPER.</p>
@@ -1979,12 +1979,12 @@ wooper:delete_passive(RedCat).
 </ul>
 <p>For example:</p>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">spec</span> <span class="n">onWOOPERExitReceived</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="nn">basic_utils</span><span class="p">:</span><span class="nf">pid_or_port</span><span class="p">(),</span>
-             <span class="nn">basic_utils</span><span class="p">:</span><span class="nf">exit_reason</span><span class="p">())</span> <span class="o">-&gt;</span> <span class="n">const_oneway_return</span><span class="p">().</span>
-<span class="nf">onWOOPERExitReceived</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">PidOrPort</span><span class="p">,</span><span class="nv">ExitReason</span><span class="p">)</span> <span class="o">-&gt;</span>
-      <span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;MyClass EXIT handler ignored signal '</span><span class="si">~p</span><span class="s">' &quot;</span>
-                <span class="s">&quot;from </span><span class="si">~w</span><span class="s">.</span><span class="si">~n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nv">ExitReason</span><span class="p">,</span><span class="nv">PidOrPort</span><span class="p">]),</span>
-      <span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return</span><span class="p">().</span>
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">onWOOPERExitReceived</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="nn">basic_utils</span><span class="p">:</span><span class="nf">pid_or_port</span><span class="p">(),</span><span class="w">
+             </span><span class="nn">basic_utils</span><span class="p">:</span><span class="nf">exit_reason</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">const_oneway_return</span><span class="p">().</span><span class="w">
+</span><span class="nf">onWOOPERExitReceived</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">PidOrPort</span><span class="p">,</span><span class="nv">ExitReason</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+      </span><span class="nn">io</span><span class="p">:</span><span class="nf">format</span><span class="p">(</span><span class="s">&quot;MyClass EXIT handler ignored signal '</span><span class="si">~p</span><span class="s">' &quot;</span><span class="w">
+                </span><span class="s">&quot;from </span><span class="si">~w</span><span class="s">.</span><span class="si">~n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="nv">ExitReason</span><span class="p">,</span><span class="nv">PidOrPort</span><span class="p">]),</span><span class="w">
+      </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return</span><span class="p">().</span>
 </pre>
 <p>may result in an output like:</p>
 <pre class="literal-block">
@@ -2023,8 +2023,8 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 </ul>
 <p>For example:</p>
 <pre class="code erlang literal-block">
-<span class="nn">class_Platypus</span><span class="p">:</span><span class="nf">get_superclasses</span><span class="p">().</span>
-<span class="p">[</span><span class="n">class_Mammal</span><span class="p">,</span><span class="n">class_OvoviviparousBeing</span><span class="p">]</span>
+<span class="nn">class_Platypus</span><span class="p">:</span><span class="nf">get_superclasses</span><span class="p">().</span><span class="w">
+</span><span class="p">[</span><span class="n">class_Mammal</span><span class="p">,</span><span class="n">class_OvoviviparousBeing</span><span class="p">]</span>
 </pre>
 </div>
 <div class="section" id="developer-guidelines">
@@ -2069,47 +2069,47 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <li>declaring the corresponding OTP behaviour, the exported functions that this implies, and any relevant define, like in:</li>
 </ul>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">behaviour</span><span class="p">(</span><span class="n">supervisor_bridge</span><span class="p">).</span>
+<span class="p">-</span><span class="ni">behaviour</span><span class="p">(</span><span class="n">supervisor_bridge</span><span class="p">).</span><span class="w">
 
-<span class="c">% User API of the bridge (can be arbitrarily chosen, including of course the arity):
-</span><span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">start_link</span><span class="o">/</span><span class="mi">2</span><span class="p">]).</span>
+</span><span class="c">% User API of the bridge (can be arbitrarily chosen, including of course the arity):</span><span class="w">
+</span><span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">start_link</span><span class="o">/</span><span class="mi">2</span><span class="p">]).</span><span class="w">
 
-<span class="c">% Callbacks of the supervisor_bridge behaviour:
-</span><span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">init</span><span class="o">/</span><span class="mi">1</span><span class="p">,</span> <span class="n">terminate</span><span class="o">/</span><span class="mi">2</span><span class="p">]).</span>
+</span><span class="c">% Callbacks of the supervisor_bridge behaviour:</span><span class="w">
+</span><span class="p">-</span><span class="ni">export</span><span class="p">([</span><span class="n">init</span><span class="o">/</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">terminate</span><span class="o">/</span><span class="mi">2</span><span class="p">]).</span><span class="w">
 
-<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">bridge_name</span><span class="p">,</span> <span class="o">?</span><span class="nv">MODULE</span><span class="p">).</span>
+</span><span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">bridge_name</span><span class="p">,</span><span class="w"> </span><span class="o">?</span><span class="nv">MODULE</span><span class="p">).</span>
 </pre>
 <ul class="simple">
 <li>implementing how the bridge shall be spawned by the user, like in:</li>
 </ul>
 <pre class="code erlang literal-block">
-<span class="nf">start_link</span><span class="p">(</span><span class="nv">X</span><span class="p">,</span><span class="nv">Y</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="nv">Z</span><span class="o">=</span><span class="n">f</span><span class="p">(</span><span class="nv">X</span><span class="p">),</span>
-  <span class="c">% Supposing here that a local registration of the bridge is wanted:
-</span>  <span class="nn">supervisor_bridge</span><span class="p">:</span><span class="nf">start_link</span><span class="p">({</span><span class="n">local</span><span class="p">,</span> <span class="o">?</span><span class="n">bridge_name</span><span class="p">},</span>
-      <span class="p">_</span><span class="nv">Module</span><span class="o">=?</span><span class="nv">MODULE</span><span class="p">,</span> <span class="p">_</span><span class="nv">InitArgs</span><span class="o">=</span><span class="p">[</span><span class="nv">Y</span><span class="p">,</span><span class="n">hello</span><span class="p">,</span><span class="nv">Z</span><span class="p">]).</span>
+<span class="nf">start_link</span><span class="p">(</span><span class="nv">X</span><span class="p">,</span><span class="nv">Y</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="nv">Z</span><span class="o">=</span><span class="n">f</span><span class="p">(</span><span class="nv">X</span><span class="p">),</span><span class="w">
+  </span><span class="c">% Supposing here that a local registration of the bridge is wanted:</span><span class="w">
+  </span><span class="nn">supervisor_bridge</span><span class="p">:</span><span class="nf">start_link</span><span class="p">({</span><span class="n">local</span><span class="p">,</span><span class="w"> </span><span class="o">?</span><span class="n">bridge_name</span><span class="p">},</span><span class="w">
+      </span><span class="p">_</span><span class="nv">Module</span><span class="o">=?</span><span class="nv">MODULE</span><span class="p">,</span><span class="w"> </span><span class="p">_</span><span class="nv">InitArgs</span><span class="o">=</span><span class="p">[</span><span class="nv">Y</span><span class="p">,</span><span class="n">hello</span><span class="p">,</span><span class="nv">Z</span><span class="p">]).</span>
 </pre>
 <ul class="simple">
 <li>implementing what the bridge shall do in terms of initialisation once spawned (notably regarding the WOOPER instance that it interfaces), like in:</li>
 </ul>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">spec</span> <span class="n">init</span><span class="p">(</span> <span class="n">list</span><span class="p">()</span> <span class="p">)</span> <span class="o">-&gt;</span> <span class="p">{</span> <span class="n">'ok'</span><span class="p">,</span> <span class="n">pid</span><span class="p">(),</span> <span class="nv">BridgeState</span> <span class="p">::</span> <span class="n">term</span><span class="p">()}</span>
-      <span class="p">|</span> <span class="n">'ignore'</span> <span class="p">|</span> <span class="p">{</span><span class="n">'error'</span><span class="p">,</span> <span class="nv">Error</span> <span class="p">::</span> <span class="n">term</span><span class="p">()}.</span>
-<span class="nf">init</span><span class="p">(_</span><span class="nv">Args</span><span class="o">=</span><span class="p">[_</span><span class="nv">A</span><span class="p">,</span> <span class="nv">Atom</span><span class="p">,</span> <span class="nv">B</span><span class="p">])</span> <span class="o">-&gt;</span>
-  <span class="c">% No synchronous creation supposed useful here:
-</span>  <span class="nv">MyFoobarInstancePid</span> <span class="o">=</span> <span class="nn">class_Foobar</span><span class="p">:</span><span class="nf">new_link</span><span class="p">(</span><span class="nv">Atom</span><span class="p">,</span><span class="nv">B</span><span class="p">),</span>
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">init</span><span class="p">(</span><span class="w"> </span><span class="n">list</span><span class="p">()</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">'ok'</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p">(),</span><span class="w"> </span><span class="nv">BridgeState</span><span class="w"> </span><span class="p">::</span><span class="w"> </span><span class="n">term</span><span class="p">()}</span><span class="w">
+      </span><span class="p">|</span><span class="w"> </span><span class="n">'ignore'</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="p">{</span><span class="n">'error'</span><span class="p">,</span><span class="w"> </span><span class="nv">Error</span><span class="w"> </span><span class="p">::</span><span class="w"> </span><span class="n">term</span><span class="p">()}.</span><span class="w">
+</span><span class="nf">init</span><span class="p">(_</span><span class="nv">Args</span><span class="o">=</span><span class="p">[_</span><span class="nv">A</span><span class="p">,</span><span class="w"> </span><span class="nv">Atom</span><span class="p">,</span><span class="w"> </span><span class="nv">B</span><span class="p">])</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="c">% No synchronous creation supposed useful here:</span><span class="w">
+  </span><span class="nv">MyFoobarInstancePid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nn">class_Foobar</span><span class="p">:</span><span class="nf">new_link</span><span class="p">(</span><span class="nv">Atom</span><span class="p">,</span><span class="nv">B</span><span class="p">),</span><span class="w">
 
-  <span class="nv">InitialBridgeState</span> <span class="o">=</span> <span class="p">{</span><span class="nv">MyFoobarInstancePid</span><span class="p">,</span> <span class="nv">Atom</span><span class="p">},</span>
+  </span><span class="nv">InitialBridgeState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="nv">MyFoobarInstancePid</span><span class="p">,</span><span class="w"> </span><span class="nv">Atom</span><span class="p">},</span><span class="w">
 
-  <span class="p">{</span><span class="n">ok</span><span class="p">,</span> <span class="nv">MyFoobarInstancePid</span><span class="p">,</span> <span class="nv">InitialBridgeState</span><span class="p">}.</span>
+  </span><span class="p">{</span><span class="n">ok</span><span class="p">,</span><span class="w"> </span><span class="nv">MyFoobarInstancePid</span><span class="p">,</span><span class="w"> </span><span class="nv">InitialBridgeState</span><span class="p">}.</span>
 </pre>
 <ul class="simple">
 <li>do the same regarding termination, like in:</li>
 </ul>
 <pre class="code erlang literal-block">
-<span class="nf">terminate</span><span class="p">(</span><span class="nv">Reason</span><span class="p">,</span> <span class="p">_</span><span class="nv">BridgeState</span><span class="o">=</span><span class="p">{</span><span class="nv">FoobarPid</span><span class="p">,</span> <span class="p">_</span><span class="nv">Atom</span><span class="p">})</span> <span class="o">-&gt;</span>
-  <span class="c">% No synchronicity especially needed:
-</span>  <span class="nv">FoobarPid</span> <span class="o">!</span> <span class="n">delete</span><span class="p">.</span>
+<span class="nf">terminate</span><span class="p">(</span><span class="nv">Reason</span><span class="p">,</span><span class="w"> </span><span class="p">_</span><span class="nv">BridgeState</span><span class="o">=</span><span class="p">{</span><span class="nv">FoobarPid</span><span class="p">,</span><span class="w"> </span><span class="p">_</span><span class="nv">Atom</span><span class="p">})</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="c">% No synchronicity especially needed:</span><span class="w">
+  </span><span class="nv">FoobarPid</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="n">delete</span><span class="p">.</span>
 </pre>
 <p>Of course:</p>
 <ul class="simple">
@@ -2250,14 +2250,14 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <p>Most probably that your <tt class="docutils literal"><span class="pre">-define(class_attributes,[...]).</span></tt> define happens <em>after</em> the WOOPER header include.</p>
 <p>The correct order is:</p>
 <pre class="code erlang literal-block">
-<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_attributes</span><span class="p">,[</span>
-            <span class="nv">ATTR_DECL1</span><span class="p">,</span>
-            <span class="nv">ATTR_DECL2</span><span class="p">,</span>
-            <span class="p">[...]</span>
-            <span class="nv">ATTR_DECLN</span><span class="p">]).</span>
-<span class="p">[...]</span>
-<span class="p">-</span><span class="ni">include</span><span class="p">(</span><span class="s">&quot;wooper.hrl&quot;</span><span class="p">).</span>
-<span class="p">[...]</span>
+<span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_attributes</span><span class="p">,[</span><span class="w">
+            </span><span class="nv">ATTR_DECL1</span><span class="p">,</span><span class="w">
+            </span><span class="nv">ATTR_DECL2</span><span class="p">,</span><span class="w">
+            </span><span class="p">[...]</span><span class="w">
+            </span><span class="nv">ATTR_DECLN</span><span class="p">]).</span><span class="w">
+</span><span class="p">[...]</span><span class="w">
+</span><span class="p">-</span><span class="ni">include</span><span class="p">(</span><span class="s">&quot;wooper.hrl&quot;</span><span class="p">).</span><span class="w">
+</span><span class="p">[...]</span>
 </pre>
 </div>
 <div class="section" id="compilation-error-pointing-to-wooper-for-classes-hrl">
@@ -2289,15 +2289,15 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <p>One of these gotchas - experienced even by the WOOPER author - is to define a two-parameter oneway, whose second parameter is a PID, and to call this method wrongly as a request, instead of as a oneway.</p>
 <p>For example, let's suppose the <tt class="docutils literal">class_Dog</tt> class defines the oneway method <tt class="docutils literal">startBarkingAt/3</tt> as:</p>
 <pre class="code erlang literal-block">
-<span class="nf">startBarkingAt</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Duration</span><span class="p">,</span><span class="nv">ListenerPID</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">...</span>
+<span class="nf">startBarkingAt</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">Duration</span><span class="p">,</span><span class="nv">ListenerPID</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">...</span>
 </pre>
 <p>The correct approach to call this <strong>oneway</strong> would be:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyDogPid</span> <span class="o">!</span> <span class="p">{</span><span class="n">startBarkingAt</span><span class="p">,[</span><span class="nv">MyDuration</span><span class="p">,</span><span class="n">self</span><span class="p">()]}</span>
+<span class="nv">MyDogPid</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">startBarkingAt</span><span class="p">,[</span><span class="nv">MyDuration</span><span class="p">,</span><span class="n">self</span><span class="p">()]}</span>
 </pre>
 <p>An absent-minded developer could have written instead:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyDogPid</span> <span class="o">!</span> <span class="p">{</span><span class="n">startBarkingAt</span><span class="p">,</span><span class="nv">MyDuration</span><span class="p">,</span><span class="n">self</span><span class="p">()}</span>
+<span class="nv">MyDogPid</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">startBarkingAt</span><span class="p">,</span><span class="nv">MyDuration</span><span class="p">,</span><span class="n">self</span><span class="p">()}</span>
 </pre>
 <p>This would have called a <tt class="docutils literal">request</tt> method <tt class="docutils literal">startBarkingAt/2</tt> (which could have been for example <tt class="docutils literal">startBarkingAt(State,TerminationOffset) <span class="pre">-&gt;</span> ...</tt>, the PID being interpreted by WOOPER as the request sender PID), a method that most probably does not even exist.</p>
 <p>This would result in a bit obscure error message like:</p>
@@ -2539,12 +2539,12 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 <h3><a class="toc-backref" href="#id157">Understanding the Mode of Operation of a WOOPER Instance</a></h3>
 <p>Each instance runs a main loop (<tt class="docutils literal">wooper_main_loop/1</tt>, defined in <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/include/wooper.hrl">wooper.hrl</a>) that keeps its internal state and, through a blocking <tt class="docutils literal">receive</tt>, serves the methods as specified by incoming messages, quite similarly to a classical server that loops on an updated state, like in:</p>
 <pre class="code erlang literal-block">
-<span class="nf">my_server</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span> <span class="o">-&gt;</span>
-  <span class="k">receive</span>
-    <span class="p">{</span><span class="n">command</span><span class="p">,{</span><span class="nv">M</span><span class="p">,</span><span class="nv">P</span><span class="p">}}</span> <span class="o">-&gt;</span>
-      <span class="nv">NewState</span> <span class="o">=</span> <span class="n">execute_command</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">M</span><span class="p">,</span><span class="nv">P</span><span class="p">),</span>
-      <span class="n">my_server</span><span class="p">(</span><span class="nv">NewState</span><span class="p">)</span>
-  <span class="k">end</span><span class="p">.</span>
+<span class="nf">my_server</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="k">receive</span><span class="w">
+    </span><span class="p">{</span><span class="n">command</span><span class="p">,{</span><span class="nv">M</span><span class="p">,</span><span class="nv">P</span><span class="p">}}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+      </span><span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">execute_command</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">M</span><span class="p">,</span><span class="nv">P</span><span class="p">),</span><span class="w">
+      </span><span class="n">my_server</span><span class="p">(</span><span class="nv">NewState</span><span class="p">)</span><span class="w">
+  </span><span class="k">end</span><span class="p">.</span>
 </pre>
 <p>In each instance, WOOPER manages the tail-recursive infinite surrounding loop, <tt class="docutils literal">State</tt> corresponding to the (private) state of the instance, and <tt class="docutils literal">execute_command(State,M,P)</tt> corresponding to the WOOPER logic that triggers the user-defined method <tt class="docutils literal">M</tt> with the current state (<tt class="docutils literal">State</tt>) and the specified parameters (<tt class="docutils literal">P</tt>), and that may return a result.</p>
 <p>The per-instance kept state is twofold, in the sense that it contains two associative tables, one to route method calls and one to store the instance attributes, as explained below.</p>
