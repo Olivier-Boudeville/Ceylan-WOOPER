@@ -26,6 +26,7 @@
 
 % Nope: @headerfile "wooper_state_functions.hrl"
 
+
 % @doc Module containing some <b>general facilities for WOOPER class
 % developers</b>.
 %
@@ -2025,7 +2026,8 @@ state_to_string( State ) ->
 
 		end,
 
-		io_lib:format( "State of ~w:~nInstance of ~ts with ~B attribute(s):~n",
+		text_utils:format( "State of ~w:~nInstance of ~ts "
+			"with ~B attribute(s):~n",
 			[ self(), get_classname( State ), length( Attributes ) ] ),
 
 		SortedAttributes ).
