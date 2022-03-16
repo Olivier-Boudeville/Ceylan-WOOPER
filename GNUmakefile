@@ -1,12 +1,13 @@
 WOOPER_TOP = .
 
 
-.PHONY: help help-intro help-wooper                                    \
-		all register-version-in-header register-wooper list-beam-dirs  \
-		add-prerequisite-plts link-plt                                 \
-		release release-zip release-bz2 release-xz                     \
-		prepare-release clean-release clean-archive stats              \
-		info-context info-versions info-paths                          \
+.PHONY: help help-intro help-wooper                                        \
+		all register-version-in-header register-wooper list-beam-dirs      \
+		copy-all-beams-to-ebins copy-deps-beams-to-ebin                    \
+		add-prerequisite-plts link-plt                                     \
+		release release-zip release-bz2 release-xz                         \
+		prepare-release clean-release clean-archive stats                  \
+		info-context info-versions info-paths                              \
 		info-compile info-conditionals info-deps
 
 
@@ -36,9 +37,9 @@ help-wooper:
 
 
 register-version-in-header:
-	@if [ -z "$(VERSION_FILE)" ] ; then \
-	echo "Error, no version file defined." 1>&2 ; exit 51 ; else \
-	$(MAKE) register-wooper ; fi
+	@if [ -z "$(VERSION_FILE)" ]; then \
+	echo "Error, no version file defined." 1>&2; exit 51; else \
+	$(MAKE) register-wooper; fi
 
 
 register-wooper:
@@ -47,15 +48,20 @@ register-wooper:
 
 # Useful to extract internal layout for re-use in upper layers:
 list-beam-dirs:
-	@for d in $(WOOPER_BEAM_DIRS) ; do echo $$(readlink -f $$d) ; done
+	@for d in $(WOOPER_BEAM_DIRS); do echo $$(readlink -f $$d); done
+
+
+copy-all-beams-to-ebins: copy-deps-beams-to-ebin
+
+copy-deps-beams-to-ebin:
+	@cd $(MYRIAD_TOP) && $(MAKE) -s copy-all-beams-to-ebins
 
 
 add-prerequisite-plts: link-plt
 
-
 # As upper layers may rely on the 'wooper' naming:
 link-plt:
-	@if [ ! "$(PLT_FILE)" = "$(WOOPER_PLT_FILE)" ]; then /bin/ln -s --force $(PLT_FILE) $(WOOPER_PLT_FILE) ; fi
+	@if [ ! "$(PLT_FILE)" = "$(WOOPER_PLT_FILE)" ]; then /bin/ln -s --force $(PLT_FILE) $(WOOPER_PLT_FILE); fi
 
 
 # Note: the source archives are not produced in this directory, but in its
