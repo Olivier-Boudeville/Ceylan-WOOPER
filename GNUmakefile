@@ -3,7 +3,6 @@ WOOPER_TOP = .
 
 .PHONY: help help-intro help-wooper                                        \
 		all register-version-in-header register-wooper list-beam-dirs      \
-		copy-all-beams-to-ebins copy-deps-beams-to-ebin                    \
 		add-prerequisite-plts link-plt                                     \
 		release release-zip release-bz2 release-xz                         \
 		prepare-release clean-release clean-archive stats                  \
@@ -51,13 +50,8 @@ list-beam-dirs:
 	@for d in $(WOOPER_BEAM_DIRS); do echo $$(readlink -f $$d); done
 
 
-copy-all-beams-to-ebins: copy-deps-beams-to-ebin
-
-copy-deps-beams-to-ebin:
-	@cd $(MYRIAD_TOP) && $(MAKE) -s copy-all-beams-to-ebins
-
-
 add-prerequisite-plts: link-plt
+
 
 # As upper layers may rely on the 'wooper' naming:
 link-plt:
