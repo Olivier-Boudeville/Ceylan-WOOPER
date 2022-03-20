@@ -375,3 +375,7 @@ else
 		endif
 	endif
 endif
+
+ifndef PREDECESSOR_LAYER_TOPS
+	PREDECESSOR_LAYER_TOPS := $(MYRIAD_TOP)
+endif
