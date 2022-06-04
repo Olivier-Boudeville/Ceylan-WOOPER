@@ -28,3 +28,5 @@ src/wooper.app.src
 
 # Generated:
 conf/rebar.config
+doc/Ceylan-WOOPER-Layer-technical-manual-english.html
+doc/Ceylan-WOOPER-Layer-technical-manual-english.rst
