@@ -5,6 +5,7 @@
 % It has been placed in the public domain.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
+% Creation date: 2003.
 
 
 % @doc Class modelling any kind of <b>reptile</b>.
@@ -81,7 +82,7 @@ construct( State, Age, Gender ) ->
 	%an_unexpected_initial_state.
 
 
-% @doc Overridden destructor
+% @doc Overridden destructor.
 -spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
 	trace_utils:info( "Deleting a Reptile." ),
