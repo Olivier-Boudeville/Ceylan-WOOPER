@@ -1970,10 +1970,47 @@ Running this code should output something like::
 The point here is that the implementer does not have to know what are the actual classes of the instances that are interacted with, provided that they share a common ancestor; polymorphism allows to handle them transparently.
 
 
+
 The Special Case of Diamond-Shaped Inheritance
 ..............................................
 
-In the case of a `diamond-shaped inheritance <http://en.wikipedia.org/wiki/Diamond_problem>`_, as the method table is constructed in the order specified in the declaration of the superclasses, like in:
+
+Principle
+_________
+
+
+A `diamond-shaped inheritance <http://en.wikipedia.org/wiki/Diamond_problem>`_ occurs, in a multiple inheritance context, whenever a class inherits more than once (usually indirectly) of a given class.
+
+.. Note:: More generally speaking, diamond-shaped inheritance is seldom necessary. More often than not, it is the consequence of a less-than-ideal OOP design, and should, if applicable, be avoided anyway.
+
+This may happen when, like in `the WOOPER example <#wooper-example>`_ presented later in this document:
+
+- a very general "root" class (ex: ``class_Creature``) sits at the top of at least a part of the hierarchy [#]_
+- various child classes derive from it (ex: ``class_Mammal`` and a ``class_OvoviviparousBeing`` may derive from ``class_Creature`` for obvious reasons)
+- a more concrete class (ex: ``class_Platypus``) has to derive from at least two of these child classes (since a platypus happens to be both a mammal and an ovoviviparous being)
+
+.. [#] For example, it might be the case with `class_TraceEmitter <https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/class_TraceEmitter.erl>`_ if relying on `Ceylan-Traces <https://traces.esperide.org/>`_, or `class_Actor <https://github.com/Olivier-Boudeville-EDF/Sim-Diasca/blob/main/sim-diasca/src/core/services/scheduling/class_Actor.erl>`_ if using `Sim-Diasca <https://github.com/Olivier-Boudeville-EDF/Sim-Diasca>`_, as such base classes are rather ubiquitous in their respective contexts.
+
+Then the concrete class will end up deriving more than once from the same root class (here: ``class_Platypus`` will derive indirectly from ``class_Creature`` twice).
+
+Diamond-shaped inheritance may lead to issues in terms of state management (ex: attributes having possibly in turn to be defined more than once), behaviour (multiple implementations having to be selected for some methods) and initialisation (extraneous constructor calls being made).
+
+
+Modelling & Implementation Choices
+__________________________________
+
+The root of such issue is to determine what is the meaning of the multiple ``is-a`` relationships involved in this diamond-shaped inheritance.
+
+If one design solution is to favour `composition over inheritance <https://en.wikipedia.org/wiki/Composition_over_inheritance>`_ [#]_ to sort out these cases, by default we tend with WOOPER to consider that a single is-a relationship should apply in that case, i.e. that for example a platypus "is a" creature in a single way (having to inherit the attributes from creature only once, and its member methods as they are defined at the creature level).
+
+.. [#] Consisting on typically defining classes that do not *inherit* traits as such, but *include* them as delegates, which are instances, stored as attributes, of an actual class encapsulating a variation of that trait (and possibly an absence of it).
+
+	   For example, regarding a trait about the ability to fly: for any creature, a ``flyable`` *attribute* may be introduced, and either be set to ``undefined`` (if such a creature is not able to fly), or to a (passive) instance deriving from a ``class_Flyable`` abstract class, whose concrete child classes could be ``class_FlyableAsAnEagle`` or ``class_FlyableAsAnOwl`` (if that makes sense in terms of volatile).
+
+	   Traits can be then managed with flexibility, at the class or even instance level, without involving any specific inheritance for the overall class itself.
+
+
+More precisely, with WOOPER, as the method table is constructed in the order specified in the declaration of the superclasses, like in:
 
 .. code:: erlang
 
@@ -1986,14 +2023,28 @@ Generally speaking, overriding in that case the relevant methods that were initi
 
 Regarding the instance state, the **attributes** are set by the constructors, and the developer can select in which order the direct mother classes should be constructed.
 
-However, in such a diamond-shaped inheritance scheme, the constructor of the class that sits at the top of a given diamond will be called more than once.
+However, in such a diamond-shaped inheritance scheme, the constructor of the class that sits at the top of a given diamond will be called more than once, and any side-effect that it would induce would then occur as many times as this class is a common ancestor of the actual class; it may be advisable to create idempotent constructors in that case.
 
-Any side-effect that it would induce would then occur as many times as this class is a common ancestor of the actual class; it may be advisable to create idempotent constructors in that case.
+This can be simply done whenever a given root class introduces at least one attribute (which is the general case): by testing whether the initial state given to its constructor already includes this attribute, the constructor can determine whether it has already been applied, in which case it may return the state that it received as it is; otherwise (it has not been applied already), it shall then be fully executed, by setting its attributes, triggering any relevant processing and side effects, and so on.
 
-.. Note:: More generally speaking, diamond-shaped inheritance is seldom necessary. More often than not, it is the consequence of a less-than-ideal OOP design, and should be avoided anyway.
+For example, should the ``class_Creature`` consider that each creature has a date of birth, its constructor may be like:
 
+.. code:: erlang
 
+ construct(State, DateOfBirth) ->
+   case hasAttribute(State, birth_date) of
 
+		% Already initialised, nothing more to do, shortcut:
+		true ->
+			State;
+
+		% Full, actual initialisation, to happen exactly once per instance:
+		false ->
+			% Trigger side-effects, change state, etc.:
+			InitState = init(State),
+			setAttribute(InitState, birth_date, DateOfBirth)
+
+	end.
 
 
 
@@ -2944,6 +2995,8 @@ As always, there is certainly room for improvement, to grind a bit more runtime 
 
 
 :raw-latex:`\pagebreak`
+
+
 
 
 WOOPER Example
