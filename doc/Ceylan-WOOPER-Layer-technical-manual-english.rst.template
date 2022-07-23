@@ -2025,7 +2025,10 @@ Regarding the instance state, the **attributes** are set by the constructors, an
 
 However, in such a diamond-shaped inheritance scheme, the constructor of the class that sits at the top of a given diamond will be called more than once, and any side-effect that it would induce would then occur as many times as this class is a common ancestor of the actual class; it may be advisable to create idempotent constructors in that case.
 
-This can be simply done whenever a given root class introduces at least one attribute (which is the general case): by testing whether the initial state given to its constructor already includes this attribute, the constructor can determine whether it has already been applied, in which case it may return the state that it received as it is; otherwise (it has not been applied already), it shall then be fully executed, by setting its attributes, triggering any relevant processing and side effects, and so on.
+This can be simply done whenever a given root class introduces at least one attribute (which is the general case): by testing whether the initial state given to its constructor already includes this attribute, the constructor can determine whether it has already been applied, in which case it may return the state that it received as it is; otherwise (it has not been applied already), it shall then be fully executed, by setting its attributes [#]_, triggering any relevant processing and side effects, and so on.
+
+.. [#] A single set of them exists thus, as opposed to as many sets as the number of times the class of interest inherits from the root class (there is no state duplication).
+
 
 For example, should the ``class_Creature`` consider that each creature has a date of birth, its constructor may be like:
 
@@ -2042,6 +2045,7 @@ For example, should the ``class_Creature`` consider that each creature has a dat
 		false ->
 			% Trigger side-effects, change state, etc.:
 			InitState = init(State),
+			% At least this attribute is defined:
 			setAttribute(InitState, birth_date, DateOfBirth)
 
 	end.
