@@ -21,7 +21,7 @@
 
 {application, wooper,
  [{description, "Ceylan-WOOPER, a Wrapper for Object-Oriented Programming in Erlang, as an OTP active application here (see http://wooper.esperide.org)"},
-  {vsn, "2.0.18"},
+  {vsn, "2.0.19"},
 
   % See wooper_class_manager.hrl:
   {registered, [wooper_class_manager]},
@@ -33,7 +33,7 @@
   %{env,[]},
 
   % Flat hierarchy in ebin here:
-  {modules, [wooper, wooper_app, wooper_class_management, wooper_class_manager, wooper_info, wooper_instance_construction, wooper_instance_destruction, wooper_instance_proxy, wooper_internals, wooper_introspection, wooper_method_management, wooper_parse_transform, wooper_parse_utils, wooper_serialisation, wooper_state_management, wooper_sup, wooper_utils]},
+  {modules, [class_Describable, wooper, wooper_app, wooper_class_management, wooper_class_manager, wooper_info, wooper_instance_construction, wooper_instance_destruction, wooper_instance_proxy, wooper_internals, wooper_introspection, wooper_method_management, wooper_parse_transform, wooper_parse_utils, wooper_serialisation, wooper_state_management, wooper_sup, wooper_utils]},
 
   {licenses, ["Ceylan-WOOPER is licensed by its author (Olivier Boudeville) under a disjunctive tri-license, giving you the choice of one of the three following sets of free software/open source licensing terms:
 	- the Mozilla Public License (MPL), version 1.1 or later (very close to the former Erlang Public License, except aspects regarding Ericsson and/or the Swedish law)
