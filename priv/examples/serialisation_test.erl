@@ -5,10 +5,12 @@
 % It has been placed in the public domain.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
+% Creation date: 2012.
 
 
-
-% Testing the implementation of the serialisation of WOOPER instances.
+% @doc Testing the implementation of the <b>serialisation of WOOPER
+% instances</b>.
+%
 -module(serialisation_test).
 
 
@@ -51,8 +53,9 @@ run() ->
 	% This is a do-nothing transformer, except that it outputs on the console
 	% the attributes it filters:
 	%
-	TextTransformer = fun( Entry={ AttributeName, AttributeValue },
-						   _Acc={ AccEntries, AccUserData } ) ->
+	TextTransformer =
+		fun( Entry={ AttributeName, AttributeValue },
+			 _Acc={ AccEntries, AccUserData } ) ->
 
 			test_facilities:display( " - attribute name '~ts' is associated "
 				"to value '~p'", [ AttributeName, AttributeValue ] ),
@@ -60,7 +63,7 @@ run() ->
 			% New accumulator:
 			{ [ Entry | AccEntries ], AccUserData }
 
-	end,
+		end,
 
 	MyC ! { serialise, [ TextTransformer, ActualUserData ], self() },
 
