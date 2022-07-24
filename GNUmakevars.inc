@@ -120,7 +120,7 @@ endif
 # The uniquely-defined version of this layer, for all uses (including rebar and
 # hex):
 #
-WOOPER_VERSION := 2.0.18
+WOOPER_VERSION := 2.0.19
 
 
 # PROJECT_VERSION should be defined on a per-project basis.
@@ -159,11 +159,13 @@ WOOPER_RELEASE_ARCHIVE_XZ  := $(WOOPER_RELEASE_BASE).tar.xz
 WOOPER_SRC := $(WOOPER_TOP)/src
 
 # BEAM path section.
-WOOPER_BEAM_DIR := $(WOOPER_TOP)/src
+WOOPER_BEAM_DIR := $(WOOPER_SRC)
+
+WOOPER_INTERFACES_DIR := $(WOOPER_SRC)/interfaces
 
 
 # See Myriad counterpart variable (MYRIAD_BEAM_DIRS) for explanations:
-WOOPER_BEAM_DIRS := $(WOOPER_BEAM_DIR) $(WOOPER_TOP)/..
+WOOPER_BEAM_DIRS := $(WOOPER_BEAM_DIR) $(WOOPER_INTERFACES_DIR) $(WOOPER_TOP)/..
 
 
 # For OTP releases and all:
