@@ -25,13 +25,17 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 
 
-
 % @doc Module containing facilities for the <b>serialisation and deserialisation
 % of WOOPER instances</b>.
 %
-% Note: offseting as much as possible code from the counterpart class header in
+% Notes:
+%
+% - offsetting as much as possible code from the counterpart class header in
 % this module allows for smaller, cache-friendly BEAMs, and short compilation
-% times.
+% times
+%
+% - introducing a class_Serialisable will much improve (and change) the way
+% serialisation and deserialisation are to happen
 %
 -module(wooper_serialisation).
 
@@ -92,9 +96,9 @@
 
 
 
--type entry_transformer() :: maybe(
+-type entry_transformer() ::
 			fun( ( attribute_entry(), basic_utils:user_data() ) ->
-					 { attribute_entry(), basic_utils:user_data() } ) ).
+					{ attribute_entry(), basic_utils:user_data() } ).
 % Any function that is able to transform the state of an instance.
 %
 % Note: see basic_utils:traverse_term/4, which may be useful in that context.
@@ -122,7 +126,7 @@
 							| ?term_restoration_marker.
 
 
-% Exported as wooper_serialisation_functions.hrl has to be included, yet this
+% Exported, as wooper_serialisation_functions.hrl has to be included, yet this
 % leads to have the function spotted as unused:
 %
 -export([ serialise/3 ]).
@@ -160,107 +164,115 @@
 % No updated user data is ever sent back, for the sake of API uniformity.
 
 
+% Shorthands:
 
-% @doc Spawns a new instance of this class, based on the specified serialisation
+-type user_data() :: basic_utils:user_data().
+-type node_name() :: net_utils:node_name().
+
+
+% @doc Spawns an instance of this class, based on the specified serialisation
 % information.
 %
 % Returns the PID of the created instance for this loading.
 %
-% Creation is asynchronous: this function returns as soon as the creation is
-% triggered, without waiting for it to complete.
+% This creation will be asynchronous: this function returns as soon as the
+% creation is triggered, without waiting for it to complete.
 %
 -spec load( bin_serialisation() ) -> instance_pid().
 load( BinSerialisation ) ->
-	load( BinSerialisation, _EntryTransformer=undefined, _UserData=undefined ).
+	load( BinSerialisation, _MaybeEntryTransformer=undefined,
+		  _UserData=undefined ).
 
 
 
-% @doc Spawns a new instance of this class, based on the specified serialisation
-% information, entry transformer and user data.
+% @doc Spawns an instance of this class, based on the specified serialisation
+% information, any entry transformer and user data.
 %
 % Returns the PID of the created instance for this loading.
 %
-% Creation is asynchronous: this function returns as soon as the creation is
-% triggered, without waiting for it to complete.
+% This creation will be asynchronous: this function returns as soon as the
+% creation is triggered, without waiting for it to complete.
 %
--spec load( bin_serialisation(), entry_transformer(),
-			basic_utils:user_data() ) -> instance_pid().
-load( BinSerialisation, EntryTransformer, UserData ) ->
+-spec load( bin_serialisation(), maybe( entry_transformer() ), user_data() ) ->
+													instance_pid().
+load( BinSerialisation, MaybeEntryTransformer, UserData ) ->
+	?myriad_spawn(
+		fun() ->
+			deserialise( BinSerialisation, MaybeEntryTransformer, UserData,
+						 _ListenerPid=undefined )
+		end ).
 
-	?myriad_spawn( fun() ->
-						deserialise( BinSerialisation, EntryTransformer,
-									 UserData, _ListenerPid=undefined )
-				   end ).
 
 
-
-% @doc Spawns a new instance of this class, based on the specified serialisation
+% @doc Spawns an instance of this class, based on the specified serialisation
 % information, and links it to the current process.
 %
 % Returns the PID of the created instance for this loading.
 %
-% Creation is asynchronous: this function returns as soon as the creation is
-% triggered, without waiting for it to complete.
+% This creation will be asynchronous: this function returns as soon as the
+% creation is triggered, without waiting for it to complete.
 %
 -spec load_link( bin_serialisation() ) -> instance_pid().
 load_link( BinSerialisation ) ->
-	load_link( BinSerialisation, _EntryTransformer=undefined,
+	load_link( BinSerialisation, _MaybeEntryTransformer=undefined,
 			   _UserData=undefined ).
 
 
 
-% @doc Spawns a new instance of this class, based on the specified serialisation
+% @doc Spawns an instance of this class, based on the specified serialisation
 % information, entry transformer and user data, and links it to the current
 % process.
 %
 % Returns the PID of the created instance for this loading.
 %
-% Creation is asynchronous: this function returns as soon as the creation is
-% triggered, without waiting for it to complete.
+% This creation will be asynchronous: this function returns as soon as the
+% creation is triggered, without waiting for it to complete.
 %
--spec load_link( bin_serialisation(), entry_transformer(),
-				 basic_utils:user_data() ) -> instance_pid().
-load_link( BinSerialisation, EntryTransformer, UserData ) ->
-	?myriad_spawn_link( fun() ->
-							deserialise( BinSerialisation, EntryTransformer,
-										 UserData, _ListenerPid=undefined )
-						end ).
+-spec load_link( bin_serialisation(), maybe( entry_transformer() ),
+				 user_data() ) -> instance_pid().
+load_link( BinSerialisation, MaybeEntryTransformer, UserData ) ->
+	?myriad_spawn_link(
+		fun() ->
+			deserialise( BinSerialisation, MaybeEntryTransformer, UserData,
+						 _ListenerPid=undefined )
+		end ).
 
 
 
-% @doc Spawns a new instance of this class, based on the specified serialisation
+% @doc Spawns an instance of this class, based on the specified serialisation
 % information.
 %
 % Returns the PID of the created instance for this loading.
 %
-% Creation is synchronous: the call will return only when the created process
-% reports that it is up and running.
+% This creation is synchronous: the call will return only when the created
+% process reports that it is up and running.
 %
 -spec synchronous_load( bin_serialisation() ) -> instance_pid().
 synchronous_load( BinSerialisation ) ->
-	synchronous_load( BinSerialisation, _EntryTransformer=undefined,
+	synchronous_load( BinSerialisation, _MaybeEntryTransformer=undefined,
 					  _UserData=undefined ).
 
 
 
-% @doc Spawns a new instance of this class, based on the specified serialisation
-% information, entry transformer and user data.
+% @doc Spawns an instance of this class, based on the specified serialisation
+% information, any entry transformer and user data.
 %
 % Returns the PID of the created instance for this loading.
 %
-% Creation is synchronous: the call will return only when the created process
-% reports that it is up and running.
+% This creation is synchronous: the call will return only when the created
+% process reports that it is up and running.
 %
--spec synchronous_load( bin_serialisation(), entry_transformer(),
-						basic_utils:user_data() ) -> instance_pid().
-synchronous_load( BinSerialisation, EntryTransformer, UserData ) ->
+-spec synchronous_load( bin_serialisation(), maybe( entry_transformer() ),
+						user_data() ) -> instance_pid().
+synchronous_load( BinSerialisation, MaybeEntryTransformer, UserData ) ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = ?myriad_spawn( fun() ->
-					deserialise( BinSerialisation, EntryTransformer, UserData,
-								 _ListenerPid=CreatorPid )
-								end ),
+	SpawnedPid = ?myriad_spawn(
+		fun() ->
+			deserialise( BinSerialisation, MaybeEntryTransformer, UserData,
+						 _ListenerPid=CreatorPid )
+		end ),
 
 	% Blocks until the spawned process answers:
 	receive
@@ -272,40 +284,41 @@ synchronous_load( BinSerialisation, EntryTransformer, UserData ) ->
 
 
 
-% @doc Spawns a new instance of this class, based on the specified serialisation
+% @doc Spawns an instance of this class, based on the specified serialisation
 % information, and links it to the current process.
 %
 % Returns the PID of the created instance for this loading.
 %
-% Creation is synchronous: the call will return only when the created process
-% reports that it is up and running.
+% This creation is synchronous: the call will return only when the created
+% process reports that it is up and running.
 %
 -spec synchronous_load_link( bin_serialisation() ) -> instance_pid().
 synchronous_load_link( BinSerialisation ) ->
-	synchronous_load_link( BinSerialisation, _EntryTransformer=undefined,
+	synchronous_load_link( BinSerialisation, _MaybeEntryTransformer=undefined,
 						   _UserData=undefined ).
 
 
 
-% @doc Spawns a new instance of this class, based on the specified serialisation
-% information, entry transformer and user data, and links it to the current
+% @doc Spawns an instance of this class, based on the specified serialisation
+% information, any entry transformer and user data, and links it to the current
 % process.
 %
 % Returns the PID of the created instance for this loading.
 %
-% Creation is synchronous: the call will return only when the created process
-% reports that it is up and running.
+% This creation is synchronous: the call will return only when the created
+% process reports that it is up and running.
 %
--spec synchronous_load_link( bin_serialisation(), entry_transformer(),
-				 basic_utils:user_data() ) -> instance_pid().
-synchronous_load_link( BinSerialisation, EntryTransformer, UserData ) ->
+-spec synchronous_load_link( bin_serialisation(), maybe( entry_transformer() ),
+							 user_data() ) -> instance_pid().
+synchronous_load_link( BinSerialisation, MaybeEntryTransformer, UserData ) ->
 
 	CreatorPid = self(),
 
-	SpawnedPid = ?myriad_spawn_link( fun() ->
-							deserialise( BinSerialisation, EntryTransformer,
-										 UserData, _ListenerPid=CreatorPid )
-									 end ),
+	SpawnedPid = ?myriad_spawn_link(
+		fun() ->
+			deserialise( BinSerialisation, MaybeEntryTransformer, UserData,
+						 _ListenerPid=CreatorPid )
+		end ),
 
 	% Blocks until the spawned process answers:
 	receive
@@ -330,91 +343,96 @@ synchronous_load_link( BinSerialisation, EntryTransformer, UserData ) ->
 
 
 
-% @doc Spawns on specified node a new instance of this class, based on the
+% @doc Spawns on specified node an instance of this class, based on the
 % specified serialisation information and links it to the current process.
 %
 % Returns the PID of the created instance.
 %
-% Creation is asynchronous (the PID is directly returned), however a {
-% spawn_successful, SpawnedPid } message will be received once (if ever) the
-% instance is up and running. This allows to perform the actual instance
-% creations in parallel, by waiting bulks of creations.
+% This creation is asynchronous (the PID is directly returned), however a
+% {spawn_successful, SpawnedPid} message will be received once (if ever) the
+% instance is up and running. This allows performing the actual instance
+% creations in parallel, by waiting sets of concurrent creations.
 %
--spec remote_synchronisable_load_link( net_utils:node_name(),
-									   bin_serialisation() ) -> instance_pid().
+-spec remote_synchronisable_load_link( node_name(), bin_serialisation() ) ->
+						instance_pid().
 remote_synchronisable_load_link( Node, BinSerialisation ) ->
 	remote_synchronisable_load_link( Node, BinSerialisation,
-					_EntryTransformer=undefined, _UserData=undefined ).
+		_MaybeEntryTransformer=undefined, _UserData=undefined ).
 
 
-% @doc Spawns on specified node a new instance of this class, based on the
-% specified serialisation information, entry transformer and user data, and
+
+% @doc Spawns on specified node an instance of this class, based on the
+% specified serialisation information, any entry transformer and user data, and
 % links it to the current process.
 %
 % Returns the PID of the created instance.
 %
-% Creation is asynchronous (the PID is directly returned), however a {
-% spawn_successful, SpawnedPid } message will be received once (if ever) the
-% instance is up and running. This allows to perform the actual instance
-% creations in parallel, by waiting bulks of creations.
+% This creation is asynchronous (the PID is directly returned), however a
+% {spawn_successful, SpawnedPid} message will be received once (if ever) the
+% instance is up and running. This allows performing the actual instance
+% creations in parallel, by waiting sets of concurrent creations.
 %
--spec remote_synchronisable_load_link( net_utils:node_name(),
-   bin_serialisation(), entry_transformer(), basic_utils:user_data() ) ->
-											 instance_pid().
-remote_synchronisable_load_link( Node, BinSerialisation, EntryTransformer,
+-spec remote_synchronisable_load_link( node_name(),
+	bin_serialisation(), maybe( entry_transformer() ), user_data() ) ->
+												instance_pid().
+remote_synchronisable_load_link( Node, BinSerialisation, MaybeEntryTransformer,
 								 UserData ) ->
 
 	CreatorPid = self(),
 
 	?myriad_spawn_link( Node,
-			fun() ->
-					deserialise( BinSerialisation, EntryTransformer, UserData,
-								 _ListenerPid=CreatorPid )
-			end ).
+		fun() ->
+			deserialise( BinSerialisation, MaybeEntryTransformer, UserData,
+						 _ListenerPid=CreatorPid )
+		end ).
 
 
 
-% @doc Spawns on specified node a new instance of this class, based on the
-% specified serialisation information, entry transformer and user data, and
+% @doc Spawns on specified node an instance of this class, based on the
+% specified serialisation information, any entry transformer and user data, and
 % links it to the current process.
 %
 % Returns the PID of the created instance for this loading, or the time_out
 % atom.
 %
-% Creation is synchronous: the call will return only when the created process
-% reports that it is up and running.
+% This creation is asynchronous (the PID is directly returned), however a
+% {spawn_successful, SpawnedPid} message will be received once (if ever) the
+% instance is up and running. This allows performing the actual instance
+% creations in parallel, by waiting sets of concurrent creations.
 %
--spec remote_synchronous_timed_load_link( net_utils:node_name(),
-							  bin_serialisation() ) -> instance_pid().
+-spec remote_synchronous_timed_load_link( node_name(),
+							 bin_serialisation() ) -> instance_pid().
 remote_synchronous_timed_load_link( Node, BinSerialisation ) ->
 	remote_synchronous_timed_load_link( Node, BinSerialisation,
-			_EntryTransformer=undefined, _UserData=undefined ).
+		_MaybeEntryTransformer=undefined, _UserData=undefined ).
 
 
 
-% @doc Spawns on specified node a new instance of this class, based on the
+% @doc Spawns on specified node an instance of this class, based on the
 % specified serialisation information, entry transformer and user data, and
 % links it to the current process.
 %
 % Returns the PID of the created instance for this loading, or the time_out
 % atom.
 %
-% Creation is synchronous: the call will return only when the created process
-% reports that it is up and running.
+% This creation is asynchronous (the PID is directly returned), however a
+% {spawn_successful, SpawnedPid} message will be received once (if ever) the
+% instance is up and running. This allows performing the actual instance
+% creations in parallel, by waiting sets of concurrent creations.
 %
--spec remote_synchronous_timed_load_link( net_utils:node_name(),
-   bin_serialisation(), entry_transformer(), basic_utils:user_data() ) ->
+-spec remote_synchronous_timed_load_link( node_name(),
+	bin_serialisation(), maybe( entry_transformer() ), user_data() ) ->
 												instance_pid().
-remote_synchronous_timed_load_link( Node, BinSerialisation, EntryTransformer,
-									UserData ) ->
+remote_synchronous_timed_load_link( Node, BinSerialisation,
+									MaybeEntryTransformer, UserData ) ->
 
 	CreatorPid = self(),
 
 	SpawnedPid = ?myriad_spawn_link( Node,
-			fun() ->
-					deserialise( BinSerialisation, EntryTransformer,
-								 UserData, _ListenerPid=CreatorPid )
-			end ),
+		fun() ->
+			deserialise( BinSerialisation, MaybeEntryTransformer,
+						 UserData, _ListenerPid=CreatorPid )
+		end ),
 
 	% Blocks until the spawned process answers or a time-out occurs:
 	receive
@@ -424,9 +442,9 @@ remote_synchronous_timed_load_link( Node, BinSerialisation, EntryTransformer,
 
 	after ?synchronous_time_out ->
 
-		io:format( "(remote_synchronous_timed_load_link: throwing time-out "
-				   "on node ~p for module ~p after ~p milliseconds)~n",
-				   [ Node, ?MODULE, ?synchronous_time_out ] ),
+		trace_utils:error_fmt( "(remote_synchronous_timed_load_link: "
+			"throwing time-out on node ~p for module ~p after ~p milliseconds)",
+			[ Node, ?MODULE, ?synchronous_time_out ] ),
 
 		throw( { remote_synchronous_linked_time_out, Node, ?MODULE } )
 
@@ -434,12 +452,12 @@ remote_synchronous_timed_load_link( Node, BinSerialisation, EntryTransformer,
 
 
 
-% @doc Deserialises the specified instance from its serialised form (as a term,
-% not as a binary), to obtain its corresponding state, using specified entry
+% @doc Deserialises the specified instance from its serialised form (as a
+% binary), to obtain its corresponding state, using any specified entry
 % transformer and user data, then having the current executing process embody
 % this instance from then on.
 %
-% Does not return, as the WOOPER main loop will manage from then this just
+% Does not return, as the WOOPER main loop will manage, from then on, this just
 % deserialised instance.
 %
 % (helper, as the receiver process may not even be already a WOOPER instance)
@@ -447,17 +465,17 @@ remote_synchronous_timed_load_link( Node, BinSerialisation, EntryTransformer,
 % Note: the hosting process is not created here, as, for an increased
 % parallelism, we expect deserialisations to happen directly from the final
 % instance processes; we consider here that the process executing this helper is
-% the final host.
+% the final hosting one.
 %
--spec deserialise( bin_serialisation(), entry_transformer(),
-				   basic_utils:user_data(), ListenerPid ) -> any() % no_return()
-						   when ListenerPid :: maybe( pid() ).
-deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
+-spec deserialise( bin_serialisation(), maybe( entry_transformer() ),
+				   user_data(), maybe( pid() ) ) -> no_return().
+deserialise( BinSerialisation, MaybeEntryTransformer, UserData,
+			 MaybeListenerPid ) ->
 
 	{ Classname, SerialisedEntries } = binary_to_term( BinSerialisation ),
 
 	% First we extract the WOOPER extra information:
-	{ RandomState, OtherEntries } =
+	{ MaybeRandomState, OtherEntries } =
 		option_list:extract( wooper_random_state, SerialisedEntries ),
 
 	HookedEntries =
@@ -465,28 +483,21 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 
 	VirtualTableKey = wooper:retrieve_virtual_table_key( Classname ),
 
-	{ TransformedEntries, FinalUserData } = case EntryTransformer of
+	{ TransformedEntries, FinalUserData } = case MaybeEntryTransformer of
 
-			undefined ->
-				{ HookedEntries, UserData };
+		undefined ->
+			{ HookedEntries, UserData };
 
-			_ ->
-				lists:foldl( EntryTransformer,
-							 _Acc0={ _ResultingEntries=[], UserData },
-							 _List=HookedEntries )
+		EntryTransformer ->
+			lists:foldl( EntryTransformer,
+						 _Acc0={ _ResultingEntries=[], UserData },
+						 _List=HookedEntries )
 
 	end,
 
 	% Sent as soon as available, rather than at the end:
-	case ListenerPid of
-
-		undefined ->
-			ok;
-
-		_->
-			ListenerPid ! { onDeserialisation, [ self(), FinalUserData ] }
-
-	end,
+	MaybeListenerPid =:= undefined orelse
+		MaybeListenerPid ! { onDeserialisation, [ self(), FinalUserData ] },
 
 	% Now we have the right attributes enumerated.
 
@@ -498,15 +509,8 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 	OptimisedAttributeTable = ?wooper_table_type:optimise( AttributeTable ),
 
 	% Must be restored as well:
-	case RandomState of
-
-		undefined ->
-			ok;
-
-		_ ->
-			random_utils:set_random_state( RandomState )
-
-	end,
+	MaybeRandomState =:= undefined orelse
+		random_utils:set_random_state( MaybeRandomState ),
 
 	VirtualTable = persistent_term:get( VirtualTableKey ),
 
@@ -528,11 +532,10 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 
 
 
-
 % @doc Handles private processes (through the name of the corresponding
-% attributes), that is processes that are internal to an instance that is to be
-% serialised, so that any next serialisation will see instead of their (former)
-% PID a serialisation marker.
+% attributes), which are processes that are internal to an instance that is to
+% be serialised, so that any next serialisation will see instead of their
+% (former) PID a serialisation marker.
 %
 % Returns an updated state.
 %
@@ -540,10 +543,11 @@ deserialise( BinSerialisation, EntryTransformer, UserData, ListenerPid ) ->
 % internal processes)
 %
 -spec handle_private_processes( [ attribute_name() ], wooper:state() ) ->
-									  wooper:state().
+										wooper:state().
 handle_private_processes( PrivateAttributeNames, State ) ->
 
-	lists:foldl( fun( PrivateAttrName, AccState ) ->
+	lists:foldl(
+		fun( PrivateAttrName, AccState ) ->
 
 			NewValue = case getAttribute( AccState, PrivateAttrName ) of
 
@@ -559,12 +563,12 @@ handle_private_processes( PrivateAttributeNames, State ) ->
 
 			end,
 
-			setAttribute( AccState, PrivateAttrName, NewValue )
+		setAttribute( AccState, PrivateAttrName, NewValue )
 
 
-				 end,
-				 _Acc0=State,
-				 _List=PrivateAttributeNames ).
+		end,
+		_Acc0=State,
+		_List=PrivateAttributeNames ).
 
 
 
@@ -580,32 +584,33 @@ handle_private_processes( PrivateAttributeNames, State ) ->
 -spec mute_attributes( [ attribute_name() ], wooper:state() ) -> wooper:state().
 mute_attributes( AttributeNameList, State ) ->
 
-	lists:foldl( fun( AttrName, AccState ) ->
+	lists:foldl(
+		fun( AttrName, AccState ) ->
 
-					case hasAttribute( AccState, AttrName ) of
+			case hasAttribute( AccState, AttrName ) of
 
-						true ->
+				true ->
 
-							case getAttribute( AccState, AttrName ) of
+					case getAttribute( AccState, AttrName ) of
 
-								undefined ->
-									% Let it as is:
-									AccState;
+						undefined ->
+							% Let it as is:
+							AccState;
 
-								_ ->
-									setAttribute( AccState, AttrName,
-												  ?term_restoration_marker )
+						_ ->
+							setAttribute( AccState, AttrName,
+										  ?term_restoration_marker )
 
-							end;
+					end;
 
-						false ->
-							throw( { unknown_attribute, AttrName, AccState } )
+				false ->
+					throw( { unknown_attribute, AttrName, AccState } )
 
-					end
+			end
 
-				 end,
-				 _Acc0=State,
-				_List=AttributeNameList ).
+		end,
+		_Acc0=State,
+		_List=AttributeNameList ).
 
 
 
@@ -639,25 +644,23 @@ check_attributes_equal( _AttributeNames=[ AttributeName | T ], AttributeEntries,
 
 
 % @doc Replaces the value held in the specified state by the one of the
-% specified attribute found in specified entry.
+% specified attribute found in the specified entry.
 %
 % (helper)
 %
 -spec replace_attribute( attribute_name(), [ attribute_entry() ],
-			 wooper:state() ) -> { [ attribute_entry() ], wooper:state() }.
+				wooper:state() ) -> { [ attribute_entry() ], wooper:state() }.
 replace_attribute( AttributeName, AttributeEntries, State ) ->
 
 	case hasAttribute( State, AttributeName ) of
 
 		true ->
-
 			{ ToSetValue, RemainingEntries } =
 				option_list:extract( _K=AttributeName, AttributeEntries ),
 
 			NewState = setAttribute( State, AttributeName, ToSetValue ),
 
 			{ RemainingEntries, NewState };
-
 
 		false ->
 			throw( { unknown_attribute, AttributeName, State } )
@@ -667,7 +670,7 @@ replace_attribute( AttributeName, AttributeEntries, State ) ->
 
 
 % @doc Replaces the values held in the specified state by the ones of the
-% specified attributes found in specified entries.
+% specified attributes found in the specified entries.
 %
 % (helper)
 %
@@ -675,17 +678,19 @@ replace_attribute( AttributeName, AttributeEntries, State ) ->
 				wooper:state() ) -> { [ attribute_entry() ], wooper:state() }.
 replace_attributes( AttributeNames, AttributeEntries, State ) ->
 
-	lists:foldl( fun( AttrName, { AccEntries, AccState } ) ->
-						 replace_attribute( AttrName, AccEntries, AccState )
-				 end,
-				 _Acc0={ AttributeEntries, State },
-				 _List=AttributeNames ).
+	lists:foldl(
+		fun( AttrName, { AccEntries, AccState } ) ->
+			replace_attribute( AttrName, AccEntries, AccState )
+		end,
+		_Acc0={ AttributeEntries, State },
+		_List=AttributeNames ).
 
 
 
-% @doc Extracts the value (supposedly, any type of list) of specified attribute
-% from specified entries, and append that list to the corresponding one found in
-% the specified state, stored under the same attribute name.
+% @doc Extracts the value (supposedly, any type of list) of the specified
+% attribute from the specified entries, and append that list to the
+% corresponding one found in the specified state, stored under the same
+% attribute name.
 %
 % Returns the remaining entries, and an updated state.
 %
@@ -716,22 +721,22 @@ merge_list_for( AttributeName, AttributeEntries, State ) ->
 
 
 % @doc Extracts the value (supposedly, any type of list) of each of the
-% specified attributes from specified entries, and append that list to the
+% specified attributes from the specified entries, and append that list to the
 % corresponding one found in the specified state, stored under the same
 % attribute name.
 %
 % Returns the remaining entries, and an updated state.
 %
 -spec merge_lists_for( [ attribute_name() ], [ attribute_entry() ],
-	wooper:state() ) -> { [ attribute_entry() ], wooper:state() }.
+			wooper:state() ) -> { [ attribute_entry() ], wooper:state() }.
 merge_lists_for( AttributeNames, AttributeEntries, State ) ->
 
 	lists:foldl(
-			fun( AttrName, { AccEntries, AccState } ) ->
-					merge_list_for( AttrName, AccEntries, AccState )
-			end,
-			_Acc0={ AttributeEntries, State },
-			_List=AttributeNames ).
+		fun( AttrName, { AccEntries, AccState } ) ->
+			merge_list_for( AttrName, AccEntries, AccState )
+		end,
+		_Acc0={ AttributeEntries, State },
+		_List=AttributeNames ).
 
 
 

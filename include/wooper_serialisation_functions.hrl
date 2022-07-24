@@ -31,14 +31,15 @@
 
 % Note: because of the hooks (which must be class-specific) and of the lack of a
 % common ancestor to all WOOPER classes (we could have defined methods like
-% serialise/3 and all in this module), some serialisation services are provided
-% through an header file (this one), short of being able to be defined in
+% serialise/3 and all in this module; a class_Serialisable abstract class will
+% be defined in the future), some serialisation services are provided through an
+% header file (this one), short of being able to be defined in
 % wooper_serialisation.erl (which would be preferable).
 
 
 
-% @doc Serialises the specified instance (that is the state thereof), using
-% specified entry transformer and user data.
+% @doc Serialises the specified instance (that is the state thereof), using the
+% specified entry transformer (if any) and user data.
 %
 % Returns a binary corresponding to a {InnerPair, UpdatedUserData} pair made of:
 %
@@ -68,20 +69,22 @@
 %
 % (const request)
 %
--spec serialise( wooper:state(), wooper_serialisation:entry_transformer(),
+-spec serialise( wooper:state(),
+				 maybe( wooper_serialisation:entry_transformer() ),
 				 basic_utils:user_data() ) -> const_request_return(
 	   { wooper_serialisation:bin_serialisation(), basic_utils:user_data() } ).
-serialise( State, _EntryTransformer=undefined, UserData ) ->
+serialise( State, _MaybeEntryTransformer=undefined, UserData ) ->
 
 	% Here no entry transformer is to be used, raw serialisation.
 
 	% Hooks may be defined on a per-class basis:
 
-	PreState = #state_holder{ attribute_table=AttributeTable,
+	PreState = #state_holder{
+					attribute_table=AttributeTable,
 					actual_class=Classname } = pre_serialise_hook( State ),
 
-	io:format( " - serialising, with no transformer, instance ~p "
-			   "of class ~ts~n", [ self(), Classname ] ),
+	trace_utils:debug_fmt( " - serialising, with no transformer, instance ~p "
+						   "of class ~ts", [ self(), Classname ] ),
 
 	% There are, for all Erlang processes, some extra information that are
 	% contextual, implicit, like: whether they are linked (and with whom), their
@@ -102,20 +105,20 @@ serialise( State, _EntryTransformer=undefined, UserData ) ->
 	% Retrieving all attribute key/value pairs (sorting is probably a bit
 	% cleaner):
 	%
-	Entries = lists:sort( [ RandomAttribute |
-							?wooper_table_type:enumerate( AttributeTable )  ] ),
+	Entries = lists:sort(
+		[ RandomAttribute | ?wooper_table_type:enumerate( AttributeTable )  ] ),
 
 	% By default returns {Classname, Entries}:
 	FullContent = post_serialise_hook( Classname, Entries, PreState ),
 
-	SerialisedContent = term_to_binary( FullContent,
-										_Opts=[ { compressed, 9 } ] ),
+	SerialisedContent =
+		term_to_binary( FullContent, _Opts=[ { compressed, 9 } ] ),
 
 	Res = { SerialisedContent, UserData },
 
 	% Yes, the returned state is 'State', as we do not want to continue with any
 	% state forged for the serialisation (ex: with transformed local processes),
-	% we want to continue as we were!
+	% we want to continue as we were before the serialisation!
 	%
 	wooper:const_return_result( Res );
 
@@ -127,11 +130,12 @@ serialise( State, EntryTransformer, UserData ) ->
 
 	% Hooks may be defined on a per-class basis:
 
-	PreState = #state_holder{ attribute_table=AttributeTable,
+	PreState = #state_holder{
+					attribute_table=AttributeTable,
 					actual_class=Classname } = pre_serialise_hook( State ),
 
-	io:format( " - serialising, with transformer, instance ~p of class ~ts~n",
-			   [ self(), Classname ] ),
+	trace_utils:debug_fmt( " - serialising, with transformer, "
+		"instance ~p of class ~ts", [ self(), Classname ] ),
 
 	% There are, for all Erlang processes, some extra information that are
 	% contextual, implicit, like: whether they are linked (and with whom), their
@@ -151,22 +155,23 @@ serialise( State, EntryTransformer, UserData ) ->
 	% Retrieving all attribute key/value pairs (sorting is probably a bit
 	% cleaner):
 	%
-	Entries = lists:sort( [ RandomAttribute |
-							?wooper_table_type:enumerate( AttributeTable ) ] ),
+	Entries = lists:sort(
+		[ RandomAttribute | ?wooper_table_type:enumerate( AttributeTable ) ] ),
 
 	%io:format( "Original entries:~n~p~n", [ Entries ] ),
 
 	% Applying the entry transformer on each of them:
 	{ TransformedEntries, FinalUserData } = lists:foldl( EntryTransformer,
-					  _Acc0={ _ResultingEntries=[], UserData }, _List=Entries ),
+		_Acc0={ _ResultingEntries=[], UserData }, _List=Entries ),
 
-	%io:format( "Transformed entries:~n~p~n", [ TransformedEntries ] ),
+	%trace_utils:debug_fmt( "Transformed entries:~n~p",
+	%                       [ TransformedEntries ] ),
 
 	% No need to reverse the transformed list.
 
-	% By default returns { Classname, TransformedEntries }:
-	FullContent = post_serialise_hook( Classname, TransformedEntries,
-									   PreState ),
+	% By default returns {Classname, TransformedEntries}:
+	FullContent =
+		post_serialise_hook( Classname, TransformedEntries, PreState ),
 
 	SerialisedContent = term_to_binary( FullContent,
 										_Opts=[ { compressed, 9 } ] ),
@@ -175,7 +180,7 @@ serialise( State, EntryTransformer, UserData ) ->
 
 	% Yes, returning the initial 'State', as we do not want to continue with any
 	% state forged for the serialisation (ex: with transformed local processes),
-	% we want to continue as we were before the serialisat
+	% we want to continue as we were before the serialisation!
 	%
 	wooper:const_return_result( Res ).
 
