@@ -29,8 +29,10 @@
 % instances are able to output their <b>textual description</b>.
 %
 % Such an interface is an abstract mother class from which all describable must
-% derive. It provides also exported functions that the user code can apply to
-% all instances, whether or not they implement that interface.
+% derive.
+%
+% It provides also exported functions designed so that they can be
+% applied to any WOOPER instance, whether or not it has this trait or not.
 %
 -module(class_Describable).
 
@@ -65,7 +67,12 @@
 % A description of interest, as any string.
 
 
--export_type([ user_description/0, description/0, any_description/0 ]).
+-type describable_pid() :: pid().
+% The PID of an instance implementing the describable interface.
+
+
+-export_type([ user_description/0, description/0, any_description/0,
+			   describable_pid/0 ]).
 
 
 % Exported helper functions, usable against any WOOPER instance:
