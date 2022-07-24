@@ -31,7 +31,7 @@
 
 -export([ setAttribute/3, setAttributes/2,
 		  swapInAttribute/3,
-		  getAttribute/2, getAttributes/2,
+		  getAttribute/2, getAttributes/2, getMaybeAttribute/2,
 		  is_wooper_debug/0,
 		  hasAttribute/2,
 		  removeAttribute/2,
@@ -103,7 +103,7 @@
 
 
 
-% Returns the value associated to specified named-designated attribute, if
+% Returns the value associated to the specified named-designated attribute, if
 % found, otherwise triggers a case clause error.
 %
 % Ex: MyCount = ?getAttr(count)
@@ -122,8 +122,41 @@
 %
 % Definitively not a legacy macro.
 %
+% Pseudo spec: getAttr(attribute_name()) -> attribute_value().
+%
 -define( getAttr(AttributeName),
 	getAttribute( State, (AttributeName) )
+).
+
+
+% Returns the value associated to the specified name-designated attribute, if
+% any, otherwise returned 'undefined'.
+%
+% Note that the value associated to this attribute must never be possibly equal
+% to the 'undefined' atom, as otherwise the result of that macro cannot tell
+% whether the attribute is associated to the 'undefined' value or not defined at
+% all.
+%
+% Ex: MyMaybeCount = ?getAttrMaybe(count)
+%
+% Definitively not a legacy macro.
+%
+% Pseudo spec: getMaybeAttr(attribute_name()) -> maybe(attribute_value()).
+
+% (hence not returning the maybe({'value', attribute_value()} type that its more
+% general getMaybeAttribute/2 associated function returns)
+%
+-define( getMaybeAttr(AttributeName),
+	case getMaybeAttribute( State, (AttributeName) ) of
+
+		undefined ->
+			undefined;
+
+		% To avoid any clash in terms of variable name:
+		{ value, Wooper_getMaybeAttributeValue } ->
+			Wooper_getMaybeAttributeValue
+
+	end
 ).
 
 
