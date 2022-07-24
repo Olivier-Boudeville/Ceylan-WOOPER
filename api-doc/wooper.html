@@ -328,6 +328,7 @@ indefinitively for its specified, expected returned value (supposing none is
 already waiting among the received messages) that is usually an atom.</td></tr>
 <tr><td valign="top"><a href="#getAttribute-2">getAttribute/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#getAttributes-2">getAttributes/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#getMaybeAttribute-2">getMaybeAttribute/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#get_all_attributes-1">get_all_attributes/1</a></td><td>Returns all the attributes of this instance, as a list of {AttributeName,
  AttributeValue} pairs.</td></tr>
 <tr><td valign="top"><a href="#get_attribute_pairs-1">get_attribute_pairs/1</a></td><td>Returns the (user-level) attributes known of WOOPER for the specified 
@@ -892,6 +893,12 @@ already waiting among the received messages) that is usually an atom.</p>
 <h3 class="function"><a name="getAttributes-2">getAttributes/2</a></h3>
 <div class="spec">
 <p><tt>getAttributes(State::<a href="wooper.html#type-state">wooper:state()</a>, AttributeNameList::[<a href="#type-attribute_name">attribute_name()</a>]) -&gt; [<a href="#type-attribute_value">attribute_value()</a>]</tt><br></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="getMaybeAttribute-2">getMaybeAttribute/2</a></h3>
+<div class="spec">
+<p><tt>getMaybeAttribute(State::<a href="wooper.html#type-state">wooper:state()</a>, AttributeName::<a href="#type-attribute_name">attribute_name()</a>) -&gt; <a href="#type-maybe">maybe</a>({value, <a href="#type-attribute_value">attribute_value()</a>})</tt><br></p>
 <p> </p>
 </div>
 

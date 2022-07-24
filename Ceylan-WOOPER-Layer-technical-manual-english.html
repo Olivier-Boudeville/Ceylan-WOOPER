@@ -29,9 +29,9 @@
 </tr>
 <tr class="field"><th class="field-name">Creation date:</th><td class="field-body">Sunday, August 17, 2008</td>
 </tr>
-<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Saturday, July 23, 2022</td>
+<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Sunday, July 24, 2022</td>
 </tr>
-<tr class="field"><th class="field-name">Version:</th><td class="field-body">2.0.18</td>
+<tr class="field"><th class="field-name">Version:</th><td class="field-body">2.0.19</td>
 </tr>
 <tr class="field"><th class="field-name">Status:</th><td class="field-body">Stable</td>
 </tr>
@@ -889,7 +889,7 @@ Therefore one could make use of that information, as in:</p>
 <h4>Sender PID</h4>
 <p>Requests can access to one more information than oneways: the PID of the caller that sent the request. As WOOPER takes care automatically of sending back the result to the caller, having the request know explicitly the caller is usually not useful, thus the caller PID does not appear explicitly in request signatures, among the actual parameters.</p>
 <p>However WOOPER keeps track of this information, which remains available to requests, and may be useful for some of them.</p>
-<p>From a request body, the caller PID can indeed be retrieved by using the <tt class="docutils literal">getSender</tt> macro, which is automatically managed by WOOPER:</p>
+<p>From a request body, the caller PID can indeed be retrieved by using the <tt class="docutils literal">getSender/0</tt> macro, which is automatically managed by WOOPER:</p>
 <pre class="code erlang literal-block">
 <span class="nf">giveBirth</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">NumberOfMaleChildren</span><span class="p">,</span><span class="nv">NumberOfFemaleChildren</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
     </span><span class="p">[..]</span><span class="w">
@@ -904,11 +904,11 @@ Therefore one could make use of that information, as in:</p>
 <pre class="code erlang literal-block">
 <span class="nv">MyCat</span><span class="w"> </span><span class="o">!</span><span class="w"> </span><span class="p">{</span><span class="n">giveBirth</span><span class="p">,[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span><span class="n">self</span><span class="p">()}</span>
 </pre>
-<p>while still letting the possibility for the called request (here <tt class="docutils literal">giveBirth/3</tt>, for a state and two parameters) to access the caller PID thanks to the <tt class="docutils literal">getSender</tt> macro, and maybe store it for a later use or do anything appropriate with it.</p>
+<p>while still letting the possibility for the called request (here <tt class="docutils literal">giveBirth/3</tt>, for a state and two parameters) to access the caller PID thanks to the <tt class="docutils literal">getSender/0</tt> macro, and maybe store it for a later use or do anything appropriate with it.</p>
 <p>Note that:</p>
 <ul class="simple">
 <li>having to handle explicitly the caller PID is rather uncommon, as WOOPER takes care automatically of the sending of the result back to the caller</li>
-<li>the <tt class="docutils literal">getSender</tt> macro should only be used for requests, as of course the sender PID has no meaning in the case of oneways; if that macro is called nevertheless from a oneway, then it returns the atom <tt class="docutils literal">undefined</tt>.</li>
+<li>the <tt class="docutils literal">getSender/0</tt> macro should only be used for requests, as of course the sender PID has no meaning in the case of oneways; if that macro is called nevertheless from a oneway, then it returns the atom <tt class="docutils literal">undefined</tt>.</li>
 </ul>
 </div>
 <div class="section" id="request-type-specifications">
@@ -939,7 +939,7 @@ Therefore one could make use of that information, as in:</p>
 <p>After relevant adaptations, most of the conventions for requests apply to oneways.</p>
 <div class="section" id="oneways-in-general">
 <h4>Oneways in general</h4>
-<p>Oneways will use <tt class="docutils literal">wooper:return_state(NewState)</tt> to terminate their clauses: the new state will be kept by the instance, and no result will be returned to the caller (which is not even known - hence no <tt class="docutils literal"><span class="pre">?getSender</span></tt> macro applies to oneways either).</p>
+<p>Oneways will use <tt class="docutils literal">wooper:return_state(NewState)</tt> to terminate their clauses: the new state will be kept by the instance, and no result will be returned to the caller (which is not even known - hence no <tt class="docutils literal">getSender/0</tt> macro applies to oneways either).</p>
 <p>For example:</p>
 <pre class="code erlang literal-block">
 <span class="nf">setAge</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">NewAge</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
@@ -1149,7 +1149,7 @@ Color = executeConstRequestAs(MyState,class_Vehicle,
 <p>We are discussing here about how an instance is to manage its inner state.</p>
 <p>Its state is only directly accessible from inside the instance, i.e. from the body of its methods, whether they are inherited or not: the state of an instance is <strong>private</strong> (local to its process), and the outside can <em>only</em> access it through the methods defined by its class.</p>
 <p>The state of an instance (corresponding to the one that is given by WOOPER as first parameter of all its methods, thanks to a variable conventionally named <tt class="docutils literal">State</tt>) is simply defined as a <strong>set of attributes</strong>.</p>
-<p>Each attribute is designated by a name, defined as an atom (we recommend using <tt class="docutils literal">camel_case</tt> for them), and is associated to a mutable value, which can be any Erlang term.</p>
+<p>Each attribute is designated by a <strong>name</strong>, defined as an atom (we recommend using <tt class="docutils literal">snake_case</tt> for them; all names starting with <tt class="docutils literal">wooper_</tt> are reserved), and is associated to a mutable <strong>value</strong>, which can be any Erlang term; therefore <tt class="docutils literal">attribute_name() :: atom()</tt> and <tt class="docutils literal">attribute_value() :: any()</tt>.</p>
 <p>The current state of an instance can be thought as a list of <tt class="docutils literal">{attribute_name,attribute_value}</tt> pairs, like in:</p>
 <pre class="code erlang literal-block">
 <span class="p">[{</span><span class="n">color</span><span class="p">,</span><span class="n">black</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="n">fur_color</span><span class="p">,</span><span class="n">sand</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="n">age</span><span class="p">,</span><span class="mi">13</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="n">name</span><span class="p">,</span><span class="s">&quot;Tortilla&quot;</span><span class="p">}].</span>
@@ -1183,7 +1183,7 @@ Color = executeConstRequestAs(MyState,class_Vehicle,
 <p>These declarations are to relate only to the <strong>class-specific</strong> attributes, i.e. the ones specifically introduced by the class at hand, regardless of the ones inherited from the mother classes.</p>
 <p>The most general form of an <strong>attribute declaration</strong> includes the following four information:</p>
 <pre class="literal-block">
-{Name,Type,QualifierInfo,Description}
+{Name, Type, QualifierInfo, Description}
 </pre>
 <p>where:</p>
 <ul class="simple" id="attribute-declaration">
@@ -1198,16 +1198,16 @@ Color = executeConstRequestAs(MyState,class_Vehicle,
 <li><p class="first">a <em>scope</em> qualifier: <tt class="docutils literal">public</tt>, <tt class="docutils literal">protected</tt> or <tt class="docutils literal">private</tt>; in future versions, a public attribute will correspond to the union of <tt class="docutils literal">settable</tt> and <tt class="docutils literal">gettable</tt> and will result in accessor methods being automatically generated; for example, should the <tt class="docutils literal">fur_color</tt> attribute be declared public, then:</p>
 <ul>
 <li><p class="first">the <tt class="docutils literal">getFurColor/1</tt> const request would be added (with its spec):</p>
-<pre class="literal-block">
-getFurColor(State) -&gt;
-     wooper:const_return_result(?getAttr(fur_color)).
+<pre class="code erlang literal-block">
+<span class="nf">getFurColor</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+     </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">const_return_result</span><span class="p">(</span><span class="o">?</span><span class="n">getAttr</span><span class="p">(</span><span class="n">fur_color</span><span class="p">)).</span>
 </pre>
 </li>
 <li><p class="first">the <tt class="docutils literal">setFurColor/2</tt> oneway would be added (with its spec):</p>
-<pre class="literal-block">
-setFurColor(State,FurColor) -&gt;
-     wooper:return_state(setAttribute(State,fur_color,
-                                      FurColor)).
+<pre class="code erlang literal-block">
+<span class="nf">setFurColor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">FurColor</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+     </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state</span><span class="p">(</span><span class="w">
+         </span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="w"> </span><span class="n">fur_color</span><span class="p">,</span><span class="w"> </span><span class="nv">FurColor</span><span class="p">)).</span>
 </pre>
 </li>
 </ul>
@@ -1226,28 +1226,28 @@ setFurColor(State,FurColor) -&gt;
 <li>no specific initial value enforced (not even <tt class="docutils literal">undefined</tt>)</li>
 </ul>
 <p>So an example of attribute declaration could be:</p>
-<pre class="literal-block">
-{age,integer(),{initial,18},
- &quot;stores the current age of this creature&quot;}
+<pre class="code erlang literal-block">
+<span class="p">{</span><span class="n">age</span><span class="p">,</span><span class="w"> </span><span class="n">integer</span><span class="p">(),</span><span class="w"> </span><span class="p">{</span><span class="n">initial</span><span class="p">,</span><span class="mi">18</span><span class="p">},</span><span class="w">
+ </span><span class="s">&quot;stores the current age of this creature&quot;</span><span class="p">}</span>
 </pre>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Currently, these information are only of use for the developer (i.e. for documentation purpose). No check is made about whether they are used, whether no other attributes are used, whether the type is meaningful and indeed enforced, the default initial value is not set, etc; yet some of these information might be handled by future WOOPER versions.</p>
+<p class="last">Currently, these information are only of use for the developer (i.e. for documentation purpose). No check is made about whether they are used, whether no other attributes are used, whether the type is meaningful and indeed enforced, the default initial value is not set, etc.; yet at least some of these information might be handled by future WOOPER versions.</p>
 </div>
 <p>Shorter attribute declarations can also used, then with less than the 4 aforementioned pieces of information mentioned:</p>
 <ul class="simple">
-<li>only 3 of them: <tt class="docutils literal">{Name,Type,Description}</tt> (implying: qualifier is <tt class="docutils literal">none</tt>)</li>
-<li>only 2 of them: <tt class="docutils literal">{Name,Description}</tt> (implying: type is <tt class="docutils literal">any()</tt>, qualifier is <tt class="docutils literal">none</tt>)</li>
+<li>only 3 of them: <tt class="docutils literal">{Name, Type, Description}</tt> (implying: qualifier is <tt class="docutils literal">none</tt>)</li>
+<li>only 2 of them: <tt class="docutils literal">{Name, Description}</tt> (implying: type is <tt class="docutils literal">any()</tt>, qualifier is <tt class="docutils literal">none</tt>)</li>
 <li>only 1 of them: <tt class="docutils literal">Name</tt> (implying: type is <tt class="docutils literal">any()</tt>, qualifier is <tt class="docutils literal">none</tt>, no description)</li>
 </ul>
 <p>(and, of course, any number of attributes may not be specified at all)</p>
 <p>Finally, a full example of the declaration of class attributes can be:</p>
 <pre class="code erlang literal-block">
 <span class="p">-</span><span class="ni">define</span><span class="p">(</span><span class="no">class_attributes</span><span class="p">,[</span><span class="w">
-          </span><span class="n">name</span><span class="p">,</span><span class="w">
-          </span><span class="p">{</span><span class="n">age</span><span class="p">,</span><span class="n">integer</span><span class="p">(),</span><span class="s">&quot;stores the current age of this creature&quot;</span><span class="p">},</span><span class="w">
-          </span><span class="n">birth_date</span><span class="p">,</span><span class="w">
-          </span><span class="p">{</span><span class="n">weight</span><span class="p">,</span><span class="s">&quot;total weight measured&quot;</span><span class="p">}]).</span>
+    </span><span class="n">name</span><span class="p">,</span><span class="w">
+    </span><span class="p">{</span><span class="n">age</span><span class="p">,</span><span class="w"> </span><span class="n">integer</span><span class="p">(),</span><span class="w"> </span><span class="s">&quot;stores the current age of this creature&quot;</span><span class="p">},</span><span class="w">
+    </span><span class="n">birth_date</span><span class="p">,</span><span class="w">
+    </span><span class="p">{</span><span class="n">weight</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;total weight measured&quot;</span><span class="p">}]).</span>
 </pre>
 </div>
 <div class="section" id="storing-them">
@@ -1255,7 +1255,7 @@ setFurColor(State,FurColor) -&gt;
 <p>The attributes of a class instance can be seen as a series of key/value pairs stored in an associative table, whose type has been chosen for its look-up/update efficiency and scalability.</p>
 <p>This is a dynamic datastructure, allowing attributes to be added, removed or modified at any time (the safer conventions that apply will be discussed later).</p>
 <p>This table, among other elements, is itself stored in the overall instance state, i.e. in the variable designated by <tt class="docutils literal">State</tt> specified at the beginning of each member method (and constructors, and destructor), on which the process corresponding to active instances is looping, and whose type is <tt class="docutils literal">wooper:state()</tt>.</p>
-<p>We strongly advise to suffix the name of the various state variables used with <tt class="docutils literal">State</tt> (ex: <tt class="docutils literal">RegisteredState</tt>, <tt class="docutils literal">FinalState</tt>, etc.).</p>
+<p>For clarity, we strongly advise to suffix the name of the various state variables used with <tt class="docutils literal">State</tt> (ex: <tt class="docutils literal">RegisteredState</tt>, <tt class="docutils literal">FinalState</tt>, etc.).</p>
 <p></p>
 </div>
 </div>
@@ -1273,7 +1273,7 @@ setFurColor(State,FurColor) -&gt;
 <h5>The <tt class="docutils literal">setAttribute/3</tt> function</h5>
 <p>Setting an attribute (creating <a class="footnote-reference" href="#footnote-13" id="footnote-reference-13">[13]</a> and/or modifying it) should be done with the <tt class="docutils literal">setAttribute/3</tt> function:</p>
 <pre class="code erlang literal-block">
-<span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">AState</span><span class="p">,</span><span class="nv">AttributeName</span><span class="p">,</span><span class="nv">NewAttributeValue</span><span class="p">)</span>
+<span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">AState</span><span class="p">,</span><span class="w"> </span><span class="nv">AttributeName</span><span class="p">,</span><span class="w"> </span><span class="nv">NewAttributeValue</span><span class="p">)</span>
 </pre>
 <table class="docutils footnote" frame="void" id="footnote-13" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -1281,11 +1281,21 @@ setFurColor(State,FurColor) -&gt;
 <tr><td class="label"><a class="fn-backref" href="#footnote-reference-13">[13]</a></td><td>Attribute creation should (by convention) only be done in constructors (not in methods).</td></tr>
 </tbody>
 </table>
-<p>For example, <tt class="docutils literal">AgeState = setAttribute(State,age,3)</tt> will return a new state, bound to <tt class="docutils literal">AgeState</tt>, exact copy of <tt class="docutils literal">State</tt> (notably with all the attribute pairs equal) but for the <tt class="docutils literal">age</tt> attribute, whose value will be set to 3.</p>
+<p>Its type specification is:</p>
+<pre class="code erlang literal-block">
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">setAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_value</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+                               </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">().</span>
+</pre>
+<p>For example, <tt class="docutils literal">AgeState = setAttribute(State, age, 3)</tt> will return a new state, bound to <tt class="docutils literal">AgeState</tt>, exact copy of <tt class="docutils literal">State</tt> (notably with all the attribute pairs equal) but for the <tt class="docutils literal">age</tt> attribute, whose value will be set to 3.</p>
 <p>Therefore, during the execution of a method, any number of states can be defined (ex: <tt class="docutils literal">State</tt>, <tt class="docutils literal">InitialisedState</tt>, <tt class="docutils literal">AgeState</tt>, etc.) before all, but the one that is returned, are garbage-collected.</p>
 <p>Note that the corresponding state duplication remains efficient both in terms of processing and memory, as the different underlying state structures (ex: <tt class="docutils literal">State</tt> and <tt class="docutils literal">AgeState</tt>) actually <strong>share</strong> all their terms except the one modified - thanks to the immutability of Erlang variables that allows to reference rather than copy, be these datastructures tables, records, or anything else.</p>
 <p>In various cases, notably in constructors, one needs to define a series of attributes in a row, but chaining <tt class="docutils literal">setAttribute/3</tt> calls with intermediate states that have each to be named is not really convenient.</p>
 <p>A better solution is to use the <tt class="docutils literal">setAttributes/2</tt> function (note the plural) to set a list of attribute name/attribute value pairs in a row.</p>
+<p>Its type specification is:</p>
+<pre class="code erlang literal-block">
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">setAttributes</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="p">[{</span><span class="n">attribute_name</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_value</span><span class="p">()}])</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+                               </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">().</span>
+</pre>
 <p>For example:</p>
 <pre class="code erlang literal-block">
 <span class="nv">ConstructedState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">setAttributes</span><span class="p">(</span><span class="nv">MyState</span><span class="p">,</span><span class="w">
@@ -1295,7 +1305,14 @@ setFurColor(State,FurColor) -&gt;
 </div>
 <div class="section" id="the-swapinattribute-3-function">
 <h5>The <tt class="docutils literal">swapInAttribute/3</tt> function</h5>
-<p>This function allows to swap, in the specified state, the current value of the specified attribute with the specified value; for example:</p>
+<p>This function allows to swap, in the specified state, the current value of the specified attribute with the specified value.</p>
+<p>Its type specification is:</p>
+<pre class="code erlang literal-block">
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">swapInAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">(),</span><span class="w">
+                      </span><span class="nv">NewValue</span><span class="w"> </span><span class="p">::</span><span class="w"> </span><span class="n">attribute_value</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+           </span><span class="p">{</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="nv">PastValue</span><span class="p">::</span><span class="w"> </span><span class="n">attribute_value</span><span class="p">()}.</span>
+</pre>
+<p>For example:</p>
 <pre class="code erlang literal-block">
 <span class="p">{</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">PastColor</span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">swapInAttribute</span><span class="p">(</span><span class="nv">AState</span><span class="p">,</span><span class="n">fur_color</span><span class="p">,_</span><span class="nv">NewValue</span><span class="o">=</span><span class="n">black</span><span class="p">)</span>
 </pre>
@@ -1304,11 +1321,16 @@ setFurColor(State,FurColor) -&gt;
 <h5>The <tt class="docutils literal">removeAttribute/2</tt> function</h5>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The <tt class="docutils literal">removeAttribute/2</tt> function is now deprecated and should not be used anymore.</p>
+<p class="last">The <tt class="docutils literal">removeAttribute/2</tt> function is now deprecated and should not be used anymore - unless, maybe, if <a class="reference internal" href="#favouring-composition-over-inheritance">favouring composition over inheritance</a>.</p>
 </div>
 <p>This function was used in order to fully remove an attribute entry (i.e. the whole key/value pair).</p>
+<p>Its type specification was:</p>
+<pre class="code erlang literal-block">
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">removeAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+                               </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">().</span>
+</pre>
+<p>For example <tt class="docutils literal">NewState = removeAttribute(State, an_attribute)</tt> could be used, for a resulting state having no key corresponding to <tt class="docutils literal">an_attribute</tt>.</p>
 <p>This function is deprecated now, as we prefer defining all attributes once for all, at construction time, and never adding or removing them dynamically: the good practice is just to operate on their value, which can by example be set to <tt class="docutils literal">undefined</tt>, without having to deal with the fact that, depending on the context, a given attribute may or may not be defined (kids: don't do that).</p>
-<p>For example <tt class="docutils literal">NewState = removeAttribute(State,an_attribute)</tt> could be used, for a resulting state having no key corresponding to <tt class="docutils literal">an_attribute</tt>.</p>
 <p>Neither the <tt class="docutils literal">setAttribute*</tt> variants nor <tt class="docutils literal">removeAttribute/2</tt> can fail, regardless of the attribute being already existing or not.</p>
 </div>
 </div>
@@ -1316,114 +1338,197 @@ setFurColor(State,FurColor) -&gt;
 <h4>Reading State</h4>
 <div class="section" id="the-hasattribute-2-function">
 <h5>The <tt class="docutils literal">hasAttribute/2</tt> function</h5>
+<p>This function tells whether, in the specified state, the specified attribute exists.</p>
+<p>Its type specification is:</p>
+<pre class="code erlang literal-block">
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">hasAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+                               </span><span class="n">boolean</span><span class="p">().</span>
+</pre>
+<p>For example:</p>
+<pre class="code erlang literal-block">
+<span class="k">case</span><span class="w"> </span><span class="n">hasAttribute</span><span class="p">(</span><span class="nv">AState</span><span class="p">,</span><span class="w"> </span><span class="n">fur_color</span><span class="p">)</span><span class="w"> </span><span class="k">of</span><span class="w">
+
+  </span><span class="n">true</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="p">[...]</span>
+</pre>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The <tt class="docutils literal">hasAttribute/2</tt> function is now deprecated and should not be used anymore, as no attribute is expected to be removed anymore either.</p>
+<p class="last">Using the <tt class="docutils literal">hasAttribute/2</tt> function is generally not recommended, as, once an instance is constructed, a given attribute shall always exist or never - unless <a class="reference internal" href="#favouring-composition-over-inheritance">favouring composition over inheritance</a>.</p>
 </div>
-<p>To test whether an attribute is defined, one could use the <tt class="docutils literal">hasAttribute/2</tt> function: <tt class="docutils literal">hasAttribute(AState,AttributeName)</tt>, which returns either <tt class="docutils literal">true</tt> or <tt class="docutils literal">false</tt>, and cannot fail.</p>
-<p>For example, <tt class="docutils literal">true = hasAttribute(State,whisker_color)</tt> matches if and only if the attribute <tt class="docutils literal">whisker_color</tt> is defined in state <tt class="docutils literal">State</tt>.</p>
+<p>To test whether an attribute is defined, one could use the <tt class="docutils literal">hasAttribute/2</tt> function: <tt class="docutils literal">hasAttribute(AState, AttributeName)</tt>, which returns either <tt class="docutils literal">true</tt> or <tt class="docutils literal">false</tt>, and cannot fail.</p>
+<p>For example, <tt class="docutils literal">true = hasAttribute(State, whisker_color)</tt> matches if and only if the attribute <tt class="docutils literal">whisker_color</tt> is defined in state <tt class="docutils literal">State</tt>.</p>
 <p>Note that generally, as already mentioned, it is a bad practice to define attributes outside of the constructor of an instance, as the availability of an attribute could then depend on the actual state, which is an eventuality generally difficult to manage reliably.</p>
 <p>A better approach is instead to define all possible attributes directly from the constructor. They would then be assigned to their initial value and, if none is appropriate, they should be set to the atom <tt class="docutils literal">undefined</tt> (instead of not being defined at all).</p>
 </div>
 <div class="section" id="the-getattribute-2-function">
 <h5>The <tt class="docutils literal">getAttribute/2</tt> function</h5>
-<p>Getting the value of an attribute is to be done with the <tt class="docutils literal">getAttribute/2</tt> function:</p>
+<p>Getting the value of an attribute from an explicitly-designated state is to be done with the <tt class="docutils literal">getAttribute/2</tt> function:</p>
 <pre class="code erlang literal-block">
-<span class="nv">AttributeValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getAttribute</span><span class="p">(</span><span class="nv">AState</span><span class="p">,</span><span class="nv">AttributeName</span><span class="p">)</span>
+<span class="nv">AttributeValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">getAttribute</span><span class="p">(</span><span class="nv">AState</span><span class="p">,</span><span class="w"> </span><span class="nv">AttributeName</span><span class="p">)</span>
 </pre>
-<p>For example, <tt class="docutils literal">MyColor = getAttribute(State,whisker_color)</tt> returns the value of the attribute <tt class="docutils literal">whisker_color</tt> from state <tt class="docutils literal">State</tt>.</p>
+<p>Its type specification is:</p>
+<pre class="code erlang literal-block">
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">getAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+                               </span><span class="n">attribute_value</span><span class="p">().</span>
+</pre>
+<p>For example, <tt class="docutils literal">MyColor = getAttribute(State, whisker_color)</tt> returns the value of the attribute <tt class="docutils literal">whisker_color</tt> from state <tt class="docutils literal">State</tt>.</p>
 <p>The requested attribute may not exist in the specified state. In this case, a runtime error is issued.</p>
 <p>Requesting a non-existing attribute triggers a bad match. In the previous example, should the attribute <tt class="docutils literal">whisker_color</tt> not have been defined, <tt class="docutils literal">getAttribute/2</tt> would return:</p>
 <pre class="code erlang literal-block">
-<span class="p">{</span><span class="n">key_not_found</span><span class="p">,</span><span class="n">whisker_color</span><span class="p">}</span>
+<span class="p">{</span><span class="n">key_not_found</span><span class="p">,</span><span class="w"> </span><span class="n">whisker_color</span><span class="p">}</span>
 </pre>
 </div>
-<div class="section" id="the-getattr-2-macro">
-<h5>The <tt class="docutils literal">getAttr/2</tt> macro</h5>
+<div class="section" id="the-getattr-1-macro">
+<h5>The <tt class="docutils literal">getAttr/1</tt> macro</h5>
 <p>Quite often, when having to retrieve the value of an attribute from a state variable, that variable will be named <tt class="docutils literal">State</tt>, notably when using directly the original state specified in the method declaration.</p>
 <p>Indeed, when a method needs a specific value, generally either this value was already available in the state it began with (then we can read it from <tt class="docutils literal">State</tt>), or is computed in the course of the method, in which case that value is most often already bound to a variable, which can then be re-used directly rather than be fetched from a state.</p>
-<p>In this case, the <tt class="docutils literal">getAttr/2</tt> macro can be used: <tt class="docutils literal"><span class="pre">?getAttr(whisker_color)</span></tt> expands (literally) as <tt class="docutils literal">getAttribute(State,whisker_color)</tt>, and is a tad shorter.</p>
+<p>In this case, the <tt class="docutils literal">getAttr/1</tt> <em>macro</em> can be used: <tt class="docutils literal"><span class="pre">?getAttr(whisker_color)</span></tt> expands (literally) as <tt class="docutils literal">getAttribute(State, whisker_color)</tt>, and is a tad shorter.</p>
 <p>This is implemented as a macro so that the user remains aware that an implicit variable named <tt class="docutils literal">State</tt> is then used.</p>
 <p>The less usual cases where a value must be read from a state variable that is <em>not</em> the initial <tt class="docutils literal">State</tt> one occur mostly when wanting to read a value from the updated state returned by a <tt class="docutils literal">execute*</tt> function call. In this case the <tt class="docutils literal">getAttribute/2</tt> function should be used.</p>
+</div>
+<div class="section" id="the-getmaybeattribute-2-function">
+<h5>The <tt class="docutils literal">getMaybeAttribute/2</tt> function</h5>
+<p>Getting the value of an attribute that may or may not be defined is to be done with the <tt class="docutils literal">getMaybeAttribute/2</tt> function.</p>
+<p>Its type specification is:</p>
+<pre class="code erlang literal-block">
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">getMaybeAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+         </span><span class="n">maybe</span><span class="p">({</span><span class="n">'value'</span><span class="p">,</span><span class="w"> </span><span class="n">attribute_value</span><span class="p">()}).</span>
+</pre>
+<p>Note that:</p>
+<ul class="simple">
+<li>thanks to Myriad, <tt class="docutils literal">maybe(T) :: T | 'undefined'</tt></li>
+<li>the <tt class="docutils literal">value</tt> atom tag is used to discriminate a non-existing attribute from one whose value is <tt class="docutils literal">undefined</tt></li>
+</ul>
+<p>For example:</p>
+<pre class="code erlang literal-block">
+<span class="k">case</span><span class="w"> </span><span class="n">getMaybeAttribute</span><span class="p">(</span><span class="nv">AState</span><span class="p">,</span><span class="w"> </span><span class="nv">AttributeName</span><span class="p">)</span><span class="w"> </span><span class="k">of</span><span class="w">
+
+   </span><span class="n">undefined</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+     </span><span class="p">[...];</span><span class="w">
+
+   </span><span class="p">{</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="nv">AttrValue</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+     </span><span class="p">[...]</span><span class="w">
+
+</span><span class="k">end</span><span class="p">.</span>
+</pre>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Using the <tt class="docutils literal">getMaybeAttribute/2</tt> function is generally not recommended, as, once an instance is constructed, a given attribute shall always exist or never - unless <a class="reference internal" href="#favouring-composition-over-inheritance">favouring composition over inheritance</a>.</p>
+</div>
+</div>
+<div class="section" id="the-getmaybeattr-1-macro">
+<h5>The <tt class="docutils literal">getMaybeAttr/1</tt> macro</h5>
+<p>Like the <tt class="docutils literal">getAttribute/2</tt> function has the <tt class="docutils literal">getAttr/1</tt> macro, to the <tt class="docutils literal">getMaybeAttribute/2</tt> function  is associated a convenience macro, <tt class="docutils literal">getMaybeAttr/1</tt>.</p>
+<p>This macro should be used <em>only</em> if the attribute of interest cannot have the <tt class="docutils literal">undefined</tt> value, as this macro returns directly the value <tt class="docutils literal">V</tt> obtained (if any), instead of its <tt class="docutils literal">{value,V}</tt> tagged version <a class="footnote-reference" href="#footnote-14" id="footnote-reference-14">[14]</a>.</p>
+<table class="docutils footnote" frame="void" id="footnote-14" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-14">[14]</a></td><td>Indeed, for convenience, this macro returns values of type <tt class="docutils literal"><span class="pre">maybe(attribute_value())</span></tt> (not of the <tt class="docutils literal"><span class="pre">maybe({'value',</span> <span class="pre">attribute_value()})</span></tt> type, thus an attribute set to the <tt class="docutils literal">undefined</tt> value could not be discriminated from a non-defined attribute).</td></tr>
+</tbody>
+</table>
+<p>For example, to return the value of a possibly-defined attribute named <tt class="docutils literal">my_description</tt>, whose value is known to never be equal to <tt class="docutils literal">undefined</tt> (for example because it is a string in all cases):</p>
+<pre class="code erlang literal-block">
+<span class="nf">get_maybe_description</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="o">?</span><span class="n">getMaybeAttr</span><span class="p">(</span><span class="n">my_description</span><span class="p">).</span>
+</pre>
 </div>
 </div>
 <div class="section" id="read-modify-write-operations">
 <h4>Read-Modify-Write Operations</h4>
-<p>Some additional helper functions are provided for the most common operations, to keep the syntax as lightweight as possible.</p>
+<p>Some additional helper functions are provided for the most common operations, to keep the syntax as lightweight as possible (and possibly increase a bit the performances due to fewer inter-module calls).</p>
 <div class="section" id="the-addtoattribute-3-function">
 <h5>The <tt class="docutils literal">addToAttribute/3</tt> function</h5>
-<p>When having a numerical attribute, <tt class="docutils literal">addToAttribute/3</tt> adds the specified number to the attribute.</p>
-<p>To be used like in:</p>
+<p>When having a numerical attribute, <tt class="docutils literal">addToAttribute/3</tt> adds the specified number (i.e. integer or float) to the attribute.</p>
+<p>Its type specification is:</p>
 <pre class="code erlang literal-block">
-<span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">addToAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">AttributeName</span><span class="p">,</span><span class="nv">Value</span><span class="p">)</span>
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">addToAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">(),</span><span class="w"> </span><span class="n">number</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+                               </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">().</span>
 </pre>
 <p>For example:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">addToAttribute</span><span class="p">(</span><span class="nv">FirstState</span><span class="p">,</span><span class="n">a_numerical_attribute</span><span class="p">,</span><span class="mi">6</span><span class="p">)</span>
+<span class="nv">MyState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">addToAttribute</span><span class="p">(</span><span class="nv">FirstState</span><span class="p">,</span><span class="w"> </span><span class="n">a_numerical_attribute</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="p">)</span>
 </pre>
 <p>In <tt class="docutils literal">MyState</tt>, the value of attribute <tt class="docutils literal">a_numerical_attribute</tt> is increased of 6, compared to the one in <tt class="docutils literal">FirstState</tt>.</p>
-<p>Calling <tt class="docutils literal">addToAttribute/3</tt> on a non-existing attribute will trigger a runtime error (<tt class="docutils literal">{key_not_found,AttributeName}</tt>).</p>
+<p>Calling <tt class="docutils literal">addToAttribute/3</tt> on a non-existing attribute will trigger a runtime error (<tt class="docutils literal">{key_not_found, AttributeName}</tt>).</p>
 <p>If the attribute exists, but no addition can be performed on it (i.e. if it is meaningless for the type of the current value), a <tt class="docutils literal">badarith</tt> runtime error will be issued.</p>
 </div>
 <div class="section" id="the-subtractfromattribute-3-function">
 <h5>The <tt class="docutils literal">subtractFromAttribute/3</tt> function</h5>
-<p>When having a numerical attribute, <tt class="docutils literal">subtractFromAttribute/3</tt> subtracts the specified number from the attribute.</p>
-<p>To be used like in:</p>
+<p>When having a numerical attribute, <tt class="docutils literal">subtractFromAttribute/3</tt> subtracts the specified number (i.e. integer or float) from the attribute.</p>
+<p>Its type specification is:</p>
 <pre class="code erlang literal-block">
-<span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subtractFromAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">AttributeName</span><span class="p">,</span><span class="nv">Value</span><span class="p">)</span>
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">subtractFromAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">(),</span><span class="w"> </span><span class="n">number</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+                               </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">().</span>
 </pre>
 <p>For example:</p>
 <pre class="code erlang literal-block">
-<span class="nv">MyState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subtractFromAttribute</span><span class="p">(</span><span class="nv">FirstState</span><span class="p">,</span><span class="n">a_numerical_attribute</span><span class="p">,</span><span class="mi">7</span><span class="p">)</span>
+<span class="nv">MyState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subtractFromAttribute</span><span class="p">(</span><span class="nv">FirstState</span><span class="p">,</span><span class="w"> </span><span class="n">a_numerical_attribute</span><span class="p">,</span><span class="w"> </span><span class="mi">7</span><span class="p">)</span>
 </pre>
 <p>In <tt class="docutils literal">MyState</tt>, the value of attribute <tt class="docutils literal">a_numerical_attribute</tt> is decreased of 7, compared to the one in <tt class="docutils literal">FirstState</tt>.</p>
-<p>Calling <tt class="docutils literal">subtractFromAttribute/3</tt> on a non-existing attribute will trigger a runtime error (<tt class="docutils literal">{key_not_found,AttributeName}</tt>).
+<p>Calling <tt class="docutils literal">subtractFromAttribute/3</tt> on a non-existing attribute will trigger a runtime error (<tt class="docutils literal">{key_not_found, AttributeName}</tt>).
 If the attribute exists, but no subtraction can be performed on it (meaningless for the type of the current value), a <tt class="docutils literal">badarith</tt> runtime error will be issued.</p>
 </div>
 <div class="section" id="the-toggleattribute-2-function">
 <h5>The <tt class="docutils literal">toggleAttribute/2</tt> function</h5>
 <p>Flips the value of the specified (supposedly boolean) attribute: when having a boolean attribute, whose value is either <tt class="docutils literal">true</tt> or <tt class="docutils literal">false</tt>, sets the opposite logical value to the current one.</p>
-<p>To be used like in:</p>
+<p>Its type specification is:</p>
 <pre class="code erlang literal-block">
-<span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toggleAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">BooleanAttributeName</span><span class="p">)</span>
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">toggleAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+                               </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">().</span>
 </pre>
 <p>For example:</p>
 <pre class="code erlang literal-block">
-<span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toggleAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="n">a_boolean_attribute</span><span class="p">)</span>
+<span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">toggleAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="w"> </span><span class="n">my_boolean_attribute</span><span class="p">)</span>
 </pre>
-<p>Calling <tt class="docutils literal">toggleAttribute/2</tt> on a non-existing attribute will trigger a runtime error (<tt class="docutils literal">{key_not_found,AttributeName}</tt>). If the attribute exists, but has not a boolean value, a <tt class="docutils literal">badarith</tt> runtime error will be issued.</p>
+<p>Calling <tt class="docutils literal">toggleAttribute/2</tt> on a non-existing attribute will trigger a runtime error (<tt class="docutils literal">{key_not_found, AttributeName}</tt>). If the attribute exists, but has not a boolean value, a <tt class="docutils literal">badarith</tt> runtime error will be issued.</p>
 </div>
 <div class="section" id="the-appendtoattribute-3-function">
 <h5>The <tt class="docutils literal">appendToAttribute/3</tt> function</h5>
-<p>The corresponding signature is:</p>
-<pre class="literal-block">
-NewState = appendToAttribute(State,AttributeName,Element)
+<p>When having an attribute whose value is a list, appends the specified element to this list, at first position.</p>
+<p>Its type specification is:</p>
+<pre class="code erlang literal-block">
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">appendToAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">(),</span><span class="w"> </span><span class="n">term</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+                               </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">().</span>
 </pre>
-<p>When having a list attribute, appends specified element to the attribute list, in first position.</p>
-<p>For example, if <tt class="docutils literal">a_list_attribute</tt> was already set to <tt class="docutils literal">[see_you,goodbye]</tt> in <tt class="docutils literal">State</tt>, then after <tt class="docutils literal">NewState = appendToAttribute(State,a_list_attribute,hello)</tt>, the <tt class="docutils literal">a_list_attribute</tt> attribute defined in <tt class="docutils literal">NewState</tt> will be equal to <tt class="docutils literal">[hello,see_you,goodbye]</tt>.</p>
+<p>For example, if the <tt class="docutils literal">my_list_attribute</tt> attribute was already set to <tt class="docutils literal">[see_you, goodbye]</tt> in <tt class="docutils literal">State</tt>, then after <tt class="docutils literal">NewState = appendToAttribute(State, my_list_attribute, hello)</tt>, the <tt class="docutils literal">my_list_attribute</tt> attribute defined in <tt class="docutils literal">NewState</tt> will be equal to <tt class="docutils literal">[hello, see_you, goodbye]</tt>, all other attributes being unchanged.</p>
 <p>Calling <tt class="docutils literal">appendToAttribute/3</tt> on a non-existing attribute will trigger a a <tt class="docutils literal">badmatch</tt> runtime error. If the attribute exists, but is not a list, an ill-formed list will be created (ex: <tt class="docutils literal">[8|false]</tt> when appending 8 to <tt class="docutils literal">false</tt>, which is not a list).</p>
 </div>
 <div class="section" id="the-deletefromattribute-3-function">
 <h5>The <tt class="docutils literal">deleteFromAttribute/3</tt> function</h5>
-<p>The corresponding signature is:</p>
-<pre class="literal-block">
-NewState = deleteFromAttribute(State,AttributeName,
-                               Element)
+<p>When having an attribute whose value is a list, deletes the first match of the specified element from the attribute list.</p>
+<p>Its type specification is:</p>
+<pre class="code erlang literal-block">
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">deleteFromAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">(),</span><span class="w"> </span><span class="n">term</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+                               </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">().</span>
 </pre>
-<p>When having a list attribute, deletes first match of specified element from the attribute list.</p>
-<p>For example: <tt class="docutils literal">NewState = deleteFromAttribute(State,a_list_attribute,hello)</tt>, with the value corresponding to the <tt class="docutils literal">a_list_attribute</tt> attribute in <tt class="docutils literal">State</tt> variable being <tt class="docutils literal">[goodbye,hello,cheers,hello,see_you]</tt> should return a state whose <tt class="docutils literal">a_list_attribute</tt> attribute would be equal to <tt class="docutils literal">[goodbye,cheers,hello,see_you]</tt>, all other attributes being unchanged.</p>
+<p>For example: <tt class="docutils literal">NewState = deleteFromAttribute(State, my_list_attribute, hello)</tt>, with the value corresponding to the <tt class="docutils literal">my_list_attribute</tt> attribute in <tt class="docutils literal">State</tt> variable being <tt class="docutils literal">[goodbye, hello, cheers, hello, see_you]</tt> should return a state whose <tt class="docutils literal">my_list_attribute</tt> attribute would be equal to <tt class="docutils literal">[goodbye, cheers, hello, see_you]</tt> (firs <tt class="docutils literal">hello</tt> is removed), all other attributes being unchanged.</p>
 <p>If no element in the list matches the specified one, no error will be triggered and the list will be kept as is.</p>
 <p>Calling <tt class="docutils literal">deleteFromAttribute/3</tt> on a non-existing attribute will trigger a <tt class="docutils literal">badmatch</tt> runtime error. If the attribute exists, but is not a list, a <tt class="docutils literal">function_clause</tt> runtime error will be issued.</p>
 </div>
 <div class="section" id="the-popfromattribute-2-function">
 <h5>The <tt class="docutils literal">popFromAttribute/2</tt> function</h5>
-<p>The corresponding signature is <tt class="docutils literal">{NewState,Head} = popFromAttribute(State,AttributeName)</tt>: when having an attribute of type list, this function removes the head from the list and returns a pair made of the updated state (same state except that the corresponding list attribute has lost its head, it is equal to the list tail now) and of that head.</p>
-<p>For example: <tt class="docutils literal">{NewState,Head} = popFromAttribute(State,a_list_attribute)</tt>. If the value of the attribute <tt class="docutils literal">a_list_attribute</tt> was <tt class="docutils literal">[5,8,3]</tt>, its new value (in <tt class="docutils literal">NewState</tt>) will be <tt class="docutils literal">[8,3]</tt> and <tt class="docutils literal">Head</tt> will be bound to <tt class="docutils literal">5</tt>.</p>
+<p>When having an attribute whose value is a list, removes the head from the list and returns a pair made of the updated state (same state except that the corresponding list attribute has lost its head, it is equal to the list tail now) and of that head.</p>
+<p>Its type specification is:</p>
+<pre class="code erlang literal-block">
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">popFromAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+                               </span><span class="p">{</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">term</span><span class="p">()}.</span>
+</pre>
+<p>For example: <tt class="docutils literal">{NewState, Head} = popFromAttribute(State, my_list_attribute)</tt>. If the value of the attribute <tt class="docutils literal">my_list_attribute</tt> was <tt class="docutils literal">[5,8,3]</tt>, its new value (in <tt class="docutils literal">NewState</tt>) will be <tt class="docutils literal">[8,3]</tt> and <tt class="docutils literal">Head</tt> will be bound to <tt class="docutils literal">5</tt>.</p>
 </div>
 <div class="section" id="the-addkeyvaluetoattribute-4-function">
 <h5>The <tt class="docutils literal">addKeyValueToAttribute/4</tt> function</h5>
-<p>The corresponding signature is <tt class="docutils literal">NewState = addKeyValueToAttribute(State,AttributeName,Key,Value)</tt>: when having an attribute whose value is a table (a Myriad <tt class="docutils literal">table:table()</tt> pseudo-type), adds specified key/value pair to that table attribute.</p>
-<p>For example: <tt class="docutils literal">TableState = <span class="pre">setAttribute(State,my_table,table:new()),</span> NewState = addKeyValueToAttribute(TableState,my_table,my_key,my_value)</tt> will result in having the attribute <tt class="docutils literal">my_table</tt> in state variable <tt class="docutils literal">TableState</tt> being a table with only one entry, whose key is <tt class="docutils literal">my_key</tt> and whose value is <tt class="docutils literal">my_value</tt>.</p>
+<p>When having an attribute whose value is a table (that is a Myriad <tt class="docutils literal">table:table()</tt> pseudo-type), adds specified key/value entry to that table attribute.</p>
+<p>Its type specification is:</p>
+<pre class="code erlang literal-block">
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">addKeyValueToAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">(),</span><span class="w">
+                       </span><span class="nn">table</span><span class="p">:</span><span class="nf">key</span><span class="p">(),</span><span class="w"> </span><span class="nn">table</span><span class="p">:</span><span class="nf">value</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">().</span>
+</pre>
+<p>For example:</p>
+<pre class="code erlang literal-block">
+<span class="nv">TableState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="w"> </span><span class="n">my_table</span><span class="p">,</span><span class="w"> </span><span class="nn">table</span><span class="p">:</span><span class="nf">new</span><span class="p">()),</span><span class="w">
+</span><span class="nv">NewState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">addKeyValueToAttribute</span><span class="p">(</span><span class="nv">TableState</span><span class="p">,</span><span class="w"> </span><span class="n">my_table</span><span class="p">,</span><span class="w"> </span><span class="n">my_key</span><span class="p">,</span><span class="w"> </span><span class="n">my_value</span><span class="p">)</span>
+</pre>
+<p>will result in having the attribute <tt class="docutils literal">my_table</tt> in state variable <tt class="docutils literal">NewState</tt> being a table with only one entry, whose key is <tt class="docutils literal">my_key</tt> and whose value is <tt class="docutils literal">my_value</tt>.</p>
 <p></p>
 </div>
 </div>
@@ -1475,14 +1580,14 @@ This is a 9 year old creature.
 </div>
 <p>This may happen when, like in <a class="reference external" href="#wooper-example">the WOOPER example</a> presented later in this document:</p>
 <ul class="simple">
-<li>a very general &quot;root&quot; class (ex: <tt class="docutils literal">class_Creature</tt>) sits at the top of at least a part of the hierarchy <a class="footnote-reference" href="#footnote-14" id="footnote-reference-14">[14]</a></li>
+<li>a very general &quot;root&quot; class (ex: <tt class="docutils literal">class_Creature</tt>) sits at the top of at least a part of the hierarchy <a class="footnote-reference" href="#footnote-15" id="footnote-reference-15">[15]</a></li>
 <li>various child classes derive from it (ex: <tt class="docutils literal">class_Mammal</tt> and a <tt class="docutils literal">class_OvoviviparousBeing</tt> may derive from <tt class="docutils literal">class_Creature</tt> for obvious reasons)</li>
 <li>a more concrete class (ex: <tt class="docutils literal">class_Platypus</tt>) has to derive from at least two of these child classes (since a platypus happens to be both a mammal and an ovoviviparous being)</li>
 </ul>
-<table class="docutils footnote" frame="void" id="footnote-14" rules="none">
+<table class="docutils footnote" frame="void" id="footnote-15" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-14">[14]</a></td><td>For example, it might be the case with <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/class_TraceEmitter.erl">class_TraceEmitter</a> if relying on <a class="reference external" href="https://traces.esperide.org/">Ceylan-Traces</a>, or <a class="reference external" href="https://github.com/Olivier-Boudeville-EDF/Sim-Diasca/blob/main/sim-diasca/src/core/services/scheduling/class_Actor.erl">class_Actor</a> if using <a class="reference external" href="https://github.com/Olivier-Boudeville-EDF/Sim-Diasca">Sim-Diasca</a>, as such base classes are rather ubiquitous in their respective contexts.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-15">[15]</a></td><td>For example, it might be the case with <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/class_TraceEmitter.erl">class_TraceEmitter</a> if relying on <a class="reference external" href="https://traces.esperide.org/">Ceylan-Traces</a>, or <a class="reference external" href="https://github.com/Olivier-Boudeville-EDF/Sim-Diasca/blob/main/sim-diasca/src/core/services/scheduling/class_Actor.erl">class_Actor</a> if using <a class="reference external" href="https://github.com/Olivier-Boudeville-EDF/Sim-Diasca">Sim-Diasca</a>, as such base classes are rather ubiquitous in their respective contexts.</td></tr>
 </tbody>
 </table>
 <p>Then the concrete class will end up deriving more than once from the same root class (here: <tt class="docutils literal">class_Platypus</tt> will derive indirectly from <tt class="docutils literal">class_Creature</tt> twice).</p>
@@ -1491,11 +1596,11 @@ This is a 9 year old creature.
 <div class="section" id="modelling-implementation-choices">
 <h4>Modelling &amp; Implementation Choices</h4>
 <p>The root of such issue is to determine what is the meaning of the multiple <tt class="docutils literal"><span class="pre">is-a</span></tt> relationships involved in this diamond-shaped inheritance.</p>
-<p>If one design solution is to favour <a class="reference external" href="https://en.wikipedia.org/wiki/Composition_over_inheritance">composition over inheritance</a> <a class="footnote-reference" href="#footnote-15" id="footnote-reference-15">[15]</a> to sort out these cases, by default we tend with WOOPER to consider that a single is-a relationship should apply in that case, i.e. that for example a platypus &quot;is a&quot; creature in a single way (having to inherit the attributes from creature only once, and its member methods as they are defined at the creature level).</p>
-<table class="docutils footnote" frame="void" id="footnote-15" rules="none">
+<p>If one design solution is to favour <a class="reference external" href="https://en.wikipedia.org/wiki/Composition_over_inheritance">composition over inheritance</a> <a class="footnote-reference" href="#footnote-16" id="footnote-reference-16">[16]</a> to sort out these cases, by default we tend with WOOPER to consider that a single is-a relationship should apply in that case, i.e. that for example a platypus &quot;is a&quot; creature in a single way (having to inherit the attributes from creature only once, and its member methods as they are defined at the creature level); it is a case of <a class="reference external" href="https://en.wikipedia.org/wiki/Virtual_inheritance">virtual inheritance</a>.</p>
+<table class="docutils footnote" frame="void" id="footnote-16" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-15">[15]</a></td><td><p class="first">Consisting on typically defining classes that do not <em>inherit</em> traits as such, but <em>include</em> them as delegates, which are instances, stored as attributes, of an actual class encapsulating a variation of that trait (and possibly an absence of it).</p>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-16">[16]</a></td><td><p class="first">Consisting on typically defining classes that do not <em>inherit</em> traits as such, but <em>include</em> them as delegates, which are instances, stored as attributes, of an actual class encapsulating a variation of that trait (and possibly an absence of it).</p>
 <p>For example, regarding a trait about the ability to fly: for any creature, a <tt class="docutils literal">flyable</tt> <em>attribute</em> may be introduced, and either be set to <tt class="docutils literal">undefined</tt> (if such a creature is not able to fly), or to a (passive) instance deriving from a <tt class="docutils literal">class_Flyable</tt> abstract class, whose concrete child classes could be <tt class="docutils literal">class_FlyableAsAnEagle</tt> or <tt class="docutils literal">class_FlyableAsAnOwl</tt> (if that makes sense in terms of volatile).</p>
 <p class="last">Traits can be then managed with flexibility, at the class or even instance level, without involving any specific inheritance for the overall class itself.</p>
 </td></tr>
@@ -1509,7 +1614,14 @@ This is a 9 year old creature.
 <p>Generally speaking, overriding in that case the relevant methods that were initially defined in the child class at the base of the diamond, in order that they perform explicitly a direct call to the wanted module, is by far the most reasonable solution, in terms of clarity and maintainability, compared to trying to guess which version of the method in the inheritance graph should be called.</p>
 <p>Regarding the instance state, the <strong>attributes</strong> are set by the constructors, and the developer can select in which order the direct mother classes should be constructed.</p>
 <p>However, in such a diamond-shaped inheritance scheme, the constructor of the class that sits at the top of a given diamond will be called more than once, and any side-effect that it would induce would then occur as many times as this class is a common ancestor of the actual class; it may be advisable to create idempotent constructors in that case.</p>
-<p>This can be simply done whenever a given root class introduces at least one attribute (which is the general case): by testing whether the initial state given to its constructor already includes this attribute, the constructor can determine whether it has already been applied, in which case it may return the state that it received as it is; otherwise (it has not been applied already), it shall then be fully executed, by setting its attributes, triggering any relevant processing and side effects, and so on.</p>
+<p>This can be simply done whenever a given root class introduces at least one attribute (which is the general case): by testing whether the initial state given to its constructor already includes this attribute, the constructor can determine whether it has already been applied, in which case it may return the state that it received as it is; otherwise (it has not been applied already), it shall then be fully executed, by setting its attributes <a class="footnote-reference" href="#footnote-17" id="footnote-reference-17">[17]</a>, triggering any relevant processing and side effects, and so on.</p>
+<table class="docutils footnote" frame="void" id="footnote-17" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-17">[17]</a></td><td>A single set of them exists thus, as opposed to as many sets as the number of times the class of interest inherits from the root class (there is no state duplication).</td></tr>
+</tbody>
+</table>
+<p>When introducing such trait-specific attributes, care must be taken to name them so that they should never clash with other attribute names.</p>
 <p>For example, should the <tt class="docutils literal">class_Creature</tt> consider that each creature has a date of birth, its constructor may be like:</p>
 <pre class="code erlang literal-block">
 <span class="nf">construct</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="w"> </span><span class="nv">DateOfBirth</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
@@ -1523,10 +1635,48 @@ This is a 9 year old creature.
        </span><span class="n">false</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
            </span><span class="c">% Trigger side-effects, change state, etc.:</span><span class="w">
            </span><span class="nv">InitState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">init</span><span class="p">(</span><span class="nv">State</span><span class="p">),</span><span class="w">
+           </span><span class="c">% At least this attribute is defined:</span><span class="w">
            </span><span class="n">setAttribute</span><span class="p">(</span><span class="nv">InitState</span><span class="p">,</span><span class="w"> </span><span class="n">birth_date</span><span class="p">,</span><span class="w"> </span><span class="nv">DateOfBirth</span><span class="p">)</span><span class="w">
 
    </span><span class="k">end</span><span class="p">.</span>
 </pre>
+</div>
+<div class="section" id="conditional-attribute-definition-for-composition-over-inheritance">
+<span id="favouring-composition-over-inheritance"></span><h4>Conditional Attribute Definition for Composition over Inheritance</h4>
+<p>As an extension of the previous section where whether an attribute already existed was tested in constructors, more generally the aforementioned pattern based on composition rather than on inheritance may, if deemed useful, be relied upon in WOOPER user code.</p>
+<p>In most OOP languages (ex: C++), such a composition used to convey, say, a <tt class="docutils literal">Describable</tt> trait, would translate to an interface (an abstract base class) <tt class="docutils literal">Foobar</tt> having an attribute (for example named <tt class="docutils literal">my_description</tt>) whose value would be, if non-null, a pointer to, say, a <tt class="docutils literal">Description</tt> object.</p>
+<p>An instance of the Foobar class would then be deemed Describable iff this attribute would be a non-null pointer. Doing so may be considered more flexible than for example having Foobar be a child class of a Describable interface (this eliminates a use of multiple inheritance, and allows some instances of Foobar to be Describable, whereas others not).</p>
+<p>In WOOPER this could translate to defining an attribute named <tt class="docutils literal">my_description</tt> whose value would be of type <tt class="docutils literal"><span class="pre">maybe(description())</span></tt> (whatever the <tt class="docutils literal">description()</tt> type may be - provided it does not include the <tt class="docutils literal">undefined</tt> atom). However this would imply that either <tt class="docutils literal">class_Foobar</tt> would inherit that attribute (but then a <tt class="docutils literal">class_Describable</tt> class and multiple inheritance would most probably needed here), or an ad hoc <tt class="docutils literal">my_description</tt> attribute would be directly introduced by <tt class="docutils literal">class_Foobar</tt>.</p>
+<p>The problem is that, for such an optional trait to exist, this would require all classes to define a <tt class="docutils literal">my_description</tt> attribute (even just to set it to <tt class="docutils literal">undefined</tt>) and, worse, to be aware of this trait - and all other traits that <em>could</em> apply.</p>
+<p>So, rather than forcing classes to support explicitly a given optional trait by introducing at least a corresponding attribute (even when not using that trait), the convention that we prefer is to allow such trait-related attributes (ex: <tt class="docutils literal">my_description</tt>) to be not defined at all by a given class.</p>
+<p>Then all classes may support any number of optional traits at no cost (no code dependency, no potentiallly useless attribute introduced). This is the motivation for the WOOPER built-in <tt class="docutils literal">hasAttribute/2</tt> and <tt class="docutils literal">getMaybeAttribute/2</tt> functions.</p>
+<p>As an example, a <tt class="docutils literal">class_Describable</tt> interface could use them that way:</p>
+<pre class="code erlang literal-block">
+<span class="c">% &#64;doc Tells whether the corresponding instance implements the</span><span class="w">
+</span><span class="c">% Describable trait.</span><span class="w">
+</span><span class="c">%</span><span class="w">
+</span><span class="c">% (exported helper)</span><span class="w">
+</span><span class="c">%</span><span class="w">
+</span><span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">is_describable</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">boolean</span><span class="p">().</span><span class="w">
+</span><span class="nf">is_describable</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+   </span><span class="n">hasAttribute</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="w"> </span><span class="n">my_description</span><span class="p">).</span><span class="w">
+
+
+</span><span class="c">% &#64;doc Returns the description of the corresponding instance,</span><span class="w">
+</span><span class="c">% should it implement the Describable trait.</span><span class="w">
+</span><span class="c">%</span><span class="w">
+</span><span class="c">% (exported helper)</span><span class="w">
+</span><span class="c">%</span><span class="w">
+</span><span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">get_maybe_description</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">maybe</span><span class="p">(</span><span class="n">description</span><span class="p">()).</span><span class="w">
+</span><span class="nf">get_maybe_description</span><span class="p">(</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+  </span><span class="c">% As here the description() type does not include the 'undefined' atom:</span><span class="w">
+  </span><span class="o">?</span><span class="n">getMaybeAttr</span><span class="p">(</span><span class="n">my_description</span><span class="p">).</span>
+</pre>
+</div>
+<div class="section" id="wooper-built-in-interfaces">
+<h4>WOOPER Built-in Interfaces</h4>
+<p>WOOPER provides additionally a few very general-purpose interfaces - like the ones discussed above - as built-in ones, like <tt class="docutils literal">class_Describable</tt>, <tt class="docutils literal">class_Identifiable</tt>, <tt class="docutils literal">class_Serialisable</tt>.</p>
+<p>Of course WOOPER-using code remains fully free not to use this kind of composition and conditional attribute definition.</p>
 <p></p>
 </div>
 </div>
@@ -1546,11 +1696,11 @@ This is a 9 year old creature.
 <p>Such an initialisation is of course part of the instance creation: all calls to any of the <tt class="docutils literal">new</tt> operators result in an underlying call to the corresponding constructor (<tt class="docutils literal">construct</tt> operator).</p>
 <p>For example, both creations stemming from <tt class="docutils literal">MyCat = class_Cat:new(A,B,C,D)</tt> and <tt class="docutils literal">MyCat = class_Cat:new_link(A,B,C,D)</tt> will rely on <tt class="docutils literal">class_Cat:construct/5</tt> to set up a proper initial state for the <tt class="docutils literal">MyCat</tt> instance.</p>
 <p>The same <tt class="docutils literal">class_Cat:construct(State,A,B,C,D)</tt> will be called for all creation cases (one may note that, because of its first parameter, which accounts for the WOOPER-provided initial <tt class="docutils literal">State</tt> parameter, the arity of <tt class="docutils literal">construct</tt> is equal to the one of <tt class="docutils literal">new</tt> / <tt class="docutils literal">new_link</tt> plus one).</p>
-<p>The <tt class="docutils literal">new_link</tt> operator behaves exactly as the <tt class="docutils literal">new</tt> operator, except that it creates an instance that is Erlang-linked with the process that called that operator, exactly like <tt class="docutils literal">spawn_link</tt> behaves compared to <tt class="docutils literal">spawn</tt> <a class="footnote-reference" href="#footnote-16" id="footnote-reference-16">[16]</a>.</p>
-<table class="docutils footnote" frame="void" id="footnote-16" rules="none">
+<p>The <tt class="docutils literal">new_link</tt> operator behaves exactly as the <tt class="docutils literal">new</tt> operator, except that it creates an instance that is Erlang-linked with the process that called that operator, exactly like <tt class="docutils literal">spawn_link</tt> behaves compared to <tt class="docutils literal">spawn</tt> <a class="footnote-reference" href="#footnote-18" id="footnote-reference-18">[18]</a>.</p>
+<table class="docutils footnote" frame="void" id="footnote-18" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-16">[16]</a></td><td>For example it induces no race condition between linking and termination in the case of a very short-lived spawned process.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-18">[18]</a></td><td>For example it induces no race condition between linking and termination in the case of a very short-lived spawned process.</td></tr>
 </tbody>
 </table>
 <p>The <tt class="docutils literal">new</tt> and <tt class="docutils literal">new_link</tt> operators are automatically defined by WOOPER (thanks to a relevant parse transform), but they rely on their corresponding, class-specific, user-defined <tt class="docutils literal">construct</tt> operator (only WOOPER is expected to make use of it). More precisely, for each of the <tt class="docutils literal">construct/N+1</tt> operator defined by the class developer, WOOPER creates a full set of corresponding <tt class="docutils literal">new</tt> variations, including <tt class="docutils literal">new/N</tt> and <tt class="docutils literal">new_link/N</tt>.</p>
@@ -1602,15 +1752,15 @@ This is a 9 year old creature.
 <div class="section" id="timed-synchronous-new">
 <h5>Timed Synchronous new</h5>
 <p>Note that, should the instance creation fail, the caller of a synchronous new would then be blocked for ever, as the awaited message would actually never be sent by the failed new instance. In some cases a time-out may be useful, so that the caller may be unblocked and may react appropriately.</p>
-<p>This is why the <tt class="docutils literal">synchronous_timed_new*</tt> operators have been introduced: if the caller-side time-out <a class="footnote-reference" href="#footnote-17" id="footnote-reference-17">[17]</a> expires while waiting for the created instance to answer, then they will throw an appropriate exception:</p>
+<p>This is why the <tt class="docutils literal">synchronous_timed_new*</tt> operators have been introduced: if the caller-side time-out <a class="footnote-reference" href="#footnote-19" id="footnote-reference-19">[19]</a> expires while waiting for the created instance to answer, then they will throw an appropriate exception:</p>
 <ul class="simple">
 <li>either <tt class="docutils literal">{synchronous_time_out,Classname}</tt> if it was a node-local creation (where <tt class="docutils literal">Classname</tt> is the name of the class corresponding to the instance to create; ex: <tt class="docutils literal">class_Cat</tt>)</li>
 <li>or <tt class="docutils literal">{remote_synchronous_time_out,Node,Classname}</tt>, where <tt class="docutils literal">Node</tt> is the name of the node (as an atom) on which the instance was to be created</li>
 </ul>
-<table class="docutils footnote" frame="void" id="footnote-17" rules="none">
+<table class="docutils footnote" frame="void" id="footnote-19" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-17">[17]</a></td><td>Depending on whether or not the class to instantiate was compiled in debug mode, the time-out is to last by default for, respectively, 5 seconds (shorter, to ease debugging) or for 30 minutes (longer, to favor robustness).</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-19">[19]</a></td><td>Depending on whether or not the class to instantiate was compiled in debug mode, the time-out is to last by default for, respectively, 5 seconds (shorter, to ease debugging) or for 30 minutes (longer, to favor robustness).</td></tr>
 </tbody>
 </table>
 <p>Then the caller may or may not catch this exception.</p>
@@ -1767,11 +1917,11 @@ This is a 9 year old creature.
 </div>
 <div class="section" id="passive-instances">
 <span id="passive-instance"></span><h2><a class="toc-backref" href="#toc-entry-130">Passive Instances</a></h2>
-<p>A passive instance is an instance of a WOOPER class that is not powered by a dedicated (Erlang) process: it is just a mere (opaque) term, a pure data-structure that holds the state <a class="footnote-reference" href="#footnote-18" id="footnote-reference-18">[18]</a> of that instance, and that is returned to the process having created that instance (which can then do whatever it wants with it - most probably store it as a &quot;super attribute&quot;).</p>
-<table class="docutils footnote" frame="void" id="footnote-18" rules="none">
+<p>A passive instance is an instance of a WOOPER class that is not powered by a dedicated (Erlang) process: it is just a mere (opaque) term, a pure data-structure that holds the state <a class="footnote-reference" href="#footnote-20" id="footnote-reference-20">[20]</a> of that instance, and that is returned to the process having created that instance (which can then do whatever it wants with it - most probably store it as a &quot;super attribute&quot;).</p>
+<table class="docutils footnote" frame="void" id="footnote-20" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-18">[18]</a></td><td>This term is mostly the same state term as the one on which the process dedicated to an active instance is looping. So one could even imagine a WOOPER instance going back and forth between an active and a passive mode of operation, if it was useful.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-20">[20]</a></td><td>This term is mostly the same state term as the one on which the process dedicated to an active instance is looping. So one could even imagine a WOOPER instance going back and forth between an active and a passive mode of operation, if it was useful.</td></tr>
 </tbody>
 </table>
 <p>As a consequence, such a passive instance will not be able to perform any spontaneous behaviour on its own, or to have its member methods triggered by other processes. However most operations that can be done on &quot;standard&quot; (active) WOOPER instances can also be done on passive ones: like their active counterparts, they are constructed thanks to, well, one of the constructors defined by their class, they are destructed thanks to, well, their destructor, and in-between they will retain their inner state and be able to execute any request or oneway triggered by the process holding that term (and of course any underlying multiple inheritance will be respected).</p>
@@ -1794,14 +1944,14 @@ RedCat = wooper:execute_oneway(OlderCat, setFurColor, red),
 wooper:delete_passive(RedCat).
 </pre>
 <p><strong>Types</strong> may be defined in order to clarify the fact that a term corresponds to a (WOOPER) passive instance.</p>
-<p>For example, for any kind of instance owning a passive calendar instance (created with, say, <tt class="docutils literal">class_Calendar:new_passive/2</tt>), one could define and use, as attribute type <a class="footnote-reference" href="#footnote-19" id="footnote-reference-19">[19]</a>:</p>
+<p>For example, for any kind of instance owning a passive calendar instance (created with, say, <tt class="docutils literal">class_Calendar:new_passive/2</tt>), one could define and use, as attribute type <a class="footnote-reference" href="#footnote-21" id="footnote-reference-21">[21]</a>:</p>
 <pre class="literal-block">
 -type calendar_passive() :: wooper:passive_instance().
 </pre>
-<table class="docutils footnote" frame="void" id="footnote-19" rules="none">
+<table class="docutils footnote" frame="void" id="footnote-21" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-19">[19]</a></td><td>A type preferably defined that way and exported in <tt class="docutils literal">class_Calendar</tt>.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-21">[21]</a></td><td>A type preferably defined that way and exported in <tt class="docutils literal">class_Calendar</tt>.</td></tr>
 </tbody>
 </table>
 <p>See the <tt class="docutils literal">passive_instance_test</tt> module for more details about passive instances.</p>
@@ -1864,7 +2014,7 @@ wooper:delete_passive(RedCat).
 <p>So we would like to use <tt class="docutils literal">wooper:return_state_result/2</tt> for the second clause as well, however we shall then have a state and a price to feed this terminator. How can we obtain them from the presumably opaque term returned by the <tt class="docutils literal">wooper:return_state_result/2</tt> call of the first clause?</p>
 <p>The answer is quite simple: all WOOPER method terminators being actually no-op, they are replaced at compilation-time by the actual terms they were given.</p>
 <p>So a terminator taking only a state as parameter is replaced literally by this state (ex: <tt class="docutils literal">wooper:return_state(FooState)</tt> is actually <tt class="docutils literal">FooState</tt>), while one taking two returns a pair (ex: <tt class="docutils literal">wooper:return_state_result(FooState,Res)</tt> is actually <tt class="docutils literal">{FooState,Res}</tt>). No black magic here!</p>
-<p>Therefore the implementation we target could be best <a class="footnote-reference" href="#footnote-20" id="footnote-reference-20">[20]</a> written as:</p>
+<p>Therefore the implementation we target could be best <a class="footnote-reference" href="#footnote-22" id="footnote-reference-22">[22]</a> written as:</p>
 <pre class="code erlang literal-block">
 <span class="c">% (same clause)</span><span class="w">
 </span><span class="nf">getPriceFor</span><span class="p">(</span><span class="nv">State</span><span class="p">,</span><span class="nv">ArticleStringDescription</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
@@ -1879,10 +2029,10 @@ wooper:delete_passive(RedCat).
        </span><span class="nb">binary_to_list</span><span class="p">(</span><span class="nv">ArticleBinDescription</span><span class="p">)),</span><span class="w">
    </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_state_result</span><span class="p">(</span><span class="nv">NewState</span><span class="p">,</span><span class="nv">Price</span><span class="p">).</span>
 </pre>
-<table class="docutils footnote" frame="void" id="footnote-20" rules="none">
+<table class="docutils footnote" frame="void" id="footnote-22" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-20">[20]</a></td><td><tt class="docutils literal">wooper:executeRequest/3</tt> could be used instead of matching the result of <tt class="docutils literal">wooper:return_state_result/2</tt> and breaking its opaqueness - but (even it is a matter of taste here) we prefer the more direct and efficient approach that was presented. Note though that in general they do not bear the same semantics: <tt class="docutils literal">wooper:executeRequest/3</tt> calls a possibly overridden version of the specified method, whereas a direct call targets specifically the class-local version of that method.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-22">[22]</a></td><td><tt class="docutils literal">wooper:executeRequest/3</tt> could be used instead of matching the result of <tt class="docutils literal">wooper:return_state_result/2</tt> and breaking its opaqueness - but (even it is a matter of taste here) we prefer the more direct and efficient approach that was presented. Note though that in general they do not bear the same semantics: <tt class="docutils literal">wooper:executeRequest/3</tt> calls a possibly overridden version of the specified method, whereas a direct call targets specifically the class-local version of that method.</td></tr>
 </tbody>
 </table>
 </div>
@@ -1919,11 +2069,11 @@ wooper:delete_passive(RedCat).
 </div>
 <div class="section" id="methods-not-returning-anything-of-interest">
 <h2><a class="toc-backref" href="#toc-entry-45">Methods Not Returning Anything of Interest</a></h2>
-<p>Not all functions or static methods (or even requests) are pure, and sometimes only the side-effects of their execution are of interest, in which case nothing relevant may have to be returned <a class="footnote-reference" href="#footnote-21" id="footnote-reference-21">[21]</a>.</p>
-<table class="docutils footnote" frame="void" id="footnote-21" rules="none">
+<p>Not all functions or static methods (or even requests) are pure, and sometimes only the side-effects of their execution are of interest, in which case nothing relevant may have to be returned <a class="footnote-reference" href="#footnote-23" id="footnote-reference-23">[23]</a>.</p>
+<table class="docutils footnote" frame="void" id="footnote-23" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-21">[21]</a></td><td>So, why one use a request instead of a oneway then? One reason is synchronisation, so that the caller code can block until the request has completed. Nevertheless for that use case we recommend that such a request returns a conventional, self-describing, preferably unique atom, such as <tt class="docutils literal">foobar_server_stopped</tt>. We will focus here mostly on the static methods that would have no meaningful value to return.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-23">[23]</a></td><td>So, why one use a request instead of a oneway then? One reason is synchronisation, so that the caller code can block until the request has completed. Nevertheless for that use case we recommend that such a request returns a conventional, self-describing, preferably unique atom, such as <tt class="docutils literal">foobar_server_stopped</tt>. We will focus here mostly on the static methods that would have no meaningful value to return.</td></tr>
 </tbody>
 </table>
 <p>For such needs, our <a class="reference external" href="http://myriad.esperide.org">Myriad</a> base layer introduced the opaque pseudo-builtin type <tt class="docutils literal">void()</tt> (nothing fancy), which is to be used by WOOPER methods as well.</p>
@@ -1936,11 +2086,11 @@ wooper:delete_passive(RedCat).
   </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">return_static</span><span class="p">(</span><span class="n">void</span><span class="p">).</span>
 </pre>
 <p>Introducing specific method terminators to convey that meaning would have been possible, yet multiplying the syntactical constructs would probably hurt the terseness of the underlying language.</p>
-<p>However, as, fairly frequently, static methods have nothing meaningful to return, the <tt class="docutils literal">wooper:return_static_void/0</tt> method terminator and its spec-level counterpart <tt class="docutils literal">static_void_return()</tt> type have been introduced <a class="footnote-reference" href="#footnote-22" id="footnote-reference-22">[22]</a>.</p>
-<table class="docutils footnote" frame="void" id="footnote-22" rules="none">
+<p>However, as, fairly frequently, static methods have nothing meaningful to return, the <tt class="docutils literal">wooper:return_static_void/0</tt> method terminator and its spec-level counterpart <tt class="docutils literal">static_void_return()</tt> type have been introduced <a class="footnote-reference" href="#footnote-24" id="footnote-reference-24">[24]</a>.</p>
+<table class="docutils footnote" frame="void" id="footnote-24" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-22">[22]</a></td><td>This method terminator is replaced at compilation-time by a no-op, thus the static method returns actually the previous expression - unless there is none, in which case the <tt class="docutils literal">wooper_void_return</tt> atom is returned (the caller is not expected to match a void result anyway).</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-24">[24]</a></td><td>This method terminator is replaced at compilation-time by a no-op, thus the static method returns actually the previous expression - unless there is none, in which case the <tt class="docutils literal">wooper_void_return</tt> atom is returned (the caller is not expected to match a void result anyway).</td></tr>
 </tbody>
 </table>
 </div>
@@ -2094,18 +2244,18 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <div class="section" id="otp-guidelines">
 <h3><a class="toc-backref" href="#toc-entry-54">OTP Guidelines</a></h3>
 <p>For server-like activities, it may be useful to have instances of WOOPER classes (ex: <tt class="docutils literal">class_Foobar</tt>) behave like OTP workers in supervision trees.</p>
-<p>Exactly like by default any Erlang process is not able to readily take part to an OTP supervision tree <a class="footnote-reference" href="#footnote-23" id="footnote-reference-23">[23]</a>, a WOOPER instance must specifically support such an integration.</p>
-<table class="docutils footnote" frame="void" id="footnote-23" rules="none">
+<p>Exactly like by default any Erlang process is not able to readily take part to an OTP supervision tree <a class="footnote-reference" href="#footnote-25" id="footnote-reference-25">[25]</a>, a WOOPER instance must specifically support such an integration.</p>
+<table class="docutils footnote" frame="void" id="footnote-25" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-23">[23]</a></td><td>For that, such process has to comply with a relevant applicative protocol in order to properly interact with its supervisor, either directly by itself or through its implementation of a worker-compliant OTP behaviour like <a class="reference external" href="https://erlang.org/doc/man/gen_server.html">gen_server</a>.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-25">[25]</a></td><td>For that, such process has to comply with a relevant applicative protocol in order to properly interact with its supervisor, either directly by itself or through its implementation of a worker-compliant OTP behaviour like <a class="reference external" href="https://erlang.org/doc/man/gen_server.html">gen_server</a>.</td></tr>
 </tbody>
 </table>
-<p>A <a class="reference external" href="https://erlang.org/doc/man/supervisor_bridge.html">supervisor bridge</a> (i.e. a process in charge of integrating properly such a non-OTP process into an OTP supervision tree) is the tool of choice here <a class="footnote-reference" href="#footnote-24" id="footnote-reference-24">[24]</a>.</p>
-<table class="docutils footnote" frame="void" id="footnote-24" rules="none">
+<p>A <a class="reference external" href="https://erlang.org/doc/man/supervisor_bridge.html">supervisor bridge</a> (i.e. a process in charge of integrating properly such a non-OTP process into an OTP supervision tree) is the tool of choice here <a class="footnote-reference" href="#footnote-26" id="footnote-reference-26">[26]</a>.</p>
+<table class="docutils footnote" frame="void" id="footnote-26" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-24">[24]</a></td><td><p class="first">Otherwise, as we understand it, should WOOPER instances be directly declared in a supervision tree as mere workers, they would have to implement typically the <tt class="docutils literal">gen_server</tt> behaviour, which implies relying on <tt class="docutils literal">handle_{call,cast,info}</tt> functions and on a behaviour-specific main loop - rather than on the counterpart method-based facilities offered by WOOPER.</p>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-26">[26]</a></td><td><p class="first">Otherwise, as we understand it, should WOOPER instances be directly declared in a supervision tree as mere workers, they would have to implement typically the <tt class="docutils literal">gen_server</tt> behaviour, which implies relying on <tt class="docutils literal">handle_{call,cast,info}</tt> functions and on a behaviour-specific main loop - rather than on the counterpart method-based facilities offered by WOOPER.</p>
 <p class="last">A consequence is the need for an extra, mostly idle process sitting between such a supervised WOOPER instance and its supervisor. In some cases (ex: a webserver processing each request based on a WOOPER instance), this overhead would be excessive; then defining a WOOPER-specific supervisor, able to handle directly its WOOPER instances as workers, could be devised.</p>
 </td></tr>
 </tbody>
@@ -2506,7 +2656,7 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 <li>multiple different-arity constructors per class are supported now</li>
 <li>no more <tt class="docutils literal">wooper_construct_parameters</tt>, longer <tt class="docutils literal">wooper_construct_export</tt> or <tt class="docutils literal">wooper_construct_export</tt> defines</li>
 <li>automatic detection and export of constructors, any destructor and methods</li>
-<li>WOOPER method terminators introduced (ex: <tt class="docutils literal">wooper:return_state_result/2</tt>, instead of the <tt class="docutils literal"><span class="pre">?wooper_return_state_result</span></tt> macro)</li>
+<li>WOOPER method terminators introduced (ex: <tt class="docutils literal">wooper:return_state_result/2</tt>, instead of the <tt class="docutils literal">wooper_return_state_result</tt> macro)</li>
 <li>the <tt class="docutils literal">class_attributes</tt> optional parse attribute define introduced (<tt class="docutils literal"><span class="pre">-define(class_attributes,[...]).</span></tt></li>
 <li><tt class="docutils literal">execute*With</tt> renamed as <tt class="docutils literal">execute*As</tt> (clearer)</li>
 <li>convenience method wrappers such as <tt class="docutils literal">wooper:execute_request/3</tt> have their parameters reordered (target - either a PID or a passive instance - comes first now)</li>
@@ -2558,7 +2708,7 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 <p>Released on Friday, December 21, 2007. Still fully functional!</p>
 <p>Main changes are:</p>
 <ul class="simple">
-<li>the sender PID is made available to requests in the instance state variable (see <tt class="docutils literal">request_sender</tt> member, used automatically by the <tt class="docutils literal">getSender</tt> macro)</li>
+<li>the sender PID is made available to requests in the instance state variable (see <tt class="docutils literal">request_sender</tt> member, used automatically by the <tt class="docutils literal">getSender/0</tt> macro)</li>
 <li>runtime errors better identified and notified</li>
 <li>macros for attribute management added, existing ones more robust and faster</li>
 <li>fixed a potential race condition when two callers request nearly at the same time the WOOPER class manager (previous mechanism worked, class manager was a singleton indeed, but second caller was not notified)</li>
@@ -2609,20 +2759,20 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 <p>This manager is itself spawned the first time it is needed, and stays ready for all instances of various classes being created (it uses a table to associate to each class its specific virtual table).</p>
 <p>This per-class method table has for keys the known method names (atoms) for this class, associated to the values being the most specialised module, in the inheritance graph, that defines that method.</p>
 <p>Hence each instance has a reference to a shared table that allows for a direct method look-up.</p>
-<p>As the table is built only once and is theoritically shared by all instances of that class <a class="footnote-reference" href="#footnote-25" id="footnote-reference-25">[25]</a>, it adds very little overhead, space-wise and time-wise. Thanks to the table, method look-up is expected to be quite efficient too (constant-time).</p>
-<table class="docutils footnote" frame="void" id="footnote-25" rules="none">
+<p>As the table is built only once and is theoritically shared by all instances of that class <a class="footnote-reference" href="#footnote-27" id="footnote-reference-27">[27]</a>, it adds very little overhead, space-wise and time-wise. Thanks to the table, method look-up is expected to be quite efficient too (constant-time).</p>
+<table class="docutils footnote" frame="void" id="footnote-27" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-25">[25]</a></td><td>Provided that Erlang does not copy these shared immutable structures, which unfortunately does not seem to be currently the case with the vanilla virtual machine. In a later version of WOOPER, the per-class table will be precompiled and shared as a module, thus fully removing that per-instance overhead.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-27">[27]</a></td><td>Provided that Erlang does not copy these shared immutable structures, which unfortunately does not seem to be currently the case with the vanilla virtual machine. In a later version of WOOPER, the per-class table will be precompiled and shared as a module, thus fully removing that per-instance overhead.</td></tr>
 </tbody>
 </table>
 <p>Taking <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Platypus.erl">class_Platypus.erl</a> as a (small) example (shallow inheritance tree, and just a few attributes), by uncommenting traces in the class manager, we can see that the size of the <tt class="docutils literal">class_Platypus</tt> virtual table is 1040 bytes.</p>
 <p>At runtime, after its full construction, the total size of a Platypus instance (i.e. the overall size of its corresponding process) is 8712 bytes.</p>
-<p>Knowing that (with OTP 23, AMD64 on GNU/Linux) the size of a blank process is 2688 bytes <a class="footnote-reference" href="#footnote-26" id="footnote-reference-26">[26]</a>, the actual payload specific to this instance is <tt class="docutils literal"><span class="pre">8712-2688=6024</span> bytes</tt> (and the virtual table accounts for roughly 17% of it).</p>
-<table class="docutils footnote" frame="void" id="footnote-26" rules="none">
+<p>Knowing that (with OTP 23, AMD64 on GNU/Linux) the size of a blank process is 2688 bytes <a class="footnote-reference" href="#footnote-28" id="footnote-reference-28">[28]</a>, the actual payload specific to this instance is <tt class="docutils literal"><span class="pre">8712-2688=6024</span> bytes</tt> (and the virtual table accounts for roughly 17% of it).</p>
+<table class="docutils footnote" frame="void" id="footnote-28" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-26">[26]</a></td><td>Measured with <tt class="docutils literal">P=spawn(basic_utils, freeze, [])</tt>, then <tt class="docutils literal">basic_utils:get_process_size(P)</tt>.</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-28">[28]</a></td><td>Measured with <tt class="docutils literal">P=spawn(basic_utils, freeze, [])</tt>, then <tt class="docutils literal">basic_utils:get_process_size(P)</tt>.</td></tr>
 </tbody>
 </table>
 <p>After having used the <a class="reference external" href="https://erlang.org/doc/man/persistent_term.html">persistent_term</a> module (see our <tt class="docutils literal">persistent_term</tt> branch) to share these (immutable) per-class virtual tables, the size of the same test Platypus instance became 6840 bytes, corresponding thus to a per-instance shrinking of <tt class="docutils literal"><span class="pre">8712-6840=1872</span> bytes</tt> here.</p>
@@ -2679,11 +2829,11 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 <p>WOOPER and Orber are rather different beasts, though: WOOPER is quite lightweight (less than 25 000 lines of code, including blank lines, numerous comments, tests and examples), does not involve a specific (IDL) compiler generating several stub/skeleton Erlang files, nor depends on OTP or on Mnesia (but depends on Myriad), whereas Orber offers a full, standard, CORBA implementation, including IDL language mapping, CosNaming, IIOP, Interface Repository, etc.</p>
 <p>Since Orber respects the OMG standard, integrating a new language (C/C++, Java, Smalltalk, Ada, Lisp, Python etc.) should be rather easy. On the other hand, if a full-blown CORBA-compliant middleware is not needed, if simplicity and ease of understanding is a key point, then WOOPER could be preferred. If unsure, give a try to both!</p>
 <p>See also another IDL-based approach (otherwise not connected to CORBA), the <a class="reference external" href="http://www.erlang.org/doc/apps/ic/ch_erl_genserv.html#5">Generic Server Back-end</a> (wrapper around <tt class="docutils literal">gen_server</tt>; warning: probably a dead link now).</p>
-<p>The WOOPER name is also a tribute to the vastly underrated <a class="reference external" href="http://en.wikipedia.org/wiki/WarGames">Wargames</a> movie (remember the <a class="reference external" href="http://en.wikipedia.org/wiki/WOPR">WOPR</a>, the NORAD central computer?) that the author enjoyed a lot. It is as well a second-order tribute to the <em>Double Whopper King Size</em>, which is a great hamburger indeed <a class="footnote-reference" href="#footnote-27" id="footnote-reference-27">[27]</a>.</p>
-<table class="docutils footnote" frame="void" id="footnote-27" rules="none">
+<p>The WOOPER name is also a tribute to the vastly underrated <a class="reference external" href="http://en.wikipedia.org/wiki/WarGames">Wargames</a> movie (remember the <a class="reference external" href="http://en.wikipedia.org/wiki/WOPR">WOPR</a>, the NORAD central computer?) that the author enjoyed a lot. It is as well a second-order tribute to the <em>Double Whopper King Size</em>, which is a great hamburger indeed <a class="footnote-reference" href="#footnote-29" id="footnote-reference-29">[29]</a>.</p>
+<table class="docutils footnote" frame="void" id="footnote-29" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-27">[27]</a></td><td>Provided of course one is still fine with eating other animals (this is another topic).</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-29">[29]</a></td><td>Provided of course one is still fine with eating other animals (this is another topic).</td></tr>
 </tbody>
 </table>
 <p></p>
