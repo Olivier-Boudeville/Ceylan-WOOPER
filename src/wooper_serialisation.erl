@@ -495,9 +495,10 @@ deserialise( BinSerialisation, MaybeEntryTransformer, UserData,
 
 	end,
 
+
 	% Sent as soon as available, rather than at the end:
 	MaybeListenerPid =:= undefined orelse
-		MaybeListenerPid ! { onDeserialisation, [ self(), FinalUserData ] },
+		( MaybeListenerPid ! { onDeserialisation, [ self(), FinalUserData ] } ),
 
 	% Now we have the right attributes enumerated.
 
