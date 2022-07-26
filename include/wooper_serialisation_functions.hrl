@@ -1,4 +1,4 @@
-% Copyright (C) 2007-2022 Olivier Boudeville
+% Copyright (C) 2012-2022 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -23,10 +23,10 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
+% Creation date: 2012.
 
 
 % Modular WOOPER header gathering all serialisation-related functions.
-
 
 
 % Note: because of the hooks (which must be class-specific) and of the lack of a
@@ -37,7 +37,6 @@
 % wooper_serialisation.erl (which would be preferable).
 
 
-
 % @doc Serialises the specified instance (that is the state thereof), using the
 % specified entry transformer (if any) and user data.
 %
@@ -45,10 +44,10 @@
 %
 % 1. an inner pair {Classname, Entries}, converted into a binary and containing
 % the corresponding class name (as an atom) and the associated serialisation (as
-% a list of transformed terms)
+% a list of transformed terms corresponding to attributes)
 %
-% 2. the resulting user-data (possibly modified by the successive operations
-% done by the entry transformer)
+% 2. the resulting user data, possibly modified by the successive operations
+% done by the entry transformer
 %
 % This is a method, but as it is defined unconditionally in the WOOPER header
 % (in the future, a WOOPER object superclass will be available, defining a
@@ -57,15 +56,9 @@
 % specify the classname however, as at deserialisation time this information
 % will be necessary.
 %
-% Notes:
-%
-% - we do not take the 'request_sender' field into account for serialisation,
-% as, by design, there is indeed such a caller (since serialise/3 is a request),
-% but it is of no interest here
-%
-% - as we do not have a typed (class-specific) state (record-like)
-% data-structures, we have to store not only the values, but also the keys; a
-% major progress in terms of compactness still lies there
+% Notes that we do not take the 'request_sender' field into account for
+% serialisation, as, by design, there is indeed such a caller (since serialise/3
+% is a request), but it is of no interest here/
 %
 % (const request)
 %
@@ -75,26 +68,22 @@
 	   { wooper_serialisation:bin_serialisation(), basic_utils:user_data() } ).
 serialise( State, _MaybeEntryTransformer=undefined, UserData ) ->
 
-	% Here no entry transformer is to be used, raw serialisation.
+	% Here no entry transformer is to be used; just a raw serialisation.
 
 	% Hooks may be defined on a per-class basis:
 
 	PreState = #state_holder{
-					attribute_table=AttributeTable,
-					actual_class=Classname } = pre_serialise_hook( State ),
+		attribute_table=AttributeTable,
+		actual_class=Classname } = pre_serialise_hook( State ),
 
 	trace_utils:debug_fmt( " - serialising, with no transformer, instance ~p "
 						   "of class ~ts", [ self(), Classname ] ),
 
 	% There are, for all Erlang processes, some extra information that are
 	% contextual, implicit, like: whether they are linked (and with whom), their
-	% process dictionary, whether they trap exits, etc.
-	%
-	% The WOOPER serialisation mechanisms do not account for them currently (ex:
-	% links may be dictated by the application logic and thus may not have to be
-	% stored), except one: the current random state of the serialised process,
-	% which is transparently managed by WOOPER so that the deserialisation will
-	% lead to restoring the right random state.
+	% process dictionary, whether they trap exits, etc. (see implementation
+	% notes); refer to the 'About serialised elements' section of the
+	% implementation notes.
 
 	% So, let's add the WOOPER extra information:
 	CurrentRandomState = random_utils:get_random_state(),
@@ -111,8 +100,7 @@ serialise( State, _MaybeEntryTransformer=undefined, UserData ) ->
 	% By default returns {Classname, Entries}:
 	FullContent = post_serialise_hook( Classname, Entries, PreState ),
 
-	SerialisedContent =
-		term_to_binary( FullContent, _Opts=[ { compressed, 9 } ] ),
+	SerialisedContent = wooper_serialisation:serialise_term( FullContent ),
 
 	Res = { SerialisedContent, UserData },
 
@@ -131,21 +119,17 @@ serialise( State, EntryTransformer, UserData ) ->
 	% Hooks may be defined on a per-class basis:
 
 	PreState = #state_holder{
-					attribute_table=AttributeTable,
-					actual_class=Classname } = pre_serialise_hook( State ),
+		attribute_table=AttributeTable,
+		actual_class=Classname } = pre_serialise_hook( State ),
 
 	trace_utils:debug_fmt( " - serialising, with transformer, "
 		"instance ~p of class ~ts", [ self(), Classname ] ),
 
 	% There are, for all Erlang processes, some extra information that are
 	% contextual, implicit, like: whether they are linked (and with whom), their
-	% process dictionary, whether they trap exits, etc.
-	%
-	% The WOOPER serialisation mechanisms do not account for them currently (ex:
-	% links may be dictated by the application logic and thus may not have to be
-	% stored), except one: the current random state of the serialised process,
-	% which is transparently managed by WOOPER so that the deserialisation will
-	% lead to restoring the right random state.
+	% process dictionary, whether they trap exits, etc. (see implementation
+	% notes); refer to the 'About serialised elements' section of the
+	% implementation notes.
 
 	% So, let's add the WOOPER extra information:
 	CurrentRandomState = random_utils:get_random_state(),
@@ -158,13 +142,13 @@ serialise( State, EntryTransformer, UserData ) ->
 	Entries = lists:sort(
 		[ RandomAttribute | ?wooper_table_type:enumerate( AttributeTable ) ] ),
 
-	%io:format( "Original entries:~n~p~n", [ Entries ] ),
+	%trace_utils:debug_fmt( "Original entries:~n ~p", [ Entries ] ),
 
 	% Applying the entry transformer on each of them:
 	{ TransformedEntries, FinalUserData } = lists:foldl( EntryTransformer,
 		_Acc0={ _ResultingEntries=[], UserData }, _List=Entries ),
 
-	%trace_utils:debug_fmt( "Transformed entries:~n~p",
+	%trace_utils:debug_fmt( "Transformed entries: ~n~p",
 	%                       [ TransformedEntries ] ),
 
 	% No need to reverse the transformed list.
@@ -173,8 +157,7 @@ serialise( State, EntryTransformer, UserData ) ->
 	FullContent =
 		post_serialise_hook( Classname, TransformedEntries, PreState ),
 
-	SerialisedContent = term_to_binary( FullContent,
-										_Opts=[ { compressed, 9 } ] ),
+	SerialisedContent = wooper_serialisation:serialise_term( FullContent ),
 
 	Res = { SerialisedContent, FinalUserData },
 
@@ -194,8 +177,8 @@ serialise( State, EntryTransformer, UserData ) ->
 % For some classes, the implementor may want to define pre/post hooks for
 % serialisation/deserialisation.
 %
-% In this case he should define 'wooper_serialisation_hooks' and specify the
-% four corresponding hooks.
+% In this case the 'wooper_serialisation_hooks' preprocessor flag shall be
+% defined, and so the four corresponding hooks.
 %
 -ifndef(wooper_serialisation_hooks).
 
@@ -216,13 +199,15 @@ pre_serialise_hook( State ) ->
 
 
 
-% @doc Hook triggered just after serialisation, based on the selected entries.
+% @doc Hook triggered just after the serialisation step having led to selecting
+% entries in a term serialisation; last possible transformation before the
+% actual storage.
 %
-% The value returned by this hook will be converted "as is" into a binary, that
-% will be written.
+% The value returned by this hook will be converted "as is" by the serializer
+% (e.g. in a binary), that will be sent to the serialisation sink (e.g. a file).
 %
-% (we do not want to return a state, as we do not want that a state modified by
-% the serialisation be mistakenly used afterwards)
+% (we do not want to return a state, as we do not want a state modified by the
+% serialisation be mistakenly used afterwards)
 %
 -spec post_serialise_hook( classname(),
 		wooper_serialisation:term_serialisation(), wooper:state() ) -> term().

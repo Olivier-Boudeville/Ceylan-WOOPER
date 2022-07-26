@@ -23,13 +23,14 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
+% Creation date: 2008.
 
 
 % @doc Interface class implementing the Describable trait, so that its
 % instances are able to output their <b>textual description</b>.
 %
-% Such an interface is an abstract mother class from which all describable must
-% derive.
+% Such an interface is an abstract mother class from which all describable
+% instances must derive.
 %
 % It provides also exported functions designed so that they can be
 % applied to any WOOPER instance, whether or not it has this trait or not.
@@ -46,7 +47,7 @@
 
 % Declaration of the interface-specific attributes:
 %
-% (as it is a WOOPER builtin, they are all prefixed with wooper and the
+% (as it is a WOOPER builtin, they are all prefixed with 'wooper' and the
 % interface name)
 %
 -define( class_attributes, [

@@ -1,4 +1,4 @@
-% Copyright (C) 2007-2022 Olivier Boudeville
+% Copyright (C) 2012-2022 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -23,37 +23,38 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
+% Creation date: 2012.
 
 
 % Modular WOOPER header gathering all serialisation-related exports.
 
 
-
 % The conventional atom to mark internal, local processes that must escape the
 % serialisation/deserialisation processes:
 %
--define( process_restoration_marker, 'wooper_restore_local_process' ).
+-define( process_restoration_marker,
+		 'wooper_serialisation_restore_local_process' ).
 
 
 % The conventional atom to mark internal, local open files (akin to file
-% descriptor)s) that must escape the serialisation/deserialisation processes:
+% descriptors) that must escape the serialisation/deserialisation processes:
 %
--define( file_restoration_marker, 'wooper_restore_local_file' ).
+-define( file_restoration_marker,
+		 'wooper_serialisation_restore_local_file' ).
 
 
 % The conventional atom to mark internal, local terms that must escape the
-% serialisation process (ex: they may be recreated afterwards):
+% serialisation process (ex: typically because they are large and may be
+% recreated afterwards):
 %
--define( term_restoration_marker, 'wooper_restore_local_term' ).
+-define( term_restoration_marker,
+		 'wooper_serialisation_restore_local_term' ).
 
 
 
 % Serialisation hooks and all:
-%
--export([
+-export([ % Not exported anymore, as no method shall be:
+		  %serialise/3,
 
-		 % Not exported anymore, as no method shall be:
-		 %serialise/3,
-
-		 pre_serialise_hook/1, post_serialise_hook/3,
-		 pre_deserialise_hook/2, post_deserialise_hook/1 ]).
+		  pre_serialise_hook/1, post_serialise_hook/3,
+		  pre_deserialise_hook/2, post_deserialise_hook/1 ]).

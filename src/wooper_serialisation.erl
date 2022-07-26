@@ -23,6 +23,7 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
+% Creation date: 2012.
 
 
 % @doc Module containing facilities for the <b>serialisation and deserialisation
@@ -92,13 +93,13 @@
 -export([ handle_private_processes/2, mute_attributes/2,
 		  check_attributes_equal/3, replace_attribute/3, replace_attributes/3,
 		  merge_list_for/3, merge_lists_for/3,
-		  list_restoration_markers/0 ]).
+		  list_restoration_markers/0, serialise_term/1 ]).
 
 
 
 -type entry_transformer() ::
-			fun( ( attribute_entry(), basic_utils:user_data() ) ->
-					{ attribute_entry(), basic_utils:user_data() } ).
+			fun( ( attribute_entry(), user_data() ) ->
+					{ attribute_entry(), user_data() } ).
 % Any function that is able to transform the state of an instance.
 %
 % Note: see basic_utils:traverse_term/4, which may be useful in that context.
@@ -107,18 +108,24 @@
 
 -type term_serialisation() :: [ attribute_entry() ].
 % The serialisation form of an instance, as an Erlang term.
+% This is the term that will be passed to an actual serializer.
+
+
+-type serialisation() :: bin_serialisation() | term().
+% Designates the serialisation form of an instance, which may or may not be a
+% binary (e.g. our default bin_serialisation/0 versus a JSON-based term).
 
 
 -type bin_serialisation() :: binary().
-% The serialisation form of an instance, as an ext_binary, i.e. a binary data
-% object, structured according to the Erlang external term format:
+% The serialisation form of an instance, as an ext_binary, that is a binary data
+% object, structured according to the Erlang external term format.
 %
 % However erlang:ext_binary/0 is not exported:
 %-type bin_serialisation() :: erlang:ext_binary().
 
 
 -export_type([ entry_transformer/0, term_serialisation/0,
-			   bin_serialisation/0 ]).
+			   serialisation/0, bin_serialisation/0 ]).
 
 
 -type restoration_marker() :: ?process_restoration_marker
@@ -150,10 +157,60 @@
 -include("wooper_execute_internal_functions.hrl").
 
 
+% Implementation notes:
 
-% In this section, we define for the current class load counterparts to new
-% operators, i.e. the various ways of creating an instance of it not through a
-% normal construction process, but from a deserialisation one (loading).
+
+% About serialised elements
+%
+% The goal of a serialisation is to store in a serialised form the full state
+% of, here, a WOOPER instance.
+%
+% This includes at least all values of all WOOPER attributes, knowing that these
+% terms may reference transient values that cannot be reproducibly recreated
+% (ex: PID, references, open files or sockets); we introduced hooks/methods that
+% can be overridden so that an application-specific entry transformer can manage
+% them.
+%
+% As we do not have a typed (class-specific) state (record-like) data-structure
+% or, currently, a reliable way of ensuring that all instances of a given class
+% have the exact same list of attributes, we have to store not only the values,
+% but also the keys; a major progress in terms of compactness still lies there.
+%
+% The serialisation should also encompass the following process-level
+% information:
+%
+%  - the process dictionary (key/values, both of which can be also transient
+%  values); this includes the random state of that instance process
+%
+%  - the processes to which this instance is linked
+%
+%  - whether this process traps EXIT messages
+%
+%  - possibly: group leader, priority, monitors
+%
+% Use erlang:process_info/1 to figure out process-level available information
+% that may have to be restored and thus saved.
+%
+% The WOOPER serialisation mechanisms do not account for these process-level
+% currently (ex: links may be dictated by the application logic and thus may not
+% have to be stored), except one: the current random state of the serialised
+% process, which is transparently managed by WOOPER so that the deserialisation
+% will lead to restoring the right random state.
+
+
+% About serialisation formats.
+%
+% Although any kind of serialisation format could be used, here, at least by
+% default, we rely on the Erlang Term Format
+% (https://www.erlang.org/doc/apps/erts/erl_ext_dist.html), at it is a compact,
+% well-integrated, binary, at least reasonably efficient solution.
+
+
+
+% In this section, we define, for the current class, loading counterparts to the
+% new operators, i.e. the various ways of creating an instance of that class
+% from a deserialisation form (loading), instead of through a normal
+% construction process.
 %
 % For example, synchronous_new_link becomes synchronous_load_link.
 
@@ -170,13 +227,14 @@
 -type node_name() :: net_utils:node_name().
 
 
+
 % @doc Spawns an instance of this class, based on the specified serialisation
 % information.
 %
-% Returns the PID of the created instance for this loading.
+% Returns the PID of the instance created by this loading.
 %
-% This creation will be asynchronous: this function returns as soon as the
-% creation is triggered, without waiting for it to complete.
+% This creation will be asynchronous: this function returns a legit PID as soon
+% as the creation is triggered, without waiting for it to complete.
 %
 -spec load( bin_serialisation() ) -> instance_pid().
 load( BinSerialisation ) ->
@@ -186,12 +244,12 @@ load( BinSerialisation ) ->
 
 
 % @doc Spawns an instance of this class, based on the specified serialisation
-% information, any entry transformer and user data.
+% information, on any entry transformer and user data.
 %
-% Returns the PID of the created instance for this loading.
+% Returns the PID of the instance created by this loading.
 %
-% This creation will be asynchronous: this function returns as soon as the
-% creation is triggered, without waiting for it to complete.
+% This creation will be asynchronous: this function returns a legit PID as soon
+% as the creation is triggered, without waiting for it to complete.
 %
 -spec load( bin_serialisation(), maybe( entry_transformer() ), user_data() ) ->
 													instance_pid().
@@ -207,10 +265,10 @@ load( BinSerialisation, MaybeEntryTransformer, UserData ) ->
 % @doc Spawns an instance of this class, based on the specified serialisation
 % information, and links it to the current process.
 %
-% Returns the PID of the created instance for this loading.
+% Returns the PID of the instance created by this loading.
 %
-% This creation will be asynchronous: this function returns as soon as the
-% creation is triggered, without waiting for it to complete.
+% This creation will be asynchronous: this function returns a legit PID as soon
+% as the creation is triggered, without waiting for it to complete.
 %
 -spec load_link( bin_serialisation() ) -> instance_pid().
 load_link( BinSerialisation ) ->
@@ -220,13 +278,13 @@ load_link( BinSerialisation ) ->
 
 
 % @doc Spawns an instance of this class, based on the specified serialisation
-% information, entry transformer and user data, and links it to the current
+% information, on entry transformer and user data, and links it to the current
 % process.
 %
-% Returns the PID of the created instance for this loading.
+% Returns the PID of the instance created by this loading.
 %
-% This creation will be asynchronous: this function returns as soon as the
-% creation is triggered, without waiting for it to complete.
+% This creation will be asynchronous: this function returns a legit PID as soon
+% as the creation is triggered, without waiting for it to complete.
 %
 -spec load_link( bin_serialisation(), maybe( entry_transformer() ),
 				 user_data() ) -> instance_pid().
@@ -242,7 +300,7 @@ load_link( BinSerialisation, MaybeEntryTransformer, UserData ) ->
 % @doc Spawns an instance of this class, based on the specified serialisation
 % information.
 %
-% Returns the PID of the created instance for this loading.
+% Returns the PID of the instance created by this loading.
 %
 % This creation is synchronous: the call will return only when the created
 % process reports that it is up and running.
@@ -255,9 +313,9 @@ synchronous_load( BinSerialisation ) ->
 
 
 % @doc Spawns an instance of this class, based on the specified serialisation
-% information, any entry transformer and user data.
+% information, on any entry transformer and user data.
 %
-% Returns the PID of the created instance for this loading.
+% Returns the PID of the instance created by this loading.
 %
 % This creation is synchronous: the call will return only when the created
 % process reports that it is up and running.
@@ -287,7 +345,7 @@ synchronous_load( BinSerialisation, MaybeEntryTransformer, UserData ) ->
 % @doc Spawns an instance of this class, based on the specified serialisation
 % information, and links it to the current process.
 %
-% Returns the PID of the created instance for this loading.
+% Returns the PID of the instance created by this loading.
 %
 % This creation is synchronous: the call will return only when the created
 % process reports that it is up and running.
@@ -300,10 +358,10 @@ synchronous_load_link( BinSerialisation ) ->
 
 
 % @doc Spawns an instance of this class, based on the specified serialisation
-% information, any entry transformer and user data, and links it to the current
-% process.
+% information, on any entry transformer and user data, and links it to the
+% current process.
 %
-% Returns the PID of the created instance for this loading.
+% Returns the PID of the instance created by this loading.
 %
 % This creation is synchronous: the call will return only when the created
 % process reports that it is up and running.
@@ -330,7 +388,6 @@ synchronous_load_link( BinSerialisation, MaybeEntryTransformer, UserData ) ->
 
 
 % We did not feel the specific need to define:
-%
 % - synchronous_timed_load
 % - synchronous_timed_load_link
 % - remote_load
@@ -343,34 +400,36 @@ synchronous_load_link( BinSerialisation, MaybeEntryTransformer, UserData ) ->
 
 
 
-% @doc Spawns on specified node an instance of this class, based on the
-% specified serialisation information and links it to the current process.
+% @doc Spawns on the specified node an instance of this class, based on the
+% specified serialisation information, and links it to the current process.
 %
 % Returns the PID of the created instance.
 %
 % This creation is asynchronous (the PID is directly returned), however a
-% {spawn_successful, SpawnedPid} message will be received once (if ever) the
-% instance is up and running. This allows performing the actual instance
-% creations in parallel, by waiting sets of concurrent creations.
+% {spawn_successful, SpawnedPid} message will be received by the calling process
+% once (if ever) the instance is up and running. This allows performing the
+% actual instance creations in parallel, by waiting sets of concurrent
+% creations.
 %
 -spec remote_synchronisable_load_link( node_name(), bin_serialisation() ) ->
-						instance_pid().
+											instance_pid().
 remote_synchronisable_load_link( Node, BinSerialisation ) ->
 	remote_synchronisable_load_link( Node, BinSerialisation,
 		_MaybeEntryTransformer=undefined, _UserData=undefined ).
 
 
 
-% @doc Spawns on specified node an instance of this class, based on the
-% specified serialisation information, any entry transformer and user data, and
-% links it to the current process.
+% @doc Spawns on the specified node an instance of this class, based on the
+% specified serialisation information, on any entry transformer and user data,
+% and links it to the current process.
 %
 % Returns the PID of the created instance.
 %
 % This creation is asynchronous (the PID is directly returned), however a
-% {spawn_successful, SpawnedPid} message will be received once (if ever) the
-% instance is up and running. This allows performing the actual instance
-% creations in parallel, by waiting sets of concurrent creations.
+% {spawn_successful, SpawnedPid} message will be received by the calling process
+% once (if ever) the instance is up and running. This allows performing the
+% actual instance creations in parallel, by waiting sets of concurrent
+% creations.
 %
 -spec remote_synchronisable_load_link( node_name(),
 	bin_serialisation(), maybe( entry_transformer() ), user_data() ) ->
@@ -388,37 +447,39 @@ remote_synchronisable_load_link( Node, BinSerialisation, MaybeEntryTransformer,
 
 
 
-% @doc Spawns on specified node an instance of this class, based on the
-% specified serialisation information, any entry transformer and user data, and
-% links it to the current process.
+% @doc Spawns on the specified node an instance of this class, based on the
+% specified serialisation information, on any entry transformer and user data,
+% and links it to the current process.
 %
-% Returns the PID of the created instance for this loading, or the time_out
+% Returns the PID of the instance created by this loading, or the time_out
 % atom.
 %
 % This creation is asynchronous (the PID is directly returned), however a
-% {spawn_successful, SpawnedPid} message will be received once (if ever) the
-% instance is up and running. This allows performing the actual instance
-% creations in parallel, by waiting sets of concurrent creations.
+% {spawn_successful, SpawnedPid} message will be received by the calling process
+% once (if ever) the instance is up and running. This allows performing the
+% actual instance creations in parallel, by waiting sets of concurrent
+% creations.
 %
 -spec remote_synchronous_timed_load_link( node_name(),
-							 bin_serialisation() ) -> instance_pid().
+							bin_serialisation() ) -> instance_pid().
 remote_synchronous_timed_load_link( Node, BinSerialisation ) ->
 	remote_synchronous_timed_load_link( Node, BinSerialisation,
 		_MaybeEntryTransformer=undefined, _UserData=undefined ).
 
 
 
-% @doc Spawns on specified node an instance of this class, based on the
-% specified serialisation information, entry transformer and user data, and
+% @doc Spawns on the specified node an instance of this class, based on the
+% specified serialisation information, on entry transformer and user data, and
 % links it to the current process.
 %
-% Returns the PID of the created instance for this loading, or the time_out
+% Returns the PID of the instance created by this loading, or the time_out
 % atom.
 %
 % This creation is asynchronous (the PID is directly returned), however a
-% {spawn_successful, SpawnedPid} message will be received once (if ever) the
-% instance is up and running. This allows performing the actual instance
-% creations in parallel, by waiting sets of concurrent creations.
+% {spawn_successful, SpawnedPid} message will be received by the calling process
+% once (if ever) the instance is up and running. This allows performing the
+% actual instance creations in parallel, by waiting sets of concurrent
+% creations.
 %
 -spec remote_synchronous_timed_load_link( node_name(),
 	bin_serialisation(), maybe( entry_transformer() ), user_data() ) ->
@@ -464,8 +525,8 @@ remote_synchronous_timed_load_link( Node, BinSerialisation,
 %
 % Note: the hosting process is not created here, as, for an increased
 % parallelism, we expect deserialisations to happen directly from the final
-% instance processes; we consider here that the process executing this helper is
-% the final hosting one.
+% instance processes; so we consider here that the process executing this helper
+% is the final hosting one.
 %
 -spec deserialise( bin_serialisation(), maybe( entry_transformer() ),
 				   user_data(), maybe( pid() ) ) -> no_return().
@@ -495,8 +556,7 @@ deserialise( BinSerialisation, MaybeEntryTransformer, UserData,
 
 	end,
 
-
-	% Sent as soon as available, rather than at the end:
+	% Sent as soon as available (rather than at the end):
 	MaybeListenerPid =:= undefined orelse
 		( MaybeListenerPid ! { onDeserialisation, [ self(), FinalUserData ] } ),
 
@@ -507,6 +567,7 @@ deserialise( BinSerialisation, MaybeEntryTransformer, UserData,
 	AttributeTable = ?wooper_table_type:add_entries( TransformedEntries,
 										?wooper_table_type:new() ),
 
+	% If ever useful:
 	OptimisedAttributeTable = ?wooper_table_type:optimise( AttributeTable ),
 
 	% Must be restored as well:
@@ -558,14 +619,13 @@ handle_private_processes( PrivateAttributeNames, State ) ->
 				Pid when is_pid( Pid ) ->
 
 					% We just hide these PIDs on the serialised form: after
-					% serialisation the live state will still reference them.
+					% serialisation, the live state will still reference them.
 					%
 					?process_restoration_marker
 
 			end,
 
-		setAttribute( AccState, PrivateAttrName, NewValue )
-
+			setAttribute( AccState, PrivateAttrName, NewValue )
 
 		end,
 		_Acc0=State,
@@ -573,7 +633,7 @@ handle_private_processes( PrivateAttributeNames, State ) ->
 
 
 
-% @doc Mutes specified attributes (that is replaces any attribute value not
+% @doc Mutes the specified attributes (that is, replaces any attribute value not
 % equal to 'undefined' by a term restoration marker), for example so that they
 % can escape the serialisation process.
 %
@@ -591,7 +651,6 @@ mute_attributes( AttributeNameList, State ) ->
 			case hasAttribute( AccState, AttrName ) of
 
 				true ->
-
 					case getAttribute( AccState, AttrName ) of
 
 						undefined ->
@@ -688,8 +747,8 @@ replace_attributes( AttributeNames, AttributeEntries, State ) ->
 
 
 
-% @doc Extracts the value (supposedly, any type of list) of the specified
-% attribute from the specified entries, and append that list to the
+% @doc Extracts the value (supposedly, any type of list, or a set) of the
+% specified attribute from the specified entries, and append that list to the
 % corresponding one found in the specified state, stored under the same
 % attribute name.
 %
@@ -721,9 +780,9 @@ merge_list_for( AttributeName, AttributeEntries, State ) ->
 
 
 
-% @doc Extracts the value (supposedly, any type of list) of each of the
-% specified attributes from the specified entries, and append that list to the
-% corresponding one found in the specified state, stored under the same
+% @doc Extracts the value (supposedly, any type of list, or a set) of each of
+% the specified attributes from the specified entries, and append that list to
+% the corresponding one found in the specified state, stored under the same
 % attribute name.
 %
 % Returns the remaining entries, and an updated state.
@@ -749,3 +808,15 @@ merge_lists_for( AttributeNames, AttributeEntries, State ) ->
 list_restoration_markers() ->
 	[ ?process_restoration_marker, ?file_restoration_marker,
 	  ?term_restoration_marker ].
+
+
+
+% @doc The actual function in charge of serialising a term prepared for
+% serialisation.
+%
+% Of course other forms of serialisation could be introduced at this level.
+%
+-spec serialise_term( term() ) -> bin_serialisation().
+serialise_term( Term ) ->
+	% The 'deterministic' option does not seem crucial here:
+	term_to_binary( Term, _Opts=[ { compressed, 9 }, { minor_version, 2 } ] ).

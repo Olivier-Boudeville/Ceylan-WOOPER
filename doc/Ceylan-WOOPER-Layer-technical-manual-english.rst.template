@@ -2223,7 +2223,7 @@ The problem is that, for such an optional trait to exist, this would require all
 
 So, rather than forcing classes to support explicitly a given optional trait by introducing at least a corresponding attribute (even when not using that trait), the convention that we prefer is to allow such trait-related attributes (ex: ``my_description``) to be not defined at all by a given class.
 
-Then all classes may support any number of optional traits at no cost (no code dependency, no potentiallly useless attribute introduced). This is the motivation for the WOOPER built-in ``hasAttribute/2`` and ``getMaybeAttribute/2`` functions.
+Then all classes may support any number of optional traits at no cost (no code dependency, no potentially useless attribute introduced). This is the motivation for the WOOPER built-in ``hasAttribute/2`` and ``getMaybeAttribute/2`` functions.
 
 As an example, a ``class_Describable`` interface could use them that way:
 
@@ -2248,6 +2248,11 @@ As an example, a ``class_Describable`` interface could use them that way:
  get_maybe_description(State) ->
    % As here the description() type does not include the 'undefined' atom:
    ?getMaybeAttr(my_description).
+
+
+Note that not having a fixed set of per-class attributes may cause difficulties, for example when performing serialisation: short of being able to rely on a constant set of attribute names, these ones may have to be stored as well (implying not only storing extra atoms but also extra aggregation constructs like pairs or lists), whereas an optimal situation would be to store for that only an (ordered) list of values.
+
+This may be alleviated a bit by determining the maximum set of per-class base attribute names, and to allow extra name/value pairs to be declared for serialisation as well.
 
 
 

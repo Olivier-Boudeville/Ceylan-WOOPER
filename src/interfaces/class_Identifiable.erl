@@ -29,8 +29,8 @@
 % @doc Interface class implementing the Identifiable trait, so that its
 % instances are able to return an <b>identifier</b> thereof, obviously unique.
 %
-% Such an interface is an abstract mother class from which all identifiable must
-% derive.
+% Such an interface is an abstract mother class from which all identifiable
+% instances must derive.
 %
 % It provides also exported functions designed so that they can be
 % applied to any WOOPER instance, whether or not it has this trait or not.
@@ -47,7 +47,7 @@
 
 % Declaration of the interface-specific attributes:
 %
-% (as it is a WOOPER builtin, they are all prefixed with wooper and the
+% (as it is a WOOPER builtin, they are all prefixed with 'wooper' and the
 % interface name)
 %
 -define( class_attributes, [
