@@ -63,6 +63,7 @@ endif
 
 # Defining check flags:
 ifeq ($(EXECUTION_TARGET),development)
+	WOOPER_CHECK_FLAGS += -Dwooper_check_serialisation
 	WOOPER_CHECK_FLAGS += -Dwooper_check_deserialisation
 endif
 
