@@ -9,9 +9,10 @@
 
 
 % @doc Testing the implementation of the <b>serialisation of WOOPER
-% instances</b>.
+% instances</b>, that is of the default implementation of the Serialisable
+% interface.
 %
--module(serialisation_test).
+-module(serialisable_test).
 
 
 % For run/0 export and al:
@@ -27,7 +28,9 @@ run() ->
 	% Allows to support both OTP conventions and ad hoc, automatic ones:
 	wooper_utils:start_for_test(),
 
-	MyC = class_Cat:new_link( 3, female, sand, white ),
+	Age = 3,
+
+	MyC = class_Cat:new_link( Age, female, sand, white ),
 
 	MyC ! { toString, [], self() },
 
@@ -43,7 +46,7 @@ run() ->
 	MyC ! { getAge, [], self() },
 	receive
 
-		{ wooper_result, 3 } ->
+		{ wooper_result, Age } ->
 			ok
 
 	end,
@@ -51,14 +54,15 @@ run() ->
 	ActualUserData = none,
 
 	% This is a do-nothing transformer, except that it outputs on the console
-	% the attributes it filters:
+	% the attributes that it filters:
 	%
 	TextTransformer =
 		fun( Entry={ AttributeName, AttributeValue },
 			 _Acc={ AccEntries, AccUserData } ) ->
 
-			test_facilities:display( " - attribute name '~ts' is associated "
-				"to value '~p'", [ AttributeName, AttributeValue ] ),
+			test_facilities:display( " - text transformer: "
+				"attribute name '~ts' is associated to value '~p'",
+				[ AttributeName, AttributeValue ] ),
 
 			% New accumulator:
 			{ [ Entry | AccEntries ], AccUserData }
@@ -67,20 +71,18 @@ run() ->
 
 	MyC ! { serialise, [ TextTransformer, ActualUserData ], self() },
 
-	CatBinSerialisation = receive
+	CatSerialisation = receive
 
-		{ wooper_result, { Bin, UserData } } ->
-
-			{ Class, _TransformedEntries } = binary_to_term( Bin ),
+		{ wooper_result, { CatSerial, SerialUserData } } ->
 
 			test_facilities:display( "Text transformer returned:~n"
-									 " - class name: ~p~n"
-									 " - binary serialisation: ~p~n"
-									 " - binary size: ~B bytes~n"
-									 " - user data: ~p~n",
-									 [ Class, Bin, size( Bin ), UserData ] ),
+				" - serialisation of ~ts:~n ~p~n"
+				" - resulting user data: ~p~n",
+				[ system_utils:interpret_byte_size(
+					system_utils:get_size( CatSerial ) ), CatSerial,
+				  SerialUserData ] ),
 
-			Bin
+			CatSerial
 
 	end,
 
@@ -94,34 +96,31 @@ run() ->
 	end,
 
 
-	test_facilities:display( "Testing also serialisation hooks, "
-							 "with a reptile." ),
+	test_facilities:display( "Testing also serialisation overridden method "
+							 "(hooks), with a reptile." ),
 
 	MyR = class_Reptile:new_link( 35, female ),
 
-	MyR ! { serialise, [ _TextTransformer=undefined,
-						 _ActualUserData=undefined ], self() },
+	MyR ! { serialise, [], self() },
 
-	receive
+	ReptileSerialisation = receive
 
-		{ wooper_result, { ReptileBin, ReptileUserData } } ->
+		{ wooper_result, ReptSerial } ->
 
-			{ ReptileClass, _ReptileEntries } = binary_to_term( ReptileBin ),
+			test_facilities:display( "Default transformer returned a "
+				"serialisation of ~ts:~n ~p~n",
+				[ system_utils:interpret_byte_size(
+					system_utils:get_size( ReptSerial ) ), ReptSerial ] ),
 
-			test_facilities:display( "Text transformer returned:~n"
-									 " - class name: ~p~n"
-									 " - binary serialisation: ~p~n"
-									 " - binary size: ~B bytes~n"
-									 " - user data: ~p~n",
-									 [ ReptileClass, ReptileBin,
-									   size( ReptileBin ),  ReptileUserData ] )
+			ReptSerial
 
 	end,
 
-	test_facilities:display( "Recreating an instance corresponding to "
-							 "previous information." ),
 
-	NewC = wooper_serialisation:load_link( CatBinSerialisation ),
+	test_facilities:display(
+		"Recreating an instance corresponding to previous information." ),
+
+	NewC = class_Serialisable:load_link( CatSerialisation ),
 
 	NewC ! { toString, [], self() },
 
@@ -136,7 +135,7 @@ run() ->
 	NewC ! { getAge, [], self() },
 	receive
 
-		{ wooper_result, 3 } ->
+		{ wooper_result, Age } ->
 			ok
 
 	end,
@@ -145,6 +144,17 @@ run() ->
 	receive
 
 		{ deleted, NewC } ->
+			ok
+
+	end,
+
+
+	NewR = class_Serialisable:load_link( ReptileSerialisation ),
+
+	NewR ! { synchronous_delete, self() },
+	receive
+
+		{ deleted, NewR } ->
 			ok
 
 	end,

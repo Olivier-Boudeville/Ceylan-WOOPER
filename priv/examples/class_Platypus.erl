@@ -1,10 +1,11 @@
-% Copyright (C) 2003-2022 Olivier Boudeville
+% Copyright (C) 2007-2022 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER examples.
 %
 % It has been placed in the public domain.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
+% Creation date: 2007.
 
 
 % @doc Class modelling any kind of <b>platypus</b>.
@@ -33,7 +34,6 @@
 
 % Import common types without module prefix:
 -include("ecosystem_types.hrl").
-
 
 
 
@@ -172,13 +172,18 @@ testCreationDeletion( State ) ->
 onWOOPERExitReceived( State, Pid, ExitType ) ->
 
 	% Typically: "Received exit message '{{nocatch,
-	%						{wooper_oneway_failed,<0.44.0>,class_Cat,
-	%							terminate,2,
-	%							[crash],
-	%							badarith}},
+	%   {wooper_oneway_failed,<0.44.0>,class_Cat,
+	%      terminate,2,
+	%      [crash],
+	%      badarith}},
 	% [...]"
 
 	trace_utils:debug_fmt( "Received exit message '~p' from ~w.",
 						   [ ExitType, Pid ] ),
 
 	wooper:const_return().
+
+
+-spec test_static() -> static_return( text_utils:ustring() ).
+test_static() ->
+	wooper:return_static( "Hello!" ).
