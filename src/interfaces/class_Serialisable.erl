@@ -31,8 +31,8 @@
 %
 % Such instances can have their state transformed in a term designed to be
 % exchanged and/or stored (typically as a series of bytes) through any medium
-% (e.g. written in a file, or a network stream), and loaded afterwards from such
-% a content.
+% (e.g. written in a WSF file, or a network stream), and loaded afterwards from
+% such a content.
 %
 % Such an interface is an abstract mother class from which all serialisable
 % instances must derive.
@@ -90,7 +90,7 @@
 % charge of converting PIDs in entries into stable identifiers (e.g. see
 % class_Identifiable).
 %
-% Note: see basic_utils:traverse_term/4, which may be useful in that context,
+% Note: see ast_transform:transform_term/4, which may be useful in that context,
 % and also the TextTransformer example in serialisable_test.erl.
 
 
@@ -144,6 +144,10 @@
 % The restoration markers are atoms that, when serialising state attribute
 % entries, may replace transient values (refer to the 'About serialised
 % elements' section) so that serialisation terms are context-free.
+%
+% Application-specific markers can also be defined, ex:
+% -define( resilience_marker, foobar_resilience_marker ).
+
 
 
 -type load_info() :: { instance_pid(), classname(), user_data() }.
@@ -183,9 +187,6 @@
 
 % The options to be used when serialising/deserialising:
 -define( serialisation_opts, [ { compressed, 9 }, { minor_version, 2 } ] ).
-
-
-
 
 
 % Design notes
@@ -472,6 +473,20 @@ performStateSerialisation( State, ToSerialiseState,
 	%trace_bridge:debug_fmt( "Transformed entries: ~n~p",
 	%                        [ TransformedEntries ] ),
 
+
+	% Generally not useful, as a prior transformation already recursed in
+	% attribute values in order to replace all transient elements:
+	%
+	cond_utils:if_defined( wooper_check_serialisation,
+		begin
+			%trace_utils:debug( "Checking that no transient term remains." ),
+			[ ast_transform:transform_term( AttrValue,
+				_TypeDescription=undefined,
+				fun wooper_serialisation:check_no_transient/2,
+				_NoTransientUserData={ attribute, AttrName } )
+					|| { AttrName, AttrValue } <- TransformedEntries ]
+		end ),
+
 	InstanceRecord = #wooper_serialisation_instance_record{
 		class_name=State#state_holder.actual_class,
 		attributes=TransformedEntries },
@@ -518,7 +533,8 @@ serialiseTerm( State, Term, UserData ) ->
 % is returned, and generally to least useful to override.
 %
 % The value returned by this hook will be converted "as is" by the serializer
-% (e.g. in a binary), that will be sent to the serialisation sink (e.g. a file).
+% (e.g. in a binary), that will be sent to the serialisation sink (e.g. a WSF
+% file).
 %
 % (we do not want to return a state, as we do not want a state modified by the
 % serialisation be mistakenly used afterwards)
@@ -1048,7 +1064,7 @@ onPostDeserialisation( State, UserData ) ->
 % To obtain restoration markers without needing a header file:
 
 
-% @doc Returns a list of the known restoration markers.
+% @doc Returns a list of the WOOPER built-in restoration markers.
 -spec list_restoration_markers() -> static_return( [ restoration_marker() ] ).
 list_restoration_markers() ->
 	wooper:return_static( [ ?process_restoration_marker,
