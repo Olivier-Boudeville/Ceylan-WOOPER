@@ -619,6 +619,12 @@ get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
 
 get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
 	_Seqs=[ _TypeProductForArgs,
+			_ResultType={ user_type, _, static_no_return, [] } ] },
+						   _FunId, _Classname ) ->
+	{ static, [] };
+
+get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
+	_Seqs=[ _TypeProductForArgs,
 			_ResultType={ user_type, FileLoc, static_return, RTypes } ] },
 						   FunId, Classname ) ->
 	wooper_internals:raise_usage_error(
@@ -852,6 +858,14 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 		_FunNature=static, _Qualifiers, _FunId, _Classname ) ->
 	ok;
 
+% No return; correct arity for static_no_return/0, and it is a static method
+% indeed:
+%
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+		_ResultType={ user_type, _, static_no_return, _Types=[] } ] },
+		_FunNature=static, _Qualifiers, _FunId, _Classname ) ->
+	ok;
+
 
 % Spec implies static method whereas is not:
 check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
@@ -886,11 +900,33 @@ check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 		pair:to_list( FunId ) ++ [ FunNature ], Classname, FileLoc );
 
 
+% Correct arity for static_no_return/0 - however it is not a static method
+% here:
+%
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+		_ResultType={ user_type, FileLoc, static_no_return, _Types=[] } ] },
+		FunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "~ts/~B uses static_no_return/0, "
+		"whereas it is not detected as a static method (detected as ~ts). "
+		"Maybe a call to the wooper:no_return_static() method terminator "
+		"is lacking?",
+		pair:to_list( FunId ) ++ [ FunNature ], Classname, FileLoc );
+
+
 % Wrong arity for static_void_return:
 check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
-	 _ResultType={ user_type, FileLoc, static_void_return, Types } ] },
-	 _AnyFunNature, _Qualifiers, FunId, Classname ) ->
+		_ResultType={ user_type, FileLoc, static_void_return, Types } ] },
+		_AnyFunNature, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "~ts/~B uses static_void_return/~B, "
+		"which does not exist; its correct arity is 0.",
+		pair:to_list( FunId ) ++ [ length( Types ) ], Classname, FileLoc );
+
+
+% Wrong arity for static_no_return:
+check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
+		_ResultType={ user_type, FileLoc, static_no_return, Types } ] },
+		_AnyFunNature, _Qualifiers, FunId, Classname ) ->
+	wooper_internals:raise_usage_error( "~ts/~B uses static_no_return/~B, "
 		"which does not exist; its correct arity is 0.",
 		pair:to_list( FunId ) ++ [ length( Types ) ], Classname, FileLoc );
 
@@ -1742,7 +1778,25 @@ call_transformer( _FileLocCall, _FunctionRef={ remote, _, {atom,_,wooper},
 	?debug_fmt( "~ts/~B detected as a static method (void return).",
 				pair:to_list( FunId ) ),
 
-	% So that wooper:return_static( void ) becomes a no-op:
+	% So that wooper:return_static_void() becomes a no-op:
+	NewTransforms = Transforms#ast_transforms{
+					transformation_state={ static, [], WOOPERExportSet } },
+
+	{ [], NewTransforms };
+
+
+% First (correct) static method detection of no return:
+call_transformer( _FileLocCall, _FunctionRef={ remote, _, {atom,_,wooper},
+												{atom,_,no_return_static} },
+				  _Params=[],
+				  Transforms=#ast_transforms{
+			transformed_function_identifier=FunId,
+			transformation_state={ undefined, _, WOOPERExportSet } } ) ->
+
+	?debug_fmt( "~ts/~B detected as a static method (no return).",
+				pair:to_list( FunId ) ),
+
+	% So that wooper:no_return_static() becomes a no-op:
 	NewTransforms = Transforms#ast_transforms{
 					transformation_state={ static, [], WOOPERExportSet } },
 
@@ -1937,12 +1991,12 @@ call_transformer( FileLocCall, FunctionRef={ remote, _, {atom,_,wooper},
 		false ->
 
 			%?debug_fmt( "Known functions exported by the wooper "
-			%	"module: ~ts",
-			%	[ set_utils:to_string( WOOPERExportSet ) ] ),
+			%   "module: ~ts",
+			%   [ set_utils:to_string( WOOPERExportSet ) ] ),
 
 			%?debug_fmt( "Known functions exported by the wooper "
-			%	"module:~n  ~ts",
-			%	[ table:to_string( WOOPERExportSet ) ] ),
+			%   "module:~n  ~ts",
+			%   [ table:to_string( WOOPERExportSet ) ] ),
 
 			% To convert end of lines:
 			ExtraHint = text_utils:format( case Nature of
@@ -1966,8 +2020,8 @@ call_transformer( FileLocCall, FunctionRef={ remote, _, {atom,_,wooper},
 					"  - for requests: return_state_result/2 and "
 					"const_return_result/1~n"
 					"  - for oneways: return_state/1 and const_return/0~n"
-					"  - for static methods: return_static/1 and "
-					"return_static_void/0 ~n"
+					"  - for static methods: return_static/1, "
+					"return_static_void/0 and no_return_static/0~n"
 
 			end, [] ),
 
