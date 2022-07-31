@@ -2826,6 +2826,15 @@ However, as, fairly frequently, static methods have nothing meaningful to return
 
 
 
+Methods Not Returning
+---------------------
+
+Some static methods may not return (see ``class_Serialisable:deserialise/4`` for an example thereof).
+
+Then their type specification shall use ``static_no_return()`` and each of their clause shall end with ``wooper:no_return_static()``.
+
+
+
 Exception-Throwing Methods
 --------------------------
 

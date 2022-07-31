@@ -57,12 +57,13 @@ endif
 
 # Defining debug flags (at least the most verbose are by default commented-out):
 ifeq ($(ENABLE_DEBUG),true)
-	#WOOPER_DEBUG_FLAGS += -Dwooper_debug_xx
+	#WOOPER_DEBUG_FLAGS += -Dwooper_debug_serialisation
+	#WOOPER_DEBUG_FLAGS += -Dwooper_debug_deserialisation
 endif
 
 # Defining check flags:
 ifeq ($(EXECUTION_TARGET),development)
-	# Does not exist: WOOPER_CHECK_FLAGS += -Dwooper_check_xx
+	WOOPER_CHECK_FLAGS += -Dwooper_check_deserialisation
 endif
 
 
@@ -166,6 +167,9 @@ WOOPER_INTERFACES_DIR := $(WOOPER_SRC)/interfaces
 
 # See Myriad counterpart variable (MYRIAD_BEAM_DIRS) for explanations:
 WOOPER_BEAM_DIRS := $(WOOPER_BEAM_DIR) $(WOOPER_INTERFACES_DIR) $(WOOPER_TOP)/..
+
+
+INC += -I $(WOOPER_SRC)/interfaces
 
 
 # For OTP releases and all:
@@ -340,7 +344,7 @@ endif
 
 
 ifndef EDOC_OPTS
-	EDOC_OPTS = '[{dir,"$(API_DOC_ROOT)"}, {def,{vsn,"$(PROJECT_VERSION)"}}, {preprocess,true}, {includes,["$(LAYER_TOP)/include", "$(MYRIAD_TOP)/.."]}, {overview, "$(LAYER_TOP)/overview.edoc"}]'
+	EDOC_OPTS = '[{dir,"$(API_DOC_ROOT)"}, {def,{vsn,"$(PROJECT_VERSION)"}}, {preprocess,true}, {includes,["$(LAYER_TOP)/include", "$(LAYER_TOP)/include/interfaces", "$(MYRIAD_TOP)/.."]}, {overview, "$(LAYER_TOP)/overview.edoc"}]'
 endif
 
 
