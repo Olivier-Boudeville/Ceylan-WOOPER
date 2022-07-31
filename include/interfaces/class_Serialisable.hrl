@@ -29,6 +29,14 @@
 % Shared elements regarding instance serialisation.
 
 
+% The recommended extension for files containing serialisations of WOOPER
+% instances:
+%
+% (for 'WOOPER Serialisation File')
+%
+-define( wooper_serialisation_extension, "wsf" ).
+
+
 % The conventional atom to mark internal, local processes that must escape the
 % serialisation/deserialisation processes:
 %
