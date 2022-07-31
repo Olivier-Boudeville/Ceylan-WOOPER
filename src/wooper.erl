@@ -42,7 +42,8 @@
 
 
 % Very generic:
--export([ get_classname/1, get_attribute_pairs/1, state_to_string/1,
+-export([ get_classname/1, get_all_superclasses/1,
+		  get_attribute_pairs/1, state_to_string/1,
 		  get_class_filename/1 ]).
 
 
@@ -483,8 +484,8 @@ execute_request( TargetInstancePID, RequestName )
 
 
 execute_request( PassiveInstance, RequestName )
-  when is_record( PassiveInstance, ?passive_record )
-	   andalso is_atom( RequestName ) ->
+						when is_record( PassiveInstance, ?passive_record )
+							 andalso is_atom( RequestName ) ->
 
 	{ NewPassiveInstance, { wooper_result, R } } =
 		wooper_execute_method( RequestName, _RequestArgs=[], PassiveInstance ),
@@ -598,8 +599,8 @@ execute_request_waiter( ExpectedResult, TargetInstancePID, RequestName,
 -ifdef(wooper_debug_mode).
 
 execute_const_request( PassiveInstance, RequestName )
-  when is_record( PassiveInstance, ?passive_record )
-	   andalso is_atom( RequestName ) ->
+				when is_record( PassiveInstance, ?passive_record )
+					 andalso is_atom( RequestName ) ->
 
 	% Matching PassiveInstance:
 	{ PassiveInstance, { wooper_result, Res } } =
@@ -1235,8 +1236,8 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 				construct_and_run( Class, ConstructionParameters );
 
 
-			  % We might need to notify another process than the caller:
-			  { embody, [ Class, ConstructionParameters ], ToNotifyPid } ->
+				% We might need to notify another process than the caller:
+				{ embody, [ Class, ConstructionParameters ], ToNotifyPid } ->
 
 				%trace_bridge:debug_fmt(
 				%   "Process ~w becoming synchronously an instance "
@@ -1264,26 +1265,16 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 	% Normally useless, as called by the module itself:
-	case code_utils:is_beam_in_path( Classname ) of
-
-		not_found ->
-			throw( { beam_not_found_for, Classname } );
-
-		_ ->
-			ok
-
-	end,
+	code_utils:is_beam_in_path( Classname ) =/= not_found orelse
+		throw( { beam_not_found_for, Classname } ),
 
 	% Includes the state:
 	ArgCount = length( ConstructionParameters ) + 1,
 
-	case meta_utils:is_function_exported( _Module=Classname,
-						_Function=construct, _Arity=ArgCount ) of
+	meta_utils:is_function_exported( _Module=Classname,
+			 _Function=construct, _Arity=ArgCount ) orelse
 
-		true ->
-			ok;
-
-		false ->
+		begin
 
 			ExportedFunctions = meta_utils:list_exported_functions( Classname ),
 
@@ -1335,7 +1326,7 @@ check_classname_and_arity( Classname, ConstructionParameters ) ->
 
 			end
 
-	end.
+		end.
 
 
 
@@ -1628,8 +1619,8 @@ execute_oneway( TargetInstancePID, OnewayName )
 
 
 execute_oneway( PassiveInstance, OnewayName )
-   when is_record( PassiveInstance, ?passive_record )
-		andalso is_atom( OnewayName ) ->
+					when is_record( PassiveInstance, ?passive_record )
+						 andalso is_atom( OnewayName ) ->
 
 	{ NewPassiveInstance, { wooper_method_returns_void, R } } =
 		wooper_execute_method( OnewayName, _OnewayArgs=[], PassiveInstance ),
@@ -1646,15 +1637,15 @@ execute_oneway( PassiveInstance, OnewayName )
 					( passive_instance(), oneway_name(), method_arguments() ) ->
 							passive_instance().
 execute_oneway( TargetInstancePID, OnewayName, OnewayArgs )
-   when is_pid( TargetInstancePID ) andalso is_atom( OnewayName ) ->
+			when is_pid( TargetInstancePID ) andalso is_atom( OnewayName ) ->
 
 	% Hardly useful:
 	TargetInstancePID ! { OnewayName, OnewayArgs };
 
 
 execute_oneway( PassiveInstance, OnewayName, OnewayArgs )
-   when is_record( PassiveInstance, ?passive_record )
-		andalso is_atom( OnewayName ) andalso is_list( OnewayArgs ) ->
+			when is_record( PassiveInstance, ?passive_record )
+				 andalso is_atom( OnewayName ) andalso is_list( OnewayArgs ) ->
 
 	%trace_bridge:info_fmt( "Executing oneway ~ts/~B on passive instance",
 	%                       [ OnewayName, length( OnewayArgs ) ] ),
@@ -1666,8 +1657,8 @@ execute_oneway( PassiveInstance, OnewayName, OnewayArgs )
 
 % Promote non-list argument to list:
 execute_oneway( PassiveInstance, OnewayName, OnewayArg )
-				when is_record( PassiveInstance, ?passive_record )
-					 andalso is_atom( OnewayName ) ->
+					when is_record( PassiveInstance, ?passive_record )
+						 andalso is_atom( OnewayName ) ->
 
 	%trace_bridge:info_fmt( "Executing oneway ~ts on passive instance",
 	%                       [ OnewayName ] ),
@@ -1942,7 +1933,7 @@ get_location_string( Loc, _NextCalls ) ->
 
 
 
-% Methods for getting information about an instance.
+% Method-like helper functions for getting information about an instance.
 
 
 % @doc Returns the actual classname of the specified instance.
@@ -1952,8 +1943,38 @@ get_location_string( Loc, _NextCalls ) ->
 % (helper)
 %
 -spec get_classname( wooper:state() ) -> classname().
-get_classname( State ) ->
-	State#state_holder.actual_class.
+get_classname( _State=#state_holder{ actual_class=Classname } ) ->
+	Classname.
+
+
+
+% @doc Returns all the mother classes (direct or not) of the instance whose
+% state is specified, or of the specified classname.
+%
+% Note that:
+% - superclasses will be returned bredth-first in the inheritance tree
+% - in case of diamond-shaped inheritance, a given superclass may be listed more
+% than once (list_utils:uniquify/1 may then be used)
+%
+% Ex: wooper:get_all_superclasses(class_Platypus) =
+%       [class_Mammal,class_OvoviviparousBeing,class_Creature, class_Creature].
+%
+% Not static to avoid making class modules heavier.
+%
+% See the get_superclasses/0 static method to list only the direct superclasses
+% of the corresponding class.
+%
+-spec get_all_superclasses( wooper:state() | classname() ) -> [ classname() ].
+get_all_superclasses( _State=#state_holder{ actual_class=Classname } ) ->
+	% Branch to the next "static" version:
+	get_all_superclasses( Classname );
+
+get_all_superclasses( Classname ) ->
+
+	DirectSuperclasses = Classname:get_superclasses(),
+
+	DirectSuperclasses ++ list_utils:flatten_once(
+		[ get_all_superclasses( C ) || C <- DirectSuperclasses ] ).
 
 
 
@@ -2268,7 +2289,7 @@ log_error( FormatString, ValueList ) ->
 -spec log_error( format_string(), format_values(),
 				 wooper:state() | basic_utils:module_name() ) -> void().
 log_error( FormatString, ValueList, State )
-  when is_record( State, state_holder ) ->
+						when is_record( State, state_holder ) ->
 
 	io:format( "~n", [] ),
 
@@ -2299,7 +2320,7 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 % and to the caller, and have the process instance exit.
 %
 -spec on_failed_request( request_name(), method_arguments(), pid(),
-	exception_class(), exception_term(), stack_trace(), wooper:state() ) ->
+		exception_class(), exception_term(), stack_trace(), wooper:state() ) ->
 								no_return().
 on_failed_request( RequestName, ArgumentList, CallerPid, ExceptionClass,
 	ExceptionTerm=undef,
