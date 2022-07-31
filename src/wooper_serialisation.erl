@@ -43,6 +43,10 @@
 		  merge_list_for/3, merge_lists_for/3 ]).
 
 
+% Term transformers:
+-export([ check_no_transient/2 ]).
+
+
 % For restoration markers:
 -include("class_Serialisable.hrl").
 
@@ -58,6 +62,9 @@
 
 
 % Shorthands:
+
+-type user_data() :: basic_utils:user_data().
+-type term_transformer() :: ast_transform:term_transformer().
 
 -type attribute_name() :: wooper:attribute_name().
 -type attribute_value() :: wooper:attribute_value().
@@ -278,3 +285,32 @@ merge_lists_for( AttributeNames, AttributeEntries, State ) ->
 		end,
 		_Acc0={ AttributeEntries, State },
 		_List=AttributeNames ).
+
+
+
+% Term transformers.
+
+
+% @doc This is a term transformer (see ast_transform:term_transformer()) in
+% charge of checking that entries do not contain transient terms such as PIDs,
+% references, etc.
+%
+% Typically to be called from class_Serialisable:onPostSerialisation/3 to ensure
+% that the entries to serialise are legit.
+%
+-spec check_no_transient( term(), user_data() ) -> term_transformer().
+check_no_transient( T, UserData ) ->
+	case type_utils:is_transient( T ) of
+
+		true ->
+			throw( { transient_term_found, T, type_utils:get_type_of( T ),
+					 UserData } );
+
+		false ->
+			{ T, UserData }
+
+	end.
+
+
+
+% check_no_restoration_markers/2
