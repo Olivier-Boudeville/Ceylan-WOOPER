@@ -58,7 +58,16 @@ construct( State, Age, Gender ) ->
 	setAttributes( SerialState, [
 		{ age, Age },
 		{ gender, Gender },
-		{ reptile_family, cobra } ] ).
+		{ reptile_family, cobra }
+
+		% To test whether direct or compounded transient terms will be detected
+		% at serialisation time as expected:
+		%
+		%{ test_pid, { hello, self() } }
+		%{ test_ref, [ foo, erlang:make_ref() ] }
+		%{ test_port, erlang:open_port( { spawn, "echo Hello!" }, _Opts=[] ) }
+
+								] ).
 
 
 
