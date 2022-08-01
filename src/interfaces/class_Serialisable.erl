@@ -110,6 +110,11 @@
 % request.
 
 
+-type extra_data() :: term().
+% Any non-state, extra data that shall be persisted as well.
+%
+% For example, associated files that may not be easily regenerated.
+
 
 % For defines and wooper_serialisation_instance_record:
 -include("class_Serialisable.hrl").
@@ -158,7 +163,7 @@
 
 -export_type([ serialisable_pid/0, entry_transformer/0,
 			   %state_transformer_fun/0,
-			   instance_record/0,
+			   extra_data/0, instance_record/0,
 			   serialisation/0, bin_serialisation/0,
 			   restoration_marker/0, load_info/0 ]).
 
@@ -355,13 +360,25 @@ serialise( State, MaybeEntryTransformer, UserData ) ->
 	%  transformed
 
 	% May affect the original instance state, if ever needed:
-	{ PreSerialInstanceState, { SerialReadyState, PreUserData } } =
+	{ PreSerialInstanceState, SerialRet } =
 		executeRequest( State, onPreSerialisation, [ UserData ] ),
+
+	{ SerialReadyState, PreUserData, MaybeExtraData } =
+		case SerialRet of
+
+			{ PreSerialState, PreSerialUserData } ->
+				{ PreSerialState, PreSerialUserData, undefined };
+
+			T={ _PreSerialState, _PreSerialUserData, _MaybeExtraData } ->
+				T
+
+	end,
 
 	% At least generally const, and supporting overriding:
 	{ SerialInstanceState, { SerialTerm, SerialUserData } } =
 		executeRequest( PreSerialInstanceState, performStateSerialisation,
-			[ SerialReadyState, MaybeEntryTransformer, PreUserData ] ),
+			[ SerialReadyState, MaybeEntryTransformer, PreUserData,
+			  MaybeExtraData ] ),
 
 	{ PostSerialInstanceState, { PostSerialTerm, PostUserData } } =
 		executeRequest( SerialInstanceState, onPostSerialisation,
@@ -372,22 +389,30 @@ serialise( State, MaybeEntryTransformer, UserData ) ->
 
 
 
-% @doc State transformer hook triggered just before serialising the state of
+% @doc Pre-serialisation hook triggered just before serialising the state of
 % this instance, to perform any pre-processing on a copy of its current state,
 % possibly based on any user-specified data.
+%
+% The state explicitly returned here is dedicated to serialisation (generally
+% the actual instance state is not impacted by serialisation and thus this
+% request is often const).
+%
+% Such a hook is to return a possibly transformed state (that will not be
+% re-used by the serialised instance, which will keep its own state) directly
+% suitable for serialisation, for example with no transient technical
+% identifiers (like PID, open files, etc.) - unless a later entry transformer is
+% able to take care of them.
+%
+% Any extra data returned will be persisted (verbatim, that is not specifically
+% transformed) as well, and be available as is when deserialising.
 %
 % The default implementation of this request is a const, do-nothing one
 % (returning an exact copy of the current state); it is meant to be overridden
 % if needed.
 %
-% Such a hook is to return a possibly transformed state (that will not be
-% re-used by the serialised instance, which will keep its original state)
-% directly suitable for serialisation, for example with no transient technical
-% identifiers (like PID, open files, etc.) - unless a later entry transformer is
-% able to take care of them.
-%
 -spec onPreSerialisation( wooper:state(), user_data() ) ->
-					const_request_return( { wooper:state(), user_data() } ).
+	const_request_return( { wooper:state(), user_data() }
+						| { wooper:state(), user_data(), extra_data() } ).
 onPreSerialisation( State, UserData ) ->
 
 	cond_utils:if_defined( wooper_debug_serialisation,
@@ -400,14 +425,14 @@ onPreSerialisation( State, UserData ) ->
 
 
 % @doc Performs the actual serialisation of the explicitly-specified
-% serialisation-ready state, using the specified entry transformer (if any) and
-% user data.
+% serialisation-ready state, using the specified entry transformer (if any),
+% user data and any extra data specified.
 %
 -spec performStateSerialisation( wooper:state(), wooper:state(),
-			maybe( entry_transformer() ), user_data() ) ->
+		maybe( entry_transformer() ), user_data(), maybe( extra_data() ) ) ->
 				request_return( { serialisation(), user_data() } ).
-performStateSerialisation( State, ToSerialiseState,
-						   MaybeEntryTransformer, UserData ) ->
+performStateSerialisation( State, ToSerialiseState, MaybeEntryTransformer,
+						   UserData, MaybeExtraData ) ->
 
 	cond_utils:if_defined( wooper_debug_serialisation,
 		case MaybeEntryTransformer of
@@ -489,7 +514,8 @@ performStateSerialisation( State, ToSerialiseState,
 
 	InstanceRecord = #wooper_serialisation_instance_record{
 		class_name=State#state_holder.actual_class,
-		attributes=TransformedEntries },
+		attributes=TransformedEntries,
+		extra_data=MaybeExtraData },
 
 	% Most probably a const request; user data generally also useless here:
 	%
@@ -530,7 +556,7 @@ serialiseTerm( State, Term, UserData ) ->
 % serialisation term and user data.
 %
 % This is the last possible transformation before the final serialisation term
-% is returned, and generally to least useful to override.
+% is returned, and generally the least useful to override.
 %
 % The value returned by this hook will be converted "as is" by the serializer
 % (e.g. in a binary), that will be sent to the serialisation sink (e.g. a WSF
@@ -909,11 +935,13 @@ remote_synchronisable_load_link( Node, Serialisation, MaybeEntryTransformer,
 deserialise( Serialisation, MaybeEntryTransformer, UserData,
 			 MaybeListenerPid ) ->
 
-	{ Classname, AttrEntries } = case deserialise_term( Serialisation ) of
+	{ Classname, AttrEntries, MaybeExtraData } =
+			case deserialise_term( Serialisation ) of
 
 		#wooper_serialisation_instance_record{ class_name=CNname,
-											   attributes=Attrs } ->
-			{ CNname, Attrs };
+											   attributes=Attrs,
+											   extra_data=MaybeExData } ->
+			{ CNname, Attrs, MaybeExData };
 
 		Other ->
 			throw( { unexpected_deserialised_term, Other } )
@@ -963,7 +991,8 @@ deserialise( Serialisation, MaybeEntryTransformer, UserData,
 	% entry transformer and list_restoration_markers/0.
 
 	 { FinalState, FinalUserData } =
-		executeRequest( ForgedState, onPostDeserialisation, EntryUserData ),
+		executeRequest( ForgedState, onPostDeserialisation, 
+						[ EntryUserData, MaybeExtraData ] ),
 
 
 	% Sent as soon as available (rather than at the end):
@@ -1047,12 +1076,34 @@ deserialise_term( Serialisation ) ->
 % of the current state), meant to be overridden if needed.
 %
 -spec onPostDeserialisation( wooper:state(), user_data() ) ->
-			const_request_return( user_data() ).
+			request_return( user_data() ).
 onPostDeserialisation( State, UserData ) ->
 
+	% Intentionally non-const:
+	{ PostState, PostUserData } = executeRequest( State,
+		onPostDeserialisation, [ UserData, _MaybeExtraData=undefined ] ),
+
+	wooper:return_state_result( PostState, PostUserData ).
+
+
+% @doc Hook triggered at the end of the deserialisation step (after the raw
+% deserialisation and the application of any entry transformer), operating on
+% the resulting instance state, possibly based on any user-specified data and
+% persisted extra data.
+%
+% Refer to onPostDeserialisation/2 for further details.
+%
+% This is a default, const, do-nothing implementation (returning an exact copy
+% of the current state), meant to be overridden if needed.
+%
+-spec onPostDeserialisation( wooper:state(), user_data(),
+			maybe( extra_data() ) ) -> const_request_return( user_data() ).
+onPostDeserialisation( State, UserData, _MaybeExtraData ) ->
+
 	cond_utils:if_defined( wooper_debug_serialisation,
-		trace_bridge:debug_fmt( "Default post-serialisation of instance ~w, "
-			"based on user data ~p.", [ self(), UserData ] ) ),
+		trace_bridge:debug_fmt( "Default post-deserialisation of instance ~w, "
+			"based on user data ~p and extra data ~p.",
+			[ self(), UserData, MaybeExtraData ] ) ),
 
 	wooper:const_return_result( UserData ).
 

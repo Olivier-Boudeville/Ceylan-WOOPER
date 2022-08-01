@@ -66,7 +66,7 @@
 	class_name :: wooper:classname(),
 	% The classname of that instance.
 
-	attributes :: [ wooper:attribute_entry() ]
+	attributes :: [ wooper:attribute_entry() ],
 	% The serialisation-ready information about all instance attributes.
 
 
@@ -74,5 +74,10 @@
 
 	% Any extra process-level element mentioned in the 'About serialised
 	% elements' section can be managed here.
+
+
+	extra_data :: term()
+	% Any extra that needs to be kept around (e.g. to preserve the content of
+	% generated files that would be problematic to recreate).
 
 } ).

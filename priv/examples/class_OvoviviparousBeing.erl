@@ -33,15 +33,14 @@
 
 
 
-% @doc Constructs an ovoviviparous being (parameter-less constructor).
--spec construct( wooper:state() ) -> wooper:state() .
-construct( State ) ->
+% @doc Constructs an ovoviviparous being.
+-spec construct( wooper:state(), age(), gender() ) -> wooper:state() .
+construct( State, Age, Gender ) ->
 
 	% In order to test the crash of a constructor:
 	%non_existing:crash(),
 
-	% Strange defaults:
-	CreatureState = class_Creature:construct( State, _Age=0, _Gender=male ),
+	CreatureState = class_Creature:construct( State, Age, Gender ),
 
 	setAttribute( CreatureState, eggs_count, 0 ).
 

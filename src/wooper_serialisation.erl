@@ -40,7 +40,8 @@
 % Serialisation helpers:
 -export([ handle_private_processes/2, mute_attributes/2,
 		  check_attributes_equal/3, replace_attribute/3, replace_attributes/3,
-		  merge_list_for/3, merge_lists_for/3 ]).
+		  merge_list_for/3, merge_lists_for/3,
+		  instance_record_to_string/1 ]).
 
 
 % Term transformers:
@@ -63,12 +64,15 @@
 
 % Shorthands:
 
+-type ustring() :: text_utils:ustring().
 -type user_data() :: basic_utils:user_data().
 -type term_transformer() :: ast_transform:term_transformer().
 
 -type attribute_name() :: wooper:attribute_name().
 -type attribute_value() :: wooper:attribute_value().
 -type attribute_entry() :: wooper:attribute_entry().
+
+-type instance_record() :: class_Serialisable:instance_record().
 
 
 
@@ -285,6 +289,33 @@ merge_lists_for( AttributeNames, AttributeEntries, State ) ->
 		end,
 		_Acc0={ AttributeEntries, State },
 		_List=AttributeNames ).
+
+
+
+% @doc Returns a textual description of the specified instance record.
+-spec instance_record_to_string( instance_record() ) -> ustring().
+instance_record_to_string( #wooper_serialisation_instance_record{
+		class_name=Classname,
+		attributes=AttrEntries,
+		extra_data=MaybeExtraData } ) ->
+
+	AttrStrs = [ text_utils:format( "attribute '~ts' of value ~p",
+					[ K, V ] ) || { K, V } <- AttrEntries ],
+
+	ExtraStr = case MaybeExtraData of
+
+		undefined ->
+			"no extra data";
+
+		ExtraData ->
+			text_utils:format( "extra data ~p", [ ExtraData ] )
+
+	end,
+
+	text_utils:format( "serialisation record for an instance of ~ts, "
+		"with ~ts and ~B entries: ~ts",
+		[ Classname, ExtraStr, length( AttrEntries ),
+		  text_utils:strings_to_string( lists:sort( AttrStrs ) ) ] ).
 
 
 

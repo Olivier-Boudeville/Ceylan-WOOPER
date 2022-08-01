@@ -48,8 +48,9 @@ construct( State, Age, Gender, FurColor, NozzleColor ) ->
 	% To test onWOOPERExitReceived/3 (comment to check that the test fails):
 	process_flag( trap_exit, true ),
 
+	% Note that age and gender here will thus be initialised twice:
 	OvoviviparousMammalState =
-		class_OvoviviparousBeing:construct( MammalState ),
+		class_OvoviviparousBeing:construct( MammalState, Age, Gender ),
 
 	io:format( "Synchronous time-out is ~ts.~n",
 			   [ time_utils:duration_to_string( ?synchronous_time_out ) ] ),
@@ -146,7 +147,7 @@ testCreationDeletion( State ) ->
 	% Comment in order to test normal exits (should not trigger the default or
 	% user-defined EXIT handler):
 	%
-	CatPid ! { terminate, intentional_crash },
+	CatPid ! { terminate, this_is_an_intentional_crash },
 
 	io:format( "Deleting cat ~p created from platypus.~n", [ CatPid ] ),
 
@@ -159,6 +160,10 @@ testCreationDeletion( State ) ->
 					cat_pid, CatState ),
 
 	undefined = getAttribute( DeleteState, cat_pid ),
+
+	trace_utils:warning( "Reminder: these deletion time-out and crash are "
+		"triggered on purpose (see above); note though that the 5-second "
+		"time-out in debug mode is a 30-minute one in normal mode)." ),
 
 	wooper:return_state( DeleteState ).
 

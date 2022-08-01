@@ -55,10 +55,9 @@ run( IsDebug ) ->
 	MyR ! { getSuperclasses, [], self() },
 	receive
 
-		{ wooper_result, [ class_Creature ] } ->
+		{ wooper_result, [ class_OvoviviparousBeing, class_Serialisable ] } ->
 			test_facilities:display(
-				"After constructor, getSuperclasses/1 returned class_Creature "
-				"as expected." );
+				"After constructor, correct superclasses returned." );
 
 		{ wooper_result, UnexpectedSuperclasses } ->
 			test_facilities:fail( "wrong superclasses: ~p",
