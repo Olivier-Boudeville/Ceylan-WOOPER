@@ -66,7 +66,7 @@
 
 -type ustring() :: text_utils:ustring().
 -type user_data() :: basic_utils:user_data().
--type term_transformer() :: ast_transform:term_transformer().
+-type term_transformer() :: meta_utils:term_transformer().
 
 -type attribute_name() :: wooper:attribute_name().
 -type attribute_value() :: wooper:attribute_value().
@@ -322,8 +322,8 @@ instance_record_to_string( #wooper_serialisation_instance_record{
 % Term transformers.
 
 
-% @doc This is a term transformer (see ast_transform:term_transformer()) in
-% charge of checking that entries do not contain transient terms such as PIDs,
+% @doc This is a term transformer (see meta_utils:term_transformer()) in charge
+% of checking that entries do not contain transient terms such as PIDs,
 % references, etc.
 %
 % Typically to be called from class_Serialisable:onPostSerialisation/3 to ensure

@@ -90,7 +90,7 @@
 % charge of converting PIDs in entries into stable identifiers (e.g. see
 % class_Identifiable).
 %
-% Note: see ast_transform:transform_term/4, which may be useful in that context,
+% Note: see meta_utils:transform_term/4, which may be useful in that context,
 % and also the TextTransformer example in serialisable_test.erl.
 
 
@@ -505,7 +505,7 @@ performStateSerialisation( State, ToSerialiseState, MaybeEntryTransformer,
 	cond_utils:if_defined( wooper_check_serialisation,
 		begin
 			%trace_utils:debug( "Checking that no transient term remains." ),
-			[ ast_transform:transform_term( AttrValue,
+			[ meta_utils:transform_term( AttrValue,
 				_TypeDescription=undefined,
 				fun wooper_serialisation:check_no_transient/2,
 				_NoTransientUserData={ attribute, AttrName } )
@@ -991,7 +991,7 @@ deserialise( Serialisation, MaybeEntryTransformer, UserData,
 	% entry transformer and list_restoration_markers/0.
 
 	 { FinalState, FinalUserData } =
-		executeRequest( ForgedState, onPostDeserialisation, 
+		executeRequest( ForgedState, onPostDeserialisation,
 						[ EntryUserData, MaybeExtraData ] ),
 
 
