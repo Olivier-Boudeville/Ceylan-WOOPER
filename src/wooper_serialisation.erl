@@ -36,8 +36,19 @@
 -module(wooper_serialisation).
 
 
+-export([ serialise_instances/1,
 
-% Serialisation helpers:
+		  load_instances/1, load_instances/3,
+		  load_link_instances/1, load_link_instances/3,
+
+		  synchronous_load_instances/1, synchronous_load_instances/3,
+		  synchronous_load_link_instances/1, synchronous_load_link_instances/3
+
+		]).
+
+
+
+% Serialisation helpers, to better implement hooks:
 -export([ handle_private_processes/2, mute_attributes/2,
 		  check_attributes_equal/3, replace_attribute/3, replace_attributes/3,
 		  merge_list_for/3, merge_lists_for/3,
@@ -61,6 +72,10 @@
 -include("wooper_state_functions.hrl").
 
 
+% For myriad_spawn*:
+-include_lib("myriad/include/spawn_utils.hrl").
+
+
 
 % Shorthands:
 
@@ -71,9 +86,331 @@
 -type attribute_name() :: wooper:attribute_name().
 -type attribute_value() :: wooper:attribute_value().
 -type attribute_entry() :: wooper:attribute_entry().
+-type instance_pid() :: wooper:instance_pid().
 
+-type serialisation() :: class_Serialisable:serialisation().
 -type instance_record() :: class_Serialisable:instance_record().
+-type entry_transformer() :: class_Serialisable:entry_transformer().
+-type load_info() :: class_Serialisable:load_info().
 
+
+% Implementation notes:
+%
+% The default deserialiser (based on binary_to_term) is used here.
+%
+% 'Serial' is used here as a shorthand of 'Serialisation', a term designating a
+% binary containing (at least) an instance record.
+
+
+
+% @doc Serialises the specified instances, using no specific entry transformer
+% or user data; returns a unique serialisation term, aggregating the
+% corresponding serialisations, in no specific order (as usually it does not
+% matter).
+%
+-spec serialise_instances( [ instance_pid() ] ) -> serialisation().
+serialise_instances( InstPids ) ->
+	serialise_instances( InstPids, _MaybeEntryTransformer=undefined,
+						 _UserData=undefined ).
+
+
+
+% @doc Serialises the specified instances, using the specific entry transformer
+% and user data (if any); returns a unique serialisation term, aggregating the
+% corresponding serialisations, in no specific order (as usually it does not
+% matter).
+%
+% Note that all these serialisations will use exactly the (same) specified user
+% data, and that any updated version of it they would return will be ignored.
+%
+-spec serialise_instances( [ instance_pid() ], maybe( entry_transformer() ),
+						   user_data() ) -> serialisation().
+serialise_instances( InstPids, MaybeEntryTransformer, UserData ) ->
+
+	% Getting a list of {Serialisation, UpdatedUserData, InstPid} triplets:
+	SerialTriplets = wooper:obtain_results_for_requests( serialise,
+		[ MaybeEntryTransformer, UserData ], InstPids ),
+
+	%trace_utils:debug_fmt( "Serialisation of the ~B instances of PIDs ~w "
+	%   "returned:~n ~p", [ length( InstPids ), InstPids, SerialTriplets ] ),
+
+	Serials = [ S || { S, _UpdatedUserData, _InstPid } <- SerialTriplets ],
+
+	% So the concatenation of (serialisation, binary) terms, not an overall
+	% term:
+	%
+	text_utils:bin_concatenate( Serials ).
+
+
+
+% Section for asynchronous loading.
+
+
+% @doc Loads the instances stored in the specified serialisation, using no
+% specific entry transformer or user data: spawns them and returns a list of
+% their corresponding PIDs, in no specific order (as usually it does not
+% matter).
+%
+% These creations will be asynchronous: this function returns legit PIDs as soon
+% as the creations are triggered, without waiting for them to complete.
+%
+% Created instances will not be linked to the calling process.
+%
+-spec load_instances( serialisation() ) -> [ instance_pid() ].
+load_instances( Serialisation ) ->
+	load_instances( Serialisation, _MaybeEntryTransformer=undefined,
+					_UserData=undefined ).
+
+
+% @doc Loads the instances stored in the specified serialisation, using the
+% specified entry transformer and user data: spawns them and returns a list of
+% their corresponding PIDs, in no specific order (as usually it does not
+% matter).
+%
+% These creations will be asynchronous: this function returns legit PIDs as soon
+% as the creations are triggered, without waiting for them to complete.
+%
+% Note that all these deserialisations will use the specified user data, and
+% that any updated version of it they would return will be ignored.
+%
+% Created instances will not be linked to the calling process.
+%
+-spec load_instances( serialisation(), maybe( entry_transformer() ),
+					  user_data() ) -> [ instance_pid() ].
+load_instances( Serialisation, MaybeEntryTransformer, UserData ) ->
+
+	% The reading of the serialisation is sequential by nature (this overall
+	% binary must be chopped chunk by chunk), yet the creations deriving from it
+	% may be concurrent:
+	%
+	% (clearer than a fold)
+	%
+	load_instances_helper( Serialisation, MaybeEntryTransformer, UserData,
+						   _DoLink=false, _AccPids=[] ).
+
+
+
+% @doc Loads the instances stored in the specified serialisation, using no
+% specific entry transformer or user data: spawns them and returns a list of
+% their corresponding PIDs, in no specific order (as usually it does not
+% matter).
+%
+% These creations will be asynchronous: this function returns legit PIDs as soon
+% as the creations are triggered, without waiting for them to complete.
+%
+% Created instances will be linked to the calling process.
+%
+-spec load_link_instances( serialisation() ) -> [ instance_pid() ].
+load_link_instances( Serialisation ) ->
+	load_instances( Serialisation, _MaybeEntryTransformer=undefined,
+					_UserData=undefined ).
+
+
+% @doc Loads the instances stored in the specified serialisation, using the
+% specified entry transformer and user data: spawns them and returns a list of
+% their corresponding PIDs, in no specific order (as usually it does not
+% matter).
+%
+% These creations will be asynchronous: this function returns legit PIDs as soon
+% as the creations are triggered, without waiting for them to complete.
+%
+% Note that all these deserialisations will use the specified user data, and
+% that any updated version of it they would return will be ignored.
+%
+% Created instances will be linked to the calling process.
+%
+-spec load_link_instances( serialisation(), maybe( entry_transformer() ),
+					  user_data() ) -> [ instance_pid() ].
+load_link_instances( Serialisation, MaybeEntryTransformer, UserData ) ->
+
+	% The reading of the serialisation is sequential by nature (this overall
+	% binary must be chopped chunk by chunk), yet the creations deriving from it
+	% may be concurrent:
+	%
+	% (clearer than a fold)
+	%
+	load_instances_helper( Serialisation, MaybeEntryTransformer, UserData,
+						   _DoLink=true, _AccPids=[] ).
+
+
+
+% (helper)
+load_instances_helper( _Serial= <<>>, _MaybeEntryTransformer, _UserData,
+					   _DoLink, AccPids ) ->
+
+	%trace_utils:debug_fmt( "Returning ~B instance PIDs: ~w",
+	%                       [ length( AccPids ), AccPids ] ),
+
+	AccPids;
+
+load_instances_helper( Serial, MaybeEntryTransformer, UserData, DoLink,
+					   AccPids ) ->
+
+	% DeserialisedTerm is expected to be an instance record:
+	{ DeserialisedTerm, UsedCount } = binary_to_term( Serial, [ used ] ),
+
+	% Go concurrent ASAP:
+
+	EmbodyFun = fun() ->
+		class_Serialisable:embody( DeserialisedTerm, MaybeEntryTransformer,
+								   UserData, _ListenerPid=undefined )
+				end,
+
+	InstPid = case DoLink of
+
+		true ->
+			?myriad_spawn_link( EmbodyFun );
+
+		false ->
+			?myriad_spawn( EmbodyFun )
+
+	end,
+
+	{ _ReadSerial, RemainingSerial } = split_binary( Serial, UsedCount ),
+
+	load_instances_helper( RemainingSerial, MaybeEntryTransformer, UserData,
+						   DoLink, [ InstPid | AccPids ] ).
+
+
+
+
+% Section for synchronous loading.
+
+
+
+% @doc Loads synchronously the instances stored in the specified serialisation,
+% using no specific entry transformer or user data: spawns them and returns a
+% list of their corresponding loading information, in no specific order (as
+% usually it does not matter).
+%
+% These creations will be synchronous: this function returns only when all
+% created processes report that they are up and running.
+%
+% Created instances will not be linked to the calling process.
+%
+-spec synchronous_load_instances( serialisation() ) -> [ load_info() ].
+synchronous_load_instances( Serialisation ) ->
+	synchronous_load_instances( Serialisation, _MaybeEntryTransformer=undefined,
+								_UserData=undefined ).
+
+
+
+% @doc Loads synchronously the instances stored in the specified serialisation,
+% using the specified entry transformer and user data: spawns them and returns a
+% list of their corresponding loading information, in no specific order (as
+% usually it does not matter).
+%
+% These creations will be synchronous: this function returns only when all
+% created processes report that they are up and running.
+%
+%
+% Created instances will not be linked to the calling process.
+%
+-spec synchronous_load_instances( serialisation(), maybe( entry_transformer() ),
+								  user_data() ) -> [ load_info() ].
+synchronous_load_instances( Serialisation, MaybeEntryTransformer, UserData ) ->
+
+	% The reading of the serialisation is sequential by nature (this overall
+	% binary must be chopped chunk by chunk), yet the creations deriving from it
+	% may be concurrent:
+	%
+	% (clearer than a fold)
+	%
+	sync_load_instances_helper( Serialisation, MaybeEntryTransformer, UserData,
+								_DoLink=false, self(), _AccPids=[] ).
+
+
+
+% @doc Loads synchronously the instances stored in the specified serialisation,
+% using no specific entry transformer or user data: spawns them and returns a
+% list of their corresponding loading information, in no specific order (as
+% usually it does not matter).
+%
+% These creations will be synchronous: this function returns only when all
+% created processes report that they are up and running.
+%
+% Created instances will be linked to the calling process.
+%
+-spec synchronous_load_link_instances( serialisation() ) -> [ load_info() ].
+synchronous_load_link_instances( Serialisation ) ->
+	synchronous_load_link_instances( Serialisation,
+		_MaybeEntryTransformer=undefined, _UserData=undefined ).
+
+
+
+% @doc Loads synchronously the instances stored in the specified serialisation,
+% using the specified entry transformer and user data: spawns them and returns a
+% list of their corresponding loading information, in no specific order (as
+% usually it does not matter).
+%
+% These creations will be synchronous: this function returns only when all
+% created processes report that they are up and running.
+%
+% Created instances will be linked to the calling process.
+%
+-spec synchronous_load_link_instances( serialisation(),
+			maybe( entry_transformer() ), user_data() ) -> [ load_info() ].
+synchronous_load_link_instances( Serialisation, MaybeEntryTransformer,
+								 UserData ) ->
+
+	% The reading of the serialisation is sequential by nature (this overall
+	% binary must be chopped chunk by chunk), yet the creations deriving from it
+	% may be concurrent:
+	%
+	% (clearer than a fold)
+	%
+	sync_load_instances_helper( Serialisation, MaybeEntryTransformer,
+		UserData, _DoLink=true, self(), _AccPids=[] ).
+
+
+
+
+% (helper)
+sync_load_instances_helper( _Serial= <<>>, _MaybeEntryTransformer, _UserData,
+							_DoLink, _Self, AccPids ) ->
+
+	LoadInfos = [ receive
+					{ onDeserialisation, LoadInfo } ->
+						  LoadInfo
+				  end || _Pid <- AccPids ],
+
+	trace_utils:debug_fmt( "Returning ~B loading information: ~w",
+						   [ length( LoadInfos ), LoadInfos ] ),
+
+	LoadInfos;
+
+sync_load_instances_helper( Serial, MaybeEntryTransformer, UserData, DoLink,
+							Self, AccPids ) ->
+
+	% DeserialisedTerm is expected to be an instance record:
+	{ DeserialisedTerm, UsedCount } = binary_to_term( Serial, [ used ] ),
+
+	% Go concurrent ASAP:
+
+	EmbodyFun = fun() ->
+		class_Serialisable:embody( DeserialisedTerm, MaybeEntryTransformer,
+								   UserData, _ListenerPid=Self )
+				end,
+
+	InstPid = case DoLink of
+
+		true ->
+			?myriad_spawn_link( EmbodyFun );
+
+		false ->
+			?myriad_spawn( EmbodyFun )
+
+	end,
+
+	{ _ReadSerial, RemainingSerial } = split_binary( Serial, UsedCount ),
+
+	sync_load_instances_helper( RemainingSerial, MaybeEntryTransformer,
+								UserData, DoLink, Self, [ InstPid | AccPids ] ).
+
+
+
+
+% Serialisation helpers.
 
 
 % @doc Replaces any PID value associated to any of the specified attribute names
