@@ -1125,7 +1125,6 @@ collect_wooper_messages( _Count=0, Acc ) ->
 	Acc;
 
 collect_wooper_messages( Count, Acc ) ->
-
 	receive
 
 		{ wooper_result, Res } ->
@@ -1195,7 +1194,6 @@ wait_request_series( _WaitCount=0, Acc ) ->
 	lists:reverse( Acc );
 
 wait_request_series( WaitCount, Acc ) ->
-
 	receive
 
 		{ wooper_result, R } ->
@@ -2535,7 +2533,6 @@ send_and_listen( InstancePid, RequestName, Arguments ) ->
 %
 -spec receive_result() -> request_result( any() ).
 receive_result() ->
-
 	receive
 
 		{ wooper_result, R } ->
