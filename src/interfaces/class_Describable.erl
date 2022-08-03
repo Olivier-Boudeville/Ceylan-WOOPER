@@ -27,7 +27,7 @@
 
 
 % @doc Interface class implementing the Describable trait, so that its
-% instances are able to output their <b>textual description</b>.
+% instances are able to output a static (prebuilt) <b>textual description</b>.
 %
 % Such an interface is an abstract mother class from which all describable
 % instances must derive.
@@ -40,7 +40,7 @@
 
 -define( class_description,
 		 "Interface to be implemented by all instances able to output "
-		 "their textual description." ).
+		 "their static textual description." ).
 
 
 % No superclasses.
@@ -113,6 +113,7 @@ construct( State, Description ) ->
 % @doc Returns the description of this Describable.
 -spec getDescription( wooper:state() ) -> const_request_return( description() ).
 getDescription( State ) ->
+	% Always defined by design:
 	wooper:const_return_result( ?getAttr(wooper_describable_description) ).
 
 
