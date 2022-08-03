@@ -19,14 +19,9 @@
 -include_lib("myriad/include/test_facilities.hrl").
 
 
+test_individual_serialisations() ->
 
--spec run() -> no_return().
-run() ->
-
-	test_facilities:start( ?MODULE ),
-
-	% Allows to support both OTP conventions and ad hoc, automatic ones:
-	wooper_utils:start_for_test(),
+	test_facilities:display( "~nTesting individual serialisations." ),
 
 	Age = 3,
 
@@ -73,7 +68,7 @@ run() ->
 
 	CatSerialisation = receive
 
-		{ wooper_result, { CatSerial, SerialUserData } } ->
+		{ wooper_result, { CatSerial, SerialUserData, MyC } } ->
 
 			test_facilities:display( "Text transformer returned:~n"
 				" - serialisation of ~ts:~n ~p~n"
@@ -105,7 +100,7 @@ run() ->
 
 	ReptileSerialisation = receive
 
-		{ wooper_result, ReptSerial } ->
+		{ wooper_result, { ReptSerial, MyR } } ->
 
 			test_facilities:display( "Default transformer returned a "
 				"serialisation of ~ts:~n ~p~n",
@@ -157,6 +152,93 @@ run() ->
 		{ deleted, NewR } ->
 			ok
 
-	end,
+	end.
+
+
+
+test_wsf_format() ->
+
+	ReptileCount = 5,
+
+	test_facilities:display( "~nTesting the support of a stream of "
+							 "~B serialisations.", [ ReptileCount ] ),
+
+	OriginalReptilePids = [
+		class_Reptile:new_link( _Age=random_utils:get_uniform_value( 20 ),
+			_Gender= case random_utils:get_uniform_value( 2 ) of
+				1 -> male;
+				2 -> female end ) || _ <- lists:seq( 1, ReptileCount ) ],
+
+	% Obtaining a basic binary:
+	ReptileSerials =
+		wooper_serialisation:serialise_instances( OriginalReptilePids ),
+
+	SerialFilename = "serialisation-test.wsf",
+
+	% Should any prior test have crashed:
+	file_utils:remove_file_if_existing( SerialFilename ),
+
+	file_utils:write_whole( SerialFilename, ReptileSerials ),
+
+	test_facilities:display( "Serialisation file '~ts' written, "
+		"deleting the corresponding serialised instances, and deserialing "
+		"them from file.", [ SerialFilename ] ),
+
+	wooper:delete_synchronously_instances( OriginalReptilePids ),
+
+	ReadSerial = file_utils:read_whole( SerialFilename ),
+
+	FileSize = file_utils:get_size( SerialFilename ),
+
+	test_facilities:display( "The size of the serialisation file '~ts' is ~ts, "
+		"this corresponds to an average size per Reptile instance of ~ts.",
+		[ SerialFilename, system_utils:interpret_byte_size( FileSize ),
+		  system_utils:interpret_byte_size( round( FileSize / ReptileCount ) )
+		] ),
+
+	file_utils:remove_file( SerialFilename ),
+
+
+	% All combinations (synchronous or not, linked or not) can be tested:
+
+	%ReadReptilePids = wooper_serialisation:load_instances( ReadSerial ),
+	%ReadReptilePids = wooper_serialisation:load_link_instances( ReadSerial ),
+
+	%ReadReptileLoadInfos =
+	%   wooper_serialisation:synchronous_load_instances( ReadSerial ),
+
+	ReadReptileLoadInfos =
+		wooper_serialisation:synchronous_load_link_instances( ReadSerial ),
+
+	ReadReptilePids = [ RepPid
+		|| { RepPid, class_Reptile, _UpdatedUserData=undefined }
+										<- ReadReptileLoadInfos ],
+
+
+	[ R ! { getDescription, [], self() } || R <- ReadReptilePids ],
+
+	% No specific order expected:
+	Descs = [ receive
+				{ wooper_result, D } -> D
+			  end || _R <- ReadReptilePids ],
+
+	test_facilities:display( "Read descriptions: ~ts",
+		[ text_utils:strings_to_string( Descs ) ] ),
+
+	wooper:delete_synchronously_instances( ReadReptilePids ).
+
+
+
+-spec run() -> no_return().
+run() ->
+
+	test_facilities:start( ?MODULE ),
+
+	% Allows to support both OTP conventions and ad hoc, automatic ones:
+	wooper_utils:start_for_test(),
+
+	test_individual_serialisations(),
+
+	test_wsf_format(),
 
 	test_facilities:stop().
