@@ -19,7 +19,8 @@
 
 
 % Determines what are the direct mother classes of this class (if any):
--define( superclasses, [ class_OvoviviparousBeing, class_Serialisable ] ).
+-define( superclasses, [ class_OvoviviparousBeing, class_Serialisable,
+						 class_Describable ] ).
 
 
 -define( class_attributes, [
@@ -52,13 +53,20 @@ construct( State, Age, Gender ) ->
 	OvivipState = class_ViviparousBeing:construct( State ),
 	SerialState = class_Serialisable:construct( OvivipState ),
 
+	Family = cobra,
+
+	Description = text_utils:format( "a ~ts ~ts of age ~B",
+									 [ Gender, Family, Age ] ),
+
+	DescState = class_Describable:construct( SerialState, Description ),
+
 	% To test constructor checking:
 	%an_unexpected_initial_state.
 
-	setAttributes( SerialState, [
+	setAttributes( DescState, [
 		{ age, Age },
 		{ gender, Gender },
-		{ reptile_family, cobra }
+		{ reptile_family, Family }
 
 		% To test whether direct or compounded transient terms will be detected
 		% at serialisation time as expected:
@@ -74,7 +82,10 @@ construct( State, Age, Gender ) ->
 % @doc Overridden destructor.
 -spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
-	trace_utils:info( "Deleting a Reptile." ),
+
+	trace_utils:info_fmt( "Deleting ~ts, of PID ~w.",
+		[ class_Describable:get_maybe_description( State ), self() ] ),
+
 	State.
 	% To test destructor checking use instead:
 	%an_unexpected_final_state.
@@ -113,7 +124,6 @@ isHotBlooded( State ) ->
 -spec canMoult( wooper:state() ) -> const_request_return( boolean() ).
 canMoult( State ) ->
 	wooper:const_return_result( true ).
-
 
 
 
