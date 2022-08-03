@@ -2259,7 +2259,7 @@ This may be alleviated a bit by determining the maximum set of per-class base at
 WOOPER Built-in Interfaces
 __________________________
 
-WOOPER provides additionally a few very general-purpose interfaces - like the ones discussed above - as built-in ones, like ``class_Describable``, ``class_Identifiable``, ``class_Serialisable``.
+WOOPER provides additionally a few very general-purpose interfaces - like the ones discussed above - as built-in ones, like ``class_Describable``, ``class_Identifiable``, ``class_Serialisable`` (refer to the serialisation_ section).
 
 Of course WOOPER-using code remains fully free not to use this kind of composition and conditional attribute definition.
 
