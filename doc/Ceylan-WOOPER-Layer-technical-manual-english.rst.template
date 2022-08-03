@@ -2648,6 +2648,36 @@ See the ``passive_instance_test`` module for more details about passive instance
 
 
 
+.. _`serialisations`:
+
+
+Serialisation
+-------------
+
+WOOPER offers a rather complete support for **serialisation and deserialisation**, so that instances can be written to and read from a series of bytes (this can be a WSF file, standing for ``WOOPER Serialisation File``, a network stream, etc.).
+
+For that the ``class_Serialisable`` interface provides all default yet overridable primitives, including:
+
+- "serialisation hooks" (ex: the ``onPreSerialisation/2`` request), meant to accommodate any class-specific transformation that shall happen prior to each operation
+
+- entry transformers, that are generally specific to a project but transverse to most if not all its classes, so that values of attributes can be recursively scanned for transient terms (like a PID, a reference), which are generally replaced with restoration markers at serialisation time, and recreated appropriately at deserialisation time
+
+The usual variations (e.g. deserialisations may be synchronous or not, linked or not) of operations are supported.
+
+
+Care as been taken so that these operations are done:
+
+- generically: only the class-specific transformations are left to implement, in well-defined hooks, with relevant helpers already available (e.g. with examples of entry transformers)
+- safely: optional checking that no transient term is still present in attribute values that are ready for serialisation, and that no restoration marker remains once a deserialised instance is ready
+- efficiently: operations are intensely concurrent (each instance takes care of itself as much as possible), and by default storage is done in a compact, binary form
+
+
+
+In practice, the ``Serialisable`` interface is defined in ``class_Serialisable.{hrl,erl}``, and the extended features are implemented in the ``wooper_serialisation`` module. The ``serialisable_test`` test module showcases various examples, which involve the (serialisable) ``class_Reptile`` module.
+
+
+
+
 :raw-latex:`\pagebreak`
 
 
