@@ -274,7 +274,12 @@
 % default, we rely on the Erlang Term Format
 % (https://www.erlang.org/doc/apps/erts/erl_ext_dist.html), at it is a compact,
 % well-integrated, binary, at least reasonably efficient solution.
-
+%
+% Note that there is a difference between an input binary and its serialised
+% form. Notably, a WSF file is not a single binary corresponding to a larger
+% term (typically that would be a list) gathering a set of serialisations, it is
+% the concatenation of binaries, each corresponding to a term (an instance
+% record precisely).
 
 
 % In this section, we define, for the current class, loading counterparts to the
@@ -333,25 +338,29 @@ construct( State ) ->
 
 
 % @doc Serialises this instance (that is its state), using no specific entry
-% transformer or user data, returning a corresponding serialisation term.
+% transformer or user data, returning a corresponding serialisation term,
+% together with the instance PID (useful to allow to discriminate between
+% serialisations performed in parallel).
 %
--spec serialise( wooper:state() ) -> request_return( serialisation() ).
+-spec serialise( wooper:state() ) ->
+					request_return( { serialisation(), instance_pid() } ).
 serialise( State ) ->
 
-	{ SerialState, { SerialTerm, _SerialUserData } } =
+	{ SerialState, { SerialTerm, _SerialUserData, Self } } =
 		executeRequest( State, serialise,
 			[ _MaybeEntryTransformer=undefined, _UserData=undefined ] ),
 
-	wooper:return_state_result( SerialState, SerialTerm ).
+	wooper:return_state_result( SerialState, { SerialTerm, Self } ).
 
 
 
 % @doc Serialises this instance (that is its state), using any specified entry
 % transformer and user data, returning corresponding serialisation term and
-% updated user data.
+% updated user data, together with the instance PID (useful to allow to
+% discriminate between serialisations performed in parallel).
 %
 -spec serialise( wooper:state(), maybe( entry_transformer() ), user_data() ) ->
-						request_return( { serialisation(), user_data() } ).
+		request_return( { serialisation(), user_data(), instance_pid() } ).
 serialise( State, MaybeEntryTransformer, UserData ) ->
 
 	% We have to discriminate between the states:
@@ -385,7 +394,7 @@ serialise( State, MaybeEntryTransformer, UserData ) ->
 						[ SerialTerm, SerialUserData ] ),
 
 	wooper:return_state_result( PostSerialInstanceState,
-								{ PostSerialTerm, PostUserData } ).
+						{ PostSerialTerm, PostUserData, self() } ).
 
 
 
@@ -597,7 +606,7 @@ onPostSerialisation( State, SerialisationTerm, UserData ) ->
 
 
 % @doc Spawns an instance of this class, based on the specified serialisation
-% information.
+% information, using no specific entry transformer or user data.
 %
 % Returns the PID of the instance created by this loading.
 %
@@ -637,7 +646,8 @@ load( Serialisation, MaybeEntryTransformer, UserData ) ->
 
 
 % @doc Spawns an instance of this class, based on the specified serialisation
-% information, and links it to the current process.
+% information, using no specific entry transformer or user data, and links it to
+% the current process.
 %
 % Returns the PID of the instance created by this loading.
 %
@@ -682,7 +692,7 @@ load_link( Serialisation, MaybeEntryTransformer, UserData ) ->
 
 
 % @doc Spawns an instance of this class, based on the specified serialisation
-% information.
+% information, using no specific entry transformer or user data.
 %
 % Returns information regarding this instance loading.
 %
@@ -729,8 +739,8 @@ synchronous_load( Serialisation, MaybeEntryTransformer, UserData ) ->
 
 
 
-% @doc Spawns an instance of this class, based on the specified serialisation
-% information, and links it to the current process.
+% @doc Spawns an instance of this class, using no specific entry transformer or
+% user data, and links it to the current process.
 %
 % Returns information regarding this instance loading.
 %
@@ -779,8 +789,8 @@ synchronous_load_link( Serialisation, MaybeEntryTransformer, UserData ) ->
 
 
 % @doc Spawns on the specified node an instance of this class, based on the
-% specified serialisation information, on any entry transformer and user data,
-% and links it to the current process.
+% specified serialisation information, using no specific entry transformer or
+% user data, and links it to the current process.
 %
 % Returns information regarding this instance loading.
 %
@@ -846,7 +856,8 @@ remote_synchronous_timed_load_link( Node, Serialisation,
 
 
 % @doc Spawns on the specified node an instance of this class, based on the
-% specified serialisation information, and links it to the current process.
+% specified serialisation information, using no specific entry transformer or
+% user data, and links it to the current process.
 %
 % Returns the PID of the created instance; the loading information message will
 % be received later by the calling process.
@@ -935,18 +946,28 @@ remote_synchronisable_load_link( Node, Serialisation, MaybeEntryTransformer,
 deserialise( Serialisation, MaybeEntryTransformer, UserData,
 			 MaybeListenerPid ) ->
 
-	{ Classname, AttrEntries, MaybeExtraData } =
-			case deserialise_term( Serialisation ) of
+	DeserialisedTerm = deserialise_term( Serialisation ),
 
-		#wooper_serialisation_instance_record{ class_name=CNname,
-											   attributes=Attrs,
-											   extra_data=MaybeExData } ->
-			{ CNname, Attrs, MaybeExData };
+	embody( DeserialisedTerm, MaybeEntryTransformer, UserData,
+			MaybeListenerPid ),
 
-		Other ->
-			throw( { unexpected_deserialised_term, Other } )
+	wooper:no_return_static() .
 
-	end,
+
+
+% @doc Have the current process embody the instance described by the specified
+% deserialised term, expected to be an instance record.
+%
+% Introduced to be used in multiple contexts, either directly for a single
+% deserialisation, or for a series thereof.
+%
+-spec embody( term(), maybe( entry_transformer() ), user_data(),
+					maybe( pid() ) ) -> static_no_return().
+embody( #wooper_serialisation_instance_record{
+			class_name=Classname,
+			attributes=AttrEntries,
+			extra_data=MaybeExtraData }, MaybeEntryTransformer, UserData,
+		MaybeListenerPid ) ->
 
 	% First we extract the WOOPER extra information (if any) to have it out of
 	% the way:
@@ -1011,7 +1032,12 @@ deserialise( Serialisation, MaybeEntryTransformer, UserData,
 	Classname:wooper_main_loop( FinalState ),
 
 	% Never reached anyway:
-	wooper:no_return_static().
+	wooper:no_return_static();
+
+
+embody( OtherDeserialisedTerm, _MaybeEntryTransformer, _UserData,
+		_MaybeListenerPid ) ->
+	throw( { unexpected_deserialised_term, OtherDeserialisedTerm } ).
 
 
 
