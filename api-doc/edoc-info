@@ -1,7 +1,7 @@
 %% encoding: UTF-8
 {application,'Ceylan-WOOPER'}.
-{modules,[class_Describable,class_Identifiable,wooper,wooper_app,
-          wooper_class_management,wooper_class_manager,wooper_info,
+{modules,[class_Describable,class_Identifiable,class_Serialisable,wooper,
+          wooper_app,wooper_class_management,wooper_class_manager,wooper_info,
           wooper_instance_construction,wooper_instance_destruction,
           wooper_instance_proxy,wooper_internals,wooper_introspection,
           wooper_method_management,wooper_parse_transform,wooper_parse_utils,

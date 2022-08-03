@@ -331,6 +331,8 @@ already waiting among the received messages) that is usually an atom.</td></tr>
 <tr><td valign="top"><a href="#getMaybeAttribute-2">getMaybeAttribute/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#get_all_attributes-1">get_all_attributes/1</a></td><td>Returns all the attributes of this instance, as a list of {AttributeName,
  AttributeValue} pairs.</td></tr>
+<tr><td valign="top"><a href="#get_all_superclasses-1">get_all_superclasses/1</a></td><td>Returns all the mother classes (direct or not) of the instance whose 
+state is specified, or of the specified classname.</td></tr>
 <tr><td valign="top"><a href="#get_attribute_pairs-1">get_attribute_pairs/1</a></td><td>Returns the (user-level) attributes known of WOOPER for the specified 
 state (that is all attributes except the ones used internally by WOOPER).</td></tr>
 <tr><td valign="top"><a href="#get_class_filename-1">get_class_filename/1</a></td><td>Returns the source filename associated to the specified class.</td></tr>
@@ -908,6 +910,27 @@ already waiting among the received messages) that is usually an atom.</p>
 <p> </p>
 </div><p>Returns all the attributes of this instance, as a list of {AttributeName,
  AttributeValue} pairs.
+</p>
+
+<h3 class="function"><a name="get_all_superclasses-1">get_all_superclasses/1</a></h3>
+<div class="spec">
+<p><tt>get_all_superclasses(State::<a href="wooper.html#type-state">wooper:state()</a> | <a href="#type-classname">classname()</a>) -&gt; [<a href="#type-classname">classname()</a>]</tt><br></p>
+<p> </p>
+</div><p><p>Returns all the mother classes (direct or not) of the instance whose 
+state is specified, or of the specified classname.</p>
+
+ <p>Note that: 
+- superclasses will be returned bredth-first in the inheritance tree 
+- in case of diamond-shaped inheritance, a given superclass may be listed more 
+than once (list_utils:uniquify/1 may then be used)</p>
+
+ <p>Ex: wooper:get_all_superclasses(class_Platypus) =       
+[class_Mammal,class_OvoviviparousBeing,class_Creature, class_Creature].</p>
+
+ <p>Not static to avoid making class modules heavier.</p>
+
+ See the get_superclasses/0 static method to list only the direct superclasses
+ of the corresponding class.
 </p>
 
 <h3 class="function"><a name="get_attribute_pairs-1">get_attribute_pairs/1</a></h3>

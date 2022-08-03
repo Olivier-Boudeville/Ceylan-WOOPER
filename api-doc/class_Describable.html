@@ -11,14 +11,14 @@
 
 <h1>Module class_Describable</h1>
 <ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Interface class implementing the Describable trait, so that its
- instances are able to output their <b>textual description</b>.
+ instances are able to output a static (prebuilt) <b>textual description</b>.
 
 
 <h2><a name="description">Description</a></h2><p>Interface class implementing the Describable trait, so that its
- instances are able to output their <b>textual description</b>.</p>
+ instances are able to output a static (prebuilt) <b>textual description</b>.</p>
 
- <p>Such an interface is an abstract mother class from which all describable must 
-derive.</p>
+ <p>Such an interface is an abstract mother class from which all describable 
+instances must derive.</p>
 
  It provides also exported functions designed so that they can be
  applied to any WOOPER instance, whether or not it has this trait or not.
@@ -150,10 +150,6 @@ derive.</p>
 interface.</td></tr>
 <tr><td valign="top"><a href="#is_wooper_debug-0">is_wooper_debug/0</a></td><td></td></tr>
 <tr><td valign="top"><a href="#popFromAttribute-2">popFromAttribute/2</a></td><td></td></tr>
-<tr><td valign="top"><a href="#post_deserialise_hook-1">post_deserialise_hook/1</a></td><td></td></tr>
-<tr><td valign="top"><a href="#post_serialise_hook-3">post_serialise_hook/3</a></td><td></td></tr>
-<tr><td valign="top"><a href="#pre_deserialise_hook-2">pre_deserialise_hook/2</a></td><td></td></tr>
-<tr><td valign="top"><a href="#pre_serialise_hook-1">pre_serialise_hook/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#removeAttribute-2">removeAttribute/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#setAttribute-3">setAttribute/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#setAttributes-2">setAttributes/2</a></td><td></td></tr>
@@ -368,30 +364,6 @@ interface.</p>
 <h3 class="function"><a name="popFromAttribute-2">popFromAttribute/2</a></h3>
 <div class="spec">
 <p><tt>popFromAttribute(State::<a href="wooper.html#type-state">wooper:state()</a>, AttributeName::<a href="#type-attribute_name">attribute_name()</a>) -&gt; {<a href="wooper.html#type-state">wooper:state()</a>, <a href="#type-attribute_value">attribute_value()</a>}</tt><br></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a name="post_deserialise_hook-1">post_deserialise_hook/1</a></h3>
-<div class="spec">
-<p><tt>post_deserialise_hook(State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; <a href="wooper.html#type-state">wooper:state()</a></tt><br></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a name="post_serialise_hook-3">post_serialise_hook/3</a></h3>
-<div class="spec">
-<p><tt>post_serialise_hook(Classname::<a href="#type-classname">classname()</a>, Entries::<a href="wooper_serialisation.html#type-term_serialisation">wooper_serialisation:term_serialisation()</a>, State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; term()</tt><br></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a name="pre_deserialise_hook-2">pre_deserialise_hook/2</a></h3>
-<div class="spec">
-<p><tt>pre_deserialise_hook(SerialisationTerm::term(), UserData::<a href="basic_utils.html#type-user_data">basic_utils:user_data()</a>) -&gt; <a href="wooper_serialisation.html#type-term_serialisation">wooper_serialisation:term_serialisation()</a></tt><br></p>
-<p> </p>
-</div>
-
-<h3 class="function"><a name="pre_serialise_hook-1">pre_serialise_hook/1</a></h3>
-<div class="spec">
-<p><tt>pre_serialise_hook(State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; <a href="wooper.html#type-state">wooper:state()</a></tt><br></p>
 <p> </p>
 </div>
 
