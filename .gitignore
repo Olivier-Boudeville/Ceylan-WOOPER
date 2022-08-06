@@ -1,5 +1,6 @@
 # Listing path patterns that shall be ignored by git:
 *.beam
+include/*.hrl
 *.traces
 *.log
 *.plt
