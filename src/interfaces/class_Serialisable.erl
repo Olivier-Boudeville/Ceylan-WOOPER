@@ -26,8 +26,9 @@
 % Creation date: Sunday, July 24, 2022.
 
 
-% @doc Interface class implementing the Serialisable trait, so that its
-% instances can have their <b>state serialised and deserialised</b>.
+% @doc Interface class implementing the Serialisable trait, so that the
+% instances having that trait can have their <b>state serialised and
+% deserialised</b>.
 %
 % Such instances can have their state transformed in a term designed to be
 % exchanged and/or stored (typically as a series of bytes) through any medium
