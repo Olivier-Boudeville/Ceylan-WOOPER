@@ -595,9 +595,9 @@ If only a single, non-list, parameter is needed, the list can be omitted, and th
 .. Note::
   This cannot apply if the unique parameter is a list, as this would be ambiguous.
 
-  For example: ``Foods=[meat,soup,croquette], MyCat ! {setFavoriteFoods,Foods}`` would result in a call to ``setFavoriteFoods/4``, i.e. a call to ``setFavoriteFoods(State,meat,soup,croquette)``, whereas the intent of the programmer is probably to call a ``setFavoriteFoods/2`` method like ``setFavoriteFoods(State,Foods) when is_list(Foods) -> [..]`` instead.
+  For example: ``Foods=[meat,soup,croquette], MyCat ! {setFavouriteFoods,Foods}`` would result in a call to ``setFavouriteFoods/4``, i.e. a call to ``setFavouriteFoods(State,meat,soup,croquette)``, whereas the intent of the programmer is probably to call a ``setFavouriteFoods/2`` method like ``setFavouriteFoods(State,Foods) when is_list(Foods) -> [..]`` instead.
 
-  The proper call would then be ``MyCat ! {setFavoriteFoods,[Foods]}``, i.e. the parameter list should be used, and it would then contain only one element, the food list, whose content would therefore be doubly enclosed.
+  The proper call would then be ``MyCat ! {setFavouriteFoods,[Foods]}``, i.e. the parameter list should be used, and it would then contain only one element, the food list, whose content would therefore be doubly enclosed.
 
   Note also that, of course, strings *are* lists. So ``Joe ! {setName,"Armstrong"}.`` is likely not the call you are looking for. Most probably you should prefer: ``Joe ! {setName,["Armstrong"]}.``.
 
@@ -1701,7 +1701,7 @@ The ``removeAttribute/2`` function
 
 .. Note::
 
- The ``removeAttribute/2`` function is now deprecated and should not be used anymore - unless, maybe, if `favouring composition over inheritance`_.
+ The ``removeAttribute/2`` function is now deprecated and should not be used anymore - unless, maybe, if wanting to `favour composition over inheritance`_.
 
 This function was used in order to fully remove an attribute entry (i.e. the whole key/value pair).
 
@@ -1749,7 +1749,7 @@ For example:
 
 .. Note::
 
- Using the ``hasAttribute/2`` function is generally not recommended, as, once an instance is constructed, a given attribute shall always exist or never - unless `favouring composition over inheritance`_.
+ Using the ``hasAttribute/2`` function is generally not recommended, as, once an instance is constructed, a given attribute shall always exist or never - unless wanting to `favour composition over inheritance`_.
 
 
 To test whether an attribute is defined, one could use the ``hasAttribute/2`` function: ``hasAttribute(AState, AttributeName)``, which returns either ``true`` or ``false``, and cannot fail.
@@ -1846,7 +1846,7 @@ For example:
 
 .. Note::
 
- Using the ``getMaybeAttribute/2`` function is generally not recommended, as, once an instance is constructed, a given attribute shall always exist or never - unless `favouring composition over inheritance`_.
+ Using the ``getMaybeAttribute/2`` function is generally not recommended, as, once an instance is constructed, a given attribute shall always exist or never - unless wanting to `favour composition over inheritance`_.
 
 
 
@@ -2144,7 +2144,7 @@ This may happen when, like in `the WOOPER example <#wooper-example>`_ presented 
 
 Then the concrete class will end up deriving more than once from the same root class (here: ``class_Platypus`` will derive indirectly from ``class_Creature`` twice).
 
-Diamond-shaped inheritance may lead to issues in terms of state management (ex: attributes having possibly in turn to be defined more than once), behaviour (multiple implementations having to be selected for some methods) and initialisation (extraneous constructor calls being made).
+Diamond-shaped inheritance may lead to issues in terms of state management (ex: attributes having possibly in turn to be defined more than once), behaviour (multiple implementations having to be selected for some methods) and initialisation (extraneous constructor and destructor calls being made).
 
 
 
@@ -2153,14 +2153,7 @@ __________________________________
 
 The root of such issue is to determine what is the meaning of the multiple ``is-a`` relationships involved in this diamond-shaped inheritance.
 
-If one design solution is to favour `composition over inheritance <https://en.wikipedia.org/wiki/Composition_over_inheritance>`_ [#]_ to sort out these cases, by default we tend with WOOPER to consider that a single is-a relationship should apply in that case, i.e. that for example a platypus "is a" creature in a single way (having to inherit the attributes from creature only once, and its member methods as they are defined at the creature level); it is a case of `virtual inheritance <https://en.wikipedia.org/wiki/Virtual_inheritance>`_.
-
-.. [#] Consisting on typically defining classes that do not *inherit* traits as such, but *include* them as delegates, which are instances, stored as attributes, of an actual class encapsulating a variation of that trait (and possibly an absence of it).
-
-	   For example, regarding a trait about the ability to fly: for any creature, a ``flyable`` *attribute* may be introduced, and either be set to ``undefined`` (if such a creature is not able to fly), or to a (passive) instance deriving from a ``class_Flyable`` abstract class, whose concrete child classes could be ``class_FlyableAsAnEagle`` or ``class_FlyableAsAnOwl`` (if that makes sense in terms of volatile).
-
-	   Traits can be then managed with flexibility, at the class or even instance level, without involving any specific inheritance for the overall class itself.
-
+If one design solution is to favour `composition over inheritance`_ to sort out these cases, by default we tend with WOOPER to consider that a single is-a relationship should apply in that case, i.e. that for example a platypus "is a" creature in a single way (having to inherit the attributes from creature only once, and its member methods as they are defined at the creature level); it is a case of `virtual inheritance <https://en.wikipedia.org/wiki/Virtual_inheritance>`_.
 
 More precisely, with WOOPER, as the method table is constructed in the order specified in the declaration of the superclasses, like in:
 
@@ -2171,15 +2164,15 @@ More precisely, with WOOPER, as the method table is constructed in the order spe
 
 and as child classes override mother ones, when an incoming WOOPER message arrives the selected **method** should be the one defined in the last inheritance branch of the last child (if any), otherwise the one defined in the next to last branch of the last child, etc.
 
-Generally speaking, overriding in that case the relevant methods that were initially defined in the child class at the base of the diamond, in order that they perform explicitly a direct call to the wanted module, is by far the most reasonable solution, in terms of clarity and maintainability, compared to trying to guess which version of the method in the inheritance graph should be called.
+Generally speaking, overriding in that case the relevant methods that were initially defined in the child class at the base of the diamond, in order that they perform explicitly a direct call to the wanted module, is by far the most reasonable solution, in terms of clarity and maintainability, compared to trying to guess which version of the method in the inheritance graph would be called implicitly.
 
 Regarding the instance state, the **attributes** are set by the constructors, and the developer can select in which order the direct mother classes should be constructed.
 
-However, in such a diamond-shaped inheritance scheme, the constructor of the class that sits at the top of a given diamond will be called more than once, and any side-effect that it would induce would then occur as many times as this class is a common ancestor of the actual class; it may be advisable to create idempotent constructors in that case.
+However, in such a diamond-shaped inheritance scheme, the constructor of the class that sits at the top of a given diamond will be called more than once, and any side-effect that it would induce would then occur as many times as this class is a common ancestor of the actual class; it may be advisable to create `idempotent <https://en.wikipedia.org/wiki/Idempotence>`_ constructors in that case.
 
-This can be simply done whenever a given root class introduces at least one attribute (which is the general case): by testing whether the initial state given to its constructor already includes this attribute, the constructor can determine whether it has already been applied, in which case it may return the state that it received as it is; otherwise (it has not been applied already), it shall then be fully executed, by setting its attributes [#]_, triggering any relevant processing and side effects, and so on.
+This can be the case naturally, or can be ensured simply whenever a given root class introduces at least one attribute (which is the general case): by testing whether the initial state given to its constructor already includes this attribute, the constructor can determine whether it has already been applied, in which case it may return the state that it received as it is; otherwise (it has not been applied already), it shall then be fully executed, by setting its attributes [#]_, triggering any relevant processing and side effects, and so on.
 
-.. [#] A single set of them exists thus, as opposed to as many sets as the number of times the class of interest inherits from the root class (there is no state duplication).
+.. [#] A single set of them exists thus, as opposed to as many sets as the number of times the class of interest inherits from the root class (no state duplication can exist in WOOPER in so far as, for a given instance, attribute names are unique).
 
 When introducing such trait-specific attributes, care must be taken to name them so that they should never clash with other attribute names.
 
@@ -2204,28 +2197,71 @@ For example, should the ``class_Creature`` consider that each creature has a dat
 	end.
 
 
+The next section will show that these idempotent constructors lead naturally to the concepts of composition and interfaces.
 
-.. _`favouring composition over inheritance`:
+
+.. _`favour composition over inheritance`:
 
 
-Conditional Attribute Definition for Composition over Inheritance
-_________________________________________________________________
+Interfaces: to be able to favour Composition over Inheritance
+.............................................................
 
-As an extension of the previous section where whether an attribute already existed was tested in constructors, more generally the aforementioned pattern based on composition rather than on inheritance may, if deemed useful, be relied upon in WOOPER user code.
 
-In most OOP languages (ex: C++), such a composition used to convey, say, a ``Describable`` trait, would translate to an interface (an abstract base class) ``Foobar`` having an attribute (for example named ``my_description``) whose value would be, if non-null, a pointer to, say, a ``Description`` object.
+Principle
+_________
 
-An instance of the Foobar class would then be deemed Describable iff this attribute would be a non-null pointer. Doing so may be considered more flexible than for example having Foobar be a child class of a Describable interface (this eliminates a use of multiple inheritance, and allows some instances of Foobar to be Describable, whereas others not).
+As an extension of the previous section where whether an attribute already existed was tested in constructors to avoid multiple calls thereof, more generally the aforementioned pattern favouring `composition over inheritance <https://en.wikipedia.org/wiki/Composition_over_inheritance>`_ may, if deemed useful, be applied in WOOPER-based code.
 
-In WOOPER this could translate to defining an attribute named ``my_description`` whose value would be of type ``maybe(description())`` (whatever the ``description()`` type may be - provided it does not include the ``undefined`` atom). However this would imply that either ``class_Foobar`` would inherit that attribute (but then a ``class_Describable`` class and multiple inheritance would most probably needed here), or an ad hoc ``my_description`` attribute would be directly introduced by ``class_Foobar``.
+This consists on typically being able to define *traits* that can be inherited or included (composed as delegates) by classes.
 
-The problem is that, for such an optional trait to exist, this would require all classes to define a ``my_description`` attribute (even just to set it to ``undefined``) and, worse, to be aware of this trait - and all other traits that *could* apply.
+A given trait is to be implemented by an interface, which is just a basic class.
 
-So, rather than forcing classes to support explicitly a given optional trait by introducing at least a corresponding attribute (even when not using that trait), the convention that we prefer is to allow such trait-related attributes (ex: ``my_description``) to be not defined at all by a given class.
+Any trait-specific attributes are then directly encapsulated in the classes that integrate that trait (among the other attributes of these classes).
 
-Then all classes may support any number of optional traits at no cost (no code dependency, no potentially useless attribute introduced). This is the motivation for the WOOPER built-in ``hasAttribute/2`` and ``getMaybeAttribute/2`` functions.
+With the approach presented here, whether an interface is inherited or composed:
 
-As an example, a ``class_Describable`` interface could use them that way:
+- all its methods are directly supported by the instances having integrated that trait
+- all trait-introduced attributes are available directly in the state of such instances
+
+Traits may also define helper functions able to be applied on any WOOPER instance (precisely: on their state), typically that are to operate only if the instance of interest actually supports that trait.
+
+Finally, traits can be optional if obtained through composition (as opposed to inheritance), in the sense that, for a given class, each of its instances may decide individually whether or not it supports that trait.
+
+
+
+Various Composition Approaches
+______________________________
+
+In most OOP languages (ex: C++), such a composition that is used to convey, say, a ``Describable`` trait, would translate to having classes (e.g. ``Foobar``) declare a member variable (for example named ``my_description``) of type pointer to, say, a ``Description`` object.
+
+An instance of the Foobar class would then be deemed Describable iff its ``my_description``  member variable would be set to a non-null pointer. Doing so may be considered more flexible than for example having Foobar be a child class of a Describable interface (as (1) this eliminates a use of multiple inheritance, and (2) allows some instances of Foobar to be Describable, whereas others not).
+
+In WOOPER this *could* translate to defining an attribute named ``my_description`` whose value would be of type ``maybe(description())`` [#]_.
+
+.. [#] Whatever the ``description()`` type may be - provided, for disambiguation, that it does not include the ``undefined`` atom.
+
+However this would imply that either ``class_Foobar`` would inherit that attribute (but then deriving from a ``class_Describable`` class would most probably introduce multiple inheritance), or an ad hoc ``my_description`` attribute would have to be directly introduced by ``class_Foobar``.
+
+The problem is that, for such an optional trait to be used in practice, this would require all classes to define a ``my_description`` attribute (even just to set it to ``undefined``) and, worse, to be aware of this trait - and all other traits that *could* apply. As the number of potential traits increases, this may become quickly impossible to manage.
+
+So, rather than forcing classes to support explicitly a given optional trait by introducing at least a corresponding attribute (even when not using that trait), a convention that we prefer is to *allow that a given class does not define at all the attributes corresponding to a given trait*. In that case obviously the class does not support that trait, and it is up to the code of that trait to detect whether it shall apply and to proceed accordingly.
+
+.. Note:: Doing so allows classes to support or not any number of traits. If desired, this form of composition may be further extended to be instance-level rather than class-level, so that *instance-optional* traits can be supported. This means that an instance of a given class may, depending on its construction parameters, enable or not specific extra traits.
+
+
+Said differently, we depart here from standard composition by adding any trait-specific attribute(s) directly in the state of the instance having to implement that trait (among its other attributes), instead of having always-defined attributes that may or may not enable that trait. So, for a trait (whether instance-optional or not) to be implemented, the usual WOOPER convention that the attributes of a class shall be unconditionally defined must be relaxed: from the point of view of the trait implementation (e.g. in ``class_Describable``), trait-related attributes (ex: ``my_description``) *may or may not be defined at all* (depending on whether or not a given instance supports that trait).
+
+Such a scheme allows all classes to support any number of optional traits at no cost (no code dependency, no potentially useless attribute introduced, no entangled multiple inheritance); this is the sole purpose of the WOOPER built-in ``hasAttribute/2`` and ``getMaybeAttribute/2`` functions.
+
+
+Defining and Using WOOPER Traits In Practice
+____________________________________________
+
+The approach that we recommend in order to implement a trait (e.g. a ``Describable`` one) is to introduce a corresponding *interface*, which is a lightweight class (here to be defined in ``class_Describable``) that may be either supported at the class-level (then declared as a superclass, and available for all instances of that class) or only at the instance-level (then, if enabled for a given instance, ``class_Describable`` shall be explicitly constructed by this instance, and later destructed symmetrically).
+
+So when a given instance of ``Foobar`` is created, its construction parameters may indicate whether the ``Describable`` trait shall be supported. If yes, the ``class_Describable`` constructor shall be called with appropriate parameters, and from then on this ``Foobar`` instance will be ``Describable``. Reciprocally, when terminating, this instance shall from its destructor call in turn the one of ``class_Describable``.
+
+As an example, a ``class_Describable`` interface could use them that way (see also `its actual definition <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/interfaces/class_Describable.erl>`_):
 
 .. code:: erlang
 
@@ -2250,9 +2286,13 @@ As an example, a ``class_Describable`` interface could use them that way:
    ?getMaybeAttr(my_description).
 
 
-Note that not having a fixed set of per-class attributes may cause difficulties, for example when performing serialisation: short of being able to rely on a constant set of attribute names, these ones may have to be stored as well (implying not only storing extra atoms but also extra aggregation constructs like pairs or lists), whereas an optimal situation would be to store for that only an (ordered) list of values.
+Note that not having a fixed set of per-class attributes may cause difficulties, for example when performing serialisation: short of being able to rely on a constant set of attribute names, these names may have to be stored as well (implying not only storing extra atoms but also extra aggregation constructs like pairs or lists), whereas an optimal situation would be to store for that only an (ordered) list of values.
 
-This may be alleviated a bit by determining the maximum set of per-class base attribute names, and to allow extra name/value pairs to be declared for serialisation as well.
+This may be alleviated a bit by determining,for a given class, its unconditionally-defined attributes, and to allow extra name/value pairs to be separately declared for serialisation as well.
+
+As another example, regarding a trait about the ability to fly: for any creature, a ``flyable`` *attribute* may be introduced, and either be set to ``undefined`` (if such a creature is not able to fly), or to any term necessary for that trait. The value of this attribute could be simply a mere value specifying, say, the maximum flight speed of this creature, or a more complex term, like a (passive) instance deriving from a ``class_Flyable`` interface class, whose concrete child classes could be ``class_FlyableAsAnEagle`` or ``class_FlyableAsAnOwl`` (if that makes sense in terms of volatile, if they were only two ways of flying). That way, the ``class_Flyable`` interface, implementing this ``Flyable`` trait, may be constructed iff only an instance is meant to fly.
+
+So traits can be then managed with flexibility, at the class or even instance level, without involving any specific inheritance for the overall class itself.
 
 
 
@@ -2378,7 +2418,7 @@ This is why the ``synchronous_timed_new*`` operators have been introduced: if th
 - either ``{synchronous_time_out,Classname}`` if it was a node-local creation (where ``Classname`` is the name of the class corresponding to the instance to create; ex: ``class_Cat``)
 - or ``{remote_synchronous_time_out,Node,Classname}``, where ``Node`` is the name of the node (as an atom) on which the instance was to be created
 
-.. [#] Depending on whether or not the class to instantiate was compiled in debug mode, the time-out is to last by default for, respectively, 5 seconds (shorter, to ease debugging) or for 30 minutes (longer, to favor robustness).
+.. [#] Depending on whether or not the class to instantiate was compiled in debug mode, the time-out is to last by default for, respectively, 5 seconds (shorter, to ease debugging) or for 30 minutes (longer, to favour robustness).
 
 Then the caller may or may not catch this exception.
 

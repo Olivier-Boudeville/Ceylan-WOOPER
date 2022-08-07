@@ -26,14 +26,18 @@
 % Creation date: 2008.
 
 
-% @doc Interface class implementing the Describable trait, so that its
-% instances are able to output a static (prebuilt) <b>textual description</b>.
+% @doc Interface class implementing the Describable trait, so that instances
+% supporting that trait are able to output a static (prebuilt) <b>textual
+% description</b> of them.
 %
-% Such an interface is an abstract mother class from which all describable
-% instances must derive.
+% A class may implement this interface either through inheritance (if all
+% instances of that class shall always have that trait) or through composition;
+% in this last case, the interface class is not meant to be declared among the
+% superclasses: it is instead to be constructed and destructed explicitly,
+% depending on the needs.
 %
-% It provides also exported functions designed so that they can be
-% applied to any WOOPER instance, whether or not it has this trait or not.
+% This interface provides also exported functions designed so that they can be
+% applied to any WOOPER instance, whether or not it supports this trait.
 %
 -module(class_Describable).
 
@@ -45,9 +49,10 @@
 
 % No superclasses.
 
+
 % Declaration of the interface-specific attributes:
 %
-% (as it is a WOOPER builtin, they are all prefixed with 'wooper' and the
+% (as it is a WOOPER builtin, they are all prefixed with 'wooper' and then the
 % interface name)
 %
 -define( class_attributes, [
@@ -95,8 +100,7 @@
 
 % Implementation notes:
 %
-% Being a trace emitter is not useful here, and it would lead to useless
-% diamond-shaped multiple inheritances.
+
 
 
 % @doc Constructs a describable instance, based on the specified description.
@@ -106,6 +110,9 @@ construct( State, Description ) ->
 				  text_utils:ensure_binary( Description ) ).
 
 
+% No destructor.
+
+
 
 % Methods section.
 
@@ -113,6 +120,15 @@ construct( State, Description ) ->
 % @doc Returns the description of this Describable.
 -spec getDescription( wooper:state() ) -> const_request_return( description() ).
 getDescription( State ) ->
+
+	% Here the description may be dynamically updated, typically by calling a
+	% to_string( wooper:state() ) -> ustring() helper function whose result
+	% would be stored in the wooper_describable_description attribute and
+	% returned by this method.
+
+	% Another option is to return a static (class-level, not instance-level)
+	% description.
+
 	% Always defined by design:
 	wooper:const_return_result( ?getAttr(wooper_describable_description) ).
 
@@ -128,6 +144,9 @@ setDescription( State, NewUserDescription ) ->
 
 
 % Section for helper functions (not methods).
+
+% They can be used in the context of any class, whether or not it implements the
+% Describable interface.
 
 
 % @doc Tells whether the corresponding instance implements the Describable
