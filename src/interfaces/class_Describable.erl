@@ -33,11 +33,14 @@
 % A class may implement this interface either through inheritance (if all
 % instances of that class shall always have that trait) or through composition;
 % in this last case, the interface class is not meant to be declared among the
-% superclasses: it is instead to be constructed and destructed explicitly,
-% depending on the needs.
+% superclasses: it is instead to be constructed and destructed explicitly by
+% each instance deciding to support the corresponding trait.
 %
 % This interface provides also exported functions designed so that they can be
 % applied to any WOOPER instance, whether or not it supports this trait.
+%
+% We recommend that all describable classe define their own
+% to_string( wooper:state() ) -> ustring() helper function.
 %
 -module(class_Describable).
 
@@ -81,8 +84,8 @@
 			   describable_pid/0 ]).
 
 
-% Exported helper functions, usable against any WOOPER instance:
--export([ is_describable/1, get_maybe_description/1 ]).
+% Exported helper functions that can be applied to any WOOPER state:
+-export([ is_describable/1, get_maybe_description/1, to_maybe_string/1 ]).
 
 
 % Allows to define WOOPER base variables and methods for that class:
@@ -96,10 +99,6 @@
 -type bin_string() :: text_utils:bin_string().
 -type any_string() :: text_utils:any_string().
 
-
-
-% Implementation notes:
-%
 
 
 
@@ -143,10 +142,12 @@ setDescription( State, NewUserDescription ) ->
 
 
 
+
 % Section for helper functions (not methods).
 
-% They can be used in the context of any class, whether or not it implements the
-% Describable interface.
+% These helper functions can be used in the context of any class, whether or not
+% it implements the Describable interface.
+
 
 
 % @doc Tells whether the corresponding instance implements the Describable
@@ -159,7 +160,8 @@ is_describable( State ) ->
 	hasAttribute( State, wooper_describable_description ).
 
 
-% @doc Returns any description available for this instance.
+
+% @doc Returns any description available for the corresponding instance.
 %
 % This function is designed to apply to any WOOPER instance, whether it is a
 % Describable one or not. This allows for more flexibility, and to rely on
@@ -173,3 +175,22 @@ get_maybe_description( State ) ->
 	% atom:
 	%
 	?getMaybeAttr(wooper_describable_description).
+
+
+
+% @doc Returns a textual element of description of the corresponding instance,
+% should it implement the Describable interface.
+%
+% (exported helper)
+%
+-spec to_maybe_string( wooper:state() ) -> maybe( ustring() ).
+to_maybe_string( State ) ->
+	case ?getMaybeAttr(wooper_describable_description) of
+
+		undefined ->
+			undefined;
+
+		Desc ->
+			text_utils:format( "whose description is: '~ts'", [ Desc ] )
+
+	end.
