@@ -33,8 +33,9 @@
 % A class may implement this interface either through inheritance (if all
 % instances of that class shall always have that trait) or through composition;
 % in this last case, the interface class is not meant to be declared among the
-% superclasses: it is instead to be constructed and destructed explicitly by
-% each instance deciding to support the corresponding trait.
+% superclasses, but among the composed interfaces, and it is instead to be
+% constructed and destructed explicitly by each instance deciding to support the
+% corresponding trait.
 %
 % This interface provides also exported functions designed so that they can be
 % applied to any WOOPER instance, whether or not it supports this trait.
@@ -50,7 +51,7 @@
 		 "their static textual description." ).
 
 
-% No superclasses.
+% No superclasses or composed interfaces.
 
 
 % Declaration of the interface-specific attributes:
@@ -145,8 +146,8 @@ setDescription( State, NewUserDescription ) ->
 
 % Section for helper functions (not methods).
 
-% These helper functions can be used in the context of any class, whether or not
-% it implements the Describable interface.
+% The following helper functions can be used in the context of any class,
+% whether or not it implements this Describable interface.
 
 
 
