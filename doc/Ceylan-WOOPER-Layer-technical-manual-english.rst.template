@@ -2200,6 +2200,7 @@ For example, should the ``class_Creature`` consider that each creature has a dat
 The next section will show that these idempotent constructors lead naturally to the concepts of composition and interfaces.
 
 
+
 .. _`favour composition over inheritance`:
 
 
@@ -2259,9 +2260,22 @@ ____________________________________________
 
 The approach that we recommend in order to implement a trait (e.g. a ``Describable`` one) is to introduce a corresponding *interface*, which is a lightweight class (here to be defined in ``class_Describable``) that may be either supported at the class-level (then declared as a superclass, and available for all instances of that class) or only at the instance-level (then, if enabled for a given instance, ``class_Describable`` shall be explicitly constructed by this instance, and later destructed symmetrically).
 
-So when a given instance of ``Foobar`` is created, its construction parameters may indicate whether the ``Describable`` trait shall be supported. If yes, the ``class_Describable`` constructor shall be called with appropriate parameters, and from then on this ``Foobar`` instance will be ``Describable``. Reciprocally, when terminating, this instance shall from its destructor call in turn the one of ``class_Describable``.
+If an interface is implemented by all instances of a given class, it makes more sense to declare this interface directly as a superclass, as in a WOOPER setting the main interest of composition lies in the fact that it may be optional; this kind of composition can be seen as well as optional inheritance.
 
-As an example, a ``class_Describable`` interface could use them that way (see also `its actual definition <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/interfaces/class_Describable.erl>`_):
+So, in the optional case, when a given instance of a ``Foobar`` class is created, its construction parameters may indicate whether the ``Describable`` trait shall be supported. If yes, the ``class_Describable`` constructor shall be called with appropriate parameters, and from then on this ``Foobar`` instance will be ``Describable``. Reciprocally, when terminating, this instance shall from its destructor call in turn the one of ``class_Describable``. Other ``Foobar`` instances may not be ``Describable`` at all.
+
+Finally, whenever a class (possibly another interface) uses interfaces *by composition* we recommend to declare them thanks to an ``composed_interfaces`` define (such interfaces shall thus be considered by default as optional).
+
+So if ``class_Foobar`` integrates systematically a ``class_Locatable`` trait and optionally a ``class_Describable`` trait, we would expect:
+
+.. code:: erlang
+
+ -define(superclasses, [class_Locatable] ).
+ -define(composed_interfaces, [class_Describable]).
+
+
+
+As an example of use of conditionally-defined attributes, a ``class_Describable`` interface could define general helpers that way (see also `its actual definition <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/interfaces/class_Describable.erl>`_):
 
 .. code:: erlang
 
