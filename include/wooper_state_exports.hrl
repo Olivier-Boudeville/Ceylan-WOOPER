@@ -23,6 +23,7 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
+% Creation date: 2007.
 
 
 % Modular WOOPER header gathering the primitives (exports) to manage the state
@@ -135,28 +136,16 @@
 % Note that the value associated to this attribute must never be possibly equal
 % to the 'undefined' atom, as otherwise the result of that macro cannot tell
 % whether the attribute is associated to the 'undefined' value or not defined at
-% all.
+% all. For example, instead of a maybe-type, use then a safe_maybe-type.
 %
 % Ex: MyMaybeCount = ?getAttrMaybe(count)
 %
 % Definitively not a legacy macro.
 %
 % Pseudo spec: getMaybeAttr(attribute_name()) -> maybe(attribute_value()).
-
-% (hence not returning the maybe({'value', attribute_value()} type that its more
-% general getMaybeAttribute/2 associated function returns)
 %
 -define( getMaybeAttr(AttributeName),
-	case getMaybeAttribute( State, (AttributeName) ) of
-
-		undefined ->
-			undefined;
-
-		% To avoid any clash in terms of variable name:
-		{ value, Wooper_getMaybeAttributeValue } ->
-			Wooper_getMaybeAttributeValue
-
-	end
+	getMaybeAttribute( State, (AttributeName) )
 ).
 
 
