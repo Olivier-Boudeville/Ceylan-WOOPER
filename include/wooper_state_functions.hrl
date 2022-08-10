@@ -211,20 +211,25 @@ getAttributes( State, AttributeNameList ) ->
 % @doc Returns the value, if any, associated to the specified named-designated
 % attribute, if found, otherwise returns 'undefined'.
 %
-% Note: useful only in specific contexts, like when relying on composition over
+% Note that an ambiguity exists if the attribute value belongs to a type that
+% comprises the 'undefined' atom, in the sense that an attribute set to a value
+% equal to 'undefined' cannot be then discriminated from an attribute not set at
+% all. For example, instead of a maybe-type, use then a safe_maybe-type.
+%
+% Useful only in specific contexts, like when preferring composition over
 % inheritance, where an attribute may not be even defined.
 %
 -spec getMaybeAttribute( wooper:state(), attribute_name() ) ->
-								maybe( { 'value', attribute_value() } ).
+								maybe( attribute_value() ).
 getMaybeAttribute( State, AttributeName ) ->
 	case ?wooper_table_type:lookup_entry( AttributeName,
-								State#state_holder.attribute_table ) of
+			State#state_holder.attribute_table ) of
 
 		key_not_found ->
 			undefined;
 
-		P ->
-			P
+		{ value, V } ->
+			V
 
 	end.
 
