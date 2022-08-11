@@ -26,9 +26,9 @@
 % Creation date: 2007.
 
 
-% Modular WOOPER header gathering all general-purposes defines.
+% Modular WOOPER header gathering all general-purpose defines.
 
-% Note: types are defined here but exported in wooper.erl.
+% Note: types are defined here, but exported in wooper.erl.
 
 
 % Note: the hashtable type used by WOOPER (not the one exposed as a potential
@@ -40,6 +40,8 @@
 % Approximate average attribute count for a given class instance, including
 % inherited ones (ideally should be slightly above the maximum number of actual
 % attributes for a given class)
+%
+% (now useless)
 %
 -define( wooper_attribute_count_upper_bound, 16 ).
 
