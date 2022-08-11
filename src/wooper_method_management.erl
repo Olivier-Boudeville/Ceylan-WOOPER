@@ -1117,6 +1117,16 @@ check_clause_for_state(
 		_FunId, _Classname ) ->
 	ok;
 
+% As we want also to support also method heads such as:
+%  'getDescription( State=#state_holder{ actual_class=Classname } ) ->'
+%
+check_clause_for_state(
+		_Clause={ clause, _, _Params=[ {match,_, {var,_,'State'},
+										{record,_,state_holder,_} } | _ ],
+				  _Guards, _Body },
+		_FunId, _Classname ) ->
+	ok;
+
 check_clause_for_state(
 		_Clause={ clause, _, _Params=[ {var,FileLoc,NonState} | _ ], _Guards,
 				  _Body },
@@ -1130,6 +1140,7 @@ check_clause_for_state(
 % would then report "variable 'State' is unbound", which is less clear than:
 %
 check_clause_for_state( _Clause, FunId, Classname ) ->
+	%trace_utils:debug_fmt( "Clause: ~p.", [ Clause ] ),
 	wooper_internals:raise_usage_error( "the first parameter of this clause of "
 		"method ~ts/~B shall be named 'State'.", pair:to_list( FunId ),
 		Classname ).
