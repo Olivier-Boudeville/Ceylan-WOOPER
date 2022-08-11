@@ -20,7 +20,7 @@
 
 % Determines what are the direct mother classes of this class (if any):
 -define( superclasses, [ class_OvoviviparousBeing, class_Serialisable,
-						 class_Describable ] ).
+						 class_StaticDescribable ] ).
 
 
 -define( class_attributes, [
@@ -58,7 +58,7 @@ construct( State, Age, Gender ) ->
 	Description = text_utils:format( "a ~ts ~ts of age ~B",
 									 [ Gender, Family, Age ] ),
 
-	DescState = class_Describable:construct( SerialState, Description ),
+	DescState = class_StaticDescribable:construct( SerialState, Description ),
 
 	% To test constructor checking:
 	%an_unexpected_initial_state.

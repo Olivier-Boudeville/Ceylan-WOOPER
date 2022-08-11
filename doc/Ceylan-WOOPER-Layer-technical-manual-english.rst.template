@@ -2200,123 +2200,132 @@ For example, should the ``class_Creature`` consider that each creature has a dat
 The next section will show that these idempotent constructors lead naturally to the concepts of composition and interfaces.
 
 
+.. _`composition over inheritance`:
 
 .. _`favour composition over inheritance`:
-
 
 Interfaces: to be able to favour Composition over Inheritance
 .............................................................
 
+This features is currently disabled, short of providing enough interest compared to the standard use of inheritance.
 
-Principle
-_________
-
-As an extension of the previous section where whether an attribute already existed was tested in constructors to avoid multiple calls thereof, more generally the aforementioned pattern favouring `composition over inheritance <https://en.wikipedia.org/wiki/Composition_over_inheritance>`_ may, if deemed useful, be applied in WOOPER-based code.
-
-This consists on typically being able to define *traits* that can be inherited or included (composed as delegates) by classes.
-
-A given trait is to be implemented by an interface, which is just a basic class.
-
-Any trait-specific attributes are then directly encapsulated in the classes that integrate that trait (among the other attributes of these classes).
-
-With the approach presented here, whether an interface is inherited or composed:
-
-- all its methods are directly supported by the instances having integrated that trait
-- all trait-introduced attributes are available directly in the state of such instances
-
-Traits may also define helper functions able to be applied on any WOOPER instance (precisely: on their state), typically that are to operate only if the instance of interest actually supports that trait.
-
-Finally, traits can be optional if obtained through composition (as opposed to inheritance), in the sense that, for a given class, each of its instances may decide individually whether or not it supports that trait.
+.. Nope, does not work: even if the constructor of an optional interface is called, as it is not listed among the superclasses, the virtual table of the class at hand will not be updated and thus will not integrate any method that should have been inherited.
+   As a result, "composition" only integrates the attributes (not the methods) and is not really useful. It has thus been com
 
 
-
-Various Composition Approaches
-______________________________
-
-In most OOP languages (ex: C++), such a composition that is used to convey, say, a ``Describable`` trait, would translate to having classes (e.g. ``Foobar``) declare a member variable (for example named ``my_description``) of type pointer to, say, a ``Description`` object.
-
-An instance of the Foobar class would then be deemed Describable iff its ``my_description``  member variable would be set to a non-null pointer. Doing so may be considered more flexible than for example having Foobar be a child class of a Describable interface (as (1) this eliminates a use of multiple inheritance, and (2) allows some instances of Foobar to be Describable, whereas others not).
-
-In WOOPER this *could* translate to defining an attribute named ``my_description`` whose value would be of type ``maybe(description())`` [#]_.
-
-.. [#] Whatever the ``description()`` type may be - provided, for disambiguation, that it does not include the ``undefined`` atom.
-
-However this would imply that either ``class_Foobar`` would inherit that attribute (but then deriving from a ``class_Describable`` class would most probably introduce multiple inheritance), or an ad hoc ``my_description`` attribute would have to be directly introduced by ``class_Foobar``.
-
-The problem is that, for such an optional trait to be used in practice, this would require all classes to define a ``my_description`` attribute (even just to set it to ``undefined``) and, worse, to be aware of this trait - and all other traits that *could* apply. As the number of potential traits increases, this may become quickly impossible to manage.
-
-So, rather than forcing classes to support explicitly a given optional trait by introducing at least a corresponding attribute (even when not using that trait), a convention that we prefer is to *allow that a given class does not define at all the attributes corresponding to a given trait*. In that case obviously the class does not support that trait, and it is up to the code of that trait to detect whether it shall apply and to proceed accordingly.
-
-.. Note:: Doing so allows classes to support or not any number of traits. If desired, this form of composition may be further extended to be instance-level rather than class-level, so that *instance-optional* traits can be supported. This means that an instance of a given class may, depending on its construction parameters, enable or not specific extra traits.
-
-
-Said differently, we depart here from standard composition by adding any trait-specific attribute(s) directly in the state of the instance having to implement that trait (among its other attributes), instead of having always-defined attributes that may or may not enable that trait. So, for a trait (whether instance-optional or not) to be implemented, the usual WOOPER convention that the attributes of a class shall be unconditionally defined must be relaxed: from the point of view of the trait implementation (e.g. in ``class_Describable``), trait-related attributes (ex: ``my_description``) *may or may not be defined at all* (depending on whether or not a given instance supports that trait).
-
-Such a scheme allows all classes to support any number of optional traits at no cost (no code dependency, no potentially useless attribute introduced, no entangled multiple inheritance); this is the sole purpose of the WOOPER built-in ``hasAttribute/2`` and ``getMaybeAttribute/2`` functions.
-
-
-Defining and Using WOOPER Traits In Practice
-____________________________________________
-
-The approach that we recommend in order to implement a trait (e.g. a ``Describable`` one) is to introduce a corresponding *interface*, which is a lightweight class (here to be defined in ``class_Describable``) that may be either supported at the class-level (then declared as a superclass, and available for all instances of that class) or only at the instance-level (then, if enabled for a given instance, ``class_Describable`` shall be explicitly constructed by this instance, and later destructed symmetrically).
-
-If an interface is implemented by all instances of a given class, it makes more sense to declare this interface directly as a superclass, as in a WOOPER setting the main interest of composition lies in the fact that it may be optional; this kind of composition can be seen as well as optional inheritance.
-
-So, in the optional case, when a given instance of a ``Foobar`` class is created, its construction parameters may indicate whether the ``Describable`` trait shall be supported. If yes, the ``class_Describable`` constructor shall be called with appropriate parameters, and from then on this ``Foobar`` instance will be ``Describable``. Reciprocally, when terminating, this instance shall from its destructor call in turn the one of ``class_Describable``. Other ``Foobar`` instances may not be ``Describable`` at all.
-
-Finally, whenever a class (possibly another interface) uses interfaces *by composition* we recommend to declare them thanks to an ``composed_interfaces`` define (such interfaces shall thus be considered by default as optional).
-
-So if ``class_Foobar`` integrates systematically a ``class_Locatable`` trait and optionally a ``class_Describable`` trait, we would expect:
-
-.. code:: erlang
-
- -define(superclasses, [class_Locatable] ).
- -define(composed_interfaces, [class_Describable]).
-
-
-
-As an example of use of conditionally-defined attributes, a ``class_Describable`` interface could define general helpers that way (see also `its actual definition <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/interfaces/class_Describable.erl>`_):
-
-.. code:: erlang
-
- % @doc Tells whether the corresponding instance implements the
- % Describable trait.
- %
- % (exported helper)
- %
- -spec is_describable(wooper:state()) -> boolean().
- is_describable(State) ->
-	hasAttribute(State, my_description).
-
-
- % @doc Returns the description of the corresponding instance,
- % should it implement the Describable trait.
- %
- % (exported helper)
- %
- -spec get_maybe_description(wooper:state()) -> maybe(description()).
- get_maybe_description(State) ->
-   % As here the description() type does not include the 'undefined' atom:
-   ?getMaybeAttr(my_description).
-
-
-Note that not having a fixed set of per-class attributes may cause difficulties, for example when performing serialisation: short of being able to rely on a constant set of attribute names, these names may have to be stored as well (implying not only storing extra atoms but also extra aggregation constructs like pairs or lists), whereas an optimal situation would be to store for that only an (ordered) list of values.
-
-This may be alleviated a bit by determining,for a given class, its unconditionally-defined attributes, and to allow extra name/value pairs to be separately declared for serialisation as well.
-
-As another example, regarding a trait about the ability to fly: for any creature, a ``flyable`` *attribute* may be introduced, and either be set to ``undefined`` (if such a creature is not able to fly), or to any term necessary for that trait. The value of this attribute could be simply a mere value specifying, say, the maximum flight speed of this creature, or a more complex term, like a (passive) instance deriving from a ``class_Flyable`` interface class, whose concrete child classes could be ``class_FlyableAsAnEagle`` or ``class_FlyableAsAnOwl`` (if that makes sense in terms of volatile, if they were only two ways of flying). That way, the ``class_Flyable`` interface, implementing this ``Flyable`` trait, may be constructed iff only an instance is meant to fly.
-
-So traits can be then managed with flexibility, at the class or even instance level, without involving any specific inheritance for the overall class itself.
-
-
-
-WOOPER Built-in Interfaces
-__________________________
-
-WOOPER provides additionally a few very general-purpose interfaces - like the ones discussed above - as built-in ones, like ``class_Describable``, ``class_Identifiable``, ``class_Serialisable`` (refer to the serialisation_ section).
-
-Of course WOOPER-using code remains fully free not to use this kind of composition and conditional attribute definition.
-
+  .. Interfaces: to be able to favour Composition over Inheritance
+  .. .............................................................
+  ..
+  ..
+  .. Principle
+  .. _________
+  ..
+  .. As an extension of the previous section where whether an attribute already existed was tested in constructors to avoid multiple calls thereof, more generally the aforementioned pattern favouring `composition over inheritance <https://en.wikipedia.org/wiki/Composition_over_inheritance>`_ may, if deemed useful, be applied in WOOPER-based code.
+  ..
+  .. This consists on typically being able to define *traits* that can be inherited or included (composed as delegates) by classes.
+  ..
+  .. A given trait is to be implemented by an interface, which is just a basic class.
+  ..
+  .. Any trait-specific attributes are then directly encapsulated in the classes that integrate that trait (among the other attributes of these classes).
+  ..
+  .. With the approach presented here, whether an interface is inherited or composed:
+  ..
+  .. - all its methods are directly supported by the instances having integrated that trait
+  .. - all trait-introduced attributes are available directly in the state of such instances
+  ..
+  .. Traits may also define helper functions able to be applied on any WOOPER instance (precisely: on their state), typically that are to operate only if the instance of interest actually supports that trait.
+  ..
+  .. Finally, traits can be optional if obtained through composition (as opposed to inheritance), in the sense that, for a given class, each of its instances may decide individually whether or not it supports that trait.
+  ..
+  ..
+  ..
+  .. Various Composition Approaches
+  .. ______________________________
+  ..
+  .. In most OOP languages (ex: C++), such a composition that is used to convey, say, a ``Describable`` trait, would translate to having classes (e.g. ``Foobar``) declare a member variable (for example named ``my_description``) of type pointer to, say, a ``Description`` object.
+  ..
+  .. An instance of the Foobar class would then be deemed Describable iff its ``my_description``  member variable would be set to a non-null pointer. Doing so may be considered more flexible than for example having Foobar be a child class of a Describable interface (as (1) this eliminates a use of multiple inheritance, and (2) allows some instances of Foobar to be Describable, whereas others not).
+  ..
+  .. In WOOPER this *could* translate to defining an attribute named ``my_description`` whose value would be of type ``maybe(description())`` [#]_.
+  ..
+  .. .. [#] Whatever the ``description()`` type may be - provided, for disambiguation, that it does not include the ``undefined`` atom.
+  ..
+  .. However this would imply that either ``class_Foobar`` would inherit that attribute (but then deriving from a ``class_Describable`` class would most probably introduce multiple inheritance), or an ad hoc ``my_description`` attribute would have to be directly introduced by ``class_Foobar``.
+  ..
+  .. The problem is that, for such an optional trait to be used in practice, this would require all classes to define a ``my_description`` attribute (even just to set it to ``undefined``) and, worse, to be aware of this trait - and all other traits that *could* apply. As the number of potential traits increases, this may become quickly impossible to manage.
+  ..
+  .. So, rather than forcing classes to support explicitly a given optional trait by introducing at least a corresponding attribute (even when not using that trait), a convention that we prefer is to *allow that a given class does not define at all the attributes corresponding to a given trait*. In that case obviously the class does not support that trait, and it is up to the code of that trait to detect whether it shall apply and to proceed accordingly.
+  ..
+  .. .. Note:: Doing so allows classes to support or not any number of traits. If desired, this form of composition may be further extended to be instance-level rather than class-level, so that *instance-optional* traits can be supported. This means that an instance of a given class may, depending on its construction parameters, enable or not specific extra traits.
+  ..
+  ..
+  .. Said differently, we depart here from standard composition by adding any trait-specific attribute(s) directly in the state of the instance having to implement that trait (among its other attributes), instead of having always-defined attributes that may or may not enable that trait. So, for a trait (whether instance-optional or not) to be implemented, the usual WOOPER convention that the attributes of a class shall be unconditionally defined must be relaxed: from the point of view of the trait implementation (e.g. in ``class_Describable``), trait-related attributes (ex: ``my_description``) *may or may not be defined at all* (depending on whether or not a given instance supports that trait).
+  ..
+  .. Such a scheme allows all classes to support any number of optional traits at no cost (no code dependency, no potentially useless attribute introduced, no entangled multiple inheritance); this is the sole purpose of the WOOPER built-in ``hasAttribute/2`` and ``getMaybeAttribute/2`` functions.
+  ..
+  ..
+  .. Defining and Using WOOPER Traits In Practice
+  .. ____________________________________________
+  ..
+  .. The approach that we recommend in order to implement a trait (e.g. a ``Describable`` one) is to introduce a corresponding *interface*, which is a lightweight class (here to be defined in ``class_Describable``) that may be either supported at the class-level (then declared as a superclass, and available for all instances of that class) or only at the instance-level (then, if enabled for a given instance, ``class_Describable`` shall be explicitly constructed by this instance, and later destructed symmetrically).
+  ..
+  .. If an interface is implemented by all instances of a given class, it makes more sense to declare this interface directly as a superclass, as in a WOOPER setting the main interest of composition lies in the fact that it may be optional; this kind of composition can be seen as well as optional inheritance.
+  ..
+  .. So, in the optional case, when a given instance of a ``Foobar`` class is created, its construction parameters may indicate whether the ``Describable`` trait shall be supported. If yes, the ``class_Describable`` constructor shall be called with appropriate parameters, and from then on this ``Foobar`` instance will be ``Describable``. Reciprocally, when terminating, this instance shall from its destructor call in turn the one of ``class_Describable``. Other ``Foobar`` instances may not be ``Describable`` at all.
+  ..
+  .. Finally, whenever a class (possibly another interface) uses interfaces *by composition* we recommend to declare them thanks to an ``composed_interfaces`` define (such interfaces shall thus be considered by default as optional).
+  ..
+  .. So if ``class_Foobar`` integrates systematically a ``class_Locatable`` trait and optionally a ``class_Describable`` trait, we would expect:
+  ..
+  .. .. code:: erlang
+  ..
+  ..  -define(superclasses, [class_Locatable] ).
+  ..  -define(composed_interfaces, [class_Describable]).
+  ..
+  ..
+  ..
+  .. As an example of use of conditionally-defined attributes, a ``class_Describable`` interface could define general helpers that way (see also `its actual definition <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/interfaces/class_Describable.erl>`_):
+  ..
+  .. .. code:: erlang
+  ..
+  ..  % @doc Tells whether the corresponding instance implements the
+  ..  % Describable trait.
+  ..  %
+  ..  % (exported helper)
+  ..  %
+  ..  -spec is_describable(wooper:state()) -> boolean().
+  ..  is_describable(State) ->
+  ..	hasAttribute(State, my_description).
+  ..
+  ..
+  ..  % @doc Returns the description of the corresponding instance,
+  ..  % should it implement the Describable trait.
+  ..  %
+  ..  % (exported helper)
+  ..  %
+  ..  -spec get_maybe_description(wooper:state()) -> maybe(description()).
+  ..  get_maybe_description(State) ->
+  ..    % As here the description() type does not include the 'undefined' atom:
+  ..    ?getMaybeAttr(my_description).
+  ..
+  ..
+  .. Note that not having a fixed set of per-class attributes may cause difficulties, for example when performing serialisation: short of being able to rely on a constant set of attribute names, these names may have to be stored as well (implying not only storing extra atoms but also extra aggregation constructs like pairs or lists), whereas an optimal situation would be to store for that only an (ordered) list of values.
+  ..
+  .. This may be alleviated a bit by determining,for a given class, its unconditionally-defined attributes, and to allow extra name/value pairs to be separately declared for serialisation as well.
+  ..
+  .. As another example, regarding a trait about the ability to fly: for any creature, a ``flyable`` *attribute* may be introduced, and either be set to ``undefined`` (if such a creature is not able to fly), or to any term necessary for that trait. The value of this attribute could be simply a mere value specifying, say, the maximum flight speed of this creature, or a more complex term, like a (passive) instance deriving from a ``class_Flyable`` interface class, whose concrete child classes could be ``class_FlyableAsAnEagle`` or ``class_FlyableAsAnOwl`` (if that makes sense in terms of volatile, if they were only two ways of flying). That way, the ``class_Flyable`` interface, implementing this ``Flyable`` trait, may be constructed iff only an instance is meant to fly.
+  ..
+  .. So traits can be then managed with flexibility, at the class or even instance level, without involving any specific inheritance for the overall class itself.
+  ..
+  ..
+  ..
+  .. WOOPER Built-in Interfaces
+  .. __________________________
+  ..
+  .. WOOPER provides additionally a few very general-purpose interfaces - like the ones discussed above - as built-in ones, like ``class_Describable``, ``class_Identifiable``, ``class_Serialisable`` (refer to the serialisation_ section).
+  ..
+  .. Of course WOOPER-using code remains fully free not to use this kind of composition and conditional attribute definition.
+  ..
 
 
 

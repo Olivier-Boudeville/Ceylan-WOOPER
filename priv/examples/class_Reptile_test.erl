@@ -57,7 +57,7 @@ run( IsDebug ) ->
 	receive
 
 		{ wooper_result, [ class_OvoviviparousBeing, class_Serialisable,
-						   class_Describable ] } ->
+						   class_StaticDescribable ] } ->
 			test_facilities:display(
 				"After constructor, correct superclasses returned." );
 

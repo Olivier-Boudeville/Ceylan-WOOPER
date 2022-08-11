@@ -29,13 +29,6 @@
 % @doc Interface class implementing the Describable trait, so that instances
 % supporting that trait are able to output a <b>textual description</b> of them.
 %
-% A class may implement this interface either through inheritance (if all
-% instances of that class shall always have that trait) or through composition;
-% in this last case, the interface class is not meant to be declared among the
-% superclasses, but among the composed interfaces, and it is instead to be
-% constructed and destructed explicitly by each instance deciding to support the
-% corresponding trait.
-%
 % Each Describable child class *must* define an exported helper with the
 % following signature, as it will be relied upon:
 %  -spec to_string(wooper:state()) -> text_utils:ustring().
@@ -54,7 +47,7 @@
 		 "to output their textual description." ).
 
 
-% No superclasses or composed interfaces.
+% No superclasses.
 
 
 % No interface-specific attribute to declare.
@@ -161,8 +154,7 @@ is_describable( State ) ->
 % @doc Returns any description available for the corresponding instance.
 %
 % This function is designed to apply to any WOOPER instance, whether it is a
-% Describable one or not. This allows for more flexibility, and to rely on
-% composition over inheritance if wanted.
+% Describable one or not.
 %
 % (exported helper)
 %

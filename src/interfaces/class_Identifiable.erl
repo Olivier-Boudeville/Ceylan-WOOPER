@@ -183,8 +183,7 @@ is_identifiable( State ) ->
 % @doc Returns any identifier available for this instance.
 %
 % This function is designed to apply to any WOOPER instance, whether it is a
-% Identifiable one or not. This allows for more flexibility, and to rely on
-% composition over inheritance if wanted.
+% Identifiable one or not.
 %
 % (exported helper)
 %

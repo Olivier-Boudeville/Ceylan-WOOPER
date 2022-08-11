@@ -30,13 +30,6 @@
 % instances supporting that trait are able to output a static (prebuilt)
 % <b>textual description</b> of them.
 %
-% A class may implement this interface either through inheritance (if all
-% instances of that class shall always have that trait) or through composition;
-% in this last case, the interface class is not meant to be declared among the
-% superclasses, but among the composed interfaces, and it is instead to be
-% constructed and destructed explicitly by each instance deciding to support the
-% corresponding trait.
-%
 % This interface provides also exported functions designed so that they can be
 % applied to any WOOPER instance, whether or not it supports this trait.
 %
@@ -50,7 +43,6 @@
 		 "their static textual description." ).
 
 
-% No composed interfaces.
 -define( superclasses, [ class_Describable ] ).
 
 
@@ -157,8 +149,7 @@ is_describable( State ) ->
 % @doc Returns any description available for the corresponding instance.
 %
 % This function is designed to apply to any WOOPER instance, whether it is a
-% Describable one or not. This allows for more flexibility, and to rely on
-% composition over inheritance if wanted.
+% Describable one or not.
 %
 % (exported helper)
 %

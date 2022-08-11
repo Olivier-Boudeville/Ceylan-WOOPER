@@ -55,8 +55,7 @@
 % classes, whereas hooks are class-specific.
 %
 % This interface provides also exported functions designed so that they can be
-% applied to any WOOPER instance, whether or not it has this trait or not (for
-% composition over inheritance).
+% applied to any WOOPER instance, whether or not it has this trait or not.
 %
 -module(class_Serialisable).
 
