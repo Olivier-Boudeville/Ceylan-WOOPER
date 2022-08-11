@@ -26,8 +26,9 @@
 % Creation date: 2008.
 
 
-% @doc Interface class implementing the Describable trait, so that instances
-% supporting that trait are able to output a <b>textual description</b> of them.
+% @doc Interface class implementing the static Describable trait, so that
+% instances supporting that trait are able to output a static (prebuilt)
+% <b>textual description</b> of them.
 %
 % A class may implement this interface either through inheritance (if all
 % instances of that class shall always have that trait) or through composition;
@@ -36,50 +37,41 @@
 % constructed and destructed explicitly by each instance deciding to support the
 % corresponding trait.
 %
-% Each Describable child class *must* define an exported helper with the
-% following signature, as it will be relied upon:
-%  -spec to_string(wooper:state()) -> text_utils:ustring().
-%
 % This interface provides also exported functions designed so that they can be
 % applied to any WOOPER instance, whether or not it supports this trait.
 %
-% See class_StaticDescribable, for instances that can be described statically.
-% -module(class_Describable).
+% This is the static counterpart of class_Describable.
 %
--module(class_Describable).
+-module(class_StaticDescribable).
 
 
 -define( class_description,
-		 "Interface implementing the Describable trait, for all instances able "
-		 "to output their textual description." ).
+		 "Interface to be implemented by all instances able to output "
+		 "their static textual description." ).
 
 
-% No superclasses or composed interfaces.
+% No composed interfaces.
+-define( superclasses, [ class_Describable ] ).
 
 
-% No interface-specific attribute to declare.
+% Declaration of the interface-specific attributes:
+%
+% (as it is a WOOPER builtin, they are all prefixed with 'wooper' and then the
+% interface name)
+%
+-define( class_attributes, [
+
+	{ wooper_describable_description, description(),
+	  "description held by this instance" }
+
+						   ] ).
 
 
--type user_description() :: ustring().
-% A user-provided description of interest.
-
--type description() :: bin_string().
-% The internal description of interest.
-
--type any_description() :: any_string().
-% A description of interest, as any string.
+-type static_describable_pid() :: pid().
+% The PID of an instance implementing the StaticDescribable interface.
 
 
--type describable_pid() :: pid().
-% The PID of an instance implementing the Describable interface.
-
-
--export_type([ user_description/0, description/0, any_description/0,
-			   describable_pid/0 ]).
-
-
-% All Describable classes must define and export such an helper function:
--export([ to_string/1 ]).
+-export_type([ static_describable_pid/0 ]).
 
 
 % Exported helper functions that can be applied to any WOOPER state:
@@ -90,25 +82,24 @@
 -include_lib("wooper/include/wooper.hrl").
 
 
-% Implementation notes:
-%
-% We force a to_string/1 helper to be defined and exported, instead of a mere
-% getDescription/1 method, as this helper is generally of much use when
-% implementing the class itself, typically for its traces.
-
-
 % Shorthands:
 
 -type ustring() :: text_utils:ustring().
--type bin_string() :: text_utils:bin_string().
--type any_string() :: text_utils:any_string().
+
+-type user_description() :: class_Describable:user_description().
+-type description() :: class_Describable:description().
+-type any_description() :: class_Describable:any_description().
 
 
 
-% @doc Constructs a describable instance.
--spec construct( wooper:state() ) -> wooper:state().
-construct( State ) ->
-	State.
+% @doc Constructs a static describable instance, based on the specified
+% description.
+%
+-spec construct( wooper:state(), any_description() ) -> wooper:state().
+construct( State, Description ) ->
+	DescState = class_Describable:construct( State ),
+	setAttribute( DescState, wooper_describable_description,
+				  text_utils:ensure_binary( Description ) ).
 
 
 % No destructor.
@@ -120,24 +111,32 @@ construct( State ) ->
 
 % @doc Returns the description of this Describable.
 -spec getDescription( wooper:state() ) -> const_request_return( description() ).
-getDescription( State=#state_holder{ actual_class=Classname } ) ->
-	Desc = Classname:to_string( State ),
-	wooper:const_return_result( Desc ).
+getDescription( State ) ->
+
+	% Here the description may be dynamically updated, typically by calling a
+	% to_string( wooper:state() ) -> ustring() helper function whose result
+	% would be stored in the wooper_describable_description attribute and
+	% returned by this method.
+
+	% Another option is to return a static (class-level, not instance-level)
+	% description.
+
+	% Always defined by design:
+	wooper:const_return_result( ?getAttr(wooper_describable_description) ).
+
+
+
+% @doc Sets the description of this Describable.
+-spec setDescription( wooper:state(), user_description() ) -> oneway_return().
+setDescription( State, NewUserDescription ) ->
+	NewBinDesc = text_utils:ensure_binary( NewUserDescription ),
+	wooper:return_state(
+		setAttribute( State, wooper_describable_description, NewBinDesc ) ).
 
 
 
 
 % Section for helper functions (not methods).
-
-
-% @doc Returns a textual description of this instance.
-%
-% (exported helper, meant to be defined per child class of class_Describable)
-%
--spec to_string( wooper:state() ) -> ustring().
-to_string( _State ) ->
-	"Describable instance".
-
 
 
 % The following helper functions can be used in the context of any class,
@@ -151,10 +150,7 @@ to_string( _State ) ->
 %
 -spec is_describable( wooper:state() ) -> boolean().
 is_describable( State ) ->
-	% We cannot rely on a specific attribute being defined or not to determine
-	% whether Describable, so:
-	%
-	lists:member( ?MODULE, wooper:get_all_superclasses( State ) ).
+	hasAttribute( State, wooper_describable_description ).
 
 
 
@@ -168,15 +164,10 @@ is_describable( State ) ->
 %
 -spec get_maybe_description( wooper:state() ) -> maybe( description() ).
 get_maybe_description( State ) ->
-	case is_describable( State ) of
-
-		true ->
-			executeConstRequest( State, getDescription );
-
-		false ->
-			undefined
-
-	end.
+	% Allowed, as the type of this attribute does not include the 'undefined'
+	% atom:
+	%
+	?getMaybeAttr(wooper_describable_description).
 
 
 
@@ -187,7 +178,7 @@ get_maybe_description( State ) ->
 %
 -spec to_maybe_string( wooper:state() ) -> maybe( ustring() ).
 to_maybe_string( State ) ->
-	case get_maybe_description( State ) of
+	case ?getMaybeAttr(wooper_describable_description) of
 
 		undefined ->
 			undefined;
