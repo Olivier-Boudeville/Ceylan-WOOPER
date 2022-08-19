@@ -2210,8 +2210,13 @@ The next section will show that these idempotent constructors lead naturally to 
 Interfaces: to be able to favour Composition over Inheritance
 .............................................................
 
-This features is currently disabled, short of providing enough interest compared to the standard use of inheritance.
+A few specific features for traits, interfaces and composition had been introduced; yet, short of a specific extra support providing enough interest, they have been disabled since WOOPER offers already, natively, everything needed to `perform composition over inheritance <https://en.wikipedia.org/wiki/Composition_over_inheritance>`_. Relying on such composition can be as simple as replacing the inheritance from some mother classes by the definition of passive instances in attributes with corresponding accessor methods.
 
+WOOPER also provides a few `general-purpose interfaces <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/src/interfaces>`_, such as ``Identifiable``, ``Describable`` and ``StaticDescribable``, ``Serialisable`` (refer to the serialisation_ section), ``Upgradable`` (refer to the `hot code update`_ section). They can serve as a source of inspiration for any other interface to be introduced.
+
+
+  ..
+  .. Of course WOOPER-using code remains fully free not to use this kind of composition and conditional attribute definition.
 .. Nope, does not work: even if the constructor of an optional interface is called, as it is not listed among the superclasses, the virtual table of the class at hand will not be updated and thus will not integrate any method that should have been inherited.
    As a result, "composition" only integrates the attributes (not the methods) and is not really useful. It has thus been com
 
@@ -2741,6 +2746,27 @@ Care as been taken so that these operations are done:
 
 In practice, the ``Serialisable`` interface is defined in ``class_Serialisable.{hrl,erl}``, and the extended features are implemented in the ``wooper_serialisation`` module. The ``serialisable_test`` test module showcases various examples, which involve the (serialisable) ``class_Reptile`` module.
 
+
+
+.. _`runtime code upgrade`:
+
+
+Hot Code Update
+---------------
+
+The objective here is to be able to **update classes at runtime** whereas the program is still running, and to have their instances adapt in terms of state and behaviour to the corresponding new versions. Hot code reloading is typically useful in the case of always-available applications (never-stopping services), where bug fixes and additional features have to be deployed in spite of the continuous operation.
+
+WOOPER offers such features, based on the ``Upgradable`` trait, implemented by the `class_Upgradable <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/src/interfaces/class_Upgradable.erl>`_ interface.
+
+An update protocol is proposed, with all support defined so that, for a given class that shall be updated (i.e. whose version must be either upgraded or downgraded):
+
+#. all its instances are synchronously frozen first, to avoid that ongoing method calls experience code discrepancies
+#. then the module corresponding to that class is reloaded (possibly after having been recompiled), being soft-purged (and possibly hard-purged if needed)
+#. then all its instances perform (concurrently) any state update that they need in order to support the new version
+
+In practice, for a given class (e.g. ``class_TestUpgradable``), various versions thereof may be introduced over time (ex: ``1.2.3``, then ``1.2.4``). Each version of a given class is free to override the default implementations of the ``upgradeVersion/4`` and ``downgradeVersion/4`` methods, as inherited from the ``class_Upgradable`` interface, in order to account for all changes introduced between two versions (e.g. attributes being added or removed, changing types, having their value transformed).
+
+Refer to `class_Upgradable_test <https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/test/interfaces/class_Upgradable_test.erl>`_ for a full test thereof.
 
 
 
