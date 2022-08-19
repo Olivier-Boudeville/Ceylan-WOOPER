@@ -10,12 +10,14 @@
 <hr>
 
 <h1>Module class_Serialisable</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Interface class implementing the Serialisable trait, so that its
- instances can have their <b>state serialised and deserialised</b>.
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Interface class implementing the Serialisable trait, so that the
+ instances having that trait can have their <b>state serialised and
+ deserialised</b>.
 
 
-<h2><a name="description">Description</a></h2><p>Interface class implementing the Serialisable trait, so that its
- instances can have their <b>state serialised and deserialised</b>.</p>
+<h2><a name="description">Description</a></h2><p>Interface class implementing the Serialisable trait, so that the
+ instances having that trait can have their <b>state serialised and
+ deserialised</b>.</p>
 
  <p>Such instances can have their state transformed in a term designed to be 
 exchanged and/or stored (typically as a series of bytes) through any medium 
@@ -42,8 +44,7 @@ way of defining synchronous operations.</p>
 classes, whereas hooks are class-specific.</p>
 
  This interface provides also exported functions designed so that they can be
- applied to any WOOPER instance, whether or not it has this trait or not (for
- composition over inheritance).
+ applied to any WOOPER instance, whether or not it has this trait or not.
 
 <h2><a name="types">Data Types</a></h2>
 
@@ -371,7 +372,7 @@ interface.</td></tr>
 
 <h3 class="function"><a name="getMaybeAttribute-2">getMaybeAttribute/2</a></h3>
 <div class="spec">
-<p><tt>getMaybeAttribute(State::<a href="wooper.html#type-state">wooper:state()</a>, AttributeName::<a href="#type-attribute_name">attribute_name()</a>) -&gt; <a href="#type-maybe">maybe</a>({value, <a href="#type-attribute_value">attribute_value()</a>})</tt><br></p>
+<p><tt>getMaybeAttribute(State::<a href="wooper.html#type-state">wooper:state()</a>, AttributeName::<a href="#type-attribute_name">attribute_name()</a>) -&gt; <a href="#type-maybe">maybe</a>(<a href="#type-attribute_value">attribute_value()</a>)</tt><br></p>
 <p> </p>
 </div>
 

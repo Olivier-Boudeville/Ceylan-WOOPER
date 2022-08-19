@@ -2,28 +2,46 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Module class_Identifiable</title>
+<title>Module class_Upgradable</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
 <body bgcolor="white">
 <div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
 <hr>
 
-<h1>Module class_Identifiable</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Interface class implementing the Identifiable trait, so that its
- instances are able to return an <b>identifier</b> thereof, obviously unique.
+<h1>Module class_Upgradable</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Interface class implementing the Upgradable trait, so that instances
+ supporting that trait are able to <b>be hot-updated</b>, that is to have their 
+class definition changed at runtime (either upgraded or downgraded), with no 
+need to restart the system as a whole.
 
 
-<h2><a name="description">Description</a></h2><p>Interface class implementing the Identifiable trait, so that its
- instances are able to return an <b>identifier</b> thereof, obviously unique.</p>
+<h2><a name="description">Description</a></h2><p>Interface class implementing the Upgradable trait, so that instances
+ supporting that trait are able to <b>be hot-updated</b>, that is to have their 
+class definition changed at runtime (either upgraded or downgraded), with no 
+need to restart the system as a whole.</p>
 
- <p>Such an interface is an abstract mother class from which all identifiable 
-instances must derive.</p>
+ <p>So the objective is that the instances implementing this interface do not have 
+to terminate, and may update themselves on the fly (once their new class has 
+been loaded), code-wise and also state-wise.</p>
 
- It provides also exported functions designed so that they can be
- applied to any WOOPER instance, whether or not it has this trait or not.
+ <p>For that, a concreate Upgradable child class should (besides inheriting from 
+this interface):</p>
+
+  <p>- implement a relevant get_version/1 static method, whose signature is:          
+-spec get_version() -&gt; static_return(any_version()).</p>
+
+  <p>- possibly override its {up,down}gradeVersion/4 member methods</p>
+
+ See also class_Upgradable_test.erl and the support of the
+ 'freezeUntilVersionChange' special message in the WOOPER main loop (refer to
+ wooper_main_loop_functions.hrl).
 
 <h2><a name="types">Data Types</a></h2>
+
+<h3 class="typedecl"><a name="type-any_version">any_version()</a></h3>
+<p><tt>any_version() = <a href="basic_utils.html#type-any_version">basic_utils:any_version()</a></tt></p>
+
 
 <h3 class="typedecl"><a name="type-attribute_entry">attribute_entry()</a></h3>
 <p><tt>attribute_entry() = {<a href="#type-attribute_name">attribute_name()</a>, <a href="#type-attribute_value">attribute_value()</a>}</tt></p>
@@ -41,13 +59,25 @@ instances must derive.</p>
 <p><tt>classname() = <a href="wooper.html#type-classname">wooper:classname()</a></tt></p>
 
 
-<h3 class="typedecl"><a name="type-id">id()</a></h3>
-<p><tt>id() = <a href="id_utils.html#type-id">id_utils:id()</a></tt></p>
-<p> Designates the identifiers used by identifiable instances.</p>
+<h3 class="typedecl"><a name="type-error_reason">error_reason()</a></h3>
+<p><tt>error_reason() = <a href="basic_utils.html#type-error_reason">basic_utils:error_reason()</a></tt></p>
 
-<h3 class="typedecl"><a name="type-identifiable_pid">identifiable_pid()</a></h3>
-<p><tt>identifiable_pid() = pid()</tt></p>
-<p> The PID of an instance implementing the identifiable interface.</p>
+
+<h3 class="typedecl"><a name="type-extra_data">extra_data()</a></h3>
+<p><tt>extra_data() = any()</tt></p>
+<p> Any extra data (akin to release-specific information) of use when performing a
+ version change.</p>
+
+<h3 class="typedecl"><a name="type-freeze_info">freeze_info()</a></h3>
+<p><tt>freeze_info() = {<a href="#type-classname">classname()</a>, <a href="#type-instance_pid">instance_pid()</a>}</tt></p>
+<p> Information about an instance after it applied a freeze request.</p>
+
+<h3 class="typedecl"><a name="type-freeze_notification">freeze_notification()</a></h3>
+<p><tt>freeze_notification() = {onInstanceFrozen, <a href="#type-freeze_info">freeze_info()</a>}</tt></p>
+<p><p> Message sent back to the sender of a 'freezeUntilVersionChange' special 
+message.</p>
+
+ This message may be interpreted as a oneway call.</p>
 
 <h3 class="typedecl"><a name="type-instance_pid">instance_pid()</a></h3>
 <p><tt>instance_pid() = pid()</tt></p>
@@ -97,6 +127,31 @@ instances must derive.</p>
 <p><tt>requests_outcome() = <a href="wooper.html#type-requests_outcome">wooper:requests_outcome()</a></tt></p>
 
 
+<h3 class="typedecl"><a name="type-update_failure_report">update_failure_report()</a></h3>
+<p><tt>update_failure_report() = {<a href="#type-error_reason">error_reason()</a>, <a href="#type-classname">classname()</a>, <a href="#type-instance_pid">instance_pid()</a>, <a href="#type-any_version">any_version()</a>}</tt></p>
+<p> A report sent by an instance that failed in updating itself and ended up in
+ the specified version (most probably its pre-update one).</p>
+
+<h3 class="typedecl"><a name="type-update_outcome">update_outcome()</a></h3>
+<p><tt>update_outcome() = {onUpdateSuccess, <a href="#type-update_success_report">update_success_report()</a>} | {onUpdateFailure, <a href="#type-update_failure_report">update_failure_report()</a>}</tt></p>
+<p><p> Outcome of an instance update, which may be an upgrade or a downgrade.</p>
+
+ This is a message (possibly interpreted as a oneway call) sent back to the
+ caller by an instance having being requested to update.</p>
+
+<h3 class="typedecl"><a name="type-update_success_report">update_success_report()</a></h3>
+<p><tt>update_success_report() = {<a href="#type-classname">classname()</a>, <a href="#type-instance_pid">instance_pid()</a>, <a href="#type-any_version">any_version()</a>}</tt></p>
+<p> A report sent by an instance that succeeded in updating itself to the
+ specified version.</p>
+
+<h3 class="typedecl"><a name="type-upgradable_pid">upgradable_pid()</a></h3>
+<p><tt>upgradable_pid() = pid()</tt></p>
+<p> The PID of an instance implementing the Upgradable interface.</p>
+
+<h3 class="typedecl"><a name="type-ustring">ustring()</a></h3>
+<p><tt>ustring() = <a href="text_utils.html#type-ustring">text_utils:ustring()</a></tt></p>
+
+
 <h2><a name="index">Function Index</a></h2>
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#addKeyValueToAttribute-4">addKeyValueToAttribute/4</a></td><td></td></tr>
 <tr><td valign="top"><a href="#addToAttribute-3">addToAttribute/3</a></td><td></td></tr>
@@ -123,18 +178,25 @@ instances must derive.</p>
 <tr><td valign="top"><a href="#getAttribute-2">getAttribute/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#getAttributes-2">getAttributes/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#getMaybeAttribute-2">getMaybeAttribute/2</a></td><td></td></tr>
-<tr><td valign="top"><a href="#get_maybe_identifier-1">get_maybe_identifier/1</a></td><td>Returns any identifier available for this instance.</td></tr>
+<tr><td valign="top"><a href="#get_maybe_version-1">get_maybe_version/1</a></td><td>Returns any version available for the corresponding instance.</td></tr>
+<tr><td valign="top"><a href="#get_version-1">get_version/1</a></td><td>Returns the current version of this upgradable version.</td></tr>
 <tr><td valign="top"><a href="#hasAttribute-2">hasAttribute/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#incrementAttribute-2">incrementAttribute/2</a></td><td></td></tr>
-<tr><td valign="top"><a href="#is_identifiable-1">is_identifiable/1</a></td><td>Tells whether the corresponding instance implements the Identifiable 
+<tr><td valign="top"><a href="#is_upgradable-1">is_upgradable/1</a></td><td>Tells whether the corresponding instance implements the Upgradable 
 interface.</td></tr>
 <tr><td valign="top"><a href="#is_wooper_debug-0">is_wooper_debug/0</a></td><td></td></tr>
+<tr><td valign="top"><a href="#manage_version_change-4">manage_version_change/4</a></td><td>Takes in charge the instance-side part of the version update protocol: 
+freezes until the class has been updated, and then applies the corresponding 
+instance-specific state changes.</td></tr>
 <tr><td valign="top"><a href="#popFromAttribute-2">popFromAttribute/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#removeAttribute-2">removeAttribute/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#setAttribute-3">setAttribute/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#setAttributes-2">setAttributes/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#subtractFromAttribute-3">subtractFromAttribute/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#swapInAttribute-3">swapInAttribute/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#to_maybe_string-1">to_maybe_string/1</a></td><td>Returns a textual element of description of the corresponding instance, 
+should it implement the Upgradable interface.</td></tr>
+<tr><td valign="top"><a href="#to_string-1">to_string/1</a></td><td>Returns a textual description of this instance.</td></tr>
 <tr><td valign="top"><a href="#toggleAttribute-2">toggleAttribute/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#wooper_destruct-1">wooper_destruct/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#wooper_effective_method_execution-4">wooper_effective_method_execution/4</a></td><td></td></tr>
@@ -300,16 +362,25 @@ interface.</td></tr>
 <p> </p>
 </div>
 
-<h3 class="function"><a name="get_maybe_identifier-1">get_maybe_identifier/1</a></h3>
+<h3 class="function"><a name="get_maybe_version-1">get_maybe_version/1</a></h3>
 <div class="spec">
-<p><tt>get_maybe_identifier(State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; <a href="#type-maybe">maybe</a>(<a href="#type-id">id()</a>)</tt><br></p>
+<p><tt>get_maybe_version(State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; <a href="#type-maybe">maybe</a>(<a href="#type-any_version">any_version()</a>)</tt><br></p>
 <p> </p>
-</div><p><p>Returns any identifier available for this instance.</p>
+</div><p><p>Returns any version available for the corresponding instance.</p>
 
  <p>This function is designed to apply to any WOOPER instance, whether it is a 
-Identifiable one or not.</p>
+Upgradable one or not.</p>
 
  (exported helper)
+</p>
+
+<h3 class="function"><a name="get_version-1">get_version/1</a></h3>
+<div class="spec">
+<p><tt>get_version(State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; <a href="#type-any_version">any_version()</a></tt><br></p>
+<p> </p>
+</div><p><p>Returns the current version of this upgradable version.</p>
+
+ (exported helper, defined for convenience)
 </p>
 
 <h3 class="function"><a name="hasAttribute-2">hasAttribute/2</a></h3>
@@ -324,11 +395,11 @@ Identifiable one or not.</p>
 <p> </p>
 </div>
 
-<h3 class="function"><a name="is_identifiable-1">is_identifiable/1</a></h3>
+<h3 class="function"><a name="is_upgradable-1">is_upgradable/1</a></h3>
 <div class="spec">
-<p><tt>is_identifiable(State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; boolean()</tt><br></p>
+<p><tt>is_upgradable(State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; boolean()</tt><br></p>
 <p> </p>
-</div><p><p>Tells whether the corresponding instance implements the Identifiable 
+</div><p><p>Tells whether the corresponding instance implements the Upgradable 
 interface.</p>
 
  (exported helper)
@@ -339,6 +410,18 @@ interface.</p>
 <p><tt>is_wooper_debug() -&gt; boolean()</tt><br></p>
 <p> </p>
 </div>
+
+<h3 class="function"><a name="manage_version_change-4">manage_version_change/4</a></h3>
+<div class="spec">
+<p><tt>manage_version_change(TargetVersion::<a href="#type-any_version">any_version()</a>, MaybeExtraData::<a href="#type-extra_data">extra_data()</a>, CallerPid::pid(), State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; <a href="wooper.html#type-state">wooper:state()</a></tt><br></p>
+<p> </p>
+</div><p><p>Takes in charge the instance-side part of the version update protocol: 
+freezes until the class has been updated, and then applies the corresponding 
+instance-specific state changes.</p>
+
+ Sends back to the caller first a freeze_notification() message, then, once
+ requested to update and having attempted to do so, a update_outcome() message.
+</p>
 
 <h3 class="function"><a name="popFromAttribute-2">popFromAttribute/2</a></h3>
 <div class="spec">
@@ -375,6 +458,22 @@ interface.</p>
 <p><tt>swapInAttribute(State::<a href="wooper.html#type-state">wooper:state()</a>, AttributeName::<a href="#type-attribute_name">attribute_name()</a>, NewAttributeValue::<a href="#type-attribute_value">attribute_value()</a>) -&gt; {<a href="wooper.html#type-state">wooper:state()</a>, <a href="#type-attribute_value">attribute_value()</a>}</tt><br></p>
 <p> </p>
 </div>
+
+<h3 class="function"><a name="to_maybe_string-1">to_maybe_string/1</a></h3>
+<div class="spec">
+<p><tt>to_maybe_string(State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; <a href="#type-maybe">maybe</a>(<a href="#type-ustring">ustring()</a>)</tt><br></p>
+<p> </p>
+</div><p><p>Returns a textual element of description of the corresponding instance, 
+should it implement the Upgradable interface.</p>
+
+ (exported helper)
+</p>
+
+<h3 class="function"><a name="to_string-1">to_string/1</a></h3>
+<div class="spec">
+<p><tt>to_string(State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; <a href="#type-ustring">ustring()</a></tt><br></p>
+<p> </p>
+</div><p>Returns a textual description of this instance.</p>
 
 <h3 class="function"><a name="toggleAttribute-2">toggleAttribute/2</a></h3>
 <div class="spec">

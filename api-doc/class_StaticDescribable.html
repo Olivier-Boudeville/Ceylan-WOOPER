@@ -2,26 +2,27 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Module class_Identifiable</title>
+<title>Module class_StaticDescribable</title>
 <link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
 </head>
 <body bgcolor="white">
 <div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
 <hr>
 
-<h1>Module class_Identifiable</h1>
-<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Interface class implementing the Identifiable trait, so that its
- instances are able to return an <b>identifier</b> thereof, obviously unique.
+<h1>Module class_StaticDescribable</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>Interface class implementing the static Describable trait, so that
+ instances supporting that trait are able to output a static (prebuilt)
+ <b>textual description</b> of them.
 
 
-<h2><a name="description">Description</a></h2><p>Interface class implementing the Identifiable trait, so that its
- instances are able to return an <b>identifier</b> thereof, obviously unique.</p>
+<h2><a name="description">Description</a></h2><p>Interface class implementing the static Describable trait, so that
+ instances supporting that trait are able to output a static (prebuilt)
+ <b>textual description</b> of them.</p>
 
- <p>Such an interface is an abstract mother class from which all identifiable 
-instances must derive.</p>
+ <p>This interface provides also exported functions designed so that they can be 
+applied to any WOOPER instance, whether or not it supports this trait.</p>
 
- It provides also exported functions designed so that they can be
- applied to any WOOPER instance, whether or not it has this trait or not.
+ This is the static counterpart of class_Describable.
 
 <h2><a name="types">Data Types</a></h2>
 
@@ -41,13 +42,9 @@ instances must derive.</p>
 <p><tt>classname() = <a href="wooper.html#type-classname">wooper:classname()</a></tt></p>
 
 
-<h3 class="typedecl"><a name="type-id">id()</a></h3>
-<p><tt>id() = <a href="id_utils.html#type-id">id_utils:id()</a></tt></p>
-<p> Designates the identifiers used by identifiable instances.</p>
+<h3 class="typedecl"><a name="type-description">description()</a></h3>
+<p><tt>description() = <a href="class_Describable.html#type-description">class_Describable:description()</a></tt></p>
 
-<h3 class="typedecl"><a name="type-identifiable_pid">identifiable_pid()</a></h3>
-<p><tt>identifiable_pid() = pid()</tt></p>
-<p> The PID of an instance implementing the identifiable interface.</p>
 
 <h3 class="typedecl"><a name="type-instance_pid">instance_pid()</a></h3>
 <p><tt>instance_pid() = pid()</tt></p>
@@ -97,6 +94,14 @@ instances must derive.</p>
 <p><tt>requests_outcome() = <a href="wooper.html#type-requests_outcome">wooper:requests_outcome()</a></tt></p>
 
 
+<h3 class="typedecl"><a name="type-static_describable_pid">static_describable_pid()</a></h3>
+<p><tt>static_describable_pid() = pid()</tt></p>
+<p> The PID of an instance implementing the StaticDescribable interface.</p>
+
+<h3 class="typedecl"><a name="type-ustring">ustring()</a></h3>
+<p><tt>ustring() = <a href="text_utils.html#type-ustring">text_utils:ustring()</a></tt></p>
+
+
 <h2><a name="index">Function Index</a></h2>
 <table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#addKeyValueToAttribute-4">addKeyValueToAttribute/4</a></td><td></td></tr>
 <tr><td valign="top"><a href="#addToAttribute-3">addToAttribute/3</a></td><td></td></tr>
@@ -123,10 +128,10 @@ instances must derive.</p>
 <tr><td valign="top"><a href="#getAttribute-2">getAttribute/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#getAttributes-2">getAttributes/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#getMaybeAttribute-2">getMaybeAttribute/2</a></td><td></td></tr>
-<tr><td valign="top"><a href="#get_maybe_identifier-1">get_maybe_identifier/1</a></td><td>Returns any identifier available for this instance.</td></tr>
+<tr><td valign="top"><a href="#get_maybe_description-1">get_maybe_description/1</a></td><td>Returns any description available for the corresponding instance.</td></tr>
 <tr><td valign="top"><a href="#hasAttribute-2">hasAttribute/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#incrementAttribute-2">incrementAttribute/2</a></td><td></td></tr>
-<tr><td valign="top"><a href="#is_identifiable-1">is_identifiable/1</a></td><td>Tells whether the corresponding instance implements the Identifiable 
+<tr><td valign="top"><a href="#is_describable-1">is_describable/1</a></td><td>Tells whether the corresponding instance implements the Describable 
 interface.</td></tr>
 <tr><td valign="top"><a href="#is_wooper_debug-0">is_wooper_debug/0</a></td><td></td></tr>
 <tr><td valign="top"><a href="#popFromAttribute-2">popFromAttribute/2</a></td><td></td></tr>
@@ -135,6 +140,8 @@ interface.</td></tr>
 <tr><td valign="top"><a href="#setAttributes-2">setAttributes/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#subtractFromAttribute-3">subtractFromAttribute/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#swapInAttribute-3">swapInAttribute/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#to_maybe_string-1">to_maybe_string/1</a></td><td>Returns a textual element of description of the corresponding instance, 
+should it implement the Describable interface.</td></tr>
 <tr><td valign="top"><a href="#toggleAttribute-2">toggleAttribute/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#wooper_destruct-1">wooper_destruct/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#wooper_effective_method_execution-4">wooper_effective_method_execution/4</a></td><td></td></tr>
@@ -300,14 +307,14 @@ interface.</td></tr>
 <p> </p>
 </div>
 
-<h3 class="function"><a name="get_maybe_identifier-1">get_maybe_identifier/1</a></h3>
+<h3 class="function"><a name="get_maybe_description-1">get_maybe_description/1</a></h3>
 <div class="spec">
-<p><tt>get_maybe_identifier(State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; <a href="#type-maybe">maybe</a>(<a href="#type-id">id()</a>)</tt><br></p>
+<p><tt>get_maybe_description(State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; <a href="#type-maybe">maybe</a>(<a href="#type-description">description()</a>)</tt><br></p>
 <p> </p>
-</div><p><p>Returns any identifier available for this instance.</p>
+</div><p><p>Returns any description available for the corresponding instance.</p>
 
  <p>This function is designed to apply to any WOOPER instance, whether it is a 
-Identifiable one or not.</p>
+Describable one or not.</p>
 
  (exported helper)
 </p>
@@ -324,11 +331,11 @@ Identifiable one or not.</p>
 <p> </p>
 </div>
 
-<h3 class="function"><a name="is_identifiable-1">is_identifiable/1</a></h3>
+<h3 class="function"><a name="is_describable-1">is_describable/1</a></h3>
 <div class="spec">
-<p><tt>is_identifiable(State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; boolean()</tt><br></p>
+<p><tt>is_describable(State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; boolean()</tt><br></p>
 <p> </p>
-</div><p><p>Tells whether the corresponding instance implements the Identifiable 
+</div><p><p>Tells whether the corresponding instance implements the Describable 
 interface.</p>
 
  (exported helper)
@@ -375,6 +382,16 @@ interface.</p>
 <p><tt>swapInAttribute(State::<a href="wooper.html#type-state">wooper:state()</a>, AttributeName::<a href="#type-attribute_name">attribute_name()</a>, NewAttributeValue::<a href="#type-attribute_value">attribute_value()</a>) -&gt; {<a href="wooper.html#type-state">wooper:state()</a>, <a href="#type-attribute_value">attribute_value()</a>}</tt><br></p>
 <p> </p>
 </div>
+
+<h3 class="function"><a name="to_maybe_string-1">to_maybe_string/1</a></h3>
+<div class="spec">
+<p><tt>to_maybe_string(State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; <a href="#type-maybe">maybe</a>(<a href="#type-ustring">ustring()</a>)</tt><br></p>
+<p> </p>
+</div><p><p>Returns a textual element of description of the corresponding instance, 
+should it implement the Describable interface.</p>
+
+ (exported helper)
+</p>
 
 <h3 class="function"><a name="toggleAttribute-2">toggleAttribute/2</a></h3>
 <div class="spec">
