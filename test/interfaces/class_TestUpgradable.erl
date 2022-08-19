@@ -116,7 +116,7 @@
 
 -spec construct( wooper:state(), ustring(), float() ) -> wooper:state().
 construct( State, Name, Height ) ->
-	trace_utils:debug( "(constructing a version 1.2.3)" ),
+	trace_utils:debug( "(constructing a class_TestUpgradable version 1.2.3)" ),
 	% Even though both are do-nothing:
 	UpState = class_Upgradable:construct( State ),
 	DescState = class_Describable:construct( UpState ),
@@ -130,7 +130,7 @@ construct( State, Name, Height ) ->
 
 -spec construct( wooper:state(), ustring(), integer() ) -> wooper:state().
 construct( State, Name, Age ) ->
-	trace_utils:debug( "(constructing a version 1.2.4)" ),
+	trace_utils:debug( "(constructing a class_TestUpgradable version 1.2.4)" ),
 	% Even though both are do-nothing:
 	UpState = class_Upgradable:construct( State ),
 	DescState = class_Describable:construct( UpState ),
@@ -164,7 +164,7 @@ upgradeVersion( State, OriginalVersion={1,2,3}, TargetVersion={1,2,4},
 	% Of course arbitrary:
 	Age = round( Height * 50 ),
 
-	NewName = ?getAttr(name) ++ " upgraded",
+	NewName = ?getAttr(name) ++ ", then upgraded",
 
 
 	trace_bridge:debug_fmt( "Upgrading from version ~ts to ~ts, "
@@ -213,7 +213,7 @@ downgradeVersion( State, OriginalVersion={1,2,4}, TargetVersion={1,2,3},
 	% Possibly with rounding errors:
 	Height = float( Age / 50 ),
 
-	NewName = ?getAttr(name) ++ " downgraded",
+	NewName = ?getAttr(name) ++ ", then downgraded",
 
 
 	trace_bridge:debug_fmt( "Downgrading from version ~ts to ~ts, "
