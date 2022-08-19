@@ -1701,11 +1701,12 @@ The ``removeAttribute/2`` function
 
 .. Note::
 
- The ``removeAttribute/2`` function is now deprecated and should not be used anymore - unless, maybe, if wanting to `favour composition over inheritance`_.
+ The ``removeAttribute/2`` function is now deprecated and should not be used anymore - unless, maybe, if wanting to `favour composition over inheritance`_, or surely if performing hot code update (for example when a version upgrade results in a given attribute not being defined anymore once relying on the newer class definition).
 
-This function was used in order to fully remove an attribute entry (i.e. the whole key/value pair).
 
-Its type specification was:
+This function may be used in order to fully remove an attribute entry (i.e. the whole key/value pair).
+
+Its type specification is:
 
 .. code:: erlang
 
@@ -1714,7 +1715,9 @@ Its type specification was:
 
 For example ``NewState = removeAttribute(State, an_attribute)`` could be used, for a resulting state having no key corresponding to ``an_attribute``.
 
-This function is deprecated now, as we prefer defining all attributes once for all, at construction time, and never adding or removing them dynamically: the good practice is just to operate on their value, which can by example be set to ``undefined``, without having to deal with the fact that, depending on the context, a given attribute may or may not be defined (kids: don't do that).
+.. This function is deprecated now, as we
+
+Except in the aforementioned very specific cases, this function is not used, as we prefer defining all attributes once for all, at construction time, and never adding or removing them dynamically: the good practice is just to operate on their value, which can by example be set to ``undefined``, without having to deal with the fact that, depending on the context, a given attribute may or may not be defined (kids: don't do that).
 
 
 Neither the ``setAttribute*`` variants nor ``removeAttribute/2`` can fail, regardless of the attribute being already existing or not.
