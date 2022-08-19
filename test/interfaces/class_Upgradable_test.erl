@@ -88,8 +88,16 @@ run() ->
 	% We do not want to inherit any updated, recompiled class from a prior test:
 	ForceRecompilation = true,
 
-	% Needed otherwise the update testing is meaningless:
+	% Needed, otherwise the update testing is meaningless:
 	DoForceRecompilation = true,
+
+	% By default left to true, so that the non-updated instance C will be killed
+	% rather than making the later downgrade fail with {error,
+	% {lingering_processes, class_TestUpgradable}} in
+	% class_Upgradable:update_class/4.
+	%
+	KillAnyLingeringProcess = true,
+	%KillAnyLingeringProcess = false,
 
 	% Upgrade testing:
 
@@ -122,12 +130,23 @@ run() ->
 	ExtraData = upgradable_test,
 
 	%test_facilities:display( "Initial description of A is: '~ts'.",
-	%						 [ get_description( AgentAPid ) ] ),
+	%                         [ get_description( AgentAPid ) ] ),
 
 	AgentBPid = TargetClass:new_link( "Agent B", 1.63 ),
 
-	% This instance will intentionally not be updated:
-	%AgentCPid = TargetClass:new_link( "Agent C", 1.71 ),
+	% This instance will intentionally be left not updated; then the upgrade
+	% will work, but not the downgrade afterwards; so either
+	% KillAnyLingeringProcess is true, and this C instance will get killed, or
+	% (if false), the test class will actually *not* be downgraded, leading the
+	% code soft purge to fail ( if ignoring this failure, then the last
+	% get_description calls are to fail as, not being updated, they will still
+	% expect 1.2.4 state whereas instances will have been downgraded to 1.2.3
+	% one:
+	%
+	% (using new, not new_link, otherwise any killing of that instance -
+	% typically due to an old code - would kill in turn that test process)
+	%
+	AgentCPid = TargetClass:new( "Agent C", 1.71 ),
 
 
 	% To test what happens if some instances (here, C) are not updated: the
@@ -136,14 +155,8 @@ run() ->
 	%
 	InstancesToUpdate = [ AgentAPid, AgentBPid ],
 
-	%AllInstances = list_utils:append_at_end( AgentCPid, InstancesToUpdate ),
-	AllInstances = InstancesToUpdate,
-
-	%InstancesToUpdate = [ AgentAPid, AgentBPid, AgentCPid ],
-	%AllInstances = Instances,
-
-	%test_facilities:display( "Initial description of B is: '~ts'.",
-	%                         [ get_description( AgentBPid ) ] ),
+	% To preserve order (clearer):
+	AllInstances = list_utils:append_at_end( AgentCPid, InstancesToUpdate ),
 
 	test_facilities:display( "Displaying the initial state description of "
 		"all instances: ~ts",
@@ -165,19 +178,19 @@ run() ->
 	test_facilities:display( "Upgrade freeze information received: ~p.",
 							 [ UpFreezeInfos ] ),
 
-	%KillAnyLingeringProcess = true,
-	KillAnyLingeringProcess = false,
 
 	test_facilities:display( "Requesting now a first update, an upgrade, "
 							 "of '~ts'.", [ TargetClass ] ),
 
 	check_old_code(),
 
-	class_Upgradable:update_class( TargetClass, DoForceRecompilation,
+	% Therefore building 1.2.4:
+	ok = class_Upgradable:update_class( TargetClass, DoForceRecompilation,
 		_Defines=[ "enable_upgraded_test_class" ], KillAnyLingeringProcess ),
 
 	test_facilities:display( "After the class upgrade, checking which "
-		"instances (not specifically updated yet) are still alive: ~ts",
+		"instances (that are not specifically updated yet) are still alive: "
+		"~ts",
 		[ text_utils:strings_to_string( [ text_utils:format( "instance ~w: ~ts",
 			[ IPid, basic_utils:is_alive( IPid ) ] )
 								|| IPid <- AllInstances ] ) ] ),
@@ -185,22 +198,23 @@ run() ->
 	check_old_code(),
 
 	test_facilities:display( "Requesting a corresponding update of "
-							 "the instances of '~ts'.", [ TargetClass ] ),
+		"some (not all) instances of '~ts': ~w.",
+		[ TargetClass, InstancesToUpdate ] ),
 
 	case class_Upgradable:request_instances_to_update( InstancesToUpdate ) of
 
 		{ UpSuccReports, _UpFailReports=[] } ->
-			test_facilities:display( "All ~B instances successfully updated:~n"
+			test_facilities:display( "~B instances successfully updated:~n"
 				" ~p", [ length( UpSuccReports ), UpSuccReports ] );
 
 		{ _UpSuccReports, UpFailReports } ->
-			throw( { update_failed, UpFailReports } )
+			throw( { upgrade_failed, UpFailReports } )
 
 	end,
 
 	check_old_code(),
 
-	% Not AllInstances, as C did not upgraded its state and therefore the new
+	% Not AllInstances, as C did not upgrade its state; therefore the new
 	% to_string/1 function would not find the new attribute ('age') that it
 	% would expect:
 	%
@@ -211,10 +225,10 @@ run() ->
 
 
 
-	% Downgrade testing:
+	% Now, downgrade testing:
 
 
-	test_facilities:display( "Now requesting this time a downgrade of '~ts'.",
+	test_facilities:display( "Requesting this time a downgrade of '~ts'.",
 							 [ TargetClass ] ),
 
 	DownFreezeInfos = class_Upgradable:freeze_instances( InstancesToUpdate,
@@ -225,12 +239,14 @@ run() ->
 
 	check_old_code(),
 
-	% No enable_upgraded_test_class define, so version 1.2.3:
-	class_Upgradable:update_class( TargetClass, DoForceRecompilation,
-								   _NoDefines=[], KillAnyLingeringProcess ),
+	% No enable_upgraded_test_class define, so building version 1.2.3.
+	%
+	% This will lead to the killing of instance C:
+	ok = class_Upgradable:update_class( TargetClass, DoForceRecompilation,
+									_NoDefines=[], KillAnyLingeringProcess ),
 
 	test_facilities:display( "After the class downgrade, checking which "
-		"instances are still alive: ~ts",
+		"instances are still alive (expected: A and B, not C anymore): ~ts",
 		[ text_utils:strings_to_string( [ text_utils:format( "instance ~w: ~ts",
 			[ IPid, basic_utils:is_alive( IPid ) ] )
 								|| IPid <- AllInstances ] ) ] ),
@@ -247,21 +263,24 @@ run() ->
 				" ~p", [ length( DownSuccReports ), DownSuccReports ] );
 
 		{ _DownSuccReports, DownFailReports } ->
-			throw( { update_failed, DownFailReports } )
+			throw( { downgrade_failed, DownFailReports } )
 
 	end,
 
 	check_old_code(),
 
-	% Not InstancesToUpdate, as even C, never updated, complies with the 1.2.3
-	% conventions:
-	%
-	test_facilities:display( "Displaying a state description of all "
-		"instances: ~ts",
-		[ text_utils:strings_to_string(
-			[ get_description( IPid ) || IPid <- AllInstances ] ) ] ),
 
-	wooper:delete_synchronously_instances( AllInstances ),
+	% Not AllInstances, as instance C, never updated, got killed during the
+	% downgrade:
+	%
+	LiveInstances = InstancesToUpdate,
+
+	test_facilities:display( "Displaying a state description of all "
+		"still live instances: ~ts",
+		[ text_utils:strings_to_string(
+			[ get_description( IPid ) || IPid <- LiveInstances ] ) ] ),
+
+	wooper:delete_synchronously_instances( LiveInstances ),
 	check_old_code(),
 
 	test_facilities:stop().
