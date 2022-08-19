@@ -456,9 +456,14 @@ freeze_instances( InstancePids, TargetVersion, MaybeExtraData ) ->
 % options.
 %
 % KillAnyLingeringProcess tells whether any process (probably an instance)
-% lingering on the old code shall be killed, or if the update shall just
-% considered as having failed. However apparently a soft-purge will succeed even
-% if an instance (ex: agent C in class_Upgradable_test) was not updated.
+% lingering on the old code shall be killed, or if the update shall just be
+% considered as having failed.
+%
+% The first soft-purge will succeed even if an instance (ex: agent C in
+% class_Upgradable_test) was not updated, yet the next module reloading will
+% fail, as the class will *not* be updated. If ignoring that failure, the old
+% code will attempt to operate on newer instance states, which of course should
+% not be attempted.
 %
 -spec update_class( classname(), boolean(), [ define() ], boolean() ) ->
 									static_return( base_status() ).
@@ -576,8 +581,8 @@ manage_version_change( TargetVersion, MaybeExtraData, CallerPid, State ) ->
 		first_bigger ->
 			cond_utils:if_defined( wooper_debug_hot_update,
 				trace_bridge:debug_fmt(
-					"Will downgrade from version ~ts to ~ts.",
-					[ text_utils:version_to_string( OriginalVersion ),
+					"Instance ~w will downgrade from version ~ts to ~ts.",
+					[ self(), text_utils:version_to_string( OriginalVersion ),
 					  text_utils:version_to_string( TargetVersion ) ] ) ),
 			downgradeVersion
 
@@ -790,13 +795,14 @@ purge_and_reload_class( Classname, KillAnyLingeringProcess ) ->
 
 		% Process(es) in the way:
 		false ->
-			trace_utils:warning_fmt( "Classname '~ts' cannot be soft-purged as "
-				"there is at least one process lingering in the old code.",
-				[ Classname ] ),
-
 			case KillAnyLingeringProcess of
 
 				true ->
+					trace_utils:warning_fmt( "Classname '~ts' cannot be "
+						"soft-purged, as there is at least one process "
+						"lingering in the old code; such processes to be "
+						"killed now through a hard purge.",	[ Classname ] ),
+
 					case code:purge( Classname ) of
 
 						% Understood as being successful:
