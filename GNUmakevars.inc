@@ -59,12 +59,14 @@ endif
 ifeq ($(ENABLE_DEBUG),true)
 	#WOOPER_DEBUG_FLAGS += -Dwooper_debug_serialisation
 	#WOOPER_DEBUG_FLAGS += -Dwooper_debug_deserialisation
+	WOOPER_DEBUG_FLAGS += -Dwooper_debug_hot_update
 endif
 
 # Defining check flags:
 ifeq ($(EXECUTION_TARGET),development)
 	WOOPER_CHECK_FLAGS += -Dwooper_check_serialisation
 	WOOPER_CHECK_FLAGS += -Dwooper_check_deserialisation
+	WOOPER_CHECK_FLAGS += -Dwooper_check_hot_update
 endif
 
 
@@ -252,10 +254,11 @@ endif
 
 ifndef COMPILER_OPT_FOR_WOOPER_CLASSES
 
+	# ENABLE_WOOPER_DEBUG_OPT managed transversely:
 	COMPILER_OPT_FOR_WOOPER_CLASSES =                     \
 		$(ERLANG_COMPILER_OPT_BASE)                       \
-		$(ENABLE_WOOPER_DEBUG_OPT)                        \
-		$(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER)
+		$(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER) \
+		$(ERLANG_COMPILER_EXTRA_OPTS)
 
 endif
 
