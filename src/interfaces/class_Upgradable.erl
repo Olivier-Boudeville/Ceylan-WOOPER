@@ -47,6 +47,27 @@
 % 'freezeUntilVersionChange' special message in the WOOPER main loop (refer to
 % wooper_main_loop_functions.hrl).
 %
+% As by default no WOOPER-level instance tracking is performed (this is often an
+% application-specific topic), the PIDs of the instances to update have to be
+% provided by the caller.
+%
+% Should instances be left over (i.e. not be updated), depending on the
+% preferences specified when triggering the update, either this update will be
+% reported as failed, or these instances will be killed - not at the first
+% missed upgrade (as they will just linger then in old code), but at the next
+% one.
+%
+% To avoid unwanted calls to be processed during an update, the relevant
+% processes, notably instances, shall be frozen. When a class is updated, this
+% includes not only its direct instances but also the one of all classes
+% deriving from it.
+%
+% A difficulty is that by default nothing prevents static methods / functions
+% exported by this class to be called just before said update and to interfere /
+% have their possibly mostly unrelated process be killed. Determining the
+% culprits and freezing them until none of them gets in the way of a soft purge
+% might be a good solution.
+%
 -module(class_Upgradable).
 
 
