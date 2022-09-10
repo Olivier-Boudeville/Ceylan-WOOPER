@@ -172,7 +172,7 @@ WOOPER_INTERFACES_DIR := $(WOOPER_SRC)/interfaces
 WOOPER_BEAM_DIRS := $(WOOPER_BEAM_DIR) $(WOOPER_INTERFACES_DIR) $(WOOPER_TOP)/..
 
 
-INC += -I $(WOOPER_SRC)/interfaces
+INC += -I$(WOOPER_SRC)/interfaces
 
 
 # For OTP releases and all:
