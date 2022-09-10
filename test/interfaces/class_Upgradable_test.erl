@@ -52,9 +52,9 @@
 % Tells whether the test module has old code.
 -spec check_old_code() -> void().
 check_old_code() ->
+	Mod = class_TestUpgradable,
 	test_facilities:display( "Has '~ts' old code? ~ts.",
-		[ class_TestUpgradable,
-		  erlang:check_old_code( class_TestUpgradableModule ) ] ).
+		[ Mod, erlang:check_old_code( Mod ) ] ).
 
 
 
@@ -138,10 +138,10 @@ run() ->
 	% will work, but not the downgrade afterwards; so either
 	% KillAnyLingeringProcess is true, and this C instance will get killed, or
 	% (if false), the test class will actually *not* be downgraded, leading the
-	% code soft purge to fail ( if ignoring this failure, then the last
+	% code soft purge to fail (if ignoring this failure, then the last
 	% get_description calls are to fail as, not being updated, they will still
 	% expect 1.2.4 state whereas instances will have been downgraded to 1.2.3
-	% one:
+	% one):
 	%
 	% (using new, not new_link, otherwise any killing of that instance -
 	% typically due to an old code - would kill in turn that test process)
