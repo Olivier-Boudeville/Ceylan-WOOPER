@@ -68,6 +68,16 @@
 % culprits and freezing them until none of them gets in the way of a soft purge
 % might be a good solution.
 %
+% A question is how the PIDs of the instances of an updated class are to be
+% determined (see
+% https://erlangforums.com/t/determining-processes-lingering-in-old-code/1755
+% for a related discussion).
+%
+% Either each class keeps track of its instances (not recommended, as incurs
+% systematic overhead and may not be scalable), or a massive scan is performed
+% (then preferably in a concurrent way, as done by the ERTS code purger; see
+% do_soft_purge/2 in erts_code_purger.erl for that).
+%
 -module(class_Upgradable).
 
 
@@ -257,6 +267,7 @@
 %
 -spec construct( wooper:state() ) -> wooper:state().
 construct( State ) ->
+	% Traceable trait now optional:
 	%TraceState = class_Traceable:construct( State ),
 	%setAttribute( TraceState, wooper_upgradable_version,
 	%              basic_utils:check_any_version( InitialVersion ) ).
@@ -822,7 +833,7 @@ purge_and_reload_class( Classname, KillAnyLingeringProcess ) ->
 					trace_utils:warning_fmt( "Classname '~ts' cannot be "
 						"soft-purged, as there is at least one process "
 						"lingering in the old code; such processes to be "
-						"killed now through a hard purge.",	[ Classname ] ),
+						"killed now through a hard purge.", [ Classname ] ),
 
 					case code:purge( Classname ) of
 
