@@ -6,6 +6,7 @@
 .. comment stylesheet specified through GNUmakefile
 
 
+
 ===================================================
 *Wrapper for Object-Oriented Programming in Erlang*
 ===================================================
@@ -25,7 +26,7 @@
 
 
 :raw-html:`<center><img src="wooper-title.png" id="responsive-image-small"></img>`
-:raw-latex:`\centering \includegraphics[scale=0.28]{wooper-title.png}`
+:raw-latex:`\begin{center} \includegraphics[scale=0.28]{wooper-title.png} \end{center}`
 
 .. comment Note: this is the latest, current version of the WOOPER 2.x documentation, directly obtained from the one of WOOPER 1.x.
 
@@ -3813,7 +3814,7 @@ Version History & Changes
 Version 2.0 [current stable]
 ----------------------------
 
-Released officially on Sunday, February 3, 2019.
+Released officially on Sunday, February 3, 2019 initially, and consistently improved since then.
 
 It has been a large rewriting of this layer, with much improvements notably:
 
