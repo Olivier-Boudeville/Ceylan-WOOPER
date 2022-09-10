@@ -308,7 +308,7 @@ ERLANG_COMPILER_OPT_FOR_PT = $(ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_MYRIAD) \
 # rebar3-based one)
 #
 ERLANG_COMPILER_PARSE_TRANSFORM_OPT_FOR_WOOPER = \
-	$(OVERALL_PZ_OPT)                            \
+	$(OVERALL_PA_OPTS)                           \
 	-pz $(WOOPER_TOP)/ebin                       \
 	-pz $(WOOPER_TOP)/src                        \
 	$(MYRIAD_PARSE_TRANSFORMS_PZ_OPT)            \
