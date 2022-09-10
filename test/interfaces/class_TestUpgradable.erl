@@ -89,10 +89,6 @@
 -include_lib("wooper/include/wooper.hrl").
 
 
-% Must be included before the class_TraceEmitter header:
--define( trace_emitter_categorization, "Upgradable.Test" ).
-
-
 
 
 % Shorthands:
