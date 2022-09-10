@@ -33,9 +33,40 @@ this interface):</p>
 
   <p>- possibly override its {up,down}gradeVersion/4 member methods</p>
 
- See also class_Upgradable_test.erl and the support of the
- 'freezeUntilVersionChange' special message in the WOOPER main loop (refer to
- wooper_main_loop_functions.hrl).
+ <p>See also class_Upgradable_test.erl and the support of the 
+'freezeUntilVersionChange' special message in the WOOPER main loop (refer to 
+wooper_main_loop_functions.hrl).</p>
+
+ <p>As by default no WOOPER-level instance tracking is performed (this is often an 
+application-specific topic), the PIDs of the instances to update have to be 
+provided by the caller.</p>
+
+ <p>Should instances be left over (i.e. not be updated), depending on the 
+preferences specified when triggering the update, either this update will be 
+reported as failed, or these instances will be killed - not at the first 
+missed upgrade (as they will just linger then in old code), but at the next 
+one.</p>
+
+ <p>To avoid unwanted calls to be processed during an update, the relevant 
+processes, notably instances, shall be frozen. When a class is updated, this 
+includes not only its direct instances but also the one of all classes 
+deriving from it.</p>
+
+ <p>A difficulty is that by default nothing prevents static methods / functions 
+exported by this class to be called just before said update and to interfere / 
+have their possibly mostly unrelated process be killed. Determining the 
+culprits and freezing them until none of them gets in the way of a soft purge 
+might be a good solution.</p>
+
+ <p>A question is how the PIDs of the instances of an updated class are to be 
+determined (see 
+https://erlangforums.com/t/determining-processes-lingering-in-old-code/1755 
+for a related discussion).</p>
+
+ Either each class keeps track of its instances (not recommended, as incurs
+ systematic overhead and may not be scalable), or a massive scan is performed
+ (then preferably in a concurrent way, as done by the ERTS code purger; see
+ do_soft_purge/2 in erts_code_purger.erl for that).
 
 <h2><a name="types">Data Types</a></h2>
 
