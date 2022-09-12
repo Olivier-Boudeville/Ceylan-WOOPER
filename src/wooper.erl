@@ -333,8 +333,9 @@
 -include("wooper_execute_internal_exports.hrl").
 
 
--opaque state() :: #state_holder{}.
-%-type state() :: #state_holder{}.
+% Opaqueness needs to be broken within WOOPER:
+%-opaque state() :: #state_holder{}.
+-type state() :: #state_holder{}.
 
 
 -type function_export_set() :: set_utils:set( meta_utils:function_id() ).
@@ -2249,7 +2250,7 @@ log_error( Message ) ->
 
 	% Never ellipsing for errors now:
 	%logger:error( text_utils:ellipse( Message, ?ellipse_length ) ++ "\n" ),
-	logger:error_fmt( "WOOPER error: ~ts~n", [ Message ] ),
+	logger:error( "WOOPER error: ~ts~n", [ Message ] ),
 
 	% Wait a bit, as logger (at least former error_logger) seems asynchronous:
 	system_utils:await_output_completion( ?wooper_error_display_waiting ).
