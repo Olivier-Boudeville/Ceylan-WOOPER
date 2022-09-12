@@ -2278,7 +2278,7 @@ log_error( FormatString, ValueList ) ->
 
 
 
-% @doc Reports (as synchronously as possible, in order to avoid loosing this
+% @doc Reports (as synchronously as possible, in order to avoid losing this
 % notification) the specified error about the current WOOPER instance
 % (preferably thanks to its state, otherwise with the current executed module,
 % so with fewer information) to the user, typically by displaying an error
