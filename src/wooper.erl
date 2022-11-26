@@ -194,7 +194,7 @@
 
 
 -type method_name() :: meta_utils:function_name().
-% A method name (ex: 'setColor').
+% A method name (e.g. 'setColor').
 
 
 -type request_name() :: method_name().
@@ -1955,7 +1955,7 @@ get_classname( _State=#state_holder{ actual_class=Classname } ) ->
 % - in case of diamond-shaped inheritance, a given superclass may be listed more
 % than once (list_utils:uniquify/1 may then be used)
 %
-% Ex: wooper:get_all_superclasses(class_Platypus) =
+% For example wooper:get_all_superclasses(class_Platypus) =
 %       [class_Mammal,class_OvoviviparousBeing,class_Creature, class_Creature].
 %
 % Not static to avoid making class modules heavier.
@@ -2058,7 +2058,7 @@ state_to_string( State ) ->
 
 % @doc Returns the source filename associated to the specified class.
 %
-% Ex: get_class_filename('class_Foo') returns simply "class_Foo.erl".
+% For example get_class_filename('class_Foo') returns simply "class_Foo.erl".
 %
 -spec get_class_filename( classname() ) -> file_utils:filename().
 get_class_filename( Classname ) ->
@@ -2241,14 +2241,15 @@ log_warning( FormatString, ValueList ) ->
 
 
 
-% @doc Reports (as synchronously as possible, in order to avoid loosing this
+% @doc Reports (as synchronously as possible, in order to avoid losing this
 % notification) the specified error to the user, typically by displaying an
-% error report on the console (non-halting function, ex: no exception thrown).
+% error report on the console (non-halting function, e.g. no exception thrown).
 %
 -spec log_error( ustring() ) -> void().
 log_error( Message ) ->
 
 	% Never ellipsing for errors now:
+	trace_bridge:warning( "Echoing WOOPER error message: " ++ Message ),
 	%logger:error( text_utils:ellipse( Message, ?ellipse_length ) ++ "\n" ),
 	logger:error( "WOOPER error: ~ts~n", [ Message ] ),
 
@@ -2257,9 +2258,9 @@ log_error( Message ) ->
 
 
 
-% @doc Reports (as synchronously as possible, in order to avoid loosing this
+% @doc Reports (as synchronously as possible, in order to avoid losing this
 % notification) the specified error to the user, typically by displaying an
-% error report on the console (non-halting function, ex: no exception thrown).
+% error report on the console (non-halting function, e.g. no exception thrown).
 %
 -spec log_error( format_string(), format_values() ) -> void().
 log_error( FormatString, ValueList ) ->
@@ -2269,6 +2270,8 @@ log_error( FormatString, ValueList ) ->
 		ValueList ++ [ self() ] ),
 
 	%trace_bridge:debug( Str ),
+	% To ensure that the message goes through even in production mode:
+	trace_bridge:warning( "Echoing WOOPER error: " ++ Str ),
 
 	% Never ellipsing for errors now:
 	%logger:error( text_utils:ellipse( Str, ?ellipse_length ) ),
@@ -2283,7 +2286,7 @@ log_error( FormatString, ValueList ) ->
 % notification) the specified error about the current WOOPER instance
 % (preferably thanks to its state, otherwise with the current executed module,
 % so with fewer information) to the user, typically by displaying an error
-% report on the console (non-halting function, ex: no exception thrown).
+% report on the console (non-halting function, e.g. no exception thrown).
 %
 -spec log_error( format_string(), format_values(),
 				 wooper:state() | basic_utils:module_name() ) -> void().
@@ -2553,7 +2556,7 @@ receive_result() ->
 %
 % Sets the corresponding attribute(s) to 'undefined', returns an updated state.
 %
-% Ex: in a destructor: DeleteState = delete_any_instance_referenced_in([
+% For example in a destructor: DeleteState = delete_any_instance_referenced_in([
 % first_pid_attr, second_pid_attr], State) or
 % delete_any_instance_referenced_in(my_pid_attr, State).
 %
@@ -2601,7 +2604,7 @@ delete_any_instance_referenced_in( PidAttribute, State ) ->
 %
 % Sets the corresponding attribute(s) to 'undefined', returns an updated state.
 %
-% Ex: in a destructor: NewState =
+% For example in a destructor: NewState =
 % delete_synchronously_any_instance_referenced_in([first_pid_attr,
 % second_pid_attr], State) or
 % delete_synchronously_any_instance_referenced_in(my_pid_attr, State).
@@ -2621,7 +2624,7 @@ delete_synchronously_any_instance_referenced_in( Attributes, State ) ->
 %
 % Sets the corresponding attribute(s) to 'undefined', returns an updated state.
 %
-% Ex: in a destructor: NewState =
+% For example in a destructor: NewState =
 % delete_synchronously_any_instance_referenced_in([first_pid_attr,
 % second_pid_attr], SomeState) or
 % safe_delete_synchronously_any_instance_referenced_in(my_pid_attr, State).
@@ -2642,7 +2645,7 @@ safe_delete_synchronously_any_instance_referenced_in( Attributes, State ) ->
 %
 % Sets the corresponding attribute(s) to 'undefined', returns an updated state.
 %
-% Ex: in a destructor: NewState =
+% For example in a destructor: NewState =
 % delete_synchronously_any_instance_referenced_in([first_pid_attr,
 % second_pid_attr], SomeState) or
 % delete_synchronously_any_instance_referenced_in(my_pid_attr, State).
@@ -2956,7 +2959,7 @@ check_undefined( AttributeName, State ) ->
 						{ AttributeName, UnexpectedValue }, Stack } );
 
 		exit:Error ->
-			% Other error (ex: unknown attribute):
+			% Other error (e.g. unknown attribute):
 			throw( { attribute_error, AttributeName, Error } );
 
 		OtherError ->
