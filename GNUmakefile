@@ -6,7 +6,7 @@ WOOPER_TOP = .
 		add-prerequisite-plts link-plt                                     \
 		release release-zip release-bz2 release-xz                         \
 		prepare-release clean-release clean-archive stats                  \
-		info-context info-versions info-paths                              \
+		info-context info-versions                                         \
 		info-compile info-conditionals info-deps
 
 
@@ -119,10 +119,6 @@ info-context: info-platform info-versions info-source-layout
 info-versions:
 	@echo "MYRIAD_VERSION = $(MYRIAD_VERSION)"
 	@echo "WOOPER_VERSION = $(WOOPER_VERSION)"
-
-
-info-paths:
-	@echo "BEAM_PATH_OPT = $(BEAM_PATH_OPT)"
 
 
 info-compile: info-compile-wooper
