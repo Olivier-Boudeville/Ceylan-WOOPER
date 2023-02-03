@@ -687,7 +687,8 @@ loop( Tables ) ->
 
 
 
-% @doc Looks-up specified table: secures it and returns its corresponding key.
+% @doc Looks-up the specified table: secures it and returns its corresponding
+% key.
 %
 % If found, returns its key immediately, otherwise constructs it, stores the
 % result and returns its key in the persistent_term registry.
@@ -795,8 +796,8 @@ create_method_table_for( TargetModule ) ->
 % classes are selected, rather than the ones of the mother class.
 %
 -spec update_method_table_with( module_name(),
-			?wooper_table_type:?wooper_table_type() ) ->
-							?wooper_table_type:?wooper_table_type().
+								?wooper_table_type:?wooper_table_type() ) ->
+									?wooper_table_type:?wooper_table_type().
 update_method_table_with( Module, Hashtable ) ->
 	?wooper_table_type:merge( Hashtable, create_method_table_for( Module ) ).
 
@@ -941,8 +942,8 @@ create_local_method_table_for( Module ) ->
 
 
 
-% @doc Pings specified WOOPER instance, designated by its PID or registered name
-% (locally, otherwise, if not found, globally).
+% @doc Pings the specified WOOPER instance, designated by its PID or registered
+% name (locally, otherwise, if not found, globally).
 %
 % Returns pong if it could be successfully ping'ed, otherwise returns pang.
 %
