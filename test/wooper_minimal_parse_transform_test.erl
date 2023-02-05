@@ -23,17 +23,16 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
-% Creation date: Wednesday, October 31, 2018.
+% Creation date: Wednesday, October 31, 2014.
 
 
-
-% This module allows to test with as few dependencies as possible the
+% @doc This module allows to test with as few dependencies as possible the
 % 'wooper_parse_transform' parse transform as a standalone unit, hence with
 % proper error and warning messages.
 %
 % See the wooper_parse_transform.erl tested module.
 %
--module(minimal_parse_transform_test).
+-module(wooper_minimal_parse_transform_test).
 
 
 -export([ run/0, perform_direct_ast_operations/1 ]).
@@ -50,12 +49,12 @@ perform_direct_ast_operations( TargetSourceFile ) ->
 	BaseModuleInfo = ast_info:extract_module_info_from_ast( BaseAST ),
 
 	trace_utils:notice_fmt( "Base module info: ~ts~n",
-			[ ast_info:module_info_to_string( BaseModuleInfo ) ] ),
+		[ ast_info:module_info_to_string( BaseModuleInfo ) ] ),
 
 	FinalModuleInfo = BaseModuleInfo,
 
 	trace_utils:notice_fmt( "Final module info: ~ts~n",
-			[ ast_info:module_info_to_string( FinalModuleInfo ) ] ),
+		[ ast_info:module_info_to_string( FinalModuleInfo ) ] ),
 
 	_FinalAST = ast_info:recompose_ast_from_module_info( FinalModuleInfo ),
 
@@ -78,7 +77,7 @@ run() ->
 	PreprocessorOptions = [ { includes, [ "../include" ] } ],
 
 	_TransformedAST = wooper_parse_transform:run_standalone( TargetSourceFile,
-													PreprocessorOptions ),
+		PreprocessorOptions ),
 
 	%trace_utils:notice_fmt( "Transformed AST:~n~p", [ TransformedAST ] ),
 

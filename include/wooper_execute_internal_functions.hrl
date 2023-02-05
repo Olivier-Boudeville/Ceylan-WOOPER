@@ -135,7 +135,7 @@
 % Note: atom and state checking in guards should be superfluous.
 %
 -spec wooper_execute_method( method_name(), method_arguments(),
-			wooper:state() ) -> { wooper:state(), method_internal_result() }.
+	wooper:state() ) -> { wooper:state(), method_internal_result() }.
 
 
 

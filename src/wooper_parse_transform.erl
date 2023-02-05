@@ -27,8 +27,8 @@
 
 
 % Defined now here, as the rebar-based build system would not allow us to define
-% per-module rules (ex: this module shall itself be compiled by the Myriad parse
-% transform).
+% per-module rules (e.g. this module shall itself be compiled by the Myriad
+% parse transform).
 %
 -compile({parse_transform, myriad_parse_transform}).
 
@@ -50,10 +50,11 @@
 % WOOPER-injected code that would rely on Myriad conventions).
 %
 % One will get: 'undefined parse transform 'wooper_parse_transform'' as soon as
-% a compiled module called by the parse transform (ex: text_utils.beam) will not
-% be found (hence even if the transform itself is available) or a non-exported
-% (or even not existing) function is called (ex: text_utils:format/1).
-
+% a compiled module called by the parse transform (e.g. text_utils.beam) will
+% not be found (hence even if the transform itself is available) or a
+% non-exported (or even not existing) function is called
+% (e.g. text_utils:format/1).
+%
 % We must discriminate here between methods and functions, and identify, among
 % detected methods: the requests, the oneways and the static ones.
 %
@@ -79,13 +80,13 @@
 
 % Regarding the WOOPER parse transform.
 
-% All WOOPER-related symbols (ex: atoms, functions, etc.) are to be prefixed by
+% All WOOPER-related symbols (e.g. atoms, functions, etc.) are to be prefixed by
 % 'wooper_'. This prefix shall be considered as reserved for WOOPER internals
 % (all wooper_* symbols are forbidden to the user).
 
-% Previously, for simplicity, some values (ex: the superclasses) were defined
-% thanks to macro defines (ex: '-define( wooper_foo, 42 )'). Now they are
-% specified thanks to attributes -ex: '-wooper_foo( 42 ).' and when there was
+% Previously, for simplicity, some values (e.g. the superclasses) were defined
+% thanks to macro defines (e.g. '-define( wooper_foo, 42 )'). Now they are
+% specified thanks to attributes -e.g. '-wooper_foo( 42 ).' and when there was
 % previously ?wooper_foo, we replaced that with the definition of a
 % wooper_get_foo() function.
 
@@ -102,7 +103,7 @@
 % - knowing that we want -spec lines (even in the form '-oneway setColor(...,
 % ... ) -> ...') to remain optional, the kind of a method
 % (oneway/request/static) is inferred at compilation-time, based on method
-% terminators (ex: scanning for wooper:oneway_return/1 through all "leaves" of
+% terminators (e.g. scanning for wooper:oneway_return/1 through all "leaves" of
 % the call graph)
 %
 % Constructor(s) and destructor (if any) are also auto-exported (i.e. all
@@ -195,8 +196,8 @@
 %
 % This allows to benefit from all compilation error and warning messages,
 % whereas they are seldom available from a code directly run as a parse
-% transform (ex: 'undefined parse transform 'foobar'' as soon as a function or a
-% module is not found).
+% transform (e.g. 'undefined parse transform 'foobar'' as soon as a function or
+% a module is not found).
 %
 -spec run_standalone( file_name() ) -> { ast(), class_info() }.
 run_standalone( FileToTransform ) ->
@@ -210,8 +211,8 @@ run_standalone( FileToTransform ) ->
 %
 % This allows to benefit from all compilation error and warning messages,
 % whereas they are seldom available from a code directly run as a parse
-% transform (ex: 'undefined parse transform 'foobar'' as soon as a function or a
-% module is not found).
+% transform (e.g. 'undefined parse transform 'foobar'' as soon as a function or
+% a module is not found).
 %
 -spec run_standalone( file_name(), [ preprocessor_option() ] ) ->
 							{ ast(), class_info() }.
@@ -335,17 +336,17 @@ apply_wooper_transform( InputAST, Options ) ->
 	%  [ ast_info:module_info_to_string( TransformedModuleInfo ) ] ),
 
 	OutputAST = ast_info:recompose_ast_from_module_info(
-				    TransformedModuleInfo ),
+		TransformedModuleInfo ),
 
 	?display_trace( "Recomposing corresponding AST." ),
 
 	%trace_utils:debug_fmt( "WOOPER output AST:~n~p", [ OutputAST ] ),
 
-	%OutputASTFilename = text_utils:format(
-	%   "WOOPER-output-AST-for-module-~ts.txt",
-	%   [ element( 1, TransformedModuleInfo#module_info.module ) ] ),
+	OutputASTFilename = text_utils:format(
+		"WOOPER-output-AST-for-module-~ts.txt",
+		[ element( 1, TransformedModuleInfo#module_info.module ) ] ),
 
-	%ast_utils:write_ast_to_file( OutputAST, OutputASTFilename ),
+	ast_utils:write_ast_to_file( OutputAST, OutputASTFilename ),
 
 	%ast_utils:write_ast_to_file( lists:sort( OutputAST ),
 	%                             "WOOPER-output-AST-sorted.txt" ),
@@ -445,42 +446,42 @@ create_class_info_from(
 	% to check for completeness more easily)
 	%
 	VerbatimClassInfo = BlankClassInfo#class_info{
-						  %class
-						  %superclasses
-						  %attributes
-						  %inherited_attributes
-						  compilation_options=CompileOptTable,
-						  compilation_option_defs=CompileOptDefs,
-						  parse_attributes=ParseAttrTable,
-						  remote_spec_defs=RemoteSpecDefs,
-						  includes=Includes,
-						  include_defs=IncludeDefs,
-						  type_exports=TypeExportTable,
-						  types=TypeTable,
-						  records=RecordTable,
-						  function_imports=FunctionImportTable,
-						  function_imports_defs=FunctionImportDefs,
-						  function_exports=FunctionExportTable,
-						  functions=FunctionTable,
-						  %constructors
-						  %destructor
-						  %request_exports
-						  %requests
-						  %oneway_exports
-						  %oneways
-						  %static_exports
-						  %statics
-						  optional_callbacks_defs=OptCallbacksDefs,
-						  last_file_location=LastFileLoc,
-						  markers=MarkerTable,
-						  errors=Errors,
-						  unhandled_forms=UnhandledForms },
+		%class
+		%superclasses
+		%attributes
+		%inherited_attributes
+		compilation_options=CompileOptTable,
+		compilation_option_defs=CompileOptDefs,
+		parse_attributes=ParseAttrTable,
+		remote_spec_defs=RemoteSpecDefs,
+		includes=Includes,
+		include_defs=IncludeDefs,
+		type_exports=TypeExportTable,
+		types=TypeTable,
+		records=RecordTable,
+		function_imports=FunctionImportTable,
+		function_imports_defs=FunctionImportDefs,
+		function_exports=FunctionExportTable,
+		functions=FunctionTable,
+		%constructors
+		%destructor
+		%request_exports
+		%requests
+		%oneway_exports
+		%oneways
+		%static_exports
+		%statics
+		optional_callbacks_defs=OptCallbacksDefs,
+		last_file_location=LastFileLoc,
+		markers=MarkerTable,
+		errors=Errors,
+		unhandled_forms=UnhandledForms },
 
 
 	% Then taking care of the missing fields, roughly in their original order:
 
 	ClassInClassInfo = wooper_class_management:manage_classname( ModuleEntry,
-															VerbatimClassInfo ),
+		VerbatimClassInfo ),
 
 	SuperClassInfo =
 		wooper_class_management:manage_superclasses( ClassInClassInfo ),
@@ -488,8 +489,8 @@ create_class_info_from(
 
 	AttrClassInfo = wooper_state_management:manage_attributes( SuperClassInfo ),
 
-	% We extract elements (ex: constructors) from the function table, yet we do
-	% not modify specifically the other related information (ex: exports).
+	% We extract elements (e.g. constructors) from the function table, yet we do
+	% not modify specifically the other related information (e.g. exports).
 
 	% We manage here {FunctionTable, ClassInfo} pairs, in which the first
 	% element is the reference, most up-to-date version of the function table
@@ -784,57 +785,57 @@ transform_class_info( ClassInfo ) ->
 %
 -spec generate_module_info_from( class_info() ) -> module_info().
 generate_module_info_from( #class_info{
-				 class=ClassEntry,
-				 %superclasses
+		class=ClassEntry,
+		%superclasses
 
-				 attributes=_AttributeTable,
+		attributes=_AttributeTable,
 
-				 % No impact onto the class-related module itself:
-				 inherited_attributes=_InheritedAttributeTable,
+		% No impact onto the class-related module itself:
+		inherited_attributes=_InheritedAttributeTable,
 
-				 compilation_options=CompileOptTable,
-				 compilation_option_defs=CompileOptDefs,
+		compilation_options=CompileOptTable,
+		compilation_option_defs=CompileOptDefs,
 
-				 parse_attributes=ParseAttrTable,
+		parse_attributes=ParseAttrTable,
 
-				 remote_spec_defs=RemoteSpecDefs,
+		remote_spec_defs=RemoteSpecDefs,
 
-				 includes=Includes,
-				 include_defs=IncludeDefs,
+		includes=Includes,
+		include_defs=IncludeDefs,
 
-				 type_exports=TypeExportTable,
-				 types=TypeTable,
+		type_exports=TypeExportTable,
+		types=TypeTable,
 
-				 records=RecordTable,
+		records=RecordTable,
 
-				 function_imports=FunctionImportTable,
-				 function_imports_defs=FunctionImportDefs,
+		function_imports=FunctionImportTable,
+		function_imports_defs=FunctionImportDefs,
 
-				 function_exports=FunctionExportTable,
-				 functions=FunctionTable,
+		function_exports=FunctionExportTable,
+		functions=FunctionTable,
 
-				 constructors=ConstructorTable,
-				 new_operators=OperatorTable,
-				 destructor=MaybeDestructor,
+		constructors=ConstructorTable,
+		new_operators=OperatorTable,
+		destructor=MaybeDestructor,
 
-				 request_exports=_RequestExportTable,
-				 requests=RequestTable,
+		request_exports=_RequestExportTable,
+		requests=RequestTable,
 
-				 oneway_exports=_OnewayExportTable,
-				 oneways=OnewayTable,
+		oneway_exports=_OnewayExportTable,
+		oneways=OnewayTable,
 
-				 static_exports=_StaticExportTable,
-				 statics=StaticTable,
+		static_exports=_StaticExportTable,
+		statics=StaticTable,
 
-				 optional_callbacks_defs=OptCallbackDefs,
+		optional_callbacks_defs=OptCallbackDefs,
 
-				 last_file_location=LastFileLoc,
+		last_file_location=LastFileLoc,
 
-				 markers=MarkerTable,
+		markers=MarkerTable,
 
-				 errors=Errors,
+		errors=Errors,
 
-				 unhandled_forms=UnhandledForms } ) ->
+		unhandled_forms=UnhandledForms } ) ->
 
 	% In addition to the plain, classical functions already in
 	% FunctionExportTable and Functions, we have to add back constructors,
@@ -860,7 +861,7 @@ generate_module_info_from( #class_info{
 	%
 
 	%trace_utils:debug_fmt( "Integrating the new operators: ~p",
-	%					   [ table:keys( OperatorTable ) ] ),
+	%                       [ table:keys( OperatorTable ) ] ),
 
 	WithNewOpFunTable = register_functions( table:enumerate( OperatorTable ),
 											WithConstrFunTable ),

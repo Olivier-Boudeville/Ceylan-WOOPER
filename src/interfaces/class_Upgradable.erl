@@ -491,7 +491,7 @@ freeze_instances( InstancePids, TargetVersion, MaybeExtraData ) ->
 % lingering on the old code shall be killed, or if the update shall just be
 % considered as having failed.
 %
-% The first soft-purge will succeed even if an instance (ex: agent C in
+% The first soft-purge will succeed even if an instance (e.g. agent C in
 % class_Upgradable_test) was not updated, yet the next module reloading will
 % fail, as the class will *not* be updated. If ignoring that failure, the old
 % code will attempt to operate on newer instance states, which of course should

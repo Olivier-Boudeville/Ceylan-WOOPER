@@ -185,7 +185,7 @@
 
 
 -type classname() :: atom().
-% An atom prefixed with 'class_'.
+% An atom prefixed with 'class_'; could be basic_utils:module_name() as well.
 
 
 -type class_key() :: term().

@@ -79,7 +79,7 @@
 % This is the class-specific object state, each instance of this class will have
 % its own state_holder, quite similar to the 'C++' this pointer.
 %
-% Constant data (ex: the virtual table) are referenced by each class instance,
+% Constant data (e.g. the virtual table) are referenced by each class instance,
 % they are not duplicated (pointer to a virtual table shared by all class
 % instances rather than deep copy).
 %
@@ -121,7 +121,7 @@
 	%
 	% To be used, instead of ?MODULE or alike.
 	%
-	actual_class :: basic_utils:module_name(),
+	actual_class :: wooper:classname(),
 
 	request_sender :: maybe( pid() ) } ).
 
