@@ -342,11 +342,11 @@ apply_wooper_transform( InputAST, Options ) ->
 
 	%trace_utils:debug_fmt( "WOOPER output AST:~n~p", [ OutputAST ] ),
 
-	OutputASTFilename = text_utils:format(
-		"WOOPER-output-AST-for-module-~ts.txt",
-		[ element( 1, TransformedModuleInfo#module_info.module ) ] ),
+	%OutputASTFilename = text_utils:format(
+	%   "WOOPER-output-AST-for-module-~ts.txt",
+	%   [ element( 1, TransformedModuleInfo#module_info.module ) ] ),
 
-	ast_utils:write_ast_to_file( OutputAST, OutputASTFilename ),
+	%ast_utils:write_ast_to_file( OutputAST, OutputASTFilename ),
 
 	%ast_utils:write_ast_to_file( lists:sort( OutputAST ),
 	%                             "WOOPER-output-AST-sorted.txt" ),
