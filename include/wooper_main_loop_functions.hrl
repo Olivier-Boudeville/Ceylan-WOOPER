@@ -145,7 +145,8 @@ wooper_main_loop( State ) ->
 			% Triggers the recursive call of destructors in the inheritance
 			% graph (bottom-up):
 			%
-			wooper_destruct( State ),
+			_IntentionallyUnmatched=wooper_destruct( State ),
+
 			CallerPid ! { deleted, self() },
 			deleted;
 			% (do nothing, loop ends here).
@@ -187,7 +188,9 @@ wooper_main_loop( State ) ->
 
 			% Triggers the recursive call of destructors in the inheritance
 			% graph (bottom-up):
-			wooper_destruct( State ),
+			%
+			_IntentionallyUnmatched=wooper_destruct( State ),
+
 			deleted;
 			% (do nothing, loop ends here).
 

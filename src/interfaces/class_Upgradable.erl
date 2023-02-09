@@ -555,10 +555,11 @@ request_instances_to_update( Instances ) ->
 % instance-specific state changes.
 %
 % Sends back to the caller first a freeze_notification() message, then, once
-% requested to update and having attempted to do so, a update_outcome() message.
+% requested to update and having attempted to do so, an update_outcome()
+% message.
 %
 -spec manage_version_change( any_version(), extra_data(), pid(),
-							 wooper:state() ) -> wooper:state().
+							 wooper:state() ) -> 'deleted'. % no_return().
 manage_version_change( TargetVersion, MaybeExtraData, CallerPid, State ) ->
 
 	ActualClassMod = State#state_holder.actual_class,

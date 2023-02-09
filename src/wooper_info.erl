@@ -344,39 +344,39 @@ class_info_to_string( #class_info{
 									  NextIndentationLevel ),
 
 			  class_specific_attributes_to_string( AttributeTable,
-										DoIncludeForms, NextIndentationLevel ),
+				DoIncludeForms, NextIndentationLevel ),
 
 			  inherited_attributes_to_string( InheritedAttributes,
-										DoIncludeForms, NextIndentationLevel ),
+				DoIncludeForms, NextIndentationLevel ),
 
 			  ast_info:compilation_options_to_string( CompileOpts,
-						CompileOptDefs, DoIncludeForms, NextIndentationLevel ),
+				CompileOptDefs, DoIncludeForms, NextIndentationLevel ),
 
 			  ast_info:optional_callbacks_to_string( OptCallbacksDefs,
-									DoIncludeForms, NextIndentationLevel ),
+				DoIncludeForms, NextIndentationLevel ),
 
 			  DebugString,
 
 			  ast_info:parse_attribute_table_to_string( ParseAttributeTable,
-										DoIncludeForms, NextIndentationLevel ),
+				DoIncludeForms, NextIndentationLevel ),
 
 			  ast_info:remote_spec_definitions_to_string( RemoteSpecDefs,
-										DoIncludeForms, NextIndentationLevel ),
+				DoIncludeForms, NextIndentationLevel ),
 
 			  ast_info:includes_to_string( Includes, IncludeDefs,
-										DoIncludeForms, NextIndentationLevel ),
+				DoIncludeForms, NextIndentationLevel ),
 
 			  % No form to manage:
 			  ast_info:type_exports_to_string( TypeExportTable,
-											   NextIndentationLevel ),
+				_DoIncludeForms=false, NextIndentationLevel ),
 
 			  ast_info:types_to_string( TypeTable, DoIncludeForms,
-										NextIndentationLevel ),
+				NextIndentationLevel ),
 
 			  ast_info:records_to_string( RecordTable, NextIndentationLevel ),
 
 			  ast_info:function_imports_to_string( FunctionImportTable,
-					FunctionImportDefs, DoIncludeForms, NextIndentationLevel ),
+				FunctionImportDefs, DoIncludeForms, NextIndentationLevel ),
 
 			  ast_info:functions_to_string( FunctionTable, DoIncludeForms,
 											NextIndentationLevel ),
@@ -406,7 +406,7 @@ class_info_to_string( #class_info{
 			  ast_info:errors_to_string( Errors, NextIndentationLevel ),
 
 			  ast_info:unhandled_forms_to_string( UnhandledForms,
-					DoIncludeForms, NextIndentationLevel ) ],
+				DoIncludeForms, NextIndentationLevel ) ],
 
 		text_utils:format( "Information about class ~ts: ~ts",
 			[ ClassnameString,
@@ -427,7 +427,7 @@ class_entry_to_string( _ClassEntry={ ThisClassname, _ClassLocDef },
 	text_utils:atom_to_string( ThisClassname );
 
 class_entry_to_string( _ClassEntry={ ThisClassname,
-						_ClassLocDef={ _Loc, Form } }, _DoIncludeForms=true ) ->
+					   _ClassLocDef={ _Loc, Form } }, _DoIncludeForms=true ) ->
 	text_utils:format( "~ts (represented as form '~p')",
 					   [ ThisClassname, Form ] ).
 
