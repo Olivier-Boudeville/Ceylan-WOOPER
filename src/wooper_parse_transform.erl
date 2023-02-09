@@ -590,7 +590,7 @@ create_class_info_from(
 
 
 
-% @doc Adds specified function into the corresponding table.
+% @doc Adds the specified function into the specified corresponding table.
 -spec add_function( meta_utils:function_name(), arity(), form(),
 					function_table() ) -> function_table().
 add_function( Name, Arity, Form, FunctionTable ) ->
@@ -629,7 +629,7 @@ add_function( Name, Arity, Form, FunctionTable ) ->
 
 
 
-% @doc Adds specified request into the corresponding table.
+% @doc Adds the specified request into the specified corresponding table.
 -spec add_request( wooper:request_name(), arity(), form(), request_table() ) ->
 							request_table().
 add_request( Name, Arity, Form, RequestTable ) ->
@@ -667,7 +667,7 @@ add_request( Name, Arity, Form, RequestTable ) ->
 
 
 
-% @doc Adds specified oneway into the corresponding table.
+% @doc Adds the specified oneway into the specified corresponding table.
 -spec add_oneway( wooper:oneway_name(), arity(), form(), oneway_table() ) ->
 						oneway_table().
 add_oneway( Name, Arity, Form, OnewayTable ) ->
@@ -705,7 +705,7 @@ add_oneway( Name, Arity, Form, OnewayTable ) ->
 
 
 
-% @doc Adds specified static method into the corresponding table.
+% @doc Adds the specified static method in the specified corresponding table.
 -spec add_static_method( wooper:static_name(), arity(), form(),
 						 static_table() ) -> static_table().
 add_static_method( Name, Arity, Form, StaticTable ) ->
