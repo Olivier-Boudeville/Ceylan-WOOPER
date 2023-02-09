@@ -80,7 +80,7 @@
 
 
 
--type request_return( T ) :: wooper:request_result( T ).
+-type request_return( T ) :: wooper:request_return( T ).
 % To specify the type of the actual value of interest returned by a (non-const)
 % request.
 

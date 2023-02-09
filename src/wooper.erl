@@ -280,7 +280,7 @@
 % For method specs:
 
 -type request_return( T ) :: { state(), request_result( T ) }.
--type const_request_return( T ) :: request_result( T ).
+-type const_request_return( T ) :: request_return( T ).
 
 -type oneway_return() :: state().
 -type const_oneway_return() :: void().
