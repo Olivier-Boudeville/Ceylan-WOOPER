@@ -109,10 +109,14 @@
 	% Just a key in the persistent_term registry:
 	%virtual_table_key :: wooper:class_key(),
 
+	% Class-level table telling, for each method supported by this class, which
+	% module (parent class) implements it.
+	%
 	% Now directly a reference within the persistent_term registry:
 	virtual_table :: ?wooper_table_type:?wooper_table_type(),
 
-	attribute_table :: maybe( ?wooper_table_type:?wooper_table_type() ),
+	% Holds the instance-specific attribute-based key/value state:
+	attribute_table :: ?wooper_table_type:?wooper_table_type(),
 
 	% Only means that we know to access the actual class name:
 	%
