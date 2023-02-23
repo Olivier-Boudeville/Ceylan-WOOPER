@@ -232,6 +232,9 @@ display_msg( _FormatString, _Values ) ->
 -type module_name() :: basic_utils:module_name().
 
 
+% Typically returned after a launching described in wooper_sup:init/1:
+-type start_return() :: { 'ok', Child :: manager_pid() }.
+
 
 % OTP-related section: first, the user-level API.
 
@@ -242,7 +245,7 @@ display_msg( _FormatString, _Values ) ->
 % @doc Starts a new, blank, class manager, with no listening client, and returns
 % its PID.
 %
--spec start() -> manager_pid().
+-spec start() -> start_return().
 start() ->
 	start( _MaybeClientPid=undefined ).
 
@@ -250,7 +253,7 @@ start() ->
 % @doc Starts and links a new, blank, class manager, with no listening client,
 % and returns its PID.
 %
--spec start_link() -> manager_pid().
+-spec start_link() -> start_return().
 start_link() ->
 	start_link( _MaybeClientPid=undefined ).
 
@@ -259,7 +262,7 @@ start_link() ->
 % @doc Starts a new, blank, class manager, with possibly a listening client, and
 % returns its PID.
 %
--spec start( maybe( pid() ) ) -> manager_pid().
+-spec start( maybe( pid() ) ) -> start_return().
 start( MaybeClientPid ) ->
 
 	% A client process might be useful for testing.
@@ -267,10 +270,10 @@ start( MaybeClientPid ) ->
 	case gen_server:start( { local, ?wooper_class_manager_name },
 						   ?MODULE, _Args=[], _Opts=[] ) of
 
-		{ ok, ManagerPid } ->
+		Success={ ok, ManagerPid } ->
 			MaybeClientPid =:= undefined orelse
 				( MaybeClientPid ! { wooper_class_manager_pid, ManagerPid } ),
-			ManagerPid;
+			Success;
 
 		% Typically {error,Reason} or ignore:
 		Unexpected ->
@@ -285,7 +288,7 @@ start( MaybeClientPid ) ->
 %
 % (same as start/1 except for the link)
 %
--spec start_link( maybe( pid() ) ) -> manager_pid().
+-spec start_link( maybe( pid() ) ) -> start_return().
 start_link( MaybeClientPid ) ->
 
 	%trace_utils:debug( "Starting and linking the WOOPER class manager." ),
@@ -379,7 +382,8 @@ get_manager_through_otp() ->
 
 				%trace_utils:debug( "OTP start of the WOOPER class manager." ),
 
-				start( _MaybeClientPid=undefined )
+				{ ok, ManagerPid } = start( _MaybeClientPid=undefined ),
+				ManagerPid
 
 			catch _:E ->
 
