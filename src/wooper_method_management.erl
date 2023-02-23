@@ -149,7 +149,8 @@
 % (request, oneway, etc.), we have to traverse recursively at least one of its
 % clauses until finding at least one final expression in order to examine, check
 % and possibly transform any method terminator found. We chose to traverse all
-% clauses in order to catch any inconsistency in the user code.
+% clauses in order to catch any inconsistency in the user code and to resist to
+% undecidable ones (e.g. if just throwing an exception).
 %
 % Recursing in nested local calls is not needed here, as by convention the
 % method terminators should be local to the method body.
@@ -158,7 +159,7 @@
 % foresee (typically based on http://erlang.org/doc/apps/erts/absform.html), at
 % the risk of rejecting correct code - should our traversal be not perfect, or
 % we can "blindly" rewrite calls for example corresponding to
-% wooper:return_state_result( S, R ) as { S, R } (and check we have no
+% wooper:return_state_result(S, R) as {S, R} (and check that we have no
 % incompatible method terminators).
 %
 % We preferred initially here the latter solution (lighter, simpler, safer), but
@@ -243,13 +244,15 @@ manage_methods( { CompleteFunctionTable,
 	% Determined once for all:
 	WOOPERExportSet = wooper:get_exported_functions_set(),
 
-	% FunctionTable starts from scratch as all functions are to be found in
+	% FunctionTable starts from scratch, as all functions are to be found in
 	% AllFunEntries:
 	%
 	{ NewFunctionTable, NewRequestTable, NewOnewayTable, NewStaticTable } =
 		sort_out_functions( AllFunEntries, _FunctionTable=table:new(),
 			RequestTable, OnewayTable, StaticTable, Classname, ExportLoc,
 			WOOPERExportSet ),
+
+	%trace_utils:debug_fmt( "New static table: ~p", [ NewStaticTable ] ),
 
 	% Split as {Functions, Methods}:
 	{ NewFunctionTable, ClassInfo#class_info{ requests=NewRequestTable,
@@ -1180,7 +1183,7 @@ manage_method_terminators( Clauses, FunId, Classname, WOOPERExportSet ) ->
 
 			{ function, _Qualifiers=[] };
 
-		% For example { request, [ const ], _ }:
+		% For example {request, [ const ], _}:
 		{ OtherNature, SomeQualifiers, _WOOPERExportSet } ->
 			%?debug_fmt( "~ts/~B detected as: ~p (qualifiers: ~w)",
 			%    pair:to_list( FunId ) ++ [ OtherNature, Qualifiers ] ),
@@ -1300,7 +1303,7 @@ clause_transformer( Clause={ clause, FileLoc, Params, Guards, Body },
 						%transformation_state={ InitialNature,
 						%   InitialQualifiers, WOOPERExportSet } } ) ->
 
-	?debug_fmt( "Transforming for WOOPER clause ~p", [ Clause ] ),
+	?debug_fmt( "Transforming for WOOPER clause~n ~p", [ Clause ] ),
 
 	% No need to reset transformation state, as done by body_transformer/3:
 
@@ -1366,7 +1369,7 @@ body_transformer( _BodyExprs=[], Transforms, _FileLoc ) ->
 body_transformer( BodyExprs, Transforms, FileLoc ) ->
 								% superfluous: when is_list( BodyExprs )
 
-	?trace_fmt( "Transforming for WOOPER body ~p", [ BodyExprs ] ),
+	?trace_fmt( "Transforming for WOOPER body~n ~p", [ BodyExprs ] ),
 
 	% Warning: we currently skip intermediate expressions as a whole (we do not
 	% transform them at all, as currently WOOPER does not have any need for
@@ -1380,7 +1383,7 @@ body_transformer( BodyExprs, Transforms, FileLoc ) ->
 	%
 	[ LastExpr | RevFirstExprs ] = lists:reverse( BodyExprs ),
 
-	?trace_fmt( "Requesting the transformation of last expression ~p",
+	?trace_fmt( "Requesting the transformation of last expression~n ~p",
 				[ LastExpr ] ),
 
 	ResetTransforms = reset_transformation_state( Transforms ),

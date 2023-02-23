@@ -548,31 +548,31 @@ create_class_info_from(
 % -module(class_XXX) declaration.
 %
 %% get_info( _AST=[ { 'attribute', FileLoc, 'classname', Classname } | T ],
-%%		  C=#class_info{ class=undefined, class_def=undefined } ) ->
+%%        C=#class_info{ class=undefined, class_def=undefined } ) ->
 
 %%	trace_utils:debug_fmt( "Intercepting WOOPER classname declaration for "
-%%						   "'~ts'.", [ Classname ] ),
+%%                         "'~ts'.", [ Classname ] ),
 
 %%	check_classname( Classname ),
 
-%%	% Transforms that in a standard module definition:
-%%	NewDef = { 'attribute', FileLoc, 'module', Classname },
+%%  % Transforms that in a standard module definition:
+%%  NewDef = { 'attribute', FileLoc, 'module', Classname },
 
-%%	get_info( T, C#class_info{ class=Classname, class_def=NewDef } );
+%%  get_info( T, C#class_info{ class=Classname, class_def=NewDef } );
 
 
 %% % We accept (only) the Erlang-standard, direct '-module(XXX).' declaration
 %% for % now:
 
 %% get_info( _AST=[ F={ 'attribute', _FileLoc, 'module', Classname } | T ],
-%%		  C=#class_info{ class=undefined, class_def=undefined } ) ->
+%%        C=#class_info{ class=undefined, class_def=undefined } ) ->
 
-%%	%trace_utils:debug_fmt( "Intercepting module-based classname declaration "
-%%	%					   "for '~ts'.", [ Classname ] ),
+%%  %trace_utils:debug_fmt( "Intercepting module-based classname declaration "
+%%  %                       "for '~ts'.", [ Classname ] ),
 
-%%	check_classname( Classname ),
+%%  check_classname( Classname ),
 
-%%	get_info( T, C#class_info{ class=Classname, class_def=F } );
+%%  get_info( T, C#class_info{ class=Classname, class_def=F } );
 
 
 %% % The fact that no '-module(XXX).' can be found in the source file results in
@@ -580,13 +580,13 @@ create_class_info_from(
 %% % filter-out, as we will introduce a relevant module form afterwards:
 %% %
 %% get_info( _AST=[ F={ 'error',{ _FileLoc, 'epp',
-%%								 { 'undefined', 'MODULE', 'none' } } } | T ],
-%%		  C ) ->
+%%                               { 'undefined', 'MODULE', 'none' } } } | T ],
+%%        C ) ->
 
-%%	% Problems ahead:
-%%	trace_utils:debug_fmt( "Dropping module-related error form ~p.", [ F ] ),
+%%  % Problems ahead:
+%%  trace_utils:debug_fmt( "Dropping module-related error form ~p.", [ F ] ),
 
-%%	get_info( T, C );
+%%  get_info( T, C );
 
 
 

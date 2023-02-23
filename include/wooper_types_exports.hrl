@@ -101,7 +101,9 @@
 % To specify the type of the actual value of interest returned by a static
 % method.
 
--type static_void_return() :: static_return( 'wooper_void_return' ).
+% Must be any()
+-type static_void_return() :: %static_return( 'wooper_void_return' ).
+							  static_return( any() ).
 % To specify that a static method does not return any value of use.
 
 -type static_no_return() :: no_return().

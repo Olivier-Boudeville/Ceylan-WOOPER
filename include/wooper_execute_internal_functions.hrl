@@ -704,7 +704,7 @@ wooper_handle_local_request_execution( RequestAtom, State, ArgumentList ) ->
 	end,
 
 	ReturnedState = RequestState#state_holder{
-						request_sender=PreviousRequestSender },
+		request_sender=PreviousRequestSender },
 
 	{ ReturnedState, ActualResult }.
 
@@ -725,7 +725,7 @@ wooper_handle_local_request_execution( RequestAtom, State, ArgumentList ) ->
 
 
 	ReturnedState = RequestState#state_holder{
-						request_sender=PreviousRequestSender },
+		request_sender=PreviousRequestSender },
 
 	{ ReturnedState, ActualResult }.
 
@@ -810,7 +810,7 @@ wooper_handle_local_request_execution_as( RequestAtom, State, ArgumentList,
 								  SenderAwareState ),
 
 	ReturnedState = RequestState#state_holder{
-						request_sender=PreviousRequestSender },
+		request_sender=PreviousRequestSender },
 
 	{ ReturnedState, ActualResult }.
 

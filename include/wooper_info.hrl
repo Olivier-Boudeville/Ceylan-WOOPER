@@ -448,7 +448,7 @@
 	% (we keep it as a located form rather than as a simple ast_utils:file_loc()
 	% to avoid a costly addition in last position)
 	%
-	last_file_location :: ast_info:located_form(),
+	last_file_location :: maybe( ast_info:located_form() ),
 
 
 	% Section markers, offering reference locations to AST transformations.

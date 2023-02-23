@@ -677,15 +677,15 @@ execute_const_oneway( PassiveInstance, OnewayName )
 				when is_record( PassiveInstance, ?passive_record )
 					 andalso is_atom( OnewayName ) ->
 
-	% Matching PassiveInstance:
+	% Forcing the match with PassiveInstance:
 	{ PassiveInstance, wooper_method_returns_void } =
 		wooper_execute_method( OnewayName, _OnewayArgs=[], PassiveInstance ).
 
 -else. % wooper_debug_mode
 
 execute_const_oneway( PassiveInstance, OnewayName )
-  when is_record( PassiveInstance, ?passive_record )
-	   andalso is_atom( OnewayName ) ->
+				when is_record( PassiveInstance, ?passive_record )
+					 andalso is_atom( OnewayName ) ->
 
 	% Reckless:
 	%{ _ExpectedSamePassiveInstance, wooper_method_returns_void } =
@@ -1632,10 +1632,10 @@ execute_oneway( PassiveInstance, OnewayName )
 					when is_record( PassiveInstance, ?passive_record )
 						 andalso is_atom( OnewayName ) ->
 
-	{ NewPassiveInstance, { wooper_method_returns_void, R } } =
+	{ NewPassiveInstance, wooper_method_returns_void } =
 		wooper_execute_method( OnewayName, _OnewayArgs=[], PassiveInstance ),
 
-	{ NewPassiveInstance, R }.
+	NewPassiveInstance.
 
 
 
@@ -1962,12 +1962,12 @@ get_classname( _State=#state_holder{ actual_class=Classname } ) ->
 % state is specified, or of the specified classname.
 %
 % Note that:
-% - superclasses will be returned bredth-first in the inheritance tree
+% - superclasses will be returned breadth-first in the inheritance tree
 % - in case of diamond-shaped inheritance, a given superclass may be listed more
 % than once (list_utils:uniquify/1 may then be used)
 %
 % For example wooper:get_all_superclasses(class_Platypus) =
-%       [class_Mammal,class_OvoviviparousBeing,class_Creature, class_Creature].
+%   [class_Mammal,class_OvoviviparousBeing,class_Creature, class_Creature].
 %
 % Not static to avoid making class modules heavier.
 %
