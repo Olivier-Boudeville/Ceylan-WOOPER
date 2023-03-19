@@ -29,9 +29,9 @@
 </tr>
 <tr class="field"><th class="field-name">Creation date:</th><td class="field-body">Sunday, August 17, 2008</td>
 </tr>
-<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Sunday, January 1, 2023</td>
+<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Sunday, March 19, 2023</td>
 </tr>
-<tr class="field"><th class="field-name">Version:</th><td class="field-body">2.0.21</td>
+<tr class="field"><th class="field-name">Version:</th><td class="field-body">2.0.22</td>
 </tr>
 <tr class="field"><th class="field-name">Status:</th><td class="field-body">Stable</td>
 </tr>
@@ -339,31 +339,31 @@
 <p>Straightforward, isn't it? We will discuss it in-depth, though.</p>
 <p>To test this class (provided that <tt class="docutils literal">GNU make</tt> and the latest stable version of <tt class="docutils literal">Erlang</tt> are available in one's environment, see <a class="reference internal" href="#prerequisites">Prerequisites</a> for more information), one can easily install <tt class="docutils literal"><span class="pre">Ceylan-WOOPER</span></tt>, which depends on <a class="reference external" href="http://myriad.esperide.org">Ceylan-Myriad</a>, hence is to be installed first:</p>
 <pre class="code bash literal-block">
-$ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad.git myriad
-$ <span class="nb">cd</span> myriad <span class="o">&amp;&amp;</span> make all <span class="o">&amp;&amp;</span> <span class="nb">cd</span> ..
+$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/Olivier-Boudeville/Ceylan-Myriad.git<span class="w"> </span>myriad<span class="w">
+</span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>myriad<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>all<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>..
 </pre>
 <pre class="code bash literal-block">
-$ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git wooper
-$ <span class="nb">cd</span> wooper <span class="o">&amp;&amp;</span> make all
+$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git<span class="w"> </span>wooper<span class="w">
+</span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>wooper<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>all
 </pre>
 <p>(for OTP compliance, using short names, such as <tt class="docutils literal">myriad</tt> or <tt class="docutils literal">wooper</tt>, for clones rather than long ones, such as <tt class="docutils literal"><span class="pre">Ceylan-Myriad</span></tt> or <tt class="docutils literal"><span class="pre">Ceylan-WOOPER</span></tt>, is recommended)</p>
 <p>Running the cat-related example just then boils down to:</p>
 <pre class="code bash literal-block">
-$ <span class="nb">cd</span> examples <span class="o">&amp;&amp;</span> make class_Cat_run
+$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>examples<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>class_Cat_run
 </pre>
 <p>In the <tt class="docutils literal">examples</tt> directory, the test defined in <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Cat_test.erl">class_Cat_test.erl</a> should run against the class defined in <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/blob/master/priv/examples/class_Cat.erl">class_Cat.erl</a>, and no error should be detected:</p>
 <pre class="code bash literal-block">
-Running unitary <span class="nb">test</span> class_Cat_run <span class="o">(</span>second form<span class="o">)</span>
+Running<span class="w"> </span>unitary<span class="w"> </span><span class="nb">test</span><span class="w"> </span>class_Cat_run<span class="w"> </span><span class="o">(</span>second<span class="w"> </span>form<span class="o">)</span><span class="w">
 
---&gt; Testing module class_Cat_test.
-<span class="o">[</span>..<span class="o">]</span>
-Deleting cat &lt;<span class="m">0</span>.80.0&gt;! <span class="o">(</span>overridden destructor<span class="o">)</span>
-Deleting mammal &lt;<span class="m">0</span>.80.0&gt;! <span class="o">(</span>overridden destructor<span class="o">)</span>
-Actual class from destructor: class_Cat.
-Deleting mammal &lt;<span class="m">0</span>.82.0&gt;! <span class="o">(</span>overridden destructor<span class="o">)</span>
-This cat could be created and be synchronously deleted, as expected.
---&gt; Successful end of test.
-<span class="o">(</span><span class="nb">test</span> finished, interpreter halted<span class="o">)</span>
+</span>--&gt;<span class="w"> </span>Testing<span class="w"> </span>module<span class="w"> </span>class_Cat_test.<span class="w">
+</span><span class="o">[</span>..<span class="o">]</span><span class="w">
+</span>Deleting<span class="w"> </span>cat<span class="w"> </span>&lt;<span class="m">0</span>.80.0&gt;!<span class="w"> </span><span class="o">(</span>overridden<span class="w"> </span>destructor<span class="o">)</span><span class="w">
+</span>Deleting<span class="w"> </span>mammal<span class="w"> </span>&lt;<span class="m">0</span>.80.0&gt;!<span class="w"> </span><span class="o">(</span>overridden<span class="w"> </span>destructor<span class="o">)</span><span class="w">
+</span>Actual<span class="w"> </span>class<span class="w"> </span>from<span class="w"> </span>destructor:<span class="w"> </span>class_Cat.<span class="w">
+</span>Deleting<span class="w"> </span>mammal<span class="w"> </span>&lt;<span class="m">0</span>.82.0&gt;!<span class="w"> </span><span class="o">(</span>overridden<span class="w"> </span>destructor<span class="o">)</span><span class="w">
+</span>This<span class="w"> </span>cat<span class="w"> </span>could<span class="w"> </span>be<span class="w"> </span>created<span class="w"> </span>and<span class="w"> </span>be<span class="w"> </span>synchronously<span class="w"> </span>deleted,<span class="w"> </span>as<span class="w"> </span>expected.<span class="w">
+</span>--&gt;<span class="w"> </span>Successful<span class="w"> </span>end<span class="w"> </span>of<span class="w"> </span>test.<span class="w">
+</span><span class="o">(</span><span class="nb">test</span><span class="w"> </span>finished,<span class="w"> </span>interpreter<span class="w"> </span>halted<span class="o">)</span>
 </pre>
 <p>That's it!</p>
 <p>Now, more in-depth explanations.</p>
@@ -374,7 +374,7 @@ This cat could be created and be synchronously deleted, as expected.
 <h1><a class="toc-backref" href="#toc-entry-6">Why Adding Object-Oriented Capabilities To Erlang?</a></h1>
 <p>Although applying blindly an OOP approach while using languages based on other paradigms (Erlang ones are functional and concurrent; the language is not specifically targeting OOP) is a common mistake, there are some problems that may be deemed inherently &quot;object-oriented&quot;, i.e. that cannot be effectively modelled without encapsulated abstractions sharing behaviours.</p>
 <p>Examples of this kind of systems are multi-agent simulations. If they often need massive concurrency, robustness, distribution, etc. (Erlang is particularly suitable for that), the various types of agents have also often to rely on similar kinds of states and behaviours, while still being able to be further specialised on a per-type basis.</p>
-<p>The <a class="reference internal" href="#example">example</a> mentioned through the current guide is an illustration <a class="footnote-reference" href="#footnote-1" id="footnote-reference-1">[1]</a> of the interacting lives of numerous animals of various species. Obviously, they have to share behaviours (ex: all ovoviviparous beings may lay eggs, all creatures can live and die, all have an age, etc.), which cannot be mapped easily (read: automatically) to Erlang concepts without adding some generic constructs.</p>
+<p>The <a class="reference internal" href="#example">example</a> mentioned through the current guide is an illustration <a class="footnote-reference" href="#footnote-1" id="footnote-reference-1">[1]</a> of the interacting lives of numerous animals of various species. Obviously, they have to share behaviours (e.g. all ovoviviparous beings may lay eggs, all creatures can live and die, all have an age, etc.), which cannot be mapped easily (read: automatically) to Erlang concepts without adding some generic constructs.</p>
 <table class="docutils footnote" frame="void" id="footnote-1" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
@@ -460,7 +460,7 @@ This cat could be created and be synchronously deleted, as expected.
 <table class="docutils footnote" frame="void" id="footnote-2" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-2">[2]</a></td><td>More generally, over time we tend to see any remaining comment as a potential candidate to &quot;metadata promotion&quot;. This way, the corresponding information can be used in multiple contexts (ex: when generating documentation from code).</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-2">[2]</a></td><td>More generally, over time we tend to see any remaining comment as a potential candidate to &quot;metadata promotion&quot;. This way, the corresponding information can be used in multiple contexts (e.g. when generating documentation from code).</td></tr>
 </tbody>
 </table>
 </div>
@@ -480,7 +480,7 @@ This cat could be created and be synchronously deleted, as expected.
 <table class="docutils footnote" frame="void" id="footnote-3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#footnote-reference-3">[3]</a></td><td>Neither of them is a subset of the other, these are mostly unrelated concepts, at least in the context of that example! (ex: a platypus is a mammal, but not a viviparous being, right?).</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#footnote-reference-3">[3]</a></td><td>Neither of them is a subset of the other, these are mostly unrelated concepts, at least in the context of that example! (e.g. a platypus is a mammal, but not a viviparous being, right?).</td></tr>
 </tbody>
 </table>
 <p>The superclasses (direct mother classes) of a given class can be known thanks to its <tt class="docutils literal">get_superclasses/0</tt> static method <a class="footnote-reference" href="#footnote-4" id="footnote-reference-4">[4]</a> (automatically defined by WOOPER):</p>
@@ -589,7 +589,7 @@ This cat could be created and be synchronously deleted, as expected.
 </div>
 <div class="section" id="method-name">
 <h3><a class="toc-backref" href="#toc-entry-114">Method Name</a></h3>
-<p>Methods are designated by their name (as an atom), i.e. the one specified when defining them (ex: <tt class="docutils literal">canEat</tt>).</p>
+<p>Methods are designated by their name (as an atom), i.e. the one specified when defining them (e.g. <tt class="docutils literal">canEat</tt>).</p>
 <p>We recommend that their name is spelled in CamelCase and remains short and descriptive, and start with a verb, like in: <tt class="docutils literal">getColor</tt>, <tt class="docutils literal">computeSum</tt>, <tt class="docutils literal">registerDefaultSettings</tt>, etc.</p>
 <p>Some method names are reserved for WOOPER; notably no user-defined method should have its name prefixed with <tt class="docutils literal">wooper</tt> or with <tt class="docutils literal">onWOOPER</tt>.</p>
 <p>The list of the other reserved names (that shall thus not be defined by a class developer) includes:</p>
@@ -605,7 +605,7 @@ This cat could be created and be synchronously deleted, as expected.
 </div>
 <div class="section" id="method-parameters">
 <h3><a class="toc-backref" href="#toc-entry-115">Method Parameters</a></h3>
-<p>All methods are free to change the state of their instance and possibly to trigger any side-effect (ex: sending a message, writing a file, kidnapping Santa Claus, etc.).</p>
+<p>All methods are free to change the state of their instance and possibly to trigger any side-effect (e.g. sending a message, writing a file, kidnapping Santa Claus, etc.).</p>
 <p>As detailed below, there are two kinds of member methods:</p>
 <ul class="simple">
 <li><em>requests</em> methods: they shall return a result to the caller (obviously they need to know it, i.e. the caller has to specify its PID)</li>
@@ -719,7 +719,7 @@ convention.</td>
 </table>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">As mentioned above, failure detection may better be done through the use of (Erlang) links, either explicitly set (with <tt class="docutils literal">erlang:link/1</tt>) or, preferably (ex: to avoid race conditions), with a linked variation of the <tt class="docutils literal">new</tt> operator (ex: <tt class="docutils literal">new_link/N</tt>), as discussed later in this document.
+<p class="last">As mentioned above, failure detection may better be done through the use of (Erlang) links, either explicitly set (with <tt class="docutils literal">erlang:link/1</tt>) or, preferably (e.g. to avoid race conditions), with a linked variation of the <tt class="docutils literal">new</tt> operator (e.g. <tt class="docutils literal">new_link/N</tt>), as discussed later in this document.
 So a reader in a hurry may want to skip these considerations and directly jump to the <a class="reference internal" href="#method-definition">Method Definition</a> section.</p>
 </div>
 <div class="section" id="wooper-method-not-found">
@@ -992,7 +992,7 @@ Therefore one could make use of that information, as in:</p>
 </div>
 <div class="section" id="usefulness-of-the-method-terminators">
 <h3><a class="toc-backref" href="#toc-entry-121">Usefulness Of the Method Terminators</a></h3>
-<p>The actual definition of the method terminators (ex: <tt class="docutils literal">wooper:return_state_result/2</tt>, <tt class="docutils literal">wooper:return_state/1</tt>) is actually quite straightforward.</p>
+<p>The actual definition of the method terminators (e.g. <tt class="docutils literal">wooper:return_state_result/2</tt>, <tt class="docutils literal">wooper:return_state/1</tt>) is actually quite straightforward.</p>
 <p>For example <tt class="docutils literal">wooper:return_state_result(AState,AResult)</tt> will simply translate into <tt class="docutils literal">{AState,AResult}</tt>, and <tt class="docutils literal">wooper:return_state(AState)</tt> will translate into <tt class="docutils literal">AState</tt>.</p>
 <p>Their purpose is just to structure the method implementations, helping the method developer not mixing updated states and results, and helping WOOPER in categorizing appropriately all Erlang-level functions.</p>
 <p>More precisely, as mentioned, all clauses of a method must directly end with a call to its corresponding WOOPER method terminator.</p>
@@ -1031,8 +1031,8 @@ Therefore one could make use of that information, as in:</p>
 <h3><a class="toc-backref" href="#toc-entry-122">Self-Invocation: Calling a Method From the Instance Itself</a></h3>
 <p>When implementing a method of a class, one may want to call other methods <strong>of that same class</strong> (have they been overridden or not).</p>
 <p>For example, when developing the <tt class="docutils literal">declareBirthday/1</tt> oneway of <tt class="docutils literal">class_Mammal</tt> (which, among other things, is expected to increment the mammal age), one may want to perform a call to its <tt class="docutils literal">setAge/2</tt> oneway (possibly introduced by an ancestor class like <tt class="docutils literal">class_Creature</tt>, or possibly overridden directly in <tt class="docutils literal">class_Mammal</tt>) on the current instance.</p>
-<p>One <em>could</em> refer to this method respectively as a function exported by that ancestor (ex: called as <tt class="docutils literal"><span class="pre">class_Creature:setAge(...)</span></tt>) or that is local to the current module (a direct <tt class="docutils literal"><span class="pre">setAge(...)</span></tt> local call designating then <tt class="docutils literal">class_Mammal:setAge/2</tt>).</p>
-<p>However, in the future, child classes of <tt class="docutils literal">class_Mammal</tt> may be introduced (ex: <tt class="docutils literal">class_Cat</tt>), and they might define their own version of <tt class="docutils literal">setAge/2</tt>.</p>
+<p>One <em>could</em> refer to this method respectively as a function exported by that ancestor (e.g. called as <tt class="docutils literal"><span class="pre">class_Creature:setAge(...)</span></tt>) or that is local to the current module (a direct <tt class="docutils literal"><span class="pre">setAge(...)</span></tt> local call designating then <tt class="docutils literal">class_Mammal:setAge/2</tt>).</p>
+<p>However, in the future, child classes of <tt class="docutils literal">class_Mammal</tt> may be introduced (e.g. <tt class="docutils literal">class_Cat</tt>), and they might define their own version of <tt class="docutils literal">setAge/2</tt>.</p>
 <p>Instead of hardcoding which version of that method shall be called (like in the two previous cases, which establish statically the intended version to call), a developer may desire - if not expect - that, for a cat or for any specialised version thereof, <tt class="docutils literal">declareBirthday/1</tt> calls automatically the &quot;right&quot; <tt class="docutils literal">setAge/2</tt> method (i.e. the lastly overridden one in the inheritance graph). Possibly any <tt class="docutils literal">class_Cat:setAge/2</tt> - not the version of <tt class="docutils literal">class_Creature</tt> or <tt class="docutils literal">class_Mammal</tt>.</p>
 <p>Such an inheritance-aware call could be easily triggered asynchronously: a classical message-based method call directly addressed by an instance to itself could be used, like in <tt class="docutils literal"><span class="pre">self()!{setAge,10}</span></tt>, and (thanks to WOOPER) this would lead to executing the &quot;right&quot; version of that method.</p>
 <p>If this approach may be useful when not directly needing, from the method, the result of the call and/or not needing to have it executed at once, in the general case one wants to have that possibly overridden method be executed <em>directly</em>, synchronously, and to obtain immediately the corresponding updated state and, if relevant, the associated output result.</p>
@@ -1145,7 +1145,7 @@ Color = executeConstRequestAs(MyState,class_Vehicle,
 </pre>
 <p>See also the section about <a class="reference internal" href="#methods-not-returning-anything-of-interest">Methods Not Returning Anything of Interest</a>, which may apply to static methods notably.</p>
 <p>Finally, having static methods leaves little interest to defining and exporting one's standard, plain (helper) functions; when doing so, one should wonder whether a static method could not be a solution at least as good.</p>
-<p>So the main purpose left to helpers is to factor out common, framework-internal code (not targeted at users) across methods (and possibly classes), especially when it involves an instance state (ex: <tt class="docutils literal">display_foo(Color,Index,State) <span class="pre">-&gt;...</span></tt>).</p>
+<p>So the main purpose left to helpers is to factor out common, framework-internal code (not targeted at users) across methods (and possibly classes), especially when it involves an instance state (e.g. <tt class="docutils literal">display_foo(Color,Index,State) <span class="pre">-&gt;...</span></tt>).</p>
 <p></p>
 </div>
 </div>
@@ -1194,10 +1194,10 @@ Color = executeConstRequestAs(MyState,class_Vehicle,
 </pre>
 <p>where:</p>
 <ul class="simple" id="attribute-declaration">
-<li><tt class="docutils literal">Name</tt> is the name of that attribute, as an atom (ex: <tt class="docutils literal">fur_color</tt>)</li>
-<li><tt class="docutils literal">Type</tt> corresponds to the <a class="reference external" href="http://erlang.org/doc/reference_manual/typespec.html">type specification</a> of that attribute (ex: <tt class="docutils literal"><span class="pre">[atom()]</span></tt>, <tt class="docutils literal">foo:color_index()</tt>); note that the Erlang parser will not support the <tt class="docutils literal">|</tt> (i.e. union) operator, like in <tt class="docutils literal"><span class="pre">'foo'|integer()</span></tt>; we recommend to use the <tt class="docutils literal">union</tt> variadic pseudo-function instead (with any arity greater or equal to 2), like in: <tt class="docutils literal"><span class="pre">union('foo',integer())</span></tt></li>
+<li><tt class="docutils literal">Name</tt> is the name of that attribute, as an atom (e.g. <tt class="docutils literal">fur_color</tt>)</li>
+<li><tt class="docutils literal">Type</tt> corresponds to the <a class="reference external" href="http://erlang.org/doc/reference_manual/typespec.html">type specification</a> of that attribute (e.g. <tt class="docutils literal"><span class="pre">[atom()]</span></tt>, <tt class="docutils literal">foo:color_index()</tt>); note that the Erlang parser will not support the <tt class="docutils literal">|</tt> (i.e. union) operator, like in <tt class="docutils literal"><span class="pre">'foo'|integer()</span></tt>; we recommend to use the <tt class="docutils literal">union</tt> variadic pseudo-function instead (with any arity greater or equal to 2), like in: <tt class="docutils literal"><span class="pre">union('foo',integer())</span></tt></li>
 <li><tt class="docutils literal">QualifierInfo</tt> is detailed just below</li>
-<li><tt class="docutils literal">Description</tt> is a plain string describing the purpose of this attribute; this is a comment aimed only at humans, which preferably does not start with a capital letter and does not end with a dot (ex: <tt class="docutils literal">&quot;describes the color of the fur of this animal (not including whiskers)&quot;</tt> or a shorter, maybe better, <tt class="docutils literal">&quot;color of the fur of this animal (not including whiskers)&quot;</tt>)</li>
+<li><tt class="docutils literal">Description</tt> is a plain string describing the purpose of this attribute; this is a comment aimed only at humans, which preferably does not start with a capital letter and does not end with a dot (e.g. <tt class="docutils literal">&quot;describes the color of the fur of this animal (not including whiskers)&quot;</tt> or a shorter, maybe better, <tt class="docutils literal">&quot;color of the fur of this animal (not including whiskers)&quot;</tt>)</li>
 </ul>
 <p>A <strong>qualifier information</strong> is either a single qualifier, or a list of qualifiers.</p>
 <p>A <strong>qualifier</strong> can be:</p>
@@ -1262,7 +1262,7 @@ Color = executeConstRequestAs(MyState,class_Vehicle,
 <p>The attributes of a class instance can be seen as a series of key/value pairs stored in an associative table, whose type has been chosen for its look-up/update efficiency and scalability.</p>
 <p>This is a dynamic datastructure, allowing attributes to be added, removed or modified at any time (the safer conventions that apply will be discussed later).</p>
 <p>This table, among other elements, is itself stored in the overall instance state, i.e. in the variable designated by <tt class="docutils literal">State</tt> specified at the beginning of each member method (and constructors, and destructor), on which the process corresponding to active instances is looping, and whose type is <tt class="docutils literal">wooper:state()</tt>.</p>
-<p>For clarity, we strongly advise to suffix the name of the various state variables used with <tt class="docutils literal">State</tt> (ex: <tt class="docutils literal">RegisteredState</tt>, <tt class="docutils literal">FinalState</tt>, etc.).</p>
+<p>For clarity, we strongly advise to suffix the name of the various state variables used with <tt class="docutils literal">State</tt> (e.g. <tt class="docutils literal">RegisteredState</tt>, <tt class="docutils literal">FinalState</tt>, etc.).</p>
 <p></p>
 </div>
 </div>
@@ -1294,8 +1294,8 @@ Color = executeConstRequestAs(MyState,class_Vehicle,
                                </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">().</span>
 </pre>
 <p>For example, <tt class="docutils literal">AgeState = setAttribute(State, age, 3)</tt> will return a new state, bound to <tt class="docutils literal">AgeState</tt>, exact copy of <tt class="docutils literal">State</tt> (notably with all the attribute pairs equal) but for the <tt class="docutils literal">age</tt> attribute, whose value will be set to 3.</p>
-<p>Therefore, during the execution of a method, any number of states can be defined (ex: <tt class="docutils literal">State</tt>, <tt class="docutils literal">InitialisedState</tt>, <tt class="docutils literal">AgeState</tt>, etc.) before all, but the one that is returned, are garbage-collected.</p>
-<p>Note that the corresponding state duplication remains efficient both in terms of processing and memory, as the different underlying state structures (ex: <tt class="docutils literal">State</tt> and <tt class="docutils literal">AgeState</tt>) actually <strong>share</strong> all their terms except the one modified - thanks to the immutability of Erlang variables that allows to reference rather than copy, be these datastructures tables, records, or anything else.</p>
+<p>Therefore, during the execution of a method, any number of states can be defined (e.g. <tt class="docutils literal">State</tt>, <tt class="docutils literal">InitialisedState</tt>, <tt class="docutils literal">AgeState</tt>, etc.) before all, but the one that is returned, are garbage-collected.</p>
+<p>Note that the corresponding state duplication remains efficient both in terms of processing and memory, as the different underlying state structures (e.g. <tt class="docutils literal">State</tt> and <tt class="docutils literal">AgeState</tt>) actually <strong>share</strong> all their terms except the one modified - thanks to the immutability of Erlang variables that allows to reference rather than copy, be these datastructures tables, records, or anything else.</p>
 <p>In various cases, notably in constructors, one needs to define a series of attributes in a row, but chaining <tt class="docutils literal">setAttribute/3</tt> calls with intermediate states that have each to be named is not really convenient.</p>
 <p>A better solution is to use the <tt class="docutils literal">setAttributes/2</tt> function (note the plural) to set a list of attribute name/attribute value pairs in a row.</p>
 <p>Its type specification is:</p>
@@ -1498,7 +1498,7 @@ If the attribute exists, but no subtraction can be performed on it (meaningless 
                                </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">().</span>
 </pre>
 <p>For example, if the <tt class="docutils literal">my_list_attribute</tt> attribute was already set to <tt class="docutils literal">[see_you, goodbye]</tt> in <tt class="docutils literal">State</tt>, then after <tt class="docutils literal">NewState = appendToAttribute(State, my_list_attribute, hello)</tt>, the <tt class="docutils literal">my_list_attribute</tt> attribute defined in <tt class="docutils literal">NewState</tt> will be equal to <tt class="docutils literal">[hello, see_you, goodbye]</tt>, all other attributes being unchanged.</p>
-<p>Calling <tt class="docutils literal">appendToAttribute/3</tt> on a non-existing attribute will trigger a a <tt class="docutils literal">badmatch</tt> runtime error. If the attribute exists, but is not a list, an ill-formed list will be created (ex: <tt class="docutils literal">[8|false]</tt> when appending 8 to <tt class="docutils literal">false</tt>, which is not a list).</p>
+<p>Calling <tt class="docutils literal">appendToAttribute/3</tt> on a non-existing attribute will trigger a a <tt class="docutils literal">badmatch</tt> runtime error. If the attribute exists, but is not a list, an ill-formed list will be created (e.g. <tt class="docutils literal">[8|false]</tt> when appending 8 to <tt class="docutils literal">false</tt>, which is not a list).</p>
 </div>
 <div class="section" id="the-deletefromattribute-3-function">
 <h5>The <tt class="docutils literal">deleteFromAttribute/3</tt> function</h5>
@@ -1587,9 +1587,9 @@ This is a 9 year old creature.
 </div>
 <p>This may happen when, like in <a class="reference external" href="#wooper-example">the WOOPER example</a> presented later in this document:</p>
 <ul class="simple">
-<li>a very general &quot;root&quot; class (ex: <tt class="docutils literal">class_Creature</tt>) sits at the top of at least a part of the hierarchy <a class="footnote-reference" href="#footnote-15" id="footnote-reference-15">[15]</a></li>
-<li>various child classes derive from it (ex: <tt class="docutils literal">class_Mammal</tt> and a <tt class="docutils literal">class_OvoviviparousBeing</tt> may derive from <tt class="docutils literal">class_Creature</tt> for obvious reasons)</li>
-<li>a more concrete class (ex: <tt class="docutils literal">class_Platypus</tt>) has to derive from at least two of these child classes (since a platypus happens to be both a mammal and an ovoviviparous being)</li>
+<li>a very general &quot;root&quot; class (e.g. <tt class="docutils literal">class_Creature</tt>) sits at the top of at least a part of the hierarchy <a class="footnote-reference" href="#footnote-15" id="footnote-reference-15">[15]</a></li>
+<li>various child classes derive from it (e.g. <tt class="docutils literal">class_Mammal</tt> and a <tt class="docutils literal">class_OvoviviparousBeing</tt> may derive from <tt class="docutils literal">class_Creature</tt> for obvious reasons)</li>
+<li>a more concrete class (e.g. <tt class="docutils literal">class_Platypus</tt>) has to derive from at least two of these child classes (since a platypus happens to be both a mammal and an ovoviviparous being)</li>
 </ul>
 <table class="docutils footnote" frame="void" id="footnote-15" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -1598,7 +1598,7 @@ This is a 9 year old creature.
 </tbody>
 </table>
 <p>Then the concrete class will end up deriving more than once from the same root class (here: <tt class="docutils literal">class_Platypus</tt> will derive indirectly from <tt class="docutils literal">class_Creature</tt> twice).</p>
-<p>Diamond-shaped inheritance may lead to issues in terms of state management (ex: attributes having possibly in turn to be defined more than once), behaviour (multiple implementations having to be selected for some methods) and initialisation (extraneous constructor and destructor calls being made).</p>
+<p>Diamond-shaped inheritance may lead to issues in terms of state management (e.g. attributes having possibly in turn to be defined more than once), behaviour (multiple implementations having to be selected for some methods) and initialisation (extraneous constructor and destructor calls being made).</p>
 </div>
 <div class="section" id="modelling-implementation-choices">
 <h4>Modelling &amp; Implementation Choices</h4>
@@ -1673,7 +1673,7 @@ This is a 9 year old creature.
 </tbody>
 </table>
 <p>The <tt class="docutils literal">new</tt> and <tt class="docutils literal">new_link</tt> operators are automatically defined by WOOPER (thanks to a relevant parse transform), but they rely on their corresponding, class-specific, user-defined <tt class="docutils literal">construct</tt> operator (only WOOPER is expected to make use of it). More precisely, for each of the <tt class="docutils literal">construct/N+1</tt> operator defined by the class developer, WOOPER creates a full set of corresponding <tt class="docutils literal">new</tt> variations, including <tt class="docutils literal">new/N</tt> and <tt class="docutils literal">new_link/N</tt>.</p>
-<p>At least one <tt class="docutils literal">construct</tt> operator must be defined by the class developer (otherwise WOOPER will raise a compile-time error), knowing that any number of them can then be defined, each with its own arity (ex: <tt class="docutils literal">construct/1, construct/2, construct/3</tt>, etc.), and each with possibly multiple clauses that will be, as usual, selected at runtime based on pattern-matching.</p>
+<p>At least one <tt class="docutils literal">construct</tt> operator must be defined by the class developer (otherwise WOOPER will raise a compile-time error), knowing that any number of them can then be defined, each with its own arity (e.g. <tt class="docutils literal">construct/1, construct/2, construct/3</tt>, etc.), and each with possibly multiple clauses that will be, as usual, selected at runtime based on pattern-matching.</p>
 <p><tt class="docutils literal">construct</tt> operators may not be exported explicitly by the class developer, as WOOPER will automatically take care of that if necessary.</p>
 <p>For example:</p>
 <pre class="code erlang literal-block">
@@ -1723,7 +1723,7 @@ This is a 9 year old creature.
 <p>Note that, should the instance creation fail, the caller of a synchronous new would then be blocked for ever, as the awaited message would actually never be sent by the failed new instance. In some cases a time-out may be useful, so that the caller may be unblocked and may react appropriately.</p>
 <p>This is why the <tt class="docutils literal">synchronous_timed_new*</tt> operators have been introduced: if the caller-side time-out <a class="footnote-reference" href="#footnote-18" id="footnote-reference-18">[18]</a> expires while waiting for the created instance to answer, then they will throw an appropriate exception:</p>
 <ul class="simple">
-<li>either <tt class="docutils literal">{synchronous_time_out,Classname}</tt> if it was a node-local creation (where <tt class="docutils literal">Classname</tt> is the name of the class corresponding to the instance to create; ex: <tt class="docutils literal">class_Cat</tt>)</li>
+<li>either <tt class="docutils literal">{synchronous_time_out,Classname}</tt> if it was a node-local creation (where <tt class="docutils literal">Classname</tt> is the name of the class corresponding to the instance to create; e.g. <tt class="docutils literal">class_Cat</tt>)</li>
 <li>or <tt class="docutils literal">{remote_synchronous_time_out,Node,Classname}</tt>, where <tt class="docutils literal">Node</tt> is the name of the node (as an atom) on which the instance was to be created</li>
 </ul>
 <table class="docutils footnote" frame="void" id="footnote-18" rules="none">
@@ -1837,7 +1837,7 @@ This is a 9 year old creature.
 <h4>Automatic Chaining Of Destructors</h4>
 <p>We saw that, when implementing a constructor (<tt class="docutils literal">construct/N</tt>), like in all other OOP approaches the constructors of the direct mother classes have to be explicitly called, so that they can be given the proper parameters, as determined by the class developer.</p>
 <p>Conversely, with WOOPER, when defining a destructor for a class (<tt class="docutils literal">destruct/1</tt>), one only has to specify what are the <em>specific</em> operations and state changes (if any) that are required so that an instance of that class is deleted: the proper calling of the destructors of mother classes across the inheritance graph is automatically taken in charge by WOOPER.</p>
-<p>Once the user-specified actions have been processed by the destructor (ex: releasing a resource, unsubscribing from a registry, deleting other instances, closing properly a file, etc.), it is expected to return an updated state, which will be given in turn to the destructors of the instance direct mother classes.</p>
+<p>Once the user-specified actions have been processed by the destructor (e.g. releasing a resource, unsubscribing from a registry, deleting other instances, closing properly a file, etc.), it is expected to return an updated state, which will be given in turn to the destructors of the instance direct mother classes.</p>
 <p>WOOPER will automatically make use of any user-defined destructor, otherwise the default one will be used, doing nothing (i.e. returning the exact same state that it was given).</p>
 <p>Note also that, as always, there is a single destructor associated to a given class.</p>
 <p>As constructors, destructors should not be exported, as WOOPER is to automatically take care of that.</p>
@@ -1856,7 +1856,7 @@ This is a 9 year old creature.
     </span><span class="c">% the instance:</span><span class="w">
     </span><span class="nv">State</span><span class="p">.</span>
 </pre>
-<p>In both cases (default or user-defined destructor), when the instance will be deleted (ex: <tt class="docutils literal">MyInstance ! delete</tt> is issued), WOOPER will take care of:</p>
+<p>In both cases (default or user-defined destructor), when the instance will be deleted (e.g. <tt class="docutils literal">MyInstance ! delete</tt> is issued), WOOPER will take care of:</p>
 <ul class="simple">
 <li>calling any user-defined destructor for that class</li>
 <li>then calling the ones of the direct mother classes, which will in turn call the ones of their mother classes, and so on</li>
@@ -1930,7 +1930,7 @@ wooper:delete_passive(RedCat).
 <p>WOOPER offers a rather complete support for <strong>serialisation and deserialisation</strong>, so that instances can be written to and read from a series of bytes (this can be a WSF file, standing for <tt class="docutils literal">WOOPER Serialisation File</tt>, a network stream, etc.).</p>
 <p>For that the <tt class="docutils literal">class_Serialisable</tt> interface provides all default yet overridable primitives, including:</p>
 <ul class="simple">
-<li>&quot;serialisation hooks&quot; (ex: the <tt class="docutils literal">onPreSerialisation/2</tt> request), meant to accommodate any class-specific transformation that shall happen prior to each operation</li>
+<li>&quot;serialisation hooks&quot; (e.g. the <tt class="docutils literal">onPreSerialisation/2</tt> request), meant to accommodate any class-specific transformation that shall happen prior to each operation</li>
 <li>entry transformers, that are generally specific to a project but transverse to most if not all its classes, so that values of attributes can be recursively scanned for transient terms (like a PID, a reference), which are generally replaced with restoration markers at serialisation time, and recreated appropriately at deserialisation time</li>
 </ul>
 <p>The usual variations (e.g. deserialisations may be synchronous or not, linked or not) of operations are supported.</p>
@@ -1952,7 +1952,7 @@ wooper:delete_passive(RedCat).
 <li>then the module corresponding to that class is reloaded (possibly after having been recompiled), being soft-purged (and possibly hard-purged if needed)</li>
 <li>then all its instances perform (concurrently) any state update that they need in order to support the new version</li>
 </ol>
-<p>In practice, for a given class (e.g. <tt class="docutils literal">class_TestUpgradable</tt>), various versions thereof may be introduced over time (ex: <tt class="docutils literal">1.2.3</tt>, then <tt class="docutils literal">1.2.4</tt>). Each version of a given class is free to override the default implementations of the <tt class="docutils literal">upgradeVersion/4</tt> and <tt class="docutils literal">downgradeVersion/4</tt> methods, as inherited from the <tt class="docutils literal">class_Upgradable</tt> interface, in order to account for all changes introduced between two versions (e.g. attributes being added or removed, changing types, having their value transformed).</p>
+<p>In practice, for a given class (e.g. <tt class="docutils literal">class_TestUpgradable</tt>), various versions thereof may be introduced over time (e.g. <tt class="docutils literal">1.2.3</tt>, then <tt class="docutils literal">1.2.4</tt>). Each version of a given class is free to override the default implementations of the <tt class="docutils literal">upgradeVersion/4</tt> and <tt class="docutils literal">downgradeVersion/4</tt> methods, as inherited from the <tt class="docutils literal">class_Upgradable</tt> interface, in order to account for all changes introduced between two versions (e.g. attributes being added or removed, changing types, having their value transformed).</p>
 <p>Refer to <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/test/interfaces/class_Upgradable_test.erl">class_Upgradable_test</a> for a full test thereof.</p>
 <p></p>
 </div>
@@ -2012,7 +2012,7 @@ wooper:delete_passive(RedCat).
 <p>However this would not be correct, as the second clause lacks a terminator, and WOOPER does not accept that (it might be the sign that the developer believes he is writing an helper function).</p>
 <p>So we would like to use <tt class="docutils literal">wooper:return_state_result/2</tt> for the second clause as well, however we shall then have a state and a price to feed this terminator. How can we obtain them from the presumably opaque term returned by the <tt class="docutils literal">wooper:return_state_result/2</tt> call of the first clause?</p>
 <p>The answer is quite simple: all WOOPER method terminators being actually no-op, they are replaced at compilation-time by the actual terms they were given.</p>
-<p>So a terminator taking only a state as parameter is replaced literally by this state (ex: <tt class="docutils literal">wooper:return_state(FooState)</tt> is actually <tt class="docutils literal">FooState</tt>), while one taking two returns a pair (ex: <tt class="docutils literal">wooper:return_state_result(FooState,Res)</tt> is actually <tt class="docutils literal">{FooState,Res}</tt>). No black magic here!</p>
+<p>So a terminator taking only a state as parameter is replaced literally by this state (e.g. <tt class="docutils literal">wooper:return_state(FooState)</tt> is actually <tt class="docutils literal">FooState</tt>), while one taking two returns a pair (e.g. <tt class="docutils literal">wooper:return_state_result(FooState,Res)</tt> is actually <tt class="docutils literal">{FooState,Res}</tt>). No black magic here!</p>
 <p>Therefore the implementation we target could be best <a class="footnote-reference" href="#footnote-21" id="footnote-reference-21">[21]</a> written as:</p>
 <pre class="code erlang literal-block">
 <span class="c">% (same clause)</span><span class="w">
@@ -2057,12 +2057,12 @@ wooper:delete_passive(RedCat).
 <p>So the <tt class="docutils literal">wooper</tt> module provides facilities in order to execute:</p>
 <ul class="simple">
 <li>a given <strong>request</strong> <strong>sequentially</strong> on <strong>multiple callees</strong>: <tt class="docutils literal">send_request_in_turn/3</tt> or, if wanting that a time-out applies, <tt class="docutils literal">send_request_in_turn/4</tt></li>
-<li>the same for a <strong>oneway</strong> sending (off-band, through a direct message sending) a user-specified <strong>acknowledgement term</strong> (ex: a conventional atom): <tt class="docutils literal">send_acknowledged_oneway_in_turn/5</tt></li>
+<li>the same for a <strong>oneway</strong> sending (off-band, through a direct message sending) a user-specified <strong>acknowledgement term</strong> (e.g. a conventional atom): <tt class="docutils literal">send_acknowledged_oneway_in_turn/5</tt></li>
 <li>a given <strong>request</strong>, whose only result in a user-specified <strong>acknowledgement term</strong>, in <strong>parallel</strong> on <strong>multiple callees</strong>: <tt class="docutils literal">send_requests_and_wait_acks/4</tt> or, if wanting that a time-out applies, <tt class="docutils literal">send_requests_and_wait_acks/5</tt></li>
 <li>a given <strong>request</strong> in <strong>parallel</strong> on <strong>multiple callees</strong>, obtaining back an <strong>unordered</strong> list of their results: <tt class="docutils literal">obtain_results_for_requests/3</tt></li>
 <li>a <strong>series of requests</strong> on a <strong>single</strong> callee: <tt class="docutils literal">send_request_series/2</tt> (just for the sending) and <tt class="docutils literal">obtain_results_for_request_series/2</tt> (to include also the collecting of their ordered results)</li>
 </ul>
-<p>Many more flavours can be considered (ex: for active/passive instances, requests or oneways, with or without time-out, synchronisable or not, etc.) and may be supported in the future, on a per-need basis.</p>
+<p>Many more flavours can be considered (e.g. for active/passive instances, requests or oneways, with or without time-out, synchronisable or not, etc.) and may be supported in the future, on a per-need basis.</p>
 <p>However it may be more convenient to compose any extra multi-call that is needed thanks to the various basic helpers that are provided in the <tt class="docutils literal">wooper</tt> module in order to send calls or to collect their results. Doing so allows for example to perform interleaving (triggering concurrent calls as soon as possible, collecting their results as late as possible) and maximise the overall parallelism.</p>
 </div>
 </div>
@@ -2103,7 +2103,7 @@ wooper:delete_passive(RedCat).
 <p>A <strong>clause of a method may simply always throw an exception</strong>, and WOOPER will manage it automatically if possible.</p>
 <p>More precisely, such a clause is considered licit yet not giving information about the method type. So, should there be other, non-throwing clauses, WOOPER will still be able to identify the nature of the method.</p>
 <p>Otherwise (all clauses always throw), the class developer will have to give a hint about the actual nature of that function - thanks to a type specification.</p>
-<p>For example, if defining the API of an abstract class (say, an <tt class="docutils literal">AbstractShape</tt> class) whereas, for a given method signature (ex: <tt class="docutils literal">getArea/1</tt>), there is no meaningful default implementation, one may for example write:</p>
+<p>For example, if defining the API of an abstract class (say, an <tt class="docutils literal">AbstractShape</tt> class) whereas, for a given method signature (e.g. <tt class="docutils literal">getArea/1</tt>), there is no meaningful default implementation, one may for example write:</p>
 <pre class="code erlang literal-block">
 <span class="nf">getArea</span><span class="p">(_</span><span class="nv">State</span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
     </span><span class="c">% For an abstract shape, no possible definition;</span><span class="w">
@@ -2247,7 +2247,7 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 </div>
 <div class="section" id="otp-guidelines">
 <h3><a class="toc-backref" href="#toc-entry-58">OTP Guidelines</a></h3>
-<p>For server-like activities, it may be useful to have instances of WOOPER classes (ex: <tt class="docutils literal">class_Foobar</tt>) behave like OTP workers in supervision trees.</p>
+<p>For server-like activities, it may be useful to have instances of WOOPER classes (e.g. <tt class="docutils literal">class_Foobar</tt>) behave like OTP workers in supervision trees.</p>
 <p>Exactly like by default any Erlang process is not able to readily take part to an OTP supervision tree <a class="footnote-reference" href="#footnote-24" id="footnote-reference-24">[24]</a>, a WOOPER instance must specifically support such an integration.</p>
 <table class="docutils footnote" frame="void" id="footnote-24" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -2260,11 +2260,11 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#footnote-reference-25">[25]</a></td><td><p class="first">Otherwise, as we understand it, should WOOPER instances be directly declared in a supervision tree as mere workers, they would have to implement typically the <tt class="docutils literal">gen_server</tt> behaviour, which implies relying on <tt class="docutils literal">handle_{call,cast,info}</tt> functions and on a behaviour-specific main loop - rather than on the counterpart method-based facilities offered by WOOPER.</p>
-<p class="last">A consequence is the need for an extra, mostly idle process sitting between such a supervised WOOPER instance and its supervisor. In some cases (ex: a webserver processing each request based on a WOOPER instance), this overhead would be excessive; then defining a WOOPER-specific supervisor, able to handle directly its WOOPER instances as workers, could be devised.</p>
+<p class="last">A consequence is the need for an extra, mostly idle process sitting between such a supervised WOOPER instance and its supervisor. In some cases (e.g. a webserver processing each request based on a WOOPER instance), this overhead would be excessive; then defining a WOOPER-specific supervisor, able to handle directly its WOOPER instances as workers, could be devised.</p>
 </td></tr>
 </tbody>
 </table>
-<p>Rather than declaring the corresponding behaviour and its implemented API directly in the target class (ex: in <tt class="docutils literal">class_Foobar</tt>), we recommend for <em>clarity</em> (as, even if the bridge was declared in the same module, it would be still an intermediate, autonomous process sitting between the OTP supervisor and the WOOPER instance of interest) and for <em>separation of concerns</em> (leaving an OTP integration as an optional feature) to introduce a specific module for that, like done with <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/traces_bridge_sup.erl">traces_bridge_sup</a> for <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/class_TraceAggregator.erl">class_TraceAggregator.erl</a> or <a class="reference external" href="https://github.com/Olivier-Boudeville/us-common/blob/master/src/us_common_config_bridge_sup.erl">us_common_config_bridge_sup</a> for <a class="reference external" href="https://github.com/Olivier-Boudeville/us-common/blob/master/src/class_USConfigServer.erl">class_USConfigServer.erl</a>.</p>
+<p>Rather than declaring the corresponding behaviour and its implemented API directly in the target class (e.g. in <tt class="docutils literal">class_Foobar</tt>), we recommend for <em>clarity</em> (as, even if the bridge was declared in the same module, it would be still an intermediate, autonomous process sitting between the OTP supervisor and the WOOPER instance of interest) and for <em>separation of concerns</em> (leaving an OTP integration as an optional feature) to introduce a specific module for that, like done with <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/traces_bridge_sup.erl">traces_bridge_sup</a> for <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/class_TraceAggregator.erl">class_TraceAggregator.erl</a> or <a class="reference external" href="https://github.com/Olivier-Boudeville/us-common/blob/master/src/us_common_config_bridge_sup.erl">us_common_config_bridge_sup</a> for <a class="reference external" href="https://github.com/Olivier-Boudeville/us-common/blob/master/src/class_USConfigServer.erl">class_USConfigServer.erl</a>.</p>
 <p>However, when the purpose of a given class is solely to integrate within an OTP application through a supervision tree, one may of course have the bridge directly defined in the WOOPER class the interfacing of which it is enabling; see <a class="reference external" href="https://github.com/Olivier-Boudeville/us-main/blob/master/src/class_USSensorManager.erl">class_USSensorManager.erl</a> for an example thereof.</p>
 <p>In all cases, following the aforementioned <a class="reference external" href="https://github.com/Olivier-Boudeville/us-common/blob/master/src/us_common_config_bridge_sup.erl">us_common_config_bridge_sup</a> simple example, the additions mostly boil down to, in a relevant module as discussed above:</p>
 <ul class="simple">
@@ -2357,7 +2357,7 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <li>its <strong>spec</strong> should rely, for its return type, either on <tt class="docutils literal"><span class="pre">static_return(T())</span></tt> or on <tt class="docutils literal">static_void_return()</tt></li>
 <li>each of its clause should terminate with <tt class="docutils literal">wooper:return_static(R)</tt> or with <tt class="docutils literal">wooper:return_static_void()</tt></li>
 </ul>
-<p>Finding it difficult not to mix the keywords for spec return types (ex: <tt class="docutils literal">request_return/1</tt>) and method terminators (ex: <tt class="docutils literal">wooper:return_state_result/2</tt>)?</p>
+<p>Finding it difficult not to mix the keywords for spec return types (e.g. <tt class="docutils literal">request_return/1</tt>) and method terminators (e.g. <tt class="docutils literal">wooper:return_state_result/2</tt>)?</p>
 <p>A mnemonic could be that a spec return type designates a returned <em>term</em> (hence for example a <tt class="docutils literal">request_return/1</tt> - more generally such types always end with <tt class="docutils literal">_return</tt>) whereas a method terminator designates an <em>action</em> (returning a state and a result, hence to <tt class="docutils literal">wooper:return_state_result/2</tt> for example).</p>
 </div>
 <div class="section" id="source-editors">
@@ -2376,7 +2376,7 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <ul class="simple">
 <li>the per-instance memory footprint has been reduced by sharing the &quot;virtual table&quot; of a given class between all its instances, thanks to <tt class="docutils literal">persistent_term</tt></li>
 <li>the efficiency of the per-instance associative table to store the attribute values has been improved by switching from our hashtable implementation to a map-based one</li>
-<li>the macro-based constructor declarations were too cumbersome and limiting (ex: a single constructor per class was supported); this is fully addressed thanks to the WOOPER parse transform now</li>
+<li>the macro-based constructor declarations were too cumbersome and limiting (e.g. a single constructor per class was supported); this is fully addressed thanks to the WOOPER parse transform now</li>
 </ul>
 <p>We expect the upcoming JIT compilation to benefit a lot to WOOPER, with no change having to be operated at its level.</p>
 <p>As always, there is certainly room for improvement, to grind a bit more runtime performances and/or to further reduce the per-instance memory footprint. Profiling actions welcome!</p>
@@ -2412,7 +2412,7 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Cat_test.erl">class_Cat_test.erl</a></li>
 <li><a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/tree/master/priv/examples/class_Platypus_test.erl">class_Platypus_test.erl</a></li>
 </ul>
-<p>To run a test (ex: <tt class="docutils literal">class_Cat_test.erl</tt>), when WOOPER has already been compiled, one just has to enter, from the corresponding directory: <tt class="docutils literal">make class_Cat_run</tt>.</p>
+<p>To run a test (e.g. <tt class="docutils literal">class_Cat_test.erl</tt>), when WOOPER has already been compiled, one just has to enter, from the corresponding directory: <tt class="docutils literal">make class_Cat_run</tt>.</p>
 <p></p>
 </div>
 </div>
@@ -2424,12 +2424,12 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <p><strong>Class-specific attributes</strong> should be specified (using the <tt class="docutils literal">class_attributes</tt> define), as doing so brings up much useful information to the developer/maintainer.</p>
 <p><strong>Type specifications</strong> should be used for at least most non-internal functions (such as constructors, methods, etc.).</p>
 <p>There are always welcome, and in some corner cases they are also needed by WOOPER in order to discriminate between equally possible cases (see <a class="reference internal" href="#exception-throwing-methods">Exception-Throwing Methods</a> for more information).</p>
-<p>The <strong>naming conventions</strong> (ex: <tt class="docutils literal">CamelCase</tt> / <tt class="docutils literal">snake_case</tt>) shall be respected; notably, helper functions and static methods (which, from an Erlang point of view, are mostly just exported functions) should be named like C functions, in <tt class="docutils literal">snake_case</tt> (ex: <tt class="docutils literal">compute_sum</tt>) rather than being written in CamelCase (ex: no helper function should be named <tt class="docutils literal">computeSum</tt>), to avoid mixing up these different kinds of code.</p>
-<p>To further separate helper functions from instance methods, an helper function taking a <tt class="docutils literal">State</tt> parameter should better place it at the end of its parameter list rather than in first position (ex: <tt class="docutils literal">compute_sum(X,Y,State)</tt> rather than <tt class="docutils literal">compute_sum(State,X,Y)</tt>).</p>
+<p>The <strong>naming conventions</strong> (e.g. <tt class="docutils literal">CamelCase</tt> / <tt class="docutils literal">snake_case</tt>) shall be respected; notably, helper functions and static methods (which, from an Erlang point of view, are mostly just exported functions) should be named like C functions, in <tt class="docutils literal">snake_case</tt> (e.g. <tt class="docutils literal">compute_sum</tt>) rather than being written in CamelCase (e.g. no helper function should be named <tt class="docutils literal">computeSum</tt>), to avoid mixing up these different kinds of code.</p>
+<p>To further separate helper functions from instance methods, an helper function taking a <tt class="docutils literal">State</tt> parameter should better place it at the end of its parameter list rather than in first position (e.g. <tt class="docutils literal">compute_sum(X,Y,State)</tt> rather than <tt class="docutils literal">compute_sum(State,X,Y)</tt>).</p>
 <p>In a method body, the various state variables being introduced should be properly named, i.e. their name should start with a self-documenting prefix followed by the <tt class="docutils literal">State</tt> suffix, like in: <tt class="docutils literal"><span class="pre">SeededState=setAttribute(State,seed,{1,7,11})</span></tt>.</p>
 <p>Some more general (mostly unrelated) <strong>Erlang-level conventions</strong> that we like:</p>
 <ul class="simple">
-<li>when, in code, more than one parameter is specified in a function signature, parameter names can be surrounded by spaces (ex: <tt class="docutils literal">f( Color )</tt>, or <tt class="docutils literal">g( Age, Height )</tt>)</li>
+<li>when, in code, more than one parameter is specified in a function signature, parameter names can be surrounded by spaces (e.g. <tt class="docutils literal">f( Color )</tt>, or <tt class="docutils literal">g( Age, Height )</tt>)</li>
 <li>functions should be separated by (at least) three newlines, whereas clauses for a given function should be separated by one or two newlines, depending on their size</li>
 <li>to auto-document parameters, a &quot;mute&quot; variable is preferably to be used: for example, instead of <tt class="docutils literal">f( Color, true )</tt> use <tt class="docutils literal">f( Color, _Dither=true )</tt>; however note that (unfortunately) these mute variables are still bound and thus pattern-matched: for example, if multiple <tt class="docutils literal">_Dither</tt> mute variables are bound in the same scope to different values, a bad match will be triggered at runtime.</li>
 </ul>
@@ -2473,15 +2473,15 @@ WOOPER default EXIT handler for instance &lt;0.36.0&gt; of class class_Cat
 <h3><a class="toc-backref" href="#toc-entry-74">Compilation Warnings</a></h3>
 <p>A basic rule of thumb in all languages is to enable all warnings and eradicate them before even trying to test a program.</p>
 <p>This is still more valid when using WOOPER, whose proper use should never result in any warning being issued by the compiler.</p>
-<p>Notably warnings about unused variables are precious in order to catch mistakes when state variables are not being properly taken care of (ex: when a state is defined but never re-used later).</p>
+<p>Notably warnings about unused variables are precious in order to catch mistakes when state variables are not being properly taken care of (e.g. when a state is defined but never re-used later).</p>
 </div>
 <div class="section" id="runtime-errors">
 <h3><a class="toc-backref" href="#toc-entry-75">Runtime Errors</a></h3>
-<p>Most errors while using WOOPER should result in relatively clear messages (ex: <tt class="docutils literal">wooper_method_failed</tt> or <tt class="docutils literal">wooper_method_faulty_return</tt>), associated with all relevant runtime information that was available to WOOPER, including context and stacktrace.</p>
-<p>Another way of overcoming WOOPER issues is to activate the debug mode for all WOOPER-enabled compiled modules (ex: uncomment <tt class="docutils literal"><span class="pre">-define(wooper_debug_mode,).</span></tt> in <tt class="docutils literal">wooper.hrl</tt> or, preferably, ensure in <tt class="docutils literal">GNUmakevars.inc</tt> that <tt class="docutils literal">ENABLE_DEBUG</tt> has been set to true), and recompile your classes.</p>
+<p>Most errors while using WOOPER should result in relatively clear messages (e.g. <tt class="docutils literal">wooper_method_failed</tt> or <tt class="docutils literal">wooper_method_faulty_return</tt>), associated with all relevant runtime information that was available to WOOPER, including context and stacktrace.</p>
+<p>Another way of overcoming WOOPER issues is to activate the debug mode for all WOOPER-enabled compiled modules (e.g. uncomment <tt class="docutils literal"><span class="pre">-define(wooper_debug_mode,).</span></tt> in <tt class="docutils literal">wooper.hrl</tt> or, preferably, ensure in <tt class="docutils literal">GNUmakevars.inc</tt> that <tt class="docutils literal">ENABLE_DEBUG</tt> has been set to true), and recompile your classes.</p>
 <p>The debug mode tries to perform extensive checking on all WOOPER entry points, from incoming messages to the user class itself, catching mistakes from the class developer as well as from the class user.</p>
 <p>For example, the validity of states returned by a constructor, by each method and by the destructor is checked, as the one of states specified to the <tt class="docutils literal">execute*</tt> constructs.</p>
-<p>If it is not enough to clear things up, an additional step can be to add, on a per-class basis (ex: in <tt class="docutils literal">class_Cat.erl</tt>), before the WOOPER include, <tt class="docutils literal"><span class="pre">-define(wooper_log_wanted,).</span></tt>.</p>
+<p>If it is not enough to clear things up, an additional step can be to add, on a per-class basis (e.g. in <tt class="docutils literal">class_Cat.erl</tt>), before the WOOPER include, <tt class="docutils literal"><span class="pre">-define(wooper_log_wanted,).</span></tt>.</p>
 <p>Then all incoming method calls will be traced, for easier debugging. It is seldom necessary to go till this level of detail.</p>
 <p>As there are a few common WOOPER gotchas though, the main ones are listed below.</p>
 <div class="section" id="mismatches-in-method-call">
@@ -2518,7 +2518,7 @@ if a method takes only one parameter and if this parameter is a list, then in a 
 <h4>Error With Exit Value: <tt class="docutils literal"><span class="pre">{undef,[{map_hashtable,new,[..]}..</span></tt></h4>
 <p>You most probably forgot to build the <tt class="docutils literal">myriad</tt> directory that contains, among other modules, the <tt class="docutils literal">map_hashtable.erl</tt> source file.</p>
 <p>Check that you have a <tt class="docutils literal">map_hashtable.beam</tt> file indeed, and that it can be found from the paths specified to the virtual machine.</p>
-<p>Note that the WOOPER code designates this module as the <tt class="docutils literal">table</tt> one (ex: <tt class="docutils literal">table:new()</tt>), for a better substituability (this is obtained thanks to a parse-transform provided by <tt class="docutils literal"><span class="pre">Ceylan-Myriad</span></tt>) .</p>
+<p>Note that the WOOPER code designates this module as the <tt class="docutils literal">table</tt> one (e.g. <tt class="docutils literal">table:new()</tt>), for a better substituability (this is obtained thanks to a parse-transform provided by <tt class="docutils literal"><span class="pre">Ceylan-Myriad</span></tt>) .</p>
 <p></p>
 </div>
 </div>
@@ -2541,10 +2541,10 @@ if a method takes only one parameter and if this parameter is a list, then in a 
 <p>This is the installation method that we use and recommend; the WOOPER <tt class="docutils literal">master</tt> branch is meant to stick to the latest stable version: we try to ensure that this main line always stays functional (sorry for the pun). Evolutions are to take place in feature branches and to be merged only when ready.</p>
 <p>As a result, once a proper Erlang version is available, the <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-Myriad">Ceylan-Myriad repository</a> should be cloned and built, before doing the same with the <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER">Ceylan-WOOPER repository</a>, like in:</p>
 <pre class="code bash literal-block">
-$ git clone https://github.com/Olivier-Boudeville/Ceylan-Myriad myriad
-$ <span class="nb">cd</span> myriad <span class="o">&amp;&amp;</span> make all <span class="o">&amp;&amp;</span> <span class="nb">cd</span> ..
-$ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER wooper
-$ <span class="nb">cd</span> wooper <span class="o">&amp;&amp;</span> make all
+$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/Olivier-Boudeville/Ceylan-Myriad<span class="w"> </span>myriad<span class="w">
+</span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>myriad<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>all<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>..<span class="w">
+</span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/Olivier-Boudeville/Ceylan-WOOPER<span class="w"> </span>wooper<span class="w">
+</span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>wooper<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>all
 </pre>
 <p><span class="raw-html"><a name="otp"></a></span></p>
 </div>
@@ -2577,50 +2577,50 @@ So, at least for the moment, we prefer mostly relying on our custom build system
 <p class="first admonition-title">Note</p>
 <p>In a nutshell: the usual rebar3 machinery is in place and functional, so the only WOOPER prerequisite (<a class="reference external" href="https://myriad.esperide.org">Myriad</a>) and WOOPER itself can be obtained simply thanks to:</p>
 <pre class="code bash literal-block">
-$ git clone https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git wooper
-$ <span class="nb">cd</span> wooper
-$ rebar3 compile
+$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/Olivier-Boudeville/Ceylan-WOOPER.git<span class="w"> </span>wooper<span class="w">
+</span>$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>wooper<span class="w">
+</span>$<span class="w"> </span>rebar3<span class="w"> </span>compile
 </pre>
 <p>Then WOOPER and its tests shall be ready for a successful execution.</p>
 <p class="last">Note that rebar3 is an alternate way of building WOOPER, as one may rely directly on our make-based system instead.</p>
 </div>
 <p>The same procedures as <a class="reference external" href="http://myriad.esperide.org/myriad.html#otp">explained for Myriad</a> apply, once rebar3 is available:</p>
 <pre class="code bash literal-block">
-$ make rebar3-application
-$ make rebar3-release
+$<span class="w"> </span>make<span class="w"> </span>rebar3-application<span class="w">
+</span>$<span class="w"> </span>make<span class="w"> </span>rebar3-release
 </pre>
 <p>More precisely, to test the WOOPER OTP application support, provided that <tt class="docutils literal">make <span class="pre">rebar3-compile</span></tt> was issued beforehand, one can run from the root of the WOOPER source tree:</p>
 <pre class="code bash literal-block">
-$ <span class="nb">cd</span> <span class="nb">test</span>
-$ make wooper_otp_application_run
-       Running unitary <span class="nb">test</span> wooper_otp_application_run <span class="o">(</span>third form<span class="o">)</span>
-            from wooper_otp_application_test
+$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span><span class="nb">test</span><span class="w">
+</span>$<span class="w"> </span>make<span class="w"> </span>wooper_otp_application_run<span class="w">
+       </span>Running<span class="w"> </span>unitary<span class="w"> </span><span class="nb">test</span><span class="w"> </span>wooper_otp_application_run<span class="w"> </span><span class="o">(</span>third<span class="w"> </span>form<span class="o">)</span><span class="w">
+            </span>from<span class="w"> </span>wooper_otp_application_test<span class="w">
 
---&gt; Testing module wooper_otp_application_test.
+</span>--&gt;<span class="w"> </span>Testing<span class="w"> </span>module<span class="w"> </span>wooper_otp_application_test.<span class="w">
 
-Starting the WOOPER application.
-<span class="o">[</span>debug<span class="o">]</span> Starting WOOPER application <span class="o">(</span>type: normal, start arguments: <span class="o">[])</span>.
-<span class="o">[</span>debug<span class="o">]</span> Starting the WOOPER root supervisor.
-<span class="o">[</span>debug<span class="o">]</span> Initializing the WOOPER root supervisor <span class="o">(</span>args: <span class="o">[])</span>.
-<span class="o">[</span>debug<span class="o">]</span> Starting and linking the WOOPER class manager.
-<span class="o">[</span>debug<span class="o">]</span> WOOPER class manager created, as &lt;<span class="m">0</span>.87.0&gt;.
-WOOPER version: <span class="o">{</span><span class="m">2</span>,0,5<span class="o">}</span>.
-Class filename corresponding to <span class="s1">'class_Tiger'</span>: <span class="s1">'class_Tiger.erl'</span>.
-Stopping the WOOPER application.
-<span class="o">[</span>debug<span class="o">]</span> Stopping WOOPER application <span class="o">(</span>state: <span class="o">[])</span>.
-Successful end of <span class="nb">test</span> of the WOOPER application.
-<span class="o">=</span>INFO <span class="nv">REPORT</span><span class="o">====</span> <span class="m">19</span>-Jul-2019::22:53:28.243821 <span class="o">===</span>
-   application: wooper
-   exited: stopped
-   type: <span class="nv">temporary</span>
-<span class="o">=</span>INFO <span class="nv">REPORT</span><span class="o">====</span> <span class="m">19</span>-Jul-2019::22:53:28.260437 <span class="o">===</span>
-   application: myriad
-   exited: stopped
-   type: temporary
+</span>Starting<span class="w"> </span>the<span class="w"> </span>WOOPER<span class="w"> </span>application.<span class="w">
+</span><span class="o">[</span>debug<span class="o">]</span><span class="w"> </span>Starting<span class="w"> </span>WOOPER<span class="w"> </span>application<span class="w"> </span><span class="o">(</span>type:<span class="w"> </span>normal,<span class="w"> </span>start<span class="w"> </span>arguments:<span class="w"> </span><span class="o">[])</span>.<span class="w">
+</span><span class="o">[</span>debug<span class="o">]</span><span class="w"> </span>Starting<span class="w"> </span>the<span class="w"> </span>WOOPER<span class="w"> </span>root<span class="w"> </span>supervisor.<span class="w">
+</span><span class="o">[</span>debug<span class="o">]</span><span class="w"> </span>Initializing<span class="w"> </span>the<span class="w"> </span>WOOPER<span class="w"> </span>root<span class="w"> </span>supervisor<span class="w"> </span><span class="o">(</span>args:<span class="w"> </span><span class="o">[])</span>.<span class="w">
+</span><span class="o">[</span>debug<span class="o">]</span><span class="w"> </span>Starting<span class="w"> </span>and<span class="w"> </span>linking<span class="w"> </span>the<span class="w"> </span>WOOPER<span class="w"> </span>class<span class="w"> </span>manager.<span class="w">
+</span><span class="o">[</span>debug<span class="o">]</span><span class="w"> </span>WOOPER<span class="w"> </span>class<span class="w"> </span>manager<span class="w"> </span>created,<span class="w"> </span>as<span class="w"> </span>&lt;<span class="m">0</span>.87.0&gt;.<span class="w">
+</span>WOOPER<span class="w"> </span>version:<span class="w"> </span><span class="o">{</span><span class="m">2</span>,0,5<span class="o">}</span>.<span class="w">
+</span>Class<span class="w"> </span>filename<span class="w"> </span>corresponding<span class="w"> </span>to<span class="w"> </span><span class="s1">'class_Tiger'</span>:<span class="w"> </span><span class="s1">'class_Tiger.erl'</span>.<span class="w">
+</span>Stopping<span class="w"> </span>the<span class="w"> </span>WOOPER<span class="w"> </span>application.<span class="w">
+</span><span class="o">[</span>debug<span class="o">]</span><span class="w"> </span>Stopping<span class="w"> </span>WOOPER<span class="w"> </span>application<span class="w"> </span><span class="o">(</span>state:<span class="w"> </span><span class="o">[])</span>.<span class="w">
+</span>Successful<span class="w"> </span>end<span class="w"> </span>of<span class="w"> </span><span class="nb">test</span><span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>WOOPER<span class="w"> </span>application.<span class="w">
+</span><span class="o">=</span>INFO<span class="w"> </span><span class="nv">REPORT</span><span class="o">====</span><span class="w"> </span><span class="m">19</span>-Jul-2019::22:53:28.243821<span class="w"> </span><span class="o">===</span><span class="w">
+   </span>application:<span class="w"> </span>wooper<span class="w">
+   </span>exited:<span class="w"> </span>stopped<span class="w">
+   </span>type:<span class="w"> </span><span class="nv">temporary</span><span class="w">
+</span><span class="o">=</span>INFO<span class="w"> </span><span class="nv">REPORT</span><span class="o">====</span><span class="w"> </span><span class="m">19</span>-Jul-2019::22:53:28.260437<span class="w"> </span><span class="o">===</span><span class="w">
+   </span>application:<span class="w"> </span>myriad<span class="w">
+   </span>exited:<span class="w"> </span>stopped<span class="w">
+   </span>type:<span class="w"> </span>temporary<span class="w">
 
---&gt; Successful end of test.
+</span>--&gt;<span class="w"> </span>Successful<span class="w"> </span>end<span class="w"> </span>of<span class="w"> </span>test.<span class="w">
 
-<span class="o">(</span><span class="nb">test</span> finished, interpreter halted<span class="o">)</span>
+</span><span class="o">(</span><span class="nb">test</span><span class="w"> </span>finished,<span class="w"> </span>interpreter<span class="w"> </span>halted<span class="o">)</span>
 </pre>
 <p>One may run <tt class="docutils literal">make <span class="pre">create-wooper-checkout</span></tt> in order to create, based on our conventions, a suitable <tt class="docutils literal">_checkouts</tt> directory so that rebar3 can directly take into account local, directly available (in-development) dependencies (here, only Myriad).</p>
 </div>
@@ -2639,13 +2639,13 @@ Successful end of <span class="nb">test</span> of the WOOPER application.
 <h2><a class="toc-backref" href="#toc-entry-82">Testing WOOPER</a></h2>
 <p>Once <a class="reference external" href="https://myriad.esperide.org">Myriad</a> and WOOPER itself have been built (for that refer to either <a class="reference internal" href="#using-cutting-edge-git">Using Cutting-Edge GIT</a> or <a class="reference internal" href="#using-rebar3">Using Rebar3</a>), just run from the root directory of WOOPER:</p>
 <pre class="code bash literal-block">
-$ make <span class="nb">test</span>
+$<span class="w"> </span>make<span class="w"> </span><span class="nb">test</span>
 </pre>
 <p>The testing shall complete successfully (if it is not the case, see our <a class="reference internal" href="#support">support</a> section).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">WOOPER is built and tested at each commit through <a class="reference external" href="https://github.com/Olivier-Boudeville/Ceylan-WOOPER/actions?query=workflow%3A%22Erlang+CI%22">continuous integration</a>, and the same holds for its only prerequisite (<a class="reference external" href="https://myriad.esperide.org">Myriad</a>).
-Reciprocally this procedure applies to the projects based on it, directly (ex: <a class="reference external" href="https://traces.esperide.org/">Traces</a>) or not (ex: <a class="reference external" href="https://us-web.esperide.org/">US-Web</a>), so in terms of usability, confidence should be high.</p>
+Reciprocally this procedure applies to the projects based on it, directly (e.g. <a class="reference external" href="https://traces.esperide.org/">Traces</a>) or not (e.g. <a class="reference external" href="https://us-web.esperide.org/">US-Web</a>), so in terms of usability, confidence should be high.</p>
 </div>
 <p></p>
 </div>
@@ -2660,7 +2660,7 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 <li>multiple different-arity constructors per class are supported now</li>
 <li>no more <tt class="docutils literal">wooper_construct_parameters</tt>, longer <tt class="docutils literal">wooper_construct_export</tt> or <tt class="docutils literal">wooper_construct_export</tt> defines</li>
 <li>automatic detection and export of constructors, any destructor and methods</li>
-<li>WOOPER method terminators introduced (ex: <tt class="docutils literal">wooper:return_state_result/2</tt>, instead of the <tt class="docutils literal">wooper_return_state_result</tt> macro)</li>
+<li>WOOPER method terminators introduced (e.g. <tt class="docutils literal">wooper:return_state_result/2</tt>, instead of the <tt class="docutils literal">wooper_return_state_result</tt> macro)</li>
 <li>the <tt class="docutils literal">class_attributes</tt> optional parse attribute define introduced (<tt class="docutils literal"><span class="pre">-define(class_attributes,[...]).</span></tt></li>
 <li><tt class="docutils literal">execute*With</tt> renamed as <tt class="docutils literal">execute*As</tt> (clearer)</li>
 <li>convenience method wrappers such as <tt class="docutils literal">wooper:execute_request/3</tt> have their parameters reordered (target - either a PID or a passive instance - comes first now)</li>
@@ -2735,7 +2735,7 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 <h3><a class="toc-backref" href="#toc-entry-93">Understanding Compilation</a></h3>
 <p>WOOPER is the second level of a software stack beginning with Erlang and then Myriad.</p>
 <p>If the initial versions of WOOPER were mostly based on macros and headers, newer ones rely on the Erlang way of doing metaprogramming, namely parse-transforms.</p>
-<p>More precisely, the sources of a user-defined class are transformed by the standard Erlang toolchain (<tt class="docutils literal">erlc</tt> compiler) into an AST (<em>Abstract Syntax Tree</em>), which is first transformed by WOOPER (ex: to generate the new operators, to export any destructor, etc.) and then by Myriad (ex: to support newer types such as <tt class="docutils literal">void/0</tt>, <tt class="docutils literal">maybe/1</tt> or <tt class="docutils literal">table/2</tt>), which also provides much of the AST transformation support.</p>
+<p>More precisely, the sources of a user-defined class are transformed by the standard Erlang toolchain (<tt class="docutils literal">erlc</tt> compiler) into an AST (<em>Abstract Syntax Tree</em>), which is first transformed by WOOPER (e.g. to generate the new operators, to export any destructor, etc.) and then by Myriad (e.g. to support newer types such as <tt class="docutils literal">void/0</tt>, <tt class="docutils literal">maybe/1</tt> or <tt class="docutils literal">table/2</tt>), which also provides much of the AST transformation support.</p>
 </div>
 <div class="section" id="understanding-the-mode-of-operation-of-a-wooper-instance">
 <h3><a class="toc-backref" href="#toc-entry-94">Understanding the Mode of Operation of a WOOPER Instance</a></h3>
@@ -2797,9 +2797,9 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 <li>integrate automatic persistent storage of instance states, for example in Mnesia databases</li>
 <li>integrate specific constructs for code reflection</li>
 <li>check that a class specified in <tt class="docutils literal">execute*As</tt> is indeed a (direct or not) mother class of this one, at least in debug mode</li>
-<li>check that the declared attributes are legit (existing, not reserved, etc.) and their access as well (ex: regarding constness)</li>
+<li>check that the declared attributes are legit (existing, not reserved, etc.) and their access as well (e.g. regarding constness)</li>
 <li>support qualifier-based declarations of methods and attributes (<tt class="docutils literal">public</tt>, <tt class="docutils literal">protected</tt>, <tt class="docutils literal">private</tt>, <tt class="docutils literal">final</tt>, <tt class="docutils literal">const</tt>, <tt class="docutils literal">pure</tt>, etc.)</li>
-<li>generate automatically a graphical class diagram out of the sources of a set of projects (ex: using <a class="reference external" href="http://plantuml.com/">PlantUML</a>)</li>
+<li>generate automatically a graphical class diagram out of the sources of a set of projects (e.g. using <a class="reference external" href="http://plantuml.com/">PlantUML</a>)</li>
 </ul>
 <ul class="simple">
 <li>ensure that all instances of a given class <em>reference</em> the same table dedicated to the method look-ups, and do not have each their own private <em>copy</em> of it (mere referencing is expected to result from single-assignment); storing a per-class direct method mapping could also be done with prebuilt modules: <tt class="docutils literal">class_Cat</tt> would rely on an automatically generated <tt class="docutils literal">class_Cat_mt</tt> (for &quot;method table&quot;) module, which would just be used in order to convert a method name in the name of the module that should be called in the context of that class, inheritance-wise; or, preferably, this information could be added directly to <tt class="docutils literal">class_Cat</tt>; note that this should be the case now that the use of <tt class="docutils literal">persistent_term</tt> has been integrated</li>
@@ -2816,7 +2816,7 @@ Reciprocally this procedure applies to the projects based on it, directly (ex: <
 </ul>
 <p>This allows the use of the WOOPER code in as wide a variety of software projects as possible, while still maintaining copyleft on this code.</p>
 <p>Being triple-licensed means that someone (the licensee) who modifies and/or distributes it can choose which of the available sets of licence terms he is operating under.</p>
-<p>We hope that enhancements will be back-contributed (ex: thanks to merge requests), so that everyone will be able to benefit from them.</p>
+<p>We hope that enhancements will be back-contributed (e.g. thanks to merge requests), so that everyone will be able to benefit from them.</p>
 <p></p>
 </div>
 <div class="section" id="sources-inspirations-alternate-solutions">
