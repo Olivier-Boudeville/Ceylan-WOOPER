@@ -43,6 +43,7 @@
 
 % Very generic:
 -export([ get_classname/1, get_all_superclasses/1,
+		  is_instance_of/2, check_instance_of/2,
 		  get_attribute_pairs/1, state_to_string/1,
 		  get_class_filename/1 ]).
 
@@ -107,7 +108,7 @@
 
 % Traps to detect any method terminator that would be left untransformed.
 %
-% Note: neither exported or even defined anymore, as now WOOPER checks at
+% Note: neither exported nor even defined anymore, as now WOOPER checks at
 % compile time whether a given wooper:SomeFun(...) call is a terminator.
 %
 -export([ return_state_result/2, return_state/1, return_static/1,
@@ -1985,6 +1986,27 @@ get_all_superclasses( Classname ) ->
 
 	DirectSuperclasses ++ list_utils:flatten_once(
 		[ get_all_superclasses( C ) || C <- DirectSuperclasses ] ).
+
+
+
+% @doc Tells whether this instance is an instance of the specified class
+% (directly or indirectly, through inheritance).
+%
+% Mostly useful for sanity checks (defining ad hoc member methods is usually
+% preferred).
+%
+-spec is_instance_of( classname(), wooper:state() ) -> boolean().
+is_instance_of( Classname, State ) ->
+	lists:member( Classname, get_all_superclasses( State ) ).
+
+
+% @doc Checks that this instance is an instance of the specified class,
+% otherwise throws an exception.
+%
+-spec check_instance_of( classname(), wooper:state() ) -> void().
+check_instance_of( Classname, State ) ->
+	is_instance_of( Classname, State ) orelse
+		throw( { not_instance_of, Classname, get_classname( State ) } ).
 
 
 
