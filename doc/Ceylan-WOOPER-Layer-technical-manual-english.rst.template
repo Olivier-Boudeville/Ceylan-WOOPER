@@ -3139,6 +3139,9 @@ For example:
   [class_Mammal,class_OvoviviparousBeing]
 
 
+When having at hand the state of an instance (so either from its methods and/or for a passive instance), various helpers in the ``wooper`` module can be used (e.g. ``get_classname/1``, ``get_all_superclasses/1``, ``is_instance_of/2``, ``check_instance_of/2``, ``get_attribute_pairs/1``, ``state_to_string/1``, ``get_class_filename/1``). They are mostly intended for testing, as a good OOP design generally does not rely on such primitives.
+
+
 
 Developer Guidelines
 --------------------
