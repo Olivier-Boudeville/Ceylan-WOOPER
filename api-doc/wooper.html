@@ -257,6 +257,8 @@
  equal to 'undefined'.</td></tr>
 <tr><td valign="top"><a href="#check_classname_and_arity-2">check_classname_and_arity/2</a></td><td>Checks, for the specified classname and construction parameters, that a
  corresponding module exists and that it has the relevant arity.</td></tr>
+<tr><td valign="top"><a href="#check_instance_of-2">check_instance_of/2</a></td><td>Checks that this instance is an instance of the specified class,
+ otherwise throws an exception.</td></tr>
 <tr><td valign="top"><a href="#check_undefined-2">check_undefined/2</a></td><td>Checks that specified attribute is indeed associated to a value equal to
  'undefined'.</td></tr>
 <tr><td valign="top"><a href="#concatToAttribute-3">concatToAttribute/3</a></td><td></td></tr>
@@ -346,6 +348,8 @@ but have different arities).</td></tr>
  the debug mode.</td></tr>
 <tr><td valign="top"><a href="#hasAttribute-2">hasAttribute/2</a></td><td></td></tr>
 <tr><td valign="top"><a href="#incrementAttribute-2">incrementAttribute/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#is_instance_of-2">is_instance_of/2</a></td><td>Tells whether this instance is an instance of the specified class 
+(directly or indirectly, through inheritance).</td></tr>
 <tr><td valign="top"><a href="#is_wooper_debug-0">is_wooper_debug/0</a></td><td></td></tr>
 <tr><td valign="top"><a href="#log_error-1">log_error/1</a></td><td>Reports (as synchronously as possible, in order to avoid losing this
  notification) the specified error to the user, typically by displaying an
@@ -476,6 +480,14 @@ specified requested instances, unless the specified time-out is exceeded
 <p> </p>
 </div><p>Checks, for the specified classname and construction parameters, that a
  corresponding module exists and that it has the relevant arity.
+</p>
+
+<h3 class="function"><a name="check_instance_of-2">check_instance_of/2</a></h3>
+<div class="spec">
+<p><tt>check_instance_of(Classname::<a href="#type-classname">classname()</a>, State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; <a href="#type-void">void()</a></tt><br></p>
+<p> </p>
+</div><p>Checks that this instance is an instance of the specified class,
+ otherwise throws an exception.
 </p>
 
 <h3 class="function"><a name="check_undefined-2">check_undefined/2</a></h3>
@@ -1000,6 +1012,17 @@ but have different arities).</p>
 <p><tt>incrementAttribute(State::<a href="wooper.html#type-state">wooper:state()</a>, AttributeName::<a href="#type-attribute_name">attribute_name()</a>) -&gt; <a href="wooper.html#type-state">wooper:state()</a></tt><br></p>
 <p> </p>
 </div>
+
+<h3 class="function"><a name="is_instance_of-2">is_instance_of/2</a></h3>
+<div class="spec">
+<p><tt>is_instance_of(Classname::<a href="#type-classname">classname()</a>, State::<a href="wooper.html#type-state">wooper:state()</a>) -&gt; boolean()</tt><br></p>
+<p> </p>
+</div><p><p>Tells whether this instance is an instance of the specified class 
+(directly or indirectly, through inheritance).</p>
+
+ Mostly useful for sanity checks (defining ad hoc member methods is usually
+ preferred).
+</p>
 
 <h3 class="function"><a name="is_wooper_debug-0">is_wooper_debug/0</a></h3>
 <div class="spec">
