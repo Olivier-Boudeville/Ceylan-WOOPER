@@ -68,7 +68,7 @@ The latest version of this documentation is to be found at the `official WOOPER 
 
 
 .. contents:: **Table of Contents**
-  :depth: 3
+  :depth: 4
 
 
 
@@ -880,16 +880,18 @@ More precisely, depending on its returning a specific result, the method signatu
 
 Note that all clauses of a given method must end directly with such a method terminator; this is so not only to be clearer for the reader, but also for WOOPER itself, so that it can determine the type of method at hand.
 
-Finally, a recommended good practice is to add a type specification (see `Dialyzer <http://erlang.org/doc/man/dialyzer.html>`_) to each method definition, which allows to indicate even more clearly whether it is a request or a oneway, whether it is a ``const`` method, etc. Comments are surely welcome additions as well.
+Finally, a recommended good practice is to add a type specification (see `Dialyzer <http://erlang.org/doc/man/dialyzer.html>`_) to each method definition, which allows to indicate even more clearly whether it is a request or a oneway, whether it is a ``const`` method, etc.; more generally WOOPER is fully compatible with the `type-checking tools used by Myriad <https://myriad.esperide.org/#type-checking-myriad>`_.
+
+Method-level comments are surely welcome additions as well, and may be considered as mandatory.
 
 
 
 For Requests
-............
+____________
 
 
 Requests in general
-___________________
+*******************
 
 
 Requests will use ``wooper:return_state_result(NewState,Result)`` to terminate their clauses: the new state will be kept by the instance, whereas the result will be sent to the caller. Hence ``wooper:return_state_result/2`` means that the method returns a state **and** a result.
@@ -928,7 +930,7 @@ Then we may call it, in the case of a cat having 2 male kitten and 3 female ones
 
 
 Const Requests
-______________
+**************
 
 Some clauses of a request may return an unchanged state. It is then a ``const`` clause, and rather than using the  ``wooper:return_state_result/2`` request terminator, it shall use the ``wooper:const_return_result/1`` one.
 
@@ -954,7 +956,7 @@ Note that ``State`` can be used as always, and that even there it is not reporte
 
 
 Sender PID
-__________
+**********
 
 Requests can access to one more information than oneways: the PID of the caller that sent the request. As WOOPER takes care automatically of sending back the result to the caller, having the request know explicitly the caller is usually not useful, thus the caller PID does not appear explicitly in request signatures, among the actual parameters.
 
@@ -991,8 +993,26 @@ Note that:
 - the ``getSender/0`` macro should only be used for requests, as of course the sender PID has no meaning in the case of oneways; if that macro is called nevertheless from a oneway, then it returns the atom ``undefined``.
 
 
+Failsafe Request Calls
+**********************
+
+Whereas some `WOOPER integrated calls`_ include a time-out, in the general case when a request call is made by a client process, this client will wait *indefinitely* for the result from the corresponding requested (active) instance.
+
+It may be desirable instead that this waiting gets interrupted, should a crash of said instance be detected. This can be done by having a **link** between the client process (which may or may not trap EXIT messages) and the requested instance. Such a link can be created at instance creation (e.g. with ``new link``) or later.
+
+Another, often more appropriate, way for the client to be notified is to **monitor** the requested instance: if this last one crashes while being monitored, the monitoring processes (hence possibly the client process) will receive a ``DOWN`` message and possibly generate an exit call. This way a clent will never block waiting for a crashed instance [#]_.
+
+In the future, the API for `WOOPER integrated calls`_ may include ``execute_monitired_request/{2,3,4}`` functions.
+
+See also our `process monitors`_ section, so that a WOOPER instance can monitor processes (possibly other WOOPER - active - instances).
+
+
+.. [#] Similarly to a `gen_server:call/{2,3} <https://www.erlang.org/doc/man/gen_server#call-2>`_, which automatically monitors the server process and thus can exit the calling process with an exit term containing ``Reason = timeout`` if appropriate.
+
+
+
 Request Type Specifications
-___________________________
+***************************
 
 Using them is not mandatory, yet is very much recommended, and WOOPER provides suitable constructs for that.
 
@@ -1024,14 +1044,14 @@ Of course, should type specifications be used, they must be correct; WOOPER will
 
 
 For Oneways
-...........
+___________
 
 
 After relevant adaptations, most of the conventions for requests apply to oneways.
 
 
 Oneways in general
-__________________
+******************
 
 Oneways will use ``wooper:return_state(NewState)`` to terminate their clauses: the new state will be kept by the instance, and no result will be returned to the caller (which is not even known - hence no ``getSender/0`` macro applies to oneways either).
 
@@ -1053,7 +1073,7 @@ This oneway can be called that way:
 
 
 Const Oneways
-_____________
+*************
 
 Even if it is less frequent than for requests, oneways may also be ``const``, i.e. may leave the state unchanged, and consequently are only called for side-effects; for example, rather than specifying:
 
@@ -1076,7 +1096,7 @@ A oneway whose clauses are all ``const`` is itself a const oneway.
 
 
 Oneway Type Specifications
-__________________________
+**************************
 
 The type specification of a oneway should rely, for its return type, either on ``oneway_return()`` or on ``const_oneway_return()``, depending on its constness (no result to account for in either case).
 
@@ -1096,7 +1116,7 @@ Making the previous examples more complete:
 
 
 Usefulness Of the Method Terminators
-....................................
+____________________________________
 
 
 The actual definition of the method terminators (e.g. ``wooper:return_state_result/2``, ``wooper:return_state/1``) is actually quite straightforward.
@@ -2876,6 +2896,8 @@ Therefore the implementation we target could be best [#]_ written as:
 .. [#] ``wooper:executeRequest/3`` could be used instead of matching the result of ``wooper:return_state_result/2`` and breaking its opaqueness - but (even it is a matter of taste here) we prefer the more direct and efficient approach that was presented. Note though that in general they do not bear the same semantics: ``wooper:executeRequest/3`` calls a possibly overridden version of the specified method, whereas a direct call targets specifically the class-local version of that method.
 
 
+.. _`WOOPER integrated calls`:
+
 Integrated Call APIs
 --------------------
 
@@ -3078,11 +3100,11 @@ For example:
 .. code:: erlang
 
  -spec onWOOPERExitReceived(wooper:state(),basic_utils:pid_or_port(),
-			  basic_utils:exit_reason()) -> const_oneway_return().
+			basic_utils:exit_reason()) -> const_oneway_return().
  onWOOPERExitReceived(State,PidOrPort,ExitReason) ->
-	   io:format("MyClass EXIT handler ignored signal '~p' "
-				 "from ~w.~n", [ExitReason,PidOrPort]),
-	   wooper:const_return().
+	io:format("MyClass EXIT handler ignored signal '~p' "
+			  "from ~w.~n", [ExitReason,PidOrPort]),
+	wooper:const_return().
 
 may result in an output like::
 
@@ -3096,6 +3118,9 @@ It will just notify the signal to the user, by displaying a message like::
  WOOPER default EXIT handler for instance <0.36.0> of class class_Cat
    ignored signal 'normal' from <0.40.0>.
 
+
+
+.. _`process monitors`:
 
 
 ``DOWN`` Messages for Process Monitors
@@ -3137,6 +3162,9 @@ For example:
 
   class_Platypus:get_superclasses().
   [class_Mammal,class_OvoviviparousBeing]
+
+
+When having at hand the state of an instance (so either from its methods and/or for a passive instance), various helpers in the ``wooper`` module can be used (e.g. ``get_classname/1``, ``get_all_superclasses/1``, ``is_instance_of/2``, ``check_instance_of/2``, ``get_attribute_pairs/1``, ``state_to_string/1``, ``get_class_filename/1``). They are mostly intended for testing, as a good OOP design generally does not rely on such primitives.
 
 
 
@@ -3314,7 +3342,7 @@ For Nedit users, a WOOPER-aware `nedit.rc <https://github.com/Olivier-Boudeville
 
 
 
-Similarity With other Languages
+Similarity With Other Languages
 -------------------------------
 
 WOOPER is in some ways adding features quite similar to the ones available with other languages, including Python (simple multiple inheritance, implied ``self/State`` parameter, attribute dictionaries/associative tables, etc.) while still offering the major strengths of Erlang (concurrency, distribution, functional paradigm) and not hurting too much the overall performances (mainly thanks to the prebuilt attribute and method tables).
@@ -3333,7 +3361,7 @@ The main limitations that existed beforehand were (from the most recently allevi
 - the efficiency of the per-instance associative table to store the attribute values has been improved by switching from our hashtable implementation to a map-based one
 - the macro-based constructor declarations were too cumbersome and limiting (e.g. a single constructor per class was supported); this is fully addressed thanks to the WOOPER parse transform now
 
-We expect the upcoming JIT compilation to benefit a lot to WOOPER, with no change having to be operated at its level.
+We expect the now default JIT compilation to benefit a lot to WOOPER, with no change having to be operated at its level.
 
 As always, there is certainly room for improvement, to grind a bit more runtime performances and/or to further reduce the per-instance memory footprint. Profiling actions welcome!
 

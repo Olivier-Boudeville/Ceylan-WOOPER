@@ -26,8 +26,6 @@ WOOPER_RELEASES = $(WOOPER_RELEASE_ARCHIVE_BZ2) \
 # First target for default:
 help: help-intro help-wooper
 
-
-
 help-wooper:
 	@cd $(MYRIAD_TOP) && $(MAKE) -s help-myriad
 
