@@ -67,7 +67,7 @@ start_link() ->
 init( Args=undefined ) ->
 
 	trace_utils:debug_fmt(
-		"Initializing the WOOPER root supervisor (args: ~p).", [ Args ] ),
+		"Initialising the WOOPER root supervisor (args: ~p).", [ Args ] ),
 
 	ExecTarget= wooper:get_execution_target(),
 
