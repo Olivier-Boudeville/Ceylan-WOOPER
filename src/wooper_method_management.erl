@@ -171,8 +171,8 @@
 % ast_expression:transform_expression/2 would have been close to what we needed,
 % yet we do not want to replace a *call* by another, we want it to be replaced
 % by a tuple creation, i.e. an expression. Moreover we need to be stateful, to
-% remember any past method terminator and check their are consistent with the
-% newer ones being found.
+% remember any past method terminator and check that they are consistent with
+% the newer ones being found.
 %
 % Finally, a difficulty is that normal functions by nature do not use
 % terminators, whereas, when handling a method, for example a clause not using
@@ -1216,7 +1216,7 @@ get_blank_transformation_state( ExportSet ) ->
 
 
 
-% @doc Returns the WOOPER-specific transform table.
+% @doc Returns the WOOPER-specific AST transform table.
 -spec get_wooper_transform_table() -> ast_transform_table().
 get_wooper_transform_table() ->
 
@@ -1237,14 +1237,14 @@ get_wooper_transform_table() ->
 	%
 	% Transforms is an ast_transforms record that contains a
 	% transformation_state field, which itself contains a value of type:
-	%   { maybe( function_nature() ), method_qualifiers(),  } ).
+	%   {maybe(function_nature()), method_qualifiers()}).
 	%
 	% Indeed it starts as 'undefined', then the first terminal call branch of
 	% the first clause allows to detect and set the function nature, and
 	% afterwards all other branches are checked against it, and transformed.
 
 	% Note that a member method is const iff all its clauses are const; so a
-	% method is flagged içnitially as const depending on the constness of its
+	% method is flagged initially as const depending on the constness of its
 	% first clause, and loses any initial const status as soon as one clause
 	% happens to be non-const (otherwise a non_const flag/qualifier would have
 	% to be introduced).
@@ -1494,7 +1494,7 @@ call_transformer( FileLocCall,
 	?debug_fmt( "~ts/~B detected as a non-const request.",
 				pair:to_list( FunId ) ),
 
-	% So that wooper:return_state_result( S, R ) becomes simply { S, R }:
+	% So that wooper:return_state_result(S, R) becomes simply {S, R}:
 	NewExpr = { tuple, FileLocCall, Params },
 
 	NewTransforms = Transforms#ast_transforms{
@@ -1564,7 +1564,7 @@ call_transformer( FileLocCall,
 
 	?debug_fmt( "~ts/~B detected as a const request.", pair:to_list( FunId ) ),
 
-	% So that wooper:const_return_result( R ) becomes simply { S, R }:
+	% So that wooper:const_return_result(R) becomes simply {S, R}:
 	NewExpr = { tuple, FileLocCall,
 				[ { var, FileLocCall, 'State' } | Params ] },
 
@@ -1823,13 +1823,13 @@ call_transformer( _FileLocCall,
 		_FunctionRef={ remote, _, {atom,_,wooper}, {atom,_,return_static} },
 		_Params=[ ResultExpr ],
 		Transforms=#ast_transforms{
-				transformed_function_identifier=FunId,
-				transformation_state={ static, _Qualifiers,
-									   _WOOPERExportSet } } ) ->
+			transformed_function_identifier=FunId,
+			transformation_state={ static, _Qualifiers,
+								   _WOOPERExportSet } } ) ->
 
 	?debug_fmt( "~ts/~B confirmed as a static method.", pair:to_list( FunId ) ),
 
-	% So that wooper:return_static( R ) becomes simply R:
+	% So that wooper:return_static(R) becomes simply R:
 	NewExpr = ResultExpr,
 	NewTransforms = Transforms,
 	{ [ NewExpr ], NewTransforms };
@@ -1900,7 +1900,7 @@ call_transformer( _FileLocCall,
 
 	?debug_fmt( "~ts/~B confirmed as a throw method.", pair:to_list( FunId ) ),
 
-	% So that wooper:throwing( R ) becomes simply R:
+	% So that wooper:throwing(R) becomes simply R:
 	NewExpr = ResultExpr,
 	NewTransforms = Transforms,
 	{ [ NewExpr ], NewTransforms };
@@ -2227,7 +2227,7 @@ try_transformer( FileLoc, TryBody, TryClauses, CatchClauses, AfterBody,
 
 	% After body not transformed, as actually never returned:
 	%{ NewAfterBody, AfterTransforms } =
-	%	body_transformer( AfterBody, CatchTransforms, FileLoc ),
+	%   body_transformer( AfterBody, CatchTransforms, FileLoc ),
 
 	NewExpr = { 'try', FileLoc, TryBody, NewTryClauses, NewCatchClauses,
 				AfterBody },
