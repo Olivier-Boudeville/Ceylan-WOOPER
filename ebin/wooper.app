@@ -10,7 +10,7 @@
 % ./ebin/wooper.app
 % ./src/wooper.app.src -> ../ebin/wooper.app
 %
-% For more information see the Ceylan-Myriad 'rebar3-create-app-file' make
+% For more information see the Ceylan-Myriad 'create-app-file' make
 % target and its associated comments.
 
 
@@ -21,7 +21,7 @@
 
 {application, wooper,
  [{description, "Ceylan-WOOPER, a Wrapper for Object-Oriented Programming in Erlang, as an OTP active application here (see http://wooper.esperide.org)"},
-  {vsn, "2.0.26"},
+  {vsn, "2.0.27"},
 
   % See wooper_class_manager.hrl:
   {registered, [wooper_class_manager]},
