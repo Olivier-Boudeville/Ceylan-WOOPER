@@ -43,6 +43,10 @@ run() ->
 	% Allows to support both OTP conventions and ad hoc, automatic ones:
 	wooper_utils:start_for_test(),
 
+	test_facilities:display( "The version of this currently tested WOOPER "
+		"library is ~ts (i.e. ~w).", [ wooper_utils:get_wooper_version_string(),
+									   wooper_utils:get_wooper_version() ] ),
+
 	FirstWOOPERClassname = 'class_BigPackage__MyPackage__MyExample',
 
 	FirstJavaFullClassname = wooper_utils:get_java_package_and_class_for(
