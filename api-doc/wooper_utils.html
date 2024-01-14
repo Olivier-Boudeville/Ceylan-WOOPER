@@ -23,6 +23,10 @@
 <p><code>camelcase_type() = atom()</code></p>
 <p> For example 'apple' or 'travelling_salesman'.</p>
 
+<h3 class="typedecl"><a name="type-three_digit_version">three_digit_version()</a></h3>
+<p><code>three_digit_version() = <a href="basic_utils.html#type-three_digit_version">basic_utils:three_digit_version()</a></code></p>
+
+
 <h3 class="typedecl"><a name="type-ustring">ustring()</a></h3>
 <p><code>ustring() = <a href="text_utils.html#type-ustring">text_utils:ustring()</a></code></p>
 
@@ -33,6 +37,8 @@
 the specified WOOPER classname.</td></tr>
 <tr><td valign="top"><a href="#get_persistent_key_for-1">get_persistent_key_for/1</a></td><td>Returns the key (as a term) associated to specified classname in the
  persistent_term registry.</td></tr>
+<tr><td valign="top"><a href="#get_wooper_version-0">get_wooper_version/0</a></td><td>Returns the version of the WOOPER library being used.</td></tr>
+<tr><td valign="top"><a href="#get_wooper_version_string-0">get_wooper_version_string/0</a></td><td>Returns the version of the WOOPER library being used, as a string.</td></tr>
 <tr><td valign="top"><a href="#java_class_to_wooper_class-1">java_class_to_wooper_class/1</a></td><td>Deduces the Erlang equivalent name, according to the WOOPER conventions, 
 of a class that is actually implemented in Java.</td></tr>
 <tr><td valign="top"><a href="#pep8_class_to_wooper_class-1">pep8_class_to_wooper_class/1</a></td><td>Deduces the Erlang equivalent name, according to the WOOPER conventions, 
@@ -82,6 +88,18 @@ undefined,  MyExample } returned.</p>
 </div><p>Returns the key (as a term) associated to specified classname in the
  persistent_term registry.
 </p>
+
+<h3 class="function"><a name="get_wooper_version-0">get_wooper_version/0</a></h3>
+<div class="spec">
+<p><code>get_wooper_version() -&gt; <a href="#type-three_digit_version">three_digit_version()</a></code><br></p>
+<p> </p>
+</div><p>Returns the version of the WOOPER library being used.</p>
+
+<h3 class="function"><a name="get_wooper_version_string-0">get_wooper_version_string/0</a></h3>
+<div class="spec">
+<p><code>get_wooper_version_string() -&gt; <a href="#type-ustring">ustring()</a></code><br></p>
+<p> </p>
+</div><p>Returns the version of the WOOPER library being used, as a string.</p>
 
 <h3 class="function"><a name="java_class_to_wooper_class-1">java_class_to_wooper_class/1</a></h3>
 <div class="spec">
