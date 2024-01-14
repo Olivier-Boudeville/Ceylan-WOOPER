@@ -81,7 +81,9 @@
 % Shorthands:
 
 -type three_digit_version() :: basic_utils:three_digit_version().
+
 -type ustring() :: text_utils:ustring().
+
 
 
 % Version-related functions.
