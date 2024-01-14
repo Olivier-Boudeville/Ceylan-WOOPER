@@ -21,7 +21,7 @@
 
 {application, wooper,
  [{description, "Ceylan-WOOPER, a Wrapper for Object-Oriented Programming in Erlang, as an OTP active application here (see http://wooper.esperide.org)"},
-  {vsn, "2.0.27"},
+  {vsn, "2.0.28"},
 
   % See wooper_class_manager.hrl:
   {registered, [wooper_class_manager]},
