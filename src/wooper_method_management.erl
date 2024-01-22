@@ -1017,8 +1017,10 @@ check_clause_spec( { type, FileLoc, 'fun',
 				   _FunNature=static, _Qualifiers, FunId, Classname ) ->
 	wooper_internals:raise_usage_error( "the clauses of ~ts/~B indicate "
 		"that this is a static method, yet in the type specification no known "
-		"static method terminator is used (hint: static_return/1 would be "
-		"expected in this context).", pair:to_list( FunId ), Classname,
+		"static method terminator is used (hint: static_return/1,  "
+		"static_void_return/0 or static_no_return/0 would be expected "
+		"in this context).",
+		pair:to_list( FunId ), Classname,
 		FileLoc );
 
 
