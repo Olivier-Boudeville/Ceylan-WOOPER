@@ -2076,8 +2076,10 @@ state_to_string( State ) ->
 		fun( { AttName, AttrValue }, Acc ) ->
 			Acc ++ text_utils:format( "     * ~ts = ~ts~n",
 					[ text_utils:term_to_string( AttName ),
-					  text_utils:term_to_string( AttrValue, _MaxDepth=16,
-												 _MaxLength=100 ) ] )
+					  % No more ellipsing wanted, for complete traces:
+					  %text_utils:term_to_string( AttrValue, _MaxDepth=16,
+					  %                           _MaxLength=100 ) ] )
+					  text_utils:term_to_string( AttrValue ) ] )
 
 		end,
 
