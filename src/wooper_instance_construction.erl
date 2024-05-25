@@ -25,11 +25,13 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Wednesday, December 24, 2014.
 
-
-% @doc Centralises, on behalf of the WOOPER parse transform, the support for
-% <b>instance construction</b>.
-%
 -module(wooper_instance_construction).
+
+-moduledoc """
+Centralises, on behalf of the WOOPER parse transform, the support for **instance
+construction**.
+""".
+
 
 
 -export([ manage_constructors/1 ]).

@@ -25,11 +25,12 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2017.
 
-
-% @doc Module containing some <b>extra facilities</b> for WOOPER users and
-% internal use.
-%
 -module(wooper_utils).
+
+-moduledoc """
+Module containing some **extra facilities** for WOOPER users and internal use.
+""".
+
 
 
 % Version-related functions.
@@ -287,9 +288,8 @@ wooper_class_to_camelcase_type( WOOPERClassname ) ->
 
 
 start_for_test() ->
-	trace_utils:info( "Starting WOOPER test OTP environment." ),
+	trace_utils:info( "Starting WOOPER test OTP environment." ).
 	%wooper_class_manager:start().
-	ok.
 
 -elif( ?wooper_enable_otp_integration =:= false ).
 
@@ -299,8 +299,7 @@ start_for_test() ->
 %
 start_for_test() ->
 	trace_utils:info( "Starting WOOPER test non-OTP environment "
-					  "(thus not creating the WOOPER class manager)." ),
-	ok.
+					  "(thus not creating the WOOPER class manager)." ).
 
 
 -endif. % wooper_enable_otp_integration
@@ -328,9 +327,7 @@ start_for_app() ->
 %
 start_for_app() ->
 	trace_utils:info( "Starting WOOPER application non-OTP environment "
-					  "(thus not creating the WOOPER class manager)." ),
-	ok.
-
+					  "(thus not creating the WOOPER class manager)." ).
 
 -endif. % wooper_enable_otp_integration
 

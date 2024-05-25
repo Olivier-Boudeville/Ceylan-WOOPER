@@ -25,9 +25,11 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Wednesday, October 31, 2018.
 
-
-% @doc Testing the <b>management of the methods of a class</b>.
 -module(method_management_test).
+
+-moduledoc """
+Testing the **management of the methods** of a class.
+""".
 
 
 -export([ run/0 ]).

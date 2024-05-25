@@ -25,15 +25,17 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2012.
 
-
-% @doc Module containing facilities for the <b>serialisation and deserialisation
-% of WOOPER instances</b>.
-%
-% Offsetting as much as possible code from the counterpart class header in this
-% module allows for smaller, cache-friendly BEAMs, and shorter compilation
-% times.
-%
 -module(wooper_serialisation).
+
+-moduledoc """
+
+Module containing facilities for the **serialisation and deserialisation of
+WOOPER instances**.
+
+Offsetting as much as possible code from the counterpart class header in this
+module allows for smaller, cache-friendly BEAMs, and shorter compilation
+times.
+""".
 
 
 -export([ serialise_instances/1,
@@ -43,7 +45,6 @@
 
 		  synchronous_load_instances/1, synchronous_load_instances/3,
 		  synchronous_load_link_instances/1, synchronous_load_link_instances/3
-
 		]).
 
 
@@ -123,7 +124,7 @@ serialise_instances( InstPids ) ->
 % Note that all these serialisations will use exactly the (same) specified user
 % data, and that any updated version of it they would return will be ignored.
 %
--spec serialise_instances( [ instance_pid() ], maybe( entry_transformer() ),
+-spec serialise_instances( [ instance_pid() ], option( entry_transformer() ),
 						   user_data() ) -> serialisation().
 serialise_instances( InstPids, MaybeEntryTransformer, UserData ) ->
 
@@ -175,7 +176,7 @@ load_instances( Serialisation ) ->
 %
 % Created instances will not be linked to the calling process.
 %
--spec load_instances( serialisation(), maybe( entry_transformer() ),
+-spec load_instances( serialisation(), option( entry_transformer() ),
 					  user_data() ) -> [ instance_pid() ].
 load_instances( Serialisation, MaybeEntryTransformer, UserData ) ->
 
@@ -219,8 +220,8 @@ load_link_instances( Serialisation ) ->
 %
 % Created instances will be linked to the calling process.
 %
--spec load_link_instances( serialisation(), maybe( entry_transformer() ),
-					  user_data() ) -> [ instance_pid() ].
+-spec load_link_instances( serialisation(), option( entry_transformer() ),
+					       user_data() ) -> [ instance_pid() ].
 load_link_instances( Serialisation, MaybeEntryTransformer, UserData ) ->
 
 	% The reading of the serialisation is sequential by nature (this overall
@@ -306,7 +307,7 @@ synchronous_load_instances( Serialisation ) ->
 %
 % Created instances will not be linked to the calling process.
 %
--spec synchronous_load_instances( serialisation(), maybe( entry_transformer() ),
+-spec synchronous_load_instances( serialisation(), option( entry_transformer() ),
 								  user_data() ) -> [ load_info() ].
 synchronous_load_instances( Serialisation, MaybeEntryTransformer, UserData ) ->
 
@@ -349,7 +350,7 @@ synchronous_load_link_instances( Serialisation ) ->
 % Created instances will be linked to the calling process.
 %
 -spec synchronous_load_link_instances( serialisation(),
-			maybe( entry_transformer() ), user_data() ) -> [ load_info() ].
+			option( entry_transformer() ), user_data() ) -> [ load_info() ].
 synchronous_load_link_instances( Serialisation, MaybeEntryTransformer,
 								 UserData ) ->
 

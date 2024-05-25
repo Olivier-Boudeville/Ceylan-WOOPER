@@ -25,37 +25,37 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Friday, July 12, 2007.
 
-
-% @doc Module corresponding to the WOOPER <b>class manager singleton</b>.
-%
-% The purpose of this process is, on a per-node basis, to create and notably to
-% serve to instances the virtual table corresponding to the actual class they
-% are corresponding to.
-%
-% This way each virtual table is computed only once per node, and no significant
-% per-instance memory is used for the virtual table: all the instances of a
-% given class just refer to a common virtual table stored by this manager, and
-% each virtual table and the table of virtual tables itself are optimised, with
-% regard to their respective load factor.
-
-% Local registration only of this manager, as we want the WOOPER instances to
-% benefit from a local direct reference to the same method table
-% (theoretically), rather to waste memory with one copy of the table per
-% instance (which is now not anymore the case in practice, since using
-% persistent_term).
-%
-% In a distributed context, there should be exactly one class manager per node.
-%
-% The class manager may be launched:
-%
-% - either after an explicit, OTP-compliant initialisation phase (supervisor,
-% gen_server, init/1 callback, etc.)
-%
-% - or implicitly, as done before the OTP integration: then done on-demand (as
-% soon as a first WOOPER instance is created, hence with no a priori explicit
-% initialisation)
-%
 -module(wooper_class_manager).
+
+-moduledoc """
+Module corresponding to the WOOPER **class manager singleton**.
+
+The purpose of this process is, on a per-node basis, to create and notably to
+serve to instances the virtual table corresponding to the actual class they are
+corresponding to.
+
+This way each virtual table is computed only once per node, and no significant
+per-instance memory is used for the virtual table: all the instances of a given
+class just refer to a common virtual table stored by this manager, and each
+virtual table and the table of virtual tables itself are optimised, with regard
+to their respective load factor.
+
+Local registration only of this manager, as we want the WOOPER instances to
+benefit from a local direct reference to the same method table (theoretically),
+rather to waste memory with one copy of the table per instance (which is now not
+anymore the case in practice, since using persistent_term).
+
+In a distributed context, there should be exactly one class manager per node.
+
+The class manager may be launched:
+
+- either after an explicit, OTP-compliant initialisation phase (supervisor,
+gen_server, init/1 callback, etc.)
+
+- or implicitly, as done before the OTP integration: then done on-demand (as
+soon as a first WOOPER instance is created, hence with no a priori explicit
+initialisation)
+""".
 
 
 % See documentation at http://wooper.esperide.org.
@@ -262,7 +262,7 @@ start_link() ->
 % @doc Starts a new, blank, class manager, with possibly a listening client, and
 % returns its PID.
 %
--spec start( maybe( pid() ) ) -> start_return().
+-spec start( option( pid() ) ) -> start_return().
 start( MaybeClientPid ) ->
 
 	% A client process might be useful for testing.
@@ -288,7 +288,7 @@ start( MaybeClientPid ) ->
 %
 % (same as start/1 except for the link)
 %
--spec start_link( maybe( pid() ) ) -> start_return().
+-spec start_link( option( pid() ) ) -> start_return().
 start_link( MaybeClientPid ) ->
 
 	%trace_utils:debug( "Starting and linking the WOOPER class manager." ),
@@ -921,7 +921,6 @@ create_local_method_table_for( Module ) ->
 					throw( { class_not_found, Module } )
 
 			  end,
-
 
 	% Filter-out functions that should not be callable via RMI:
 	lists:foldl(

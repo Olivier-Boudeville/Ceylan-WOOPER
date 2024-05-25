@@ -491,7 +491,7 @@ executeOneway( StateError, OnewayAtom, _LastArg ) when is_atom( OnewayAtom ) ->
 
 
 executeOneway( State, OnewayAtomError, _LastArg )
-						when is_record( State, state_holder ) ->
+		when is_record( State, state_holder ) ->
 
 	wooper:log_error( "when executing oneway: '~p' is not an atom.",
 					  [ OnewayAtomError ], State ),

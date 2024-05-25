@@ -25,17 +25,18 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2008.
 
-
-% @doc Interface class implementing the static Describable trait, so that
-% instances supporting that trait are able to output a static (prebuilt)
-% <b>textual description</b> of them.
-%
-% This interface provides also exported functions designed so that they can be
-% applied to any WOOPER instance, whether or not it supports this trait.
-%
-% This is the static counterpart of class_Describable.
-%
 -module(class_StaticDescribable).
+
+-moduledoc """
+Interface class implementing the static Describable trait, so that instances
+supporting that trait are able to output a static (prebuilt) **textual
+description** of them.
+
+This interface provides also exported functions designed so that they can be
+applied to any WOOPER instance, whether or not it supports this trait.
+
+This is the static counterpart of class_Describable.
+""".
 
 
 -define( class_description,
@@ -153,7 +154,7 @@ is_describable( State ) ->
 %
 % (exported helper)
 %
--spec get_maybe_description( wooper:state() ) -> maybe( description() ).
+-spec get_maybe_description( wooper:state() ) -> option( description() ).
 get_maybe_description( State ) ->
 	% Allowed, as the type of this attribute does not include the 'undefined'
 	% atom:
@@ -167,7 +168,7 @@ get_maybe_description( State ) ->
 %
 % (exported helper)
 %
--spec to_maybe_string( wooper:state() ) -> maybe( ustring() ).
+-spec to_maybe_string( wooper:state() ) -> option( ustring() ).
 to_maybe_string( State ) ->
 	case ?getMaybeAttr(wooper_describable_description) of
 

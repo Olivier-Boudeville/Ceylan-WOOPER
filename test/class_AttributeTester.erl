@@ -25,9 +25,11 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2007.
 
-
-% @doc A test of WOOPER <b>attribute management</b>.
 -module(class_AttributeTester).
+
+-moduledoc """
+A test of WOOPER **attribute management**.
+""".
 
 
 -define( class_description, "Basic testing of WOOPER attribute management." ).

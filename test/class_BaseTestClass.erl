@@ -25,9 +25,11 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Wednesday, December 24, 2014.
 
-
-% @doc Class introduced notably to test <b>inheritance</b>.
 -module(class_BaseTestClass).
+
+-moduledoc """
+Class introduced notably to test **inheritance**.
+""".
 
 
 -define( class_description,
@@ -43,7 +45,7 @@
 
 
 -type name() :: text_utils:ustring().
--type gender() :: maybe( 'male' | 'female' ).
+-type gender() :: option( 'male' | 'female' ).
 
 -export_type([ name/0, gender/0 ]).
 

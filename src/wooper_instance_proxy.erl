@@ -25,21 +25,22 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2010.
 
-
-% @doc Module to create <b>WOOPER instance proxies</b>.
-%
-% The purpose of a proxy P is to be a process that acts as a man-in-the-middle
-% for a WOOPER target instance T: all processes interacting with P will actually
-% interact transparently with T.
-%
-% This can be useful when, for example, a local process (P) is needed (ex: must
-% be locally registered), whereas the actual service is implemented by a remote
-% instance (T).
-%
-% Note that this proxy is only as transparent as reasonably achievable and,
-% that, anyway, proxies are seldom satisfactory solutions.
-%
 -module(wooper_instance_proxy).
+
+-moduledoc """
+Module to create **WOOPER instance proxies**.
+
+The purpose of a proxy P is to be a process that acts as a man-in-the-middle for
+a WOOPER target instance T: all processes interacting with P will actually
+interact transparently with T.
+
+This can be useful when, for example, a local process (P) is needed (ex: must be
+locally registered), whereas the actual service is implemented by a remote
+instance (T).
+
+Note that this proxy is only as transparent as reasonably achievable and, that,
+anyway, proxies are seldom satisfactory solutions.
+""".
 
 
 -type proxy_pid() :: pid().

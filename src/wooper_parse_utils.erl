@@ -25,11 +25,13 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Wednesday, December 24, 2014.
 
-
-% @doc Centralizes, on behalf of the WOOPER parse transform, <b>some utilities
-% to transform ASTs</b>.
-%
 -module(wooper_parse_utils).
+
+-moduledoc """
+Centralises, on behalf of the WOOPER parse transform, **some utilities to
+transform ASTs**.
+""".
+
 
 
 -export([ get_state_type/0, get_state_var/0 ]).

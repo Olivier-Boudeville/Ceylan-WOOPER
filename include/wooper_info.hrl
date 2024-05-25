@@ -26,7 +26,7 @@
 % Creation date: 2007.
 
 
-% @doc Describes a <b>member attribute</b> of the state of a given class: stores
+% @doc Describes a **member attribute** of the state of a given class: stores
 % all class-level information (i.e. metadata) regarding this attribute.
 %
 -record( attribute_info, {
@@ -39,15 +39,15 @@
 	%
 	% For example '{atom(), [float()]}'.
 	%
-	type = undefined :: maybe( type_utils:type_description() ),
+	type = undefined :: option( type_utils:type_description() ),
 
 
 	% The qualifiers (if any) that apply to this attribute:
-	qualifiers = [] :: maybe( [ wooper:attribute_qualifier() ] ),
+	qualifiers = [] :: option( [ wooper:attribute_qualifier() ] ),
 
 
 	% Textual description (if any) of that attribute (free text):
-	description = undefined :: maybe( text_utils:bin_string() ) } ).
+	description = undefined :: option( text_utils:bin_string() ) } ).
 
 
 
@@ -83,7 +83,7 @@
 	% for the definition (first clause) of this request method (not of its spec,
 	% which has its specific field below):
 	%
-	ast_location = undefined :: maybe( ast_info:ast_location() ),
+	ast_location = undefined :: option( ast_info:ast_location() ),
 
 
 	% Corresponds to the in-file location of the first defined clause (in its
@@ -94,7 +94,7 @@
 	% one in the first clause, yet present in the forms, thus kept here; note
 	% that the linter will not accept an 'undefined' value)
 	%
-	file_location = undefined :: maybe( ast_base:file_loc() ),
+	file_location = undefined :: option( ast_base:file_loc() ),
 
 
 	% Request actual definition, a (non-located) list of the abstract forms of
@@ -104,7 +104,7 @@
 
 
 	% The type specification (if any) of that request, as an abstract form:
-	spec = undefined :: maybe( wooper_info:located_method_spec() ) } ).
+	spec = undefined :: option( wooper_info:located_method_spec() ) } ).
 
 
 
@@ -134,7 +134,7 @@
 	% full form for the definition (first clause) of this oneway method
 	% (not of its spec, which has its specific field below):
 	%
-	ast_location = undefined :: maybe( ast_info:ast_location() ),
+	ast_location = undefined :: option( ast_info:ast_location() ),
 
 
 	% Corresponds to the in-file location of the first defined clause (in
@@ -146,7 +146,7 @@
 	% kept here; note that the linter will not accept an 'undefined'
 	% value)
 	%
-	file_location = undefined :: maybe( ast_base:file_loc() ),
+	file_location = undefined :: option( ast_base:file_loc() ),
 
 
 	% Oneway actual definition, a (non-located) list of the abstract
@@ -157,7 +157,7 @@
 
 	% The type specification (if any) of that oneway, as an abstract
 	% form:
-	spec = undefined :: maybe( wooper_info:located_method_spec() ) } ).
+	spec = undefined :: option( wooper_info:located_method_spec() ) } ).
 
 
 
@@ -187,7 +187,7 @@
 	% for the definition (first clause) of this static method (not of its spec,
 	% which has its specific field below):
 	%
-	ast_location = undefined :: maybe( ast_info:ast_location() ),
+	ast_location = undefined :: option( ast_info:ast_location() ),
 
 
 	% Corresponds to the in-file location of the first defined clause (in its
@@ -198,7 +198,7 @@
 	% one in the first clause, yet present in the forms, thus kept here; note
 	% that the linter will not accept an 'undefined' value)
 	%
-	file_location = undefined :: maybe( ast_base:file_loc() ),
+	file_location = undefined :: option( ast_base:file_loc() ),
 
 
 	% Static actual definition, a (non-located) list of the abstract forms of
@@ -208,11 +208,11 @@
 
 
 	% The type specification (if any) of that static, as an abstract form:
-	spec = undefined :: maybe( wooper_info:located_method_spec() ) } ).
+	spec = undefined :: option( wooper_info:located_method_spec() ) } ).
 
 
 
--type class_entry() :: maybe( { wooper:classname(), ast_info:located_form() } ).
+-type class_entry() :: option( { wooper:classname(), ast_info:located_form() } ).
 % Description of the class name.
 
 
@@ -358,7 +358,7 @@
 
 
 	% All information about the destructor (if any) of that class:
-	destructor = undefined :: maybe( ast_info:function_info() ),
+	destructor = undefined :: option( ast_info:function_info() ),
 
 
 	% Whether a request is exported is recorded primarily in its own
@@ -448,7 +448,7 @@
 	% (we keep it as a located form rather than as a simple ast_utils:file_loc()
 	% to avoid a costly addition in last position)
 	%
-	last_file_location :: maybe( ast_info:located_form() ),
+	last_file_location :: option( ast_info:located_form() ),
 
 
 	% Section markers, offering reference locations to AST transformations.

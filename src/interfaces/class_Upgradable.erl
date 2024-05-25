@@ -25,60 +25,58 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Friday, August 12, 2022.
 
-
-% @doc Interface class implementing the Upgradable trait, so that instances
-% supporting that trait are able to <b>be hot-updated</b>, that is to have their
-% class definition changed at runtime (either upgraded or downgraded), with no
-% need to restart the system as a whole.
-%
-% So the objective is that the instances implementing this interface do not have
-% to terminate, and may update themselves on the fly (once their new class has
-% been loaded), code-wise and also state-wise.
-%
-% For that, a concreate Upgradable child class should (besides inheriting from
-% this interface):
-%
-%  - implement a relevant get_version/1 static method, whose signature is:
-%          -spec get_version() -> static_return(any_version()).
-%
-%  - possibly override its {up,down}gradeVersion/4 member methods
-%
-% See also class_Upgradable_test.erl and the support of the
-% 'freezeUntilVersionChange' special message in the WOOPER main loop (refer to
-% wooper_main_loop_functions.hrl).
-%
-% As by default no WOOPER-level instance tracking is performed (this is often an
-% application-specific topic), the PIDs of the instances to update have to be
-% provided by the caller.
-%
-% Should instances be left over (i.e. not be updated), depending on the
-% preferences specified when triggering the update, either this update will be
-% reported as failed, or these instances will be killed - not at the first
-% missed upgrade (as they will just linger then in old code), but at the next
-% one.
-%
-% To avoid unwanted calls to be processed during an update, the relevant
-% processes, notably instances, shall be frozen. When a class is updated, this
-% includes not only its direct instances but also the one of all classes
-% deriving from it.
-%
-% A difficulty is that by default nothing prevents static methods / functions
-% exported by this class to be called just before said update and to interfere /
-% have their possibly mostly unrelated process be killed. Determining the
-% culprits and freezing them until none of them gets in the way of a soft purge
-% might be a good solution.
-%
-% A question is how the PIDs of the instances of an updated class are to be
-% determined (see
-% https://erlangforums.com/t/determining-processes-lingering-in-old-code/1755
-% for a related discussion).
-%
-% Either each class keeps track of its instances (not recommended, as incurs
-% systematic overhead and may not be scalable), or a massive scan is performed
-% (then preferably in a concurrent way, as done by the ERTS code purger; see
-% do_soft_purge/2 in erts_code_purger.erl for that).
-%
 -module(class_Upgradable).
+
+-moduledoc """
+Interface class implementing the **Upgradable** trait, so that instances
+supporting that trait are able to **be hot-updated**, that is to have their
+class definition changed at runtime (either upgraded or downgraded), with no
+need to restart the system as a whole.
+
+So the objective is that the instances implementing this interface do not have
+to terminate, and may update themselves on the fly (once their new class has
+been loaded), code-wise and also state-wise.
+
+For that, a concreate Upgradable child class should (besides inheriting from
+this interface):
+ - implement a relevant get_version/1 static method, whose signature is:
+		 -spec get_version() -> static_return(any_version()).
+ - possibly override its {up,down}gradeVersion/4 member methods
+
+See also class_Upgradable_test.erl and the support of the
+'freezeUntilVersionChange' special message in the WOOPER main loop (refer to
+wooper_main_loop_functions.hrl).
+
+As by default no WOOPER-level instance tracking is performed (this is often an
+application-specific topic), the PIDs of the instances to update have to be
+provided by the caller.
+
+Should instances be left over (i.e. not be updated), depending on the
+preferences specified when triggering the update, either this update will be
+reported as failed, or these instances will be killed - not at the first missed
+upgrade (as they will just linger then in old code), but at the next one.
+
+To avoid unwanted calls to be processed during an update, the relevant
+processes, notably instances, shall be frozen. When a class is updated, this
+includes not only its direct instances but also the one of all classes deriving
+from it.
+
+A difficulty is that by default nothing prevents static methods / functions
+exported by this class to be called just before said update and to interfere /
+have their possibly mostly unrelated process be killed. Determining the culprits
+and freezing them until none of them gets in the way of a soft purge might be a
+good solution.
+
+A question is how the PIDs of the instances of an updated class are to be
+determined (see
+<https://erlangforums.com/t/determining-processes-lingering-in-old-code/1755>
+for a related discussion).
+
+Either each class keeps track of its instances (not recommended, as incurs
+systematic overhead and may not be scalable), or a massive scan is performed
+(then preferably in a concurrent way, as done by the ERTS code purger; see
+do_soft_purge/2 in erts_code_purger.erl for that).
+""".
 
 
 -define( class_description,
@@ -312,7 +310,7 @@ getVersion( State ) ->
 % See also manage_version_change/4.
 %
 -spec upgradeVersion( wooper:state(), any_version(), any_version(),
-			maybe( extra_data() ) ) -> request_return( base_outcome() ).
+			option( extra_data() ) ) -> request_return( base_outcome() ).
 upgradeVersion( State, OriginalVersion, TargetVersion, MaybeExtraData ) ->
 
 	cond_utils:if_defined( wooper_debug_hot_update,
@@ -365,7 +363,7 @@ upgradeVersion( State, OriginalVersion, TargetVersion, MaybeExtraData ) ->
 % See also manage_version_change/4.
 %
 -spec downgradeVersion( wooper:state(), any_version(), any_version(),
-			maybe( extra_data() ) ) -> request_return( base_outcome() ).
+			option( extra_data() ) ) -> request_return( base_outcome() ).
 downgradeVersion( State, OriginalVersion, TargetVersion, MaybeExtraData ) ->
 
 	cond_utils:if_defined( wooper_debug_hot_update,
@@ -447,7 +445,7 @@ freeze_instances( InstancePids, TargetVersion ) ->
 % messages, instead of interpreting them as oneway calls).
 %
 -spec freeze_instances( [ instance_pid() ], any_version(),
-			maybe( extra_data() ) ) -> static_return( [ freeze_info() ] ).
+			option( extra_data() ) ) -> static_return( [ freeze_info() ] ).
 freeze_instances( InstancePids, TargetVersion, MaybeExtraData ) ->
 
 	InstCount = length( InstancePids ),
@@ -769,7 +767,7 @@ is_upgradable( State ) ->
 %
 % (exported helper)
 %
--spec get_maybe_version( wooper:state() ) -> maybe( any_version() ).
+-spec get_maybe_version( wooper:state() ) -> option( any_version() ).
 get_maybe_version( State ) ->
 
 	ActualClassMod = State#state_holder.actual_class,
@@ -792,7 +790,7 @@ get_maybe_version( State ) ->
 %
 % (exported helper)
 %
--spec to_maybe_string( wooper:state() ) -> maybe( ustring() ).
+-spec to_maybe_string( wooper:state() ) -> option( ustring() ).
 to_maybe_string( State ) ->
 	case get_maybe_version( State ) of
 

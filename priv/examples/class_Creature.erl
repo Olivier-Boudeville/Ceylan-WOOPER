@@ -7,9 +7,11 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2007.
 
-
-% @doc Top-level class modelling any kind of creature.
 -module(class_Creature).
+
+-moduledoc """
+Top-level class modelling **any kind of creature**.
+""".
 
 
 -define( class_description, "Top-level class modelling any kind of creature." ).
@@ -158,7 +160,7 @@ side_effect_function( State ) ->
 
 
 
-% Helper function.
+% Helper functions.
 
 
 % @doc Just to show it can exist.

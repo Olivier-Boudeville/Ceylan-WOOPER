@@ -25,6 +25,15 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Wednesday, December 24, 2014.
 
+-module(wooper_parse_transform).
+
+-moduledoc """
+The **overall parse transform** for the WOOPER layer.
+
+It is meant to be applied to ASTs describing (WOOPER) classes (not standard
+modules).
+""".
+
 
 % Defined now here, as the rebar-based build system would not allow us to define
 % per-module rules (e.g. this module shall itself be compiled by the Myriad
@@ -33,12 +42,6 @@
 -compile({parse_transform, myriad_parse_transform}).
 
 
-% @doc The <b>overall parse transform</b> for the WOOPER layer.
-%
-% It is meant to be applied to ASTs describing (WOOPER) classes (not standard
-% modules).
-%
--module(wooper_parse_transform).
 
 
 

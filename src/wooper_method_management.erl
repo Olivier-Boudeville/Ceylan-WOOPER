@@ -25,11 +25,12 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Wednesday, December 24, 2014.
 
-
-% @doc Centralises, on behalf of the WOOPER parse transform, the support for
-% <b>method management</b>.
-%
 -module(wooper_method_management).
+
+-moduledoc """
+Centralises, on behalf of the WOOPER parse transform, the support for **method
+management**.
+""".
 
 
 -export([ manage_methods/1,
@@ -458,7 +459,7 @@ raise_no_implementation_error( Classname, FName, FArity, MaybeFileLoc,
 %
 % (helper)
 %
--spec take_spec_into_account( maybe( ast_info:located_form() ), function_id(),
+-spec take_spec_into_account( option( ast_info:located_form() ), function_id(),
 		function_nature(), method_qualifiers(), classname(),
 		function_info() ) -> { function_nature(), method_qualifiers() }.
 % Function specs are generally optional, yet are useful in all cases, and even
@@ -1045,7 +1046,7 @@ check_clause_spec( _UnexpectedTypeForm, FunNature, _Qualifiers, FunId,
 
 
 % @doc Returns a textual description of the specified function nature.
--spec function_nature_to_string( maybe( function_nature() ) ) ->
+-spec function_nature_to_string( option( function_nature() ) ) ->
 										text_utils:ustring().
 function_nature_to_string( request ) ->
 	"request";
@@ -1239,7 +1240,7 @@ get_wooper_transform_table() ->
 	%
 	% Transforms is an ast_transforms record that contains a
 	% transformation_state field, which itself contains a value of type:
-	%   {maybe(function_nature()), method_qualifiers()}).
+	%   {option(function_nature()), method_qualifiers()}).
 	%
 	% Indeed it starts as 'undefined', then the first terminal call branch of
 	% the first clause allows to detect and set the function nature, and
@@ -1500,7 +1501,7 @@ call_transformer( FileLocCall,
 	NewExpr = { tuple, FileLocCall, Params },
 
 	NewTransforms = Transforms#ast_transforms{
-						transformation_state={ request, [], WOOPERExportSet } },
+		transformation_state={ request, [], WOOPERExportSet } },
 
 	{ [ NewExpr ], NewTransforms };
 
@@ -2823,7 +2824,7 @@ methods_to_functions( RequestTable, OnewayTable, StaticTable,
 
 	StaticAsFunPairs = [
 		{ StId, static_to_function_info( StInfo, ExportLoc ) }
-						|| { StId, StInfo } <- StaticPairs ],
+			|| { StId, StInfo } <- StaticPairs ],
 
 	table:add_new_entries( StaticAsFunPairs, WithOnewaysFunTable ).
 

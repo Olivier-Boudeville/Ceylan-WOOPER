@@ -7,9 +7,11 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2007.
 
-
-% @doc Class modelling any kind of <b>viviparous being</b>.
 -module(class_ViviparousBeing).
+
+-moduledoc """
+Class modelling any kind of **viviparous being**.
+""".
 
 
 -define( class_description, "Class modelling any kind of viviparous being." ).

@@ -23,10 +23,13 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
+% Creation date: 2019.
 
-
-% Module containing some <b>introspection-related</b> facilities.
 -module(wooper_introspection).
+
+-moduledoc """
+Module containing some **introspection-related** facilities.
+""".
 
 
 -export([ get_class_specific_attribute_names/1 ]).

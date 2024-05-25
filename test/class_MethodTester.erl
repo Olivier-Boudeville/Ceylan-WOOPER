@@ -25,9 +25,12 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2007.
 
-
-% @doc Test of the <b>support of methods</b>.
 -module(class_MethodTester).
+
+-moduledoc """
+Test of the **support of methods**.
+""".
+
 
 
 -define( class_description,

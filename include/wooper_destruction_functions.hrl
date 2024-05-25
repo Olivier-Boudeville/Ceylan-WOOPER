@@ -81,7 +81,6 @@ wooper_destruct( State ) ->
 					ReturnedState;
 
 				Other ->
-
 					wooper:log_error( "~nWOOPER error for PID ~w of class ~ts: "
 						"user-defined destructor did not return a state, but "
 						"returned '~p' instead.", [ self(), ?MODULE, Other ] ),
@@ -226,10 +225,8 @@ chain_parent_destructors( State ) ->
 	%
 	lists:foldr(
 		fun( Class, NewState ) ->
-
 				% More efficient than using apply/3:
 				Class:wooper_destruct( NewState )
-
 		end,
 		_InitialAcc=State,
 		_List=Superclasses ).

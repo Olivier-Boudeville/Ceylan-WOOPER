@@ -23,10 +23,13 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
+% Creation date: 2007.
 
-
-% @doc Test of a <b>most basic class</b>.
 -module(class_SimplestClass).
+
+-moduledoc """
+Test of a **most basic class**.
+""".
 
 
 % Determines what are the direct mother classes of this class (if any):
@@ -176,7 +179,6 @@ testSingleExecution( State ) ->
 side_effect_function( State ) ->
 	io:format( "~n### This message must not be displayed more than once.~n" ),
 	State.
-
 
 
 

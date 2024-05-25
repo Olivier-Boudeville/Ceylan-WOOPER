@@ -25,11 +25,12 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Wednesday, December 24, 2014.
 
-
-% @doc Centralises, on behalf of the WOOPER parse transform, the support for the
-% <b>state management, including instance attributes</b>.
-%
 -module(wooper_state_management).
+
+-moduledoc """
+Centralises, on behalf of the WOOPER parse transform, the support for the
+**state management, including instance attributes**.
+""".
 
 
 -export([ manage_attributes/1, attributes_to_string/1 ]).
@@ -40,6 +41,7 @@
 
 
 -type attribute_table() :: wooper_info:attribute_table().
+
 
 
 % Shorthands:
@@ -122,7 +124,6 @@ manage_attributes( ClassInfo=#class_info{ class={ Classname, _LocForm },
 			case table:extract_entry( AttrTempFunKey, FunctionTable ) of
 
 		{ #function_info{
-
 				 clauses=[ { clause, _FileLoc, _Patterns=[], _Guards=[],
 							 _Body=[ AttrsForm ] } ],
 				 exported=ExportLcs }, ShrkFunTable } ->
@@ -137,11 +138,11 @@ manage_attributes( ClassInfo=#class_info{ class={ Classname, _LocForm },
 	end,
 
 	NewFunExportTable = ast_info:ensure_function_not_exported( AttrTempFunKey,
-										ExportLocs, FunExportTable ),
+		ExportLocs, FunExportTable ),
 
 	% First, register the corresponding attributes:
 	NewAttributeTable = register_attributes_from_form( AttrListForm,
-											AttributeTable, Classname ),
+		AttributeTable, Classname ),
 
 	% Then fix the AST of the temporary function, for the final getter one:
 	NewAttrListForm = transform_attribute_getter_form( AttrListForm ),
@@ -262,11 +263,11 @@ register_helper( _AttrFormList=[ AttrForm={atom,_,_AttrName} | T ],
 
 % 4 elements:
 register_helper( _AttrFormList=[ _AttrForm={ tuple,_, [ AttrNameForm,
-	  TypeForm, QualifiersForm, DescriptionForm ] } | T ], AttributeTable,
+		TypeForm, QualifiersForm, DescriptionForm ] } | T ], AttributeTable,
 				 Classname ) ->
 
 	NewAttributeTable = register_attribute( AttrNameForm, TypeForm,
-				QualifiersForm, DescriptionForm, AttributeTable, Classname ),
+		QualifiersForm, DescriptionForm, AttributeTable, Classname ),
 
 	register_helper( T, NewAttributeTable, Classname );
 
@@ -439,7 +440,7 @@ filter_attribute_forms( _ListForm=[ { tuple, _FileLoc,
 	AttrDescription = filter_description( Description ),
 
 	AttrInfo = convert_to_attribute_info_form( AttrName, AttrType,
-										AttrQualifier, AttrDescription ),
+		AttrQualifier, AttrDescription ),
 
 	filter_attribute_forms( T, [ AttrInfo | Acc ] );
 

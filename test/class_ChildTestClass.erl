@@ -25,9 +25,11 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2007.
 
-
-% @doc <b>Inheritance-related</b> child test class.
 -module(class_ChildTestClass).
+
+-moduledoc """
+**Inheritance-related** child test class.
+""".
 
 
 -define( class_description, "Test class, defined notably in relationship with "
@@ -49,7 +51,7 @@
 
 
 -type name() :: text_utils:ustring().
--type gender() :: maybe( 'male' | 'female' ).
+-type gender() :: option( 'male' | 'female' ).
 -type age() :: non_neg_integer().
 
 

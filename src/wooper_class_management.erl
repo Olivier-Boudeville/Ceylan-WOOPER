@@ -26,10 +26,13 @@
 % Creation date: Wednesday, December 24, 2014.
 
 
-% @doc Module centralising, on behalf of the WOOPER parse transform, the support
-% for <b>classes, inheritance</b>, etc.
-%
 -module(wooper_class_management).
+
+-moduledoc """
+Module centralising, on behalf of the WOOPER parse transform, the support for
+**classes, inheritance**, etc.
+""".
+
 
 
 -export([ check_classname/1, manage_classname/2, manage_superclasses/1 ]).

@@ -25,9 +25,11 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2008.
 
-
-% @doc Basic testing of the wooper_utils module.
 -module(wooper_utils_test).
+
+-moduledoc """
+Basic testing of the `wooper_utils` module.
+""".
 
 
 % For run/0 export and al:
@@ -62,7 +64,7 @@ run() ->
 	SecondWOOPERClassname = 'class_MyPackage__MyExample',
 
 	SecondJavaFullClassname = wooper_utils:get_java_package_and_class_for(
-		SecondWOOPERClassname   ),
+		SecondWOOPERClassname ),
 
 	test_facilities:display( "To the WOOPER classname '~ts' corresponds "
 		"~p, i.e. ~ts.~n",

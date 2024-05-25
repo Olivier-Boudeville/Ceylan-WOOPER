@@ -25,9 +25,11 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Friday, April 13, 2018.
 
-
-% @doc Gathering of <b>WOOPER-internal</b> helpers.
 -module(wooper_internals).
+
+-moduledoc """
+Gathering of **WOOPER-internal** helpers.
+""".
 
 
 -export([ raise_error/1, raise_error/2,
@@ -117,9 +119,9 @@ raise_usage_error( ErrorFormatString, ErrorFormatValues ) ->
 % source context, when applying this parse transform, to stop the build on
 % failure and report adequately the actual error to the user.
 %
--spec raise_usage_error( ustring(), ast_transforms(), maybe( file_loc() ) ) ->
+-spec raise_usage_error( ustring(), ast_transforms(), option( file_loc() ) ) ->
 								no_return();
-					   ( ustring(), classname(), maybe( file_loc() ) ) ->
+					   ( ustring(), classname(), option( file_loc() ) ) ->
 								no_return();
 					   ( format_string(), format_values(), classname() ) ->
 								no_return().

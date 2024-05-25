@@ -7,9 +7,12 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2007.
 
-
-% @doc Class modelling any kind of <b>mammal</b>.
 -module(class_Mammal).
+
+-moduledoc """
+Class modelling any kind of **mammal**.
+""".
+
 
 
 -define( class_description, "Class modelling any kind of mammal.").

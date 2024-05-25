@@ -138,11 +138,11 @@
 % whether the attribute is associated to the 'undefined' value or not defined at
 % all. For example, instead of a maybe-type, use then a safe_maybe-type.
 %
-% Ex: MyMaybeCount = ?getAttrMaybe(count)
+% Ex: MyMaybeCount = ?getAttrOption(count)
 %
 % Definitively not a legacy macro.
 %
-% Pseudo spec: getMaybeAttr(attribute_name()) -> maybe(attribute_value()).
+% Pseudo spec: getMaybeAttr(attribute_name()) -> option(attribute_value()).
 %
 -define( getMaybeAttr(AttributeName),
 	getMaybeAttribute( State, (AttributeName) )

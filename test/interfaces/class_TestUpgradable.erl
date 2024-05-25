@@ -25,15 +25,15 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Tuesday, August 16, 2022.
 
-
-% @doc Test class for the implementation of the Upgradable trait.
-%
-% It does not include a version in itself: it is defined through the
-% command-line, as with this single test source it can be either 1.2.3 or 1.2.4,
-% depending on whether enable_upgraded_test_class has been defined (then 1.2.4)
-% or not (1.2.3).
-%
 -module(class_TestUpgradable).
+
+-moduledoc """
+Test class for the implementation of the **Upgradable** trait.
+
+It does not include a version in itself: it is defined through the command-line,
+as with this single test source it can be either 1.2.3 or 1.2.4, depending on
+whether enable_upgraded_test_class has been defined (then 1.2.4) or not (1.2.3).
+""".
 
 
 -define( class_description,
@@ -59,11 +59,8 @@
 -define( this_class_version, { 1, 2, 3 } ).
 
 -define( class_attributes, [
-
 	{ name, ustring(), "name of this test instance" },
-	{ height, float(), "height of this test instance" }
-
-						   ] ).
+	{ height, float(), "height of this test instance" } ] ).
 
 
 -else.
@@ -74,11 +71,8 @@
 -define( this_class_version, { 1, 2, 4 } ).
 
 -define( class_attributes, [
-
 	{ name, ustring(), "name of this test instance" },
-	{ age, integer(), "age of this test instance" }
-
-						   ] ).
+	{ age, integer(), "age of this test instance" } ] ).
 
 -endif.
 
@@ -148,7 +142,7 @@ construct( State, Name, Age ) ->
 % code and state, taking into account any specified extra data.
 %
 -spec upgradeVersion( wooper:state(), any_version(), any_version(),
-			maybe( extra_data() ) ) -> request_return( base_outcome() ).
+			option( extra_data() ) ) -> request_return( base_outcome() ).
 % Only these very specific settings are supported:
 upgradeVersion( State, OriginalVersion={1,2,3}, TargetVersion={1,2,4},
 				ExtraData=upgradable_test ) ->
@@ -198,7 +192,7 @@ upgradeVersion( State, OriginalVersion={1,2,3}, TargetVersion={1,2,4},
 % code and state, taking into account any specified extra data.
 %
 -spec downgradeVersion( wooper:state(), any_version(), any_version(),
-			maybe( extra_data() ) ) -> request_return( base_outcome() ).
+			option( extra_data() ) ) -> request_return( base_outcome() ).
 downgradeVersion( State, OriginalVersion={1,2,4}, TargetVersion={1,2,3},
 				  ExtraData=upgradable_test ) ->
 
@@ -264,8 +258,8 @@ get_version() ->
 -ifndef(enable_upgraded_test_class).
 
 to_string( State ) ->
-	text_utils:format( "test upgradable instance ~w of class ~ts version ~ts,"
-		" of name '~ts' and height ~p m",
+	text_utils:format( "test upgradable instance ~w of class ~ts version ~ts, "
+		"of name '~ts' and height ~p m",
 		[ self(), State#state_holder.actual_class,
 		  text_utils:version_to_string( ?this_class_version ),
 		  ?getAttr(name), ?getAttr(height) ] ).
@@ -273,8 +267,8 @@ to_string( State ) ->
 -else.
 
 to_string( State ) ->
-	text_utils:format( "test upgradable instance ~w of class ~ts version ~ts,"
-		" of name '~ts' and age ~p years",
+	text_utils:format( "test upgradable instance ~w of class ~ts version ~ts, "
+		"of name '~ts' and age ~p years",
 		[ self(), State#state_holder.actual_class,
 		  text_utils:version_to_string( ?this_class_version ),
 		  ?getAttr(name), ?getAttr(age) ] ).

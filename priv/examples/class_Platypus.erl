@@ -7,9 +7,11 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2007.
 
-
-% @doc Class modelling any kind of <b>platypus</b>.
 -module(class_Platypus).
+
+-moduledoc """
+Class modelling any kind of **platypus**.
+""".
 
 
 -define( class_description, "Class modelling any kind of platypus." ).
@@ -157,7 +159,7 @@ testCreationDeletion( State ) ->
 		"normal mode)." ),
 
 	DeleteState = wooper:delete_synchronously_any_instance_referenced_in(
-					cat_pid, CatState ),
+		cat_pid, CatState ),
 
 	undefined = getAttribute( DeleteState, cat_pid ),
 

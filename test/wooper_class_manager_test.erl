@@ -25,12 +25,13 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2008.
 
-
-% @doc Unit tests for the WOOPER class manager implementation.
-%
-% See the wooper_class_manager.erl tested module.
-%
 -module(wooper_class_manager_test).
+
+-moduledoc """
+Unit tests for the WOOPER **class manager** implementation.
+
+See the wooper_class_manager.erl tested module.
+""".
 
 
 -include_lib("myriad/include/test_facilities.hrl").

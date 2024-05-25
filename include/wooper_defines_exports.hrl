@@ -104,7 +104,7 @@
 %
 -record( state_holder, {
 
-	%virtual_table :: maybe( ?wooper_table_type:?wooper_table_type() ),
+	%virtual_table :: option( ?wooper_table_type:?wooper_table_type() ),
 
 	% Just a key in the persistent_term registry:
 	%virtual_table_key :: wooper:class_key(),
@@ -127,7 +127,7 @@
 	%
 	actual_class :: wooper:classname(),
 
-	request_sender :: maybe( pid() ) } ).
+	request_sender :: option( pid() ) } ).
 
 
 

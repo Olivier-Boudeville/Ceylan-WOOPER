@@ -25,17 +25,16 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2012.
 
-
-% Nope: @headerfile "wooper_state_functions.hrl"
-
-
-% @doc Module containing some <b>general facilities for WOOPER class
-% developers</b>.
-%
-% Better placed in a standalone module than duplicated in each class.
-%
 -module(wooper).
 
+-moduledoc """
+Module containing some **general facilities for WOOPER class developers**.
+
+Better placed in a standalone module than duplicated in each class.
+""".
+
+
+% Nope: @headerfile "wooper_state_functions.hrl"
 
 
 % First, all the various exports:
@@ -237,17 +236,17 @@
 % Standalone (non-list) arguments may also be specified in calls.
 
 
--type method_qualifier() :: access_qualifier()
+-type method_qualifier() ::
+	access_qualifier()
 
-							% This method cannot be overridden:
-						  | 'final'
+	% This method cannot be overridden:
+  | 'final'
 
-							% This method does not change the state of the
-							% instance it is applied on:
-							%
-							% (only meaningful for requests and oneways)
-							%
-						  | 'const'.
+	% This method does not change the state of the instance it is applied on:
+	%
+	% (only meaningful for requests and oneways)
+	%
+  | 'const'.
 % Qualifiers applying to methods.
 
 
@@ -508,15 +507,15 @@ execute_request( PassiveInstance, RequestName )
 					   method_arguments() ) ->
 							{ passive_instance(), method_internal_result() }.
 execute_request( TargetInstancePID, RequestName, RequestArgs )
-  when is_pid( TargetInstancePID ) andalso is_atom( RequestName ) ->
+		when is_pid( TargetInstancePID ) andalso is_atom( RequestName ) ->
 
 	TargetInstancePID ! { RequestName, RequestArgs, self() },
 
 	execute_request_waiter( TargetInstancePID, RequestName, RequestArgs );
 
 execute_request( PassiveInstance, RequestName, RequestArgs )
-					when is_record( PassiveInstance, ?passive_record )
-						 andalso is_atom( RequestName ) ->
+		when is_record( PassiveInstance, ?passive_record )
+			 andalso is_atom( RequestName ) ->
 
 	{ NewPassiveInstance, { wooper_result, R } } =
 		wooper_execute_method( RequestName, RequestArgs, PassiveInstance ),
@@ -1382,7 +1381,6 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 
 		Other ->
-
 			log_error( "WOOPER error for PID ~w of class ~ts: "
 				"constructor did not return a state, but returned '~p' "
 				"instead. Construction parameters were:~n~p.",
@@ -1462,9 +1460,9 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 							   SpawnerPid ) ->
 
 	cond_utils:if_defined( wooper_debug_construction,
-	  trace_bridge:debug_fmt( "wooper:construct_and_run_synchronous "
-		"for class ~p and following parameters:~n ~p (in debug mode)",
-		[ Classname, ConstructionParameters ] ) ),
+		trace_bridge:debug_fmt( "wooper:construct_and_run_synchronous "
+			"for class ~p and following parameters:~n ~p (in debug mode)",
+			[ Classname, ConstructionParameters ] ) ),
 
 	%check_classname_and_arity( Classname, ConstructionParameters ),
 
@@ -2305,7 +2303,7 @@ log_error( FormatString, ValueList ) ->
 
 	Str = text_utils:format( "WOOPER error: " ++ FormatString
 		++ "~n= END OF WOOPER ERROR REPORT FOR ~w ===",
-		ValueList ++ [ self() ] ),
+							 ValueList ++ [ self() ] ),
 
 	% To ensure that the message goes through even in production mode:
 	% (this is the case, so commented-out)

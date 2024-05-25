@@ -5,6 +5,7 @@
 % It has been placed in the public domain.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
+% Creation date: 2012.
 
 
 % Common type specifications to be used in the ecosystem-based WOOPER examples.

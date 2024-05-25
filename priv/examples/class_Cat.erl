@@ -7,12 +7,14 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2007.
 
-
-% @doc Cat-based example. Those are the ones that work best.
-%
-% Guaranteed to be implemented by a cat.
-%
 -module(class_Cat).
+
+-moduledoc """
+**Cat-based** example. Those are the ones that work best.
+
+Guaranteed to be implemented by a cat.
+""".
+
 
 
 -define( class_description,
@@ -20,8 +22,8 @@
 
 
 % Determines what are the direct mother classes of this class (if any):
--define( superclasses, [ class_Mammal, class_ViviparousBeing,
-						 class_Serialisable ] ).
+-define( superclasses,
+		 [ class_Mammal, class_ViviparousBeing, class_Serialisable ] ).
 
 
 -define( class_attributes, [
@@ -128,7 +130,6 @@ toString( State ) ->
 
 
 % Static section.
-
 
 % @doc Returns the mean life expectancy of a cat, in years.
 -spec get_mean_life_expectancy() -> static_return( age() ).

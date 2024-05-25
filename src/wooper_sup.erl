@@ -25,13 +25,15 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Sunday, July 14, 2019.
 
-
-% @doc Module implementing the <b>root (OTP) supervisor</b> of WOOPER.
-%
-% In practice, it will supervise a single process, the one of the (singleton)
-% WOOPER class manager (which implements the gen_server behaviour).
-%
 -module(wooper_sup).
+
+-moduledoc """
+Module implementing the **root (OTP) supervisor** of WOOPER.
+
+In practice, it will supervise a single process, the one of the (singleton)
+WOOPER class manager (which implements the gen_server behaviour).
+""".
+
 
 
 % Implementing the OTP supervisor behaviour:

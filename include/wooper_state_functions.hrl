@@ -149,7 +149,7 @@ swapInAttribute( State=#state_holder{ attribute_table=AttrTable },
 	{ PreviousValue, NewAttrTable } = ?wooper_table_type:swap_value(
 		AttributeName, NewAttributeValue, AttrTable ),
 
-   { State#state_holder{ attribute_table=NewAttrTable }, PreviousValue }.
+	{ State#state_holder{ attribute_table=NewAttrTable }, PreviousValue }.
 
 
 
@@ -222,7 +222,7 @@ getAttributes( State, AttributeNameList ) ->
 % inheritance, where an attribute may not be even defined.
 %
 -spec getMaybeAttribute( wooper:state(), attribute_name() ) ->
-								maybe( attribute_value() ).
+								option( attribute_value() ).
 getMaybeAttribute( State, AttributeName ) ->
 	case ?wooper_table_type:lookup_entry( AttributeName,
 			State#state_holder.attribute_table ) of
@@ -442,6 +442,6 @@ addKeyValueToAttribute( State, AttributeName, Key, Value ) ->
 popFromAttribute( State, AttributeName ) ->
 
 	{ Head, PoppedAttributeTable } = ?wooper_table_type:pop_from_entry(
-				  AttributeName, State#state_holder.attribute_table ),
+		AttributeName, State#state_holder.attribute_table ),
 
 	{ State#state_holder{ attribute_table=PoppedAttributeTable }, Head }.

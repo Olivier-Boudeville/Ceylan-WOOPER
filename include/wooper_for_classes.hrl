@@ -145,7 +145,7 @@ wooper_get_class_specific_attributes() ->
 % Note: available to the user.
 %
 -spec get_class_description() ->
-			static_return( maybe( wooper_info:class_description() ) ).
+			static_return( option( wooper_info:class_description() ) ).
 
 
 
@@ -158,7 +158,6 @@ wooper_get_class_specific_attributes() ->
 % transform.
 %
 get_class_description() ->
-
 	% Note: if your compiler points to these lines, you must have introduced a
 	% parse (syntax) error in your 'class_description' define (expected to be a
 	% string).

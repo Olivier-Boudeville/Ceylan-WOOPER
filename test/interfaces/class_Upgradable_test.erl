@@ -25,12 +25,14 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Tuesday, August 16, 2022.
 
-
-% @doc Unit tests for the <b>Upgradable</b> class implementation.
-%
-% See the class_Upgradable module.
-%
 -module(class_Upgradable_test).
+
+-moduledoc """
+Unit tests for the **Upgradable** class implementation.
+
+See the class_Upgradable module.
+""".
+
 
 
 -export([ run/0 ]).

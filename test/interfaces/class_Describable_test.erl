@@ -25,12 +25,13 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2008.
 
-
-% @doc Unit tests for the <b>Describable</b> class implementation.
-%
-% See the class_Describable module.
-%
 -module(class_Describable_test).
+
+-moduledoc """
+Unit tests for the **Describable** class implementation.
+
+See the class_Describable module.
+""".
 
 
 -export([ run/0 ]).

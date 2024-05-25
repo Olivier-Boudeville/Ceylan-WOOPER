@@ -7,12 +7,14 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2007.
 
-
-% @doc Class modelling any kind of <b>reptile</b>.
-%
-% This class allows to test serialisation for an exploratory resilience support.
-%
 -module(class_Reptile).
+
+-moduledoc """
+Class modelling any kind of **reptile**.
+
+This class allows to test serialisation for an exploratory resilience support.
+""".
+
 
 
 -define( class_description, "Class modelling any kind of reptile." ).

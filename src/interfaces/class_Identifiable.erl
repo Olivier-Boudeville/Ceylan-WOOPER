@@ -25,17 +25,19 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Sunday, July 24, 2022.
 
-
-% @doc Interface class implementing the Identifiable trait, so that its
-% instances are able to return an <b>identifier</b> thereof, obviously unique.
-%
-% Such an interface is an abstract mother class from which all identifiable
-% instances must derive.
-%
-% It provides also exported functions designed so that they can be
-% applied to any WOOPER instance, whether or not it has this trait or not.
-%
 -module(class_Identifiable).
+
+-moduledoc """
+Interface class implementing the **Identifiable** trait, so that its instances
+are able to return an **identifier** thereof, obviously unique.
+
+Such an interface is an abstract mother class from which all identifiable
+instances must derive.
+
+It provides also exported functions designed so that they can be applied to any
+WOOPER instance, whether or not it has this trait or not.
+""".
+
 
 
 -define( class_description,
@@ -187,7 +189,7 @@ is_identifiable( State ) ->
 %
 % (exported helper)
 %
--spec get_maybe_identifier( wooper:state() ) -> maybe( id() ).
+-spec get_maybe_identifier( wooper:state() ) -> option( id() ).
 get_maybe_identifier( State ) ->
 	% Allowed, as the type of this attribute does not include the 'undefined'
 	% atom:

@@ -25,39 +25,39 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Sunday, July 24, 2022.
 
-
-% @doc Interface class implementing the Serialisable trait, so that the
-% instances having that trait can have their <b>state serialised and
-% deserialised</b>.
-%
-% Such instances can have their state transformed in a term designed to be
-% exchanged and/or stored (typically as a series of bytes) through any medium
-% (e.g. written in a WSF file, or a network stream), and loaded afterwards from
-% such a content.
-%
-% Such an interface is an abstract mother class from which all serialisable
-% instances must derive.
-%
-% They may override the serialisation/deserialisation mechanisms (e.g. to target
-% extra serialisation formats thanks to the serialiseTerm/2 request and the
-% deserialise_term/1 static method) or, more frequently, they may introduce
-% class-specific operations before and/or after serialisation and/or
-% deserialisation, through the overriding of the base, do-nothing
-% on{Pre,Post}Serialisation/2 and onPostDeserialisation/2 requests (a.k.a. OOP
-% "hooks").
-%
-% Operations can be further specialised by providing a custom entry transformer,
-% possibly with any user-data of choice (which additionally can be further
-% transformed by aforementioned pre/post hooks). Returning user data is also a
-% way of defining synchronous operations.
-%
-% Generally an entry transformer is project-specific and transverse to all
-% classes, whereas hooks are class-specific.
-%
-% This interface provides also exported functions designed so that they can be
-% applied to any WOOPER instance, whether or not it has this trait or not.
-%
 -module(class_Serialisable).
+
+-moduledoc """
+Interface class implementing the **Serialisable** trait, so that the instances
+having that trait can have their **state serialised and deserialised**.
+
+Such instances can have their state transformed in a term designed to be
+exchanged and/or stored (typically as a series of bytes) through any medium
+(e.g. written in a WSF file, or a network stream), and loaded afterwards from
+such a content.
+
+Such an interface is an abstract mother class from which all serialisable
+instances must derive.
+
+They may override the serialisation/deserialisation mechanisms (e.g. to target
+extra serialisation formats thanks to the serialiseTerm/2 request and the
+deserialise_term/1 static method) or, more frequently, they may introduce
+class-specific operations before and/or after serialisation and/or
+deserialisation, through the overriding of the base, do-nothing
+on{Pre,Post}Serialisation/2 and onPostDeserialisation/2 requests (a.k.a. OOP
+"hooks").
+
+Operations can be further specialised by providing a custom entry transformer,
+possibly with any user-data of choice (which additionally can be further
+transformed by aforementioned pre/post hooks). Returning user data is also a way
+of defining synchronous operations.
+
+Generally an entry transformer is project-specific and transverse to all
+classes, whereas hooks are class-specific.
+
+This interface provides also exported functions designed so that they can be
+applied to any WOOPER instance, whether or not it has this trait or not.
+""".
 
 
 -define( class_description,
@@ -199,6 +199,7 @@
 
 % The options to be used when serialising/deserialising:
 -define( serialisation_opts, [ { compressed, 9 }, { minor_version, 2 } ] ).
+
 
 
 % Design notes
@@ -367,7 +368,7 @@ serialise( State ) ->
 % updated user data, together with the instance PID (useful to allow to
 % discriminate between serialisations performed in parallel).
 %
--spec serialise( wooper:state(), maybe( entry_transformer() ), user_data() ) ->
+-spec serialise( wooper:state(), option( entry_transformer() ), user_data() ) ->
 		request_return( { serialisation(), user_data(), instance_pid() } ).
 serialise( State, MaybeEntryTransformer, UserData ) ->
 
@@ -402,7 +403,7 @@ serialise( State, MaybeEntryTransformer, UserData ) ->
 						[ SerialTerm, SerialUserData ] ),
 
 	wooper:return_state_result( PostSerialInstanceState,
-						{ PostSerialTerm, PostUserData, self() } ).
+		{ PostSerialTerm, PostUserData, self() } ).
 
 
 
@@ -446,7 +447,7 @@ onPreSerialisation( State, UserData ) ->
 % user data and any extra data specified.
 %
 -spec performStateSerialisation( wooper:state(), wooper:state(),
-		maybe( entry_transformer() ), user_data(), maybe( extra_data() ) ) ->
+		option( entry_transformer() ), user_data(), option( extra_data() ) ) ->
 				request_return( { serialisation(), user_data() } ).
 performStateSerialisation( State, ToSerialiseState, MaybeEntryTransformer,
 						   UserData, MaybeExtraData ) ->
@@ -640,7 +641,7 @@ load( Serialisation ) ->
 % This creation will be asynchronous: this function returns a legit PID as soon
 % as the creation is triggered, without waiting for it to complete.
 %
--spec load( serialisation(), maybe( entry_transformer() ), user_data() ) ->
+-spec load( serialisation(), option( entry_transformer() ), user_data() ) ->
 											static_return( instance_pid() ).
 load( Serialisation, MaybeEntryTransformer, UserData ) ->
 
@@ -682,8 +683,8 @@ load_link( Serialisation ) ->
 % This creation will be asynchronous: this function returns a legit PID as soon
 % as the creation is triggered, without waiting for it to complete.
 %
--spec load_link( serialisation(), maybe( entry_transformer() ), user_data() ) ->
-								static_return( instance_pid() ).
+-spec load_link( serialisation(), option( entry_transformer() ),
+				 user_data() ) -> static_return( instance_pid() ).
 load_link( Serialisation, MaybeEntryTransformer, UserData ) ->
 
 	InstPid = ?myriad_spawn_link(
@@ -726,7 +727,7 @@ synchronous_load( Serialisation ) ->
 % This creation is synchronous: the call will return only when the created
 % process reports that it is up and running.
 %
--spec synchronous_load( serialisation(), maybe( entry_transformer() ),
+-spec synchronous_load( serialisation(), option( entry_transformer() ),
 						user_data() ) -> static_return( load_info() ).
 synchronous_load( Serialisation, MaybeEntryTransformer, UserData ) ->
 
@@ -775,7 +776,7 @@ synchronous_load_link( Serialisation ) ->
 % This creation is synchronous: the call will return only when the created
 % process reports that it is up and running.
 %
--spec synchronous_load_link( serialisation(), maybe( entry_transformer() ),
+-spec synchronous_load_link( serialisation(), option( entry_transformer() ),
 							 user_data() ) -> static_return( load_info() ).
 synchronous_load_link( Serialisation, MaybeEntryTransformer, UserData ) ->
 
@@ -827,7 +828,7 @@ remote_synchronous_timed_load_link( Node, Serialisation ) ->
 % process reports that it is up and running.
 %
 -spec remote_synchronous_timed_load_link( node_name(),
-	serialisation(), maybe( entry_transformer() ), user_data() ) ->
+	serialisation(), option( entry_transformer() ), user_data() ) ->
 												static_return( load_info() ).
 remote_synchronous_timed_load_link( Node, Serialisation,
 									MaybeEntryTransformer, UserData ) ->
@@ -902,7 +903,7 @@ remote_synchronisable_load_link( Node, Serialisation ) ->
 % loadings.
 %
 -spec remote_synchronisable_load_link( node_name(), serialisation(),
-			maybe( entry_transformer() ), user_data() ) ->
+			option( entry_transformer() ), user_data() ) ->
 												static_return( instance_pid() ).
 remote_synchronisable_load_link( Node, Serialisation, MaybeEntryTransformer,
 								 UserData ) ->
@@ -950,8 +951,8 @@ remote_synchronisable_load_link( Node, Serialisation, MaybeEntryTransformer,
 % instance processes; so we consider here that the process executing this helper
 % is the final hosting one, regardless of its past.
 %
--spec deserialise( serialisation(), maybe( entry_transformer() ), user_data(),
-				   maybe( pid() ) ) -> static_no_return().
+-spec deserialise( serialisation(), option( entry_transformer() ), user_data(),
+				   option( pid() ) ) -> static_no_return().
 deserialise( Serialisation, MaybeEntryTransformer, UserData,
 			 MaybeListenerPid ) ->
 
@@ -970,8 +971,8 @@ deserialise( Serialisation, MaybeEntryTransformer, UserData,
 % Introduced to be used in multiple contexts, either directly for a single
 % deserialisation, or for a series thereof.
 %
--spec embody( term(), maybe( entry_transformer() ), user_data(),
-					maybe( pid() ) ) -> static_no_return().
+-spec embody( term(), option( entry_transformer() ), user_data(),
+					option( pid() ) ) -> static_no_return().
 embody( #wooper_serialisation_instance_record{
 			class_name=Classname,
 			attributes=AttrEntries,
@@ -1002,7 +1003,7 @@ embody( #wooper_serialisation_instance_record{
 	% We need to bypass any constructor here.
 
 	AttributeTable = ?wooper_table_type:add_entries( TransformedEntries,
-										?wooper_table_type:new() ),
+		?wooper_table_type:new() ),
 
 	% If ever useful:
 	OptimisedAttributeTable = ?wooper_table_type:optimise( AttributeTable ),
@@ -1132,7 +1133,7 @@ onPostDeserialisation( State, UserData ) ->
 % of the current state), meant to be overridden if needed.
 %
 -spec onPostDeserialisation( wooper:state(), user_data(),
-			maybe( extra_data() ) ) -> const_request_return( user_data() ).
+			option( extra_data() ) ) -> const_request_return( user_data() ).
 onPostDeserialisation( State, UserData, _MaybeExtraData ) ->
 
 	cond_utils:if_defined( wooper_debug_serialisation,

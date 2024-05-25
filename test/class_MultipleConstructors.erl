@@ -23,10 +23,13 @@
 % <http://www.mozilla.org/MPL/>.
 %
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
+% Creation date: 2007.
 
-
-% @doc Tests the support of multiple constructors.
 -module(class_MultipleConstructors).
+
+-moduledoc """
+Tests the support of **multiple constructors**.
+""".
 
 
 -define( class_description,

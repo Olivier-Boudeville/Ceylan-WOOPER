@@ -25,11 +25,12 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Wednesday, December 24, 2014.
 
-
-% @doc Centralizes, on behalf of the WOOPER parse transform, the support for
-% <b>instance destruction</b>.
-%
 -module(wooper_instance_destruction).
+
+-moduledoc """
+Centralizes, on behalf of the WOOPER parse transform, the support for **instance
+destruction**.
+""".
 
 
 -export([ manage_destructor/1 ]).

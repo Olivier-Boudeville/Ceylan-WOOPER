@@ -25,19 +25,21 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Thursday, July 11, 2019.
 
-
-% @doc Module implementing the <b>WOOPER (active) OTP application</b> behaviour.
-%
-% Note that, thanks to the automatic creation of the class manager, WOOPER will
-% still work flawlessly even if not specifically started (typically out of any
-% OTP context).
-%
 -module(wooper_app).
+
+-moduledoc """
+Module implementing the **WOOPER (active) OTP application** behaviour.
+
+Note that, thanks to the automatic creation of the class manager, WOOPER will
+still work flawlessly even if not specifically started (typically out of any OTP
+context).
+""".
+
 
 
 % Implementing the (active, OTP) application behaviour:
 %
-% See [https://erlang.org/doc/design_principles/applications.html].
+% See <https://erlang.org/doc/design_principles/applications.html>.
 %
 -behaviour(application).
 

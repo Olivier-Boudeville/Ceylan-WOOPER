@@ -25,6 +25,12 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Friday, April 13, 2018.
 
+-module(wooper_info).
+
+-moduledoc """
+Centralisation of **class-level information**.
+""".
+
 
 % Defined now here, as the rebar-based build system would not allow us to define
 % per-module rules (e.g. this module shall itself be compiled by the Myriad
@@ -33,8 +39,6 @@
 -compile( {parse_transform, myriad_parse_transform } ).
 
 
-% @doc Centralisation of <b>class-level information</b>.
--module(wooper_info).
 
 
 % For the attribute_info record:
@@ -385,7 +389,7 @@ class_info_to_string( #class_info{
 									  NextIndentationLevel ),
 
 			  "regarding new operators, " ++ ast_info:functions_to_string(
-					NewOperatorTable, DoIncludeForms, NextIndentationLevel ),
+				NewOperatorTable, DoIncludeForms, NextIndentationLevel ),
 
 			  destructor_to_string( DestructorInfo, DoIncludeForms,
 									NextIndentationLevel ),
@@ -546,7 +550,7 @@ constructors_to_string( ConstructorTable, DoIncludeForms, IndentationLevel ) ->
 
 
 % @doc Returns a textual representation of the specified destructor information.
--spec destructor_to_string( maybe( ast_info:function_info() ), boolean(),
+-spec destructor_to_string( option( ast_info:function_info() ), boolean(),
 							indentation_level() ) -> ustring().
 destructor_to_string( _DestructorInfo=undefined, _DoIncludeForms,
 					  _IndentationLevel ) ->
@@ -892,7 +896,7 @@ qualifiers_to_string( Qualifiers ) ->
 
 
 % @doc Returns a textual description of the specified method definition.
--spec definition_to_string( [ clause_def() ], maybe( file_loc() ) ) ->
+-spec definition_to_string( [ clause_def() ], option( file_loc() ) ) ->
 									ustring().
 definition_to_string( Clauses, _FileLoc=undefined ) ->
 	text_utils:format( "with ~B clause(s) defined", [ length( Clauses ) ] );
@@ -903,7 +907,7 @@ definition_to_string( Clauses, FileLoc ) ->
 
 
 % @doc Returns a textual description of the specified located method spec.
--spec located_spec_to_string( maybe( located_method_spec() ) ) -> ustring().
+-spec located_spec_to_string( option( located_method_spec() ) ) -> ustring().
 located_spec_to_string( _LocatedSpec=undefined ) ->
 	"no type specification";
 

@@ -25,21 +25,23 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: 2008.
 
-
-% @doc Interface class implementing the Describable trait, so that instances
-% supporting that trait are able to output a <b>textual description</b> of them.
-%
-% Each Describable child class *must* define an exported helper with the
-% following signature, as it will be relied upon:
-%  -spec to_string(wooper:state()) -> text_utils:ustring().
-%
-% This interface provides also exported functions designed so that they can be
-% applied to any WOOPER instance, whether or not it supports this trait.
-%
-% See class_StaticDescribable, for instances that can be described statically.
-% -module(class_Describable).
-%
 -module(class_Describable).
+
+-moduledoc """
+Interface class implementing the Describable trait, so that instances supporting
+that trait are able to output a **textual description** of them.
+
+Each Describable child class *must* define an exported helper with the
+following signature, as it will be relied upon:
+ -spec to_string(wooper:state()) -> text_utils:ustring().
+
+This interface provides also exported functions designed so that they can be
+applied to any WOOPER instance, whether or not it supports this trait.
+
+See class_StaticDescribable, for instances that can be described statically.
+-module(class_Describable).
+""".
+
 
 
 -define( class_description,
@@ -161,7 +163,7 @@ is_describable( State ) ->
 %
 % (exported helper)
 %
--spec get_maybe_description( wooper:state() ) -> maybe( description() ).
+-spec get_maybe_description( wooper:state() ) -> option( description() ).
 get_maybe_description( State ) ->
 	case is_describable( State ) of
 
@@ -180,7 +182,7 @@ get_maybe_description( State ) ->
 %
 % (exported helper)
 %
--spec to_maybe_string( wooper:state() ) -> maybe( ustring() ).
+-spec to_maybe_string( wooper:state() ) -> option( ustring() ).
 to_maybe_string( State ) ->
 	case get_maybe_description( State ) of
 
