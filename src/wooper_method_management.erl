@@ -72,16 +72,19 @@ management**.
 -include("wooper_info.hrl").
 
 
+
+-doc """
+The (WOOPER-level) nature of a given Erlang function.
+
+('throw' designates a function whose all clauses throw an exception, and as such
+may be temporarily not identified in terms of nature)
+""".
 -type function_nature() :: 'constructor' | 'destructor'
 	| 'request' | 'oneway' | 'static' | 'function' | 'throw'.
-% The (WOOPER-level) nature of a given Erlang function.
-%
-% ('throw' designates a function whose all clauses throw an exception, and as
-% such may be temporarily not identified in terms of nature)
-
 
 
 -export_type([ function_nature/0 ]).
+
 
 
 % Shorthands:
@@ -217,12 +220,12 @@ management**.
 
 
 
-% @doc Extracts the methods found in the specified function table, transforms
-% them, and interprets that information to update the specified class
-% information.
-%
-% Returns an updated pair thereof.
-%
+-doc """
+Extracts the methods found in the specified function table, transforms them, and
+interprets that information to update the specified class information.
+
+Returns an updated pair thereof.
+""".
 -spec manage_methods( compose_pair() ) -> compose_pair().
 manage_methods( { CompleteFunctionTable,
 				  ClassInfo=#class_info{ class={ Classname, _ClassForm },
@@ -262,10 +265,10 @@ manage_methods( { CompleteFunctionTable,
 
 
 
-% @doc Transforms and categorises each of the specified functions according to
-% its real nature (e.g. a given Erlang function may actually be a WOOPER
-% oneway).
-%
+-doc """
+Transforms and categorises each of the specified functions according to its real
+nature (e.g. a given Erlang function may actually be a WOOPER oneway).
+""".
 sort_out_functions( _FunEntries=[], FunctionTable, RequestTable, OnewayTable,
 					StaticTable, _Classname, _ExportLoc, _WOOPERExportSet ) ->
 	{ FunctionTable, RequestTable, OnewayTable, StaticTable };
@@ -391,12 +394,13 @@ sort_out_functions( _Functions=[ #function_info{ name=FunName,
 
 
 
-% @doc Tries to locate among specified function entries and tables any
-% implementation of the specified function with any (different) arity, and
-% raises an appropriate exception.
-%
-% (helper, defined for reuse by upper layers)
-%
+-doc """
+Tries to locate among specified function entries and tables any implementation
+of the specified function with any (different) arity, and raises an appropriate
+exception.
+
+(helper, defined for reuse by upper layers)
+""".
 raise_no_implementation_error( Classname, FName, FArity, MaybeFileLoc,
 							   FunctionEntries, Tables ) ->
 
@@ -420,7 +424,7 @@ raise_no_implementation_error( Classname, FName, FArity, MaybeFileLoc,
 
 		[] ->
 			text_utils:format( " (no function '~ts' defined, for any arity)",
-								 [ FName ] );
+							   [ FName ] );
 
 		[ SingleArity ] ->
 			% No function definition line easily obtainable:
@@ -452,13 +456,13 @@ raise_no_implementation_error( Classname, FName, FArity, MaybeFileLoc,
 
 
 
+-doc """
+Checks that the method spec (if any) corresponds indeed to the right nature of
+function, that is relies on the right method terminators with the right
+qualifiers, and returns a corresponding pair.
 
-% @doc Checks that the method spec (if any) corresponds indeed to the right
-% nature of function, that is relies on the right method terminators with the
-% right qualifiers, and returns a corresponding pair.
-%
-% (helper)
-%
+(helper)
+""".
 -spec take_spec_into_account( option( ast_info:located_form() ), function_id(),
 		function_nature(), method_qualifiers(), classname(),
 		function_info() ) -> { function_nature(), method_qualifiers() }.
@@ -537,9 +541,10 @@ take_spec_into_account( _LocSpec={ _ASTLoc,
 
 
 
-% @doc Returns a {FunctionNature, Qualifiers} pair deduced from specified clause
-% spec.
-%
+
+-doc """
+Returns a {FunctionNature, Qualifiers} pair deduced from specified clause spec.
+""".
 get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
 		_Seqs=[ _TypeProductForArgs,
 				_ResultType={ user_type, _, request_return, [ _RType ] } ] },
@@ -649,13 +654,12 @@ get_info_from_clause_spec( _ClauseSpec, _FunId, _Classname ) ->
 
 
 
+-doc """
+Checks the specified method clause spec.
 
-% @doc Checks the specified method clause spec.
-%
-% (helper)
-
+(helper)
+""".
 %% For requests:
-
 % Spec implies non-const request:
 check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
 		_ResultType={ user_type, FileLoc, request_return, [ _RType ] } ] },
@@ -1045,7 +1049,7 @@ check_clause_spec( _UnexpectedTypeForm, FunNature, _Qualifiers, FunId,
 
 
 
-% @doc Returns a textual description of the specified function nature.
+-doc "Returns a textual description of the specified function nature.".
 -spec function_nature_to_string( option( function_nature() ) ) ->
 										text_utils:ustring().
 function_nature_to_string( request ) ->
@@ -1076,16 +1080,14 @@ function_nature_to_string( Other ) when is_atom( Other ) ->
 
 
 
+-doc """
+Checks that, in the specified clauses of specified function (corresponding to a
+request or a oneway), the first parameter is 'State' indeed.
 
-% @doc Checks that, in the specified clauses of specified function
-% (corresponding to a request or a oneway), the first parameter is 'State'
-% indeed.
-%
-% Note: enforces a very welcome convention, but also complies with the
-% expression that the support for example of const_return_result/1 introduces
-% (e.g. {var, FileLocCall, 'State'} added in the AST, hence the enforced
-% variable name).
-%
+Note: enforces a very welcome convention, but also complies with the expression
+that the support for example of const_return_result/1 introduces (e.g. {var,
+FileLocCall, 'State'} added in the AST, hence the enforced variable name).
+""".
 -spec check_state_argument( [ clause_def() ], function_id(), classname() ) ->
 									void().
 check_state_argument( Clauses, FunId, Classname ) ->
@@ -1135,17 +1137,18 @@ check_clause_for_state( _Clause, FunId, Classname ) ->
 
 
 
-% @doc Infers the nature of the corresponding function and any relevant method
-% qualifier(s), ensures that all method terminators correspond, and transforms
-% them appropriately (for WOOPER), in one pass.
-%
-% We consider that no method is to be explicitly exported and that all actual
-% clauses of a method must explicitly terminate with a WOOPER method terminator
-% (the same for all clauses, except regarding constness), rather than calling an
-% helper function that would use such a terminator (otherwise the nature of
-% methods could not be auto-detected, as there would be no way to determine
-% whether said helper should be considered as a method or not).
-%
+-doc """
+Infers the nature of the corresponding function and any relevant method
+qualifier(s), ensures that all method terminators correspond, and transforms
+them appropriately (for WOOPER), in one pass.
+
+We consider that no method is to be explicitly exported and that all actual
+clauses of a method must explicitly terminate with a WOOPER method terminator
+(the same for all clauses, except regarding constness), rather than calling an
+helper function that would use such a terminator (otherwise the nature of
+methods could not be auto-detected, as there would be no way to determine
+whether said helper should be considered as a method or not).
+""".
 -spec manage_method_terminators( clause_def(), function_id(),
 								 classname(), function_export_set()) ->
 		{ clause_def(), function_nature(), method_qualifiers(),
@@ -1198,28 +1201,28 @@ manage_method_terminators( Clauses, FunId, Classname, WOOPERExportSet ) ->
 
 
 
+-doc """
+Returns a blank transformation state, based on the WOOPER exports.
 
-% @doc Returns a blank transformation state, based on the WOOPER exports.
-%
-% Defined to be safely reused from various locations.
-%
+Defined to be safely reused from various locations.
+""".
 get_blank_transformation_state() ->
 	WOOPERExportSet = wooper:get_exported_functions_set(),
 	get_blank_transformation_state( WOOPERExportSet ).
 
 
 
-% @doc Returns a suitable, blank transformation state, from specified export
-% set.
-%
-% Defined to be safely reused from various locations.
-%
+-doc """
+Returns a suitable, blank transformation state, from specified export set.
+
+Defined to be safely reused from various locations.
+""".
 get_blank_transformation_state( ExportSet ) ->
 	{ _FunctionNature=undefined, _Qualifiers=[], ExportSet }.
 
 
 
-% @doc Returns the WOOPER-specific AST transform table.
+-doc "Returns the WOOPER-specific AST transform table.".
 -spec get_wooper_transform_table() -> ast_transform_table().
 get_wooper_transform_table() ->
 
@@ -1286,17 +1289,18 @@ get_wooper_transform_table() ->
 
 
 
+
 % List of WOOPER-specific transformers.
 
 
-% @doc Drives the AST transformation of a clause.
-%
-% For any clause, we are to transform here, for WOOPER, only the last expression
-% (not the preceding ones) of the body (hence not touching parameters or
-% guards).
-%
-% The goal is to feed the call-transformer only with relevant expressions.
-%
+-doc """
+Drives the AST transformation of a clause.
+
+For any clause, we are to transform here, for WOOPER, only the last expression
+(not the preceding ones) of the body (hence not touching parameters or guards).
+
+The goal is to feed the call-transformer only with relevant expressions.
+""".
 -spec clause_transformer( ast_clause(), ast_transforms() ) ->
 								{ ast_clause(), ast_transforms() }.
 clause_transformer( Clause={ clause, FileLoc, Params, Guards, Body },
@@ -1321,9 +1325,10 @@ clause_transformer( Clause={ clause, FileLoc, Params, Guards, Body },
 
 
 
-% @doc The standard body transformer, expected never to be called due to the
-% WOOPER-driven traversal of branching constructs.
-%
+-doc """
+The standard body transformer, expected never to be called due to the
+WOOPER-driven traversal of branching constructs.
+""".
 -spec body_transformer( ast_body(), ast_transforms() ) ->
 							{ ast_body(), ast_transforms() }.
 body_transformer( Body, Transforms=#ast_transforms{
@@ -1336,17 +1341,17 @@ body_transformer( Body, Transforms=#ast_transforms{
 
 
 
+-doc """
+Drives the AST transformation of a body: processes specifically each last
+expression of a body to be transformed (and only them), as it is the place where
+we can guess the nature of a function and possibly, if it is a method, at least
+some of its qualifiers.
 
-% @doc Drives the AST transformation of a body: processes specifically each last
-% expression of a body to be transformed (and only them), as it is the place
-% where we can guess the nature of a function and possibly, if it is a method,
-% at least some of its qualifiers.
-%
-% Used to be an anonymous function, yet now exported so that it can be re-used
-% by upper layers.
-%
-% Note: resets its transforms by itself.
-%
+Used to be an anonymous function, yet now exported so that it can be re-used by
+upper layers.
+
+Note: resets its transforms by itself.
+""".
 -spec body_transformer( ast_body(), ast_transforms(), file_loc() ) ->
 							{ ast_body(), ast_transforms() }.
 % As empty bodies may happen (e.g. 'receive' without an 'after'):
@@ -1408,7 +1413,6 @@ body_transformer( BodyExprs, Transforms, FileLoc ) ->
 		% void whilr having no prior expression), which would not be legit:
 		%
 		[] ->
-
 			PlaceholderAtom = wooper_void_return,
 
 			%trace_utils:warning_fmt(
@@ -1433,14 +1437,15 @@ body_transformer( BodyExprs, Transforms, FileLoc ) ->
 
 
 
-% @doc Drives the AST transformation of a call: in charge of detecting the
-% method terminators and qualifiers, in a WOOPER context.
-%
-% Only the top-level call is of interest here (no need to recurse to hunt for
-% method terminators).
-%
-% (anonymous mute variables correspond to line numbers)
-%
+-doc """
+Drives the AST transformation of a call: in charge of detecting the method
+terminators and qualifiers, in a WOOPER context.
+
+Only the top-level call is of interest here (no need to recurse to hunt for
+method terminators).
+
+(anonymous mute variables correspond to line numbers)
+""".
 -spec call_transformer( file_loc(), ast_expression:function_ref_expression(),
 			ast_expression:params_expression(), ast_transforms() ) ->
 					{ [ ast_expression:ast_expression() ], ast_transforms() }.
@@ -1940,14 +1945,14 @@ call_transformer( FileLocCall,
 %
 % Invalid method terminator:
 %call_transformer( FileLocCall, _FunctionRef={ remote, _, {atom,_,wooper},
-%										   {atom,_,UnexpectedTerminator} },
-%				  _Params,
-%				  Transforms=#ast_transforms{
-%								transformed_function_identifier=FunId } ) ->
-%	wooper_internals:raise_usage_error( "invalid method terminator specified "
-%		"for ~ts/~B: wooper:~ts does not exist (for any arity).",
-%		pair:to_list( FunId ) ++ [ UnexpectedTerminator ], Transforms,
-%		FileLocCall );
+%                                  {atom,_,UnexpectedTerminator} },
+%                  _Params,
+%                  Transforms=#ast_transforms{
+%                               transformed_function_identifier=FunId } ) ->
+%   wooper_internals:raise_usage_error( "invalid method terminator specified "
+%       "for ~ts/~B: wooper:~ts does not exist (for any arity).",
+%       pair:to_list( FunId ) ++ [ UnexpectedTerminator ], Transforms,
+%       FileLocCall );
 
 
 % So we selectively accept the WOOPER non-terminator functions, and reject the
@@ -2060,9 +2065,9 @@ call_transformer( FileLocCall, FunctionRef, Params,
 % To help debugging any non-match:
 % call_transformer( _FileLocCall, FunctionRef, _Params, Transforms ) ->
 %
-%	trace_utils:error_fmt( "Unexpected transforms for call ~p:~n  ~ts",
-%		[ FunctionRef,
-%		  ast_transform:ast_transforms_to_string( Transforms ) ] ),
+%   trace_utils:error_fmt( "Unexpected transforms for call ~p:~n  ~ts",
+%       [ FunctionRef,
+%         ast_transform:ast_transforms_to_string( Transforms ) ] ),
 %
 %	throw( { unexpected_transforms, Transforms } ).
 
@@ -2077,10 +2082,11 @@ call_transformer( FileLocCall, FunctionRef, Params,
 
 
 
-% @doc Drives the AST transformation of a 'if' construct.
-%
-% (see ast_expression:transform_if/3)
-%
+-doc """
+Drives the AST transformation of a 'if' construct.
+
+(see ast_expression:transform_if/3)
+""".
 -spec if_transformer( file_loc(), [ ast_if_clause() ], ast_transforms() ) ->
 						{ [ ast_expression() ], ast_transforms() }.
 if_transformer( FileLoc, IfClauses, Transforms ) ?rec_guard ->
@@ -2095,10 +2101,11 @@ if_transformer( FileLoc, IfClauses, Transforms ) ?rec_guard ->
 
 
 
-% @doc Drives the AST transformation of a 'case' construct.
-%
-% (see ast_expression:transform_case/4)
-%
+-doc """
+Drives the AST transformation of a 'case' construct.
+
+(see ast_expression:transform_case/4)
+""".
 -spec case_transformer( file_loc(), ast_expression(), [ ast_case_clause() ],
 			ast_transforms() ) -> { [ ast_expression() ], ast_transforms() }.
 case_transformer( FileLoc, TestExpression, CaseClauses,
@@ -2116,10 +2123,11 @@ case_transformer( FileLoc, TestExpression, CaseClauses,
 
 
 
-% @doc Drives the AST transformation of a 'simple_receive' construct.
-%
-% (see ast_expression:transform_simple_receive/3)
-%
+-doc """
+Drives the AST transformation of a 'simple_receive' construct.
+
+(see ast_expression:transform_simple_receive/3)
+""".
 -spec simple_receive_transformer( file_loc(), [ ast_case_clause() ],
 		ast_transforms() ) -> { [ ast_expression() ], ast_transforms() }.
 simple_receive_transformer( FileLoc, ReceiveClauses, Transforms ) ?rec_guard ->
@@ -2134,11 +2142,11 @@ simple_receive_transformer( FileLoc, ReceiveClauses, Transforms ) ?rec_guard ->
 
 
 
+-doc """
+Drives the AST transformation of a 'receive_with_after' construct.
 
-% @doc Drives the AST transformation of a 'receive_with_after' construct.
-%
-% (see ast_expression:transform_receive_with_after/5)
-%
+(see ast_expression:transform_receive_with_after/5)
+""".
 -spec receive_with_after_transformer( file_loc(), [ ast_case_clause() ],
 		ast_expression(), ast_body(), ast_transforms() ) ->
 								{ [ ast_expression() ], ast_transforms() }.
@@ -2168,24 +2176,24 @@ receive_with_after_transformer( FileLoc, ReceiveClauses, AfterTest, AfterBody,
 
 
 
+-doc """
+Drives the AST transformation of a 'try' construct.
 
-% @doc Drives the AST transformation of a 'try' construct.
-%
-% Actually it is rather tricky, as a try, in terms of return value, can have 3
-% different forms (cf. http://erlang.org/doc/reference_manual/expressions.html):
-%
-% (1) try EXPR catch (CATCH_PATTERN_1 -> BODY_1), (CATCH_PATTERN_2 -> BODY_2)
-%
-% (2) try EXPR of (PATTERN_1 -> BODY_1), (PATTERN_2 -> BODY_2) catch
-% (CATCH_PATTERN_A -> BODY_A), (CATCH_PATTERN_B -> BODY_B),...
-%
-% (3) like (2), with an additional AFTER_BODY, whose value is lost
-%
-% So, here, for (1) EXPR is a possible return value, whereas not for (2) and
-% (3), and we have to discriminate among these cases.
-%
-% (see also ast_expression:transform_try/6)
-%
+Actually it is rather tricky, as a try, in terms of return value, can have 3
+different forms (cf. http://erlang.org/doc/reference_manual/expressions.html):
+
+(1) try EXPR catch (CATCH_PATTERN_1 -> BODY_1), (CATCH_PATTERN_2 -> BODY_2)
+
+(2) try EXPR of (PATTERN_1 -> BODY_1), (PATTERN_2 -> BODY_2) catch
+(CATCH_PATTERN_A -> BODY_A), (CATCH_PATTERN_B -> BODY_B),...
+
+(3) like (2), with an additional AFTER_BODY, whose value is lost
+
+So, here, for (1) EXPR is a possible return value, whereas not for (2) and (3),
+and we have to discriminate among these cases.
+
+(see also ast_expression:transform_try/6)
+""".
 -spec try_transformer( file_loc(), ast_body(), [ ast_case_clause() ],
 					   [ ast_case_clause() ], ast_body(), ast_transforms() ) ->
 								{ [ ast_expression() ], ast_transforms() }.
@@ -2239,10 +2247,11 @@ try_transformer( FileLoc, TryBody, TryClauses, CatchClauses, AfterBody,
 
 
 
-% @doc Drives the AST transformation of a 'catch' construct.
-%
-% Not: for catch as an expression, not as a component of try.
-%
+-doc """
+Drives the AST transformation of a 'catch' construct.
+
+Note: for catch as an expression, not as a component of try.
+""".
 -spec catch_transformer( file_loc(), ast_expression(), ast_transforms() ) ->
 							{ [ ast_expression() ], ast_transforms() }.
 catch_transformer( FileLoc, Expression, Transforms ) ?rec_guard ->
@@ -2265,17 +2274,17 @@ catch_transformer( FileLoc, Expression, Transforms ) ?rec_guard ->
 
 
 
-
 % Subsection for WOOPER helper transformers.
 %
 % They may be used by multiple top-level transformers.
 
 
 
-% @doc Transforms an 'if' clause just for the sake of WOOPER.
-%
-% (corresponds to ast_clause:transform_if_clause/2)
-%
+-doc """
+Transforms an 'if' clause just for the sake of WOOPER.
+
+(corresponds to ast_clause:transform_if_clause/2)
+""".
 if_clause_transformer( _Clause={ 'clause', FileLoc, HeadPatternSequence=[],
 								 GuardSequence, BodyExprs },
 					   Transforms ) ?rec_guard ->
@@ -2301,10 +2310,11 @@ if_clause_transformer( _Clause={ 'clause', FileLoc, HeadPatternSequence=[],
 
 
 
-% @doc Transforms a 'case' clause just for the sake of WOOPER.
-%
-% (corresponds to ast_clause:transform_case_clause/2)
-%
+-doc """
+Transforms a 'case' clause just for the sake of WOOPER.
+
+(corresponds to ast_clause:transform_case_clause/2)
+""".
 case_clause_transformer( _Clause={ 'clause', FileLoc, CaseHead=[ _Pattern ],
 								   GuardSequence, BodyExprs },
 						 Transforms ) ?rec_guard ->
@@ -2330,10 +2340,12 @@ case_clause_transformer( _Clause={ 'clause', FileLoc, CaseHead=[ _Pattern ],
 	Res.
 
 
-% @doc Transforms a 'catch' clause just for the sake of WOOPER.
-%
-% (corresponds to ast_clause:transform_catch_clause/2)
-%
+
+-doc """
+Transforms a 'catch' clause just for the sake of WOOPER.
+
+(corresponds to ast_clause:transform_catch_clause/2)
+""".
 catch_clause_transformer(
 		_Clause={ 'clause', FileLoc, Throw=[ { throw, _Pattern, _Any } ],
 				  GuardSequence, BodyExprs },
@@ -2384,14 +2396,15 @@ catch_clause_transformer(
 
 
 
-% @doc Resets the transformation state, so that new findings can be compared to
-% previous knowledge.
-%
-% Otherwise, for example if having already a 'request' nature found and finding
-% afterwards a 'function' expression (i.e. a nature established by default), the
-% recorded nature would remain to 'request' and thus the mismatching 'function'
-% clause would not be detected.
-%
+-doc """
+Resets the transformation state, so that new findings can be compared to
+previous knowledge.
+
+Otherwise, for example if having already a 'request' nature found and finding
+afterwards a 'function' expression (i.e. a nature established by default), the
+recorded nature would remain to 'request' and thus the mismatching 'function'
+clause would not be detected.
+""".
 -spec reset_transformation_state( ast_transforms() ) -> ast_transforms().
 reset_transformation_state( Transforms=#ast_transforms{
 		transformation_state={ _Nature, _Qualifiers, WOOPERExportSet } } ) ->
@@ -2399,12 +2412,14 @@ reset_transformation_state( Transforms=#ast_transforms{
 		transformation_state={ undefined, [], WOOPERExportSet } }.
 
 
-% @doc Returns an updated transformation state, based on an initial one and one
-% returned by a transformation.
-%
-% Note that the base one provided to the transformation in-between shall have
-% been reset (see reset_transformation_state/1).
-%
+
+-doc """
+Returns an updated transformation state, based on an initial one and one
+returned by a transformation.
+
+Note that the base one provided to the transformation in-between shall have been
+reset (see reset_transformation_state/1).
+""".
 -spec update_transformation_state( ast_transforms(), ast_transforms(),
 								   file_loc() ) -> ast_transforms().
 update_transformation_state(
@@ -2509,17 +2524,16 @@ update_transformation_state(
 	%   [ InitialNature, NewRawNature, NewActualNature, ResultingNature ] ),
 
 	NewTransforms#ast_transforms{ transformation_state={ ResultingNature,
-								ResultingQualifiers, WOOPERExportSet } }.
+		ResultingQualifiers, WOOPERExportSet } }.
 
 
 
+-doc """
+Ensures that the specified information is exported, auto-exporting it if
+necessary.
 
-
-% @doc Ensures that the specified information is exported, auto-exporting it if
-% necessary.
-%
-% See also: ast_info:ensure_function_exported/4.
-%
+See also: ast_info:ensure_function_exported/4.
+""".
 -spec ensure_exported( function_info(), marker_table() ) -> function_info().
 ensure_exported( FunInfo=#function_info{ exported=[] }, MarkerTable ) ->
 
@@ -2536,9 +2550,10 @@ ensure_exported( FunInfo, _MarkerTable ) ->
 
 
 
-% @doc Ensures that all functions in specified function table are exported,
-% auto-exporting them if necessary.
-%
+-doc """
+Ensures that all functions in specified function table are exported,
+auto-exporting them if necessary.
+""".
 -spec ensure_all_exported_in( function_table(), location() ) ->
 									function_table().
 ensure_all_exported_in( FunctionTable, ExportLoc ) ->
@@ -2549,7 +2564,7 @@ ensure_all_exported_in( FunctionTable, ExportLoc ) ->
 
 
 
-% @doc Ensures that the specified method is indeed to export, and does it.
+-doc "Ensures that the specified method is indeed to export, and does it.".
 ensure_exported_at( FunInfo=#function_info{ exported=[] }, ExportLoc ) ->
 	FunInfo#function_info{ exported=[ ExportLoc ] };
 
@@ -2568,9 +2583,10 @@ ensure_exported_at( FunInfo=#function_info{ name=Name,
 % Section for the conversion of information records.
 
 
-% @doc Converts specified (Myriad-level) function information into a
-% (WOOPER-level) request information.
-%
+-doc """
+Converts specified (Myriad-level) function information into a (WOOPER-level)
+request information.
+""".
 -spec function_to_request_info( function_info(), method_qualifiers() ) ->
 										request_info().
 function_to_request_info( #function_info{ name=Name,
@@ -2615,9 +2631,10 @@ function_to_request_info( Other, _Qualifiers ) ->
 
 
 
-% @doc Converts specified (WOOPER-level) request information into a
-% (Myriad-level) function information.
-%
+-doc """
+Converts specified (WOOPER-level) request information into a (Myriad-level)
+function information.
+""".
 -spec request_to_function_info( request_info(), location() ) -> function_info().
 request_to_function_info( #request_info{ name=Name,
 										 arity=Arity,
@@ -2641,9 +2658,10 @@ request_to_function_info( Other, _Location ) ->
 
 
 
-% @doc Converts specified (Myriad-level) function information into a
-% (WOOPER-level) oneway information.
-%
+-doc """
+Converts specified (Myriad-level) function information into a (WOOPER-level)
+oneway information.
+""".
 -spec function_to_oneway_info( function_info(), method_qualifiers() ) ->
 										oneway_info().
 function_to_oneway_info( #function_info{ name=Name,
@@ -2688,9 +2706,10 @@ function_to_oneway_info( Other, _Qualifiers ) ->
 
 
 
-% @doc Converts specified (WOOPER-level) oneway information into a
-% (Myriad-level) function information.
-%
+-doc """
+Converts specified (WOOPER-level) oneway information into a (Myriad-level)
+function information.
+""".
 -spec oneway_to_function_info( oneway_info(), location() ) -> function_info().
 oneway_to_function_info( #oneway_info{ name=Name,
 									   arity=Arity,
@@ -2714,9 +2733,10 @@ oneway_to_function_info( Other, _Location ) ->
 
 
 
-% @doc Converts specified (Myriad-level) function information into a
-% (WOOPER-level) static information.
-%
+-doc """
+Converts specified (Myriad-level) function information into a (WOOPER-level)
+static information.
+""".
 -spec function_to_static_info( function_info(), method_qualifiers() ) ->
 									 static_info().
 function_to_static_info( #function_info{ name=Name,
@@ -2761,9 +2781,10 @@ function_to_static_info( Other, _Qualifiers ) ->
 
 
 
-% @doc Converts specified (WOOPER-level) static information into a
-% (Myriad-level) function information.
-%
+-doc """
+Converts specified (WOOPER-level) static information into a (Myriad-level)
+function information.
+""".
 -spec static_to_function_info( static_info(), location() ) -> function_info().
 static_to_function_info( #static_info{ name=Name,
 									   arity=Arity,
@@ -2787,9 +2808,10 @@ static_to_function_info( Other, _Location ) ->
 
 
 
-% @doc Transforms the methods in the specified tables into functions, and adds
-% them in specified function table.
-%
+-doc """
+Transforms the methods in the specified tables into functions, and adds them in
+specified function table.
+""".
 -spec methods_to_functions( request_table(), oneway_table(), static_table(),
 						function_table(), marker_table() ) -> function_table().
 methods_to_functions( RequestTable, OnewayTable, StaticTable,
@@ -2808,7 +2830,6 @@ methods_to_functions( RequestTable, OnewayTable, StaticTable,
 
 	WithRequestsFunTable =
 		table:add_new_entries( RequestAsFunPairs, InitFunctionTable ),
-
 
 	OnewayPairs = table:enumerate( OnewayTable ),
 
@@ -2830,7 +2851,7 @@ methods_to_functions( RequestTable, OnewayTable, StaticTable,
 
 
 
-% @doc Formats specified log, to help debugging.
+-doc "Formats specified log, to help debugging.".
 format_log( FormatString, [ { Exprs, #ast_transforms{
 		transformation_state={Nature,_Qualifiers,_WOOPERExportSet} } } ] ) ->
 

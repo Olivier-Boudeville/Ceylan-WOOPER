@@ -9,9 +9,7 @@
 
 -module(class_Mammal).
 
--moduledoc """
-Class modelling any kind of **mammal**.
-""".
+-moduledoc "Class modelling any kind of **mammal**.".
 
 
 
@@ -33,7 +31,7 @@ Class modelling any kind of **mammal**.
 
 
 
-% @doc Constructs a mammal.
+-doc "Constructs a mammal.".
 -spec construct( wooper:state(), age(), gender(), fur_color() ) ->
 						wooper:state().
 construct( State, Age, Gender, FurColor ) ->
@@ -52,9 +50,10 @@ construct( State, Age, Gender, FurColor ) ->
 
 
 
-% @doc Overriding default destructor: state should be returned, and destructors
-% should be called in leaf-to-root order in inheritance tree.
-%
+-doc """
+Overriding default destructor: state should be returned, and destructors should
+be called in leaf-to-root order in inheritance tree.
+""".
 -spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
 
@@ -75,11 +74,12 @@ destruct( State ) ->
 % Method implementations.
 
 
-% @doc Sets correctly the age of this Mammal (not like faulty implementation of
-% the Creature mother class).
-%
-% Overridden from Creature, useful to show the use of executeOneway.
-%
+-doc """
+Sets correctly the age of this Mammal (not like faulty implementation of the
+Creature mother class).
+
+Overridden from Creature, useful to show the use of executeOneway.
+""".
 -spec setAge( wooper:state(), age() ) -> oneway_return().
 setAge( State, NewAge ) ->
 
@@ -94,26 +94,28 @@ setAge( State, NewAge ) ->
 
 
 
-% @doc All mammals are hot-blooded.
+-doc "All mammals are hot-blooded.".
 -spec isHotBlooded( wooper:state() ) -> const_request_return( boolean() ).
 isHotBlooded( State ) ->
 	wooper:const_return_result( true ).
 
 
 
-% @doc Attribute names could be defined in '-define().' header (.hrl) clauses,
-% to ensure consistency.
-%
+-doc """
+Attribute names could be defined in '-define().' header (.hrl) clauses, to
+ensure consistency.
+""".
 -spec getFurColor( wooper:state() ) -> const_request_return( fur_color() ).
 getFurColor( State ) ->
 	wooper:const_return_result( ?getAttr(fur_color) ).
 
 
 
-% @doc Returns a class-specific arbitrary number.
-%
-% Overridden from Creature, useful to show the use of executeRequest.
-%
+-doc """
+Returns a class-specific arbitrary number.
+
+Overridden from Creature, useful to show the use of executeRequest.
+""".
 -spec getArbitraryNumber( wooper:state() ) -> request_return( number() ).
 getArbitraryNumber( State ) ->
 
@@ -133,9 +135,10 @@ getArbitraryNumber( State ) ->
 
 
 
-% @doc Allows to test that we can indeed call any version of the implementation
-% of a method, not only the latest overridden one.
-%
+-doc """
+Allows to test that we can indeed call any version of the implementation of a
+method, not only the latest overridden one.
+""".
 -spec testExplicitClassSelection( wooper:state() ) -> oneway_return().
 testExplicitClassSelection( State ) ->
 

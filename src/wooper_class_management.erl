@@ -46,7 +46,7 @@ Module centralising, on behalf of the WOOPER parse transform, the support for
 -include("wooper_info.hrl").
 
 
-% Shorthands:
+% Type shorthands:
 
 -type class_info() :: wooper_info:class_info().
 
@@ -83,7 +83,8 @@ Module centralising, on behalf of the WOOPER parse transform, the support for
 % the -define method is the recommended one, for homogeneity reasons.
 
 
-% @doc Ensures that specified name is a legit class name, and returns it.
+
+-doc "Ensures that specified name is a legit class name, and returns it.".
 -spec check_classname( any() ) -> atom().
 check_classname( Name ) when is_atom( Name ) ->
 
@@ -104,7 +105,9 @@ check_classname( Other ) ->
 
 
 
-% @doc Registers the corresponding classname into specified class information.
+-doc """
+Registers the corresponding classname into specified class information.
+""".
 -spec manage_classname( module_entry(), class_info() ) -> class_info().
 manage_classname( _ModuleEntry=undefined, _ClassInfo ) ->
 	wooper_internals:raise_usage_error( "no module name was defined" );
@@ -117,9 +120,9 @@ manage_classname( _ModuleEntry={ _ModuleName=Classname, ModuleDef },
 
 
 
-% @doc Registers the declared superclasses (if any) into specified class
-% information.
-%
+-doc """
+Registers the declared superclasses (if any) into specified class information.
+""".
 -spec manage_superclasses( class_info() ) -> class_info().
 manage_superclasses( ClassInfo=#class_info{ class={ Classname, _ClassLocForm },
 											functions=FunctionTable } ) ->

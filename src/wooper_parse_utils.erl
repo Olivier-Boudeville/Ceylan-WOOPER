@@ -33,18 +33,20 @@ transform ASTs**.
 """.
 
 
-
 -export([ get_state_type/0, get_state_var/0 ]).
 
+
+% Type shorthand:
 
 -type form_element() :: ast_base:form_element().
 
 
 
-% @doc Returns a form element corresponding to the wooper:state() type.
-%
-% (shorthand)
-%
+-doc """
+Returns a form element corresponding to the wooper:state() type.
+
+(shorthand)
+""".
 -spec get_state_type() -> form_element().
 get_state_type() ->
 	Line = 0,
@@ -52,10 +54,11 @@ get_state_type() ->
 
 
 
-% @doc Returns a form element corresponding to the State variable.
-%
-% (shorthand)
-%
+-doc """
+Returns a form element corresponding to the State variable.
+
+(shorthand)
+""".
 -spec get_state_var() -> form_element().
 get_state_var() ->
 	Line = 0,

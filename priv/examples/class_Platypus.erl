@@ -39,7 +39,7 @@ Class modelling any kind of **platypus**.
 
 
 
-% @doc Constructs a platypus.
+-doc "Constructs a platypus.".
 -spec construct( wooper:state(), age(), gender(), fur_color(),
 				 nozzle_color() ) -> wooper:state().
 construct( State, Age, Gender, FurColor, NozzleColor ) ->
@@ -71,19 +71,22 @@ getMeanEggsCount( State ) ->
 
 
 
-% @doc Returns the number of teats a platypus has.
+-doc """
+Returns the number of teats a platypus has.
 %
-% It is a mammal, though!
-%
+It is a mammal, though!
+""".
 -spec getTeatCount( wooper:state() ) -> const_request_return( teat_count() ).
 getTeatCount( State ) ->
 	wooper:const_return_result( 0 ).
 
 
 
-% @doc Tells whether this platypus can eat specified food.
-%
-% Platypuses are supposed carnivorous though:
+-doc """
+Tells whether this platypus can eat specified food.
+
+Platypuses are supposed carnivorous though:
+""".
 -spec canEat( wooper:state(), food() ) -> const_request_return( boolean() ).
 canEat( State, leaf ) ->
 	wooper:const_return_result( true );
@@ -102,7 +105,7 @@ canEat( State, _OtherFood ) ->
 
 
 
-% @doc Returns the color of the nozzle of this platypus.
+-doc "Returns the color of the nozzle of this platypus.".
 -spec getNozzleColor( wooper:state() ) ->
 							const_request_return( nozzle_color() ).
 getNozzleColor( State )->
@@ -116,14 +119,14 @@ getNozzleColor( State )->
 
 
 
-% @doc Returns the list of alternate names for this platypus.
+-doc "Returns the list of alternate names for this platypus.".
 -spec getAlternateNames( wooper:state() ) -> const_request_return( [ atom() ] ).
 getAlternateNames( State ) ->
 	wooper:const_return_result( ?getAttr(alternate_names) ).
 
 
 
-% @doc Returns the first alternate name for this platypus and forget it.
+-doc "Returns the first alternate name for this platypus and forget it.".
 -spec popFirstAlternateName( wooper:state() ) -> request_return( atom() ).
 popFirstAlternateName( State ) ->
 	{ NewState, Name } = popFromAttribute( State, alternate_names ),
@@ -131,7 +134,7 @@ popFirstAlternateName( State ) ->
 
 
 
-% @doc Allows to test the creation and deletion of other WOOPER instances.
+-doc "Allows to test the creation and deletion of other WOOPER instances.".
 -spec testCreationDeletion( wooper:state() ) -> oneway_return().
 testCreationDeletion( State ) ->
 
@@ -140,7 +143,7 @@ testCreationDeletion( State ) ->
 		wooper:delete_synchronously_any_instance_referenced_in( [], State ),
 
 	CatPid = class_Cat:synchronous_new_link( _Age=1, _Gender=male,
-								_FurColor=pink, _WhiskerColor=black ),
+		_FurColor=pink, _WhiskerColor=black ),
 
 	io:format( "Cat ~p just created from platypus.~n", [ CatPid ] ),
 
@@ -171,9 +174,10 @@ testCreationDeletion( State ) ->
 
 
 
-% @doc Callback triggered, as we trap exits, whenever a linked process stops
-% (here, the created cat instance).
-%
+-doc """
+Callback triggered, as we trap exits, whenever a linked process stops (here, the
+created cat instance).
+""".
 -spec onWOOPERExitReceived( wooper:state(), pid(),
 						basic_utils:exit_reason() ) -> const_oneway_return().
 onWOOPERExitReceived( State, Pid, ExitType ) ->

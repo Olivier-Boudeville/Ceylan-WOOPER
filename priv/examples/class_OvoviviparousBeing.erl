@@ -36,7 +36,7 @@ Class modelling any kind of **ovoviviparous being**.
 
 
 
-% @doc Constructs an ovoviviparous being.
+-doc "Constructs an ovoviviparous being.".
 -spec construct( wooper:state(), age(), gender() ) -> wooper:state() .
 construct( State, Age, Gender ) ->
 
@@ -49,7 +49,7 @@ construct( State, Age, Gender ) ->
 
 
 
-% @doc This is a useless destructor that may not have been defined.
+-doc "This is a useless destructor that may not have been defined.".
 -spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
 
@@ -59,25 +59,31 @@ destruct( State ) ->
 	State.
 
 
+
 % Method implementations.
 
 
-% @doc Let's say an average means something here.
-%
-% (this ought to be a static method, as it does not depend on a state)
-%
+-doc """
+Let's say an average means something here.
+
+(this ought to be a static method, as it does not depend on a state)
+""".
 -spec getMeanEggsCount( wooper:state() ) -> const_request_return( egg_count() ).
 getMeanEggsCount( State ) ->
 	wooper:const_return_result( 1000 ).
 
 
-% @doc Returns the number of eggs that this ovoviviparous being laid.
+
+-doc "Returns the number of eggs that this ovoviviparous being laid.".
 -spec getEggsLaidCount( wooper:state() ) -> const_request_return( egg_count() ).
 getEggsLaidCount( State ) ->
 	wooper:const_return_result( ?getAttr(eggs_count) ).
 
 
-% @doc Increases the number of eggs that this ovoviviparous being already laid.
+
+-doc """
+Increases the number of eggs that this ovoviviparous being already laid.
+""".
 -spec layEggs( wooper:state(), egg_count() ) -> oneway_return().
 layEggs( State, NumberOfNewEggs ) ->
 	wooper:return_state( addToAttribute( State, eggs_count, NumberOfNewEggs ) ).

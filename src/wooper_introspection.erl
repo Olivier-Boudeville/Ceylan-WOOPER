@@ -38,9 +38,11 @@ Module containing some **introspection-related** facilities.
 -include("wooper_info.hrl").
 
 
-% @doc Returns the list of the names of the class-specific attributes of
-% specified class, in their declaration order.
-%
+
+-doc """
+Returns the list of the names of the class-specific attributes of specified
+class, in their declaration order.
+""".
 -spec get_class_specific_attribute_names( wooper:classname() ) ->
 												[ wooper:attribute_name() ].
 get_class_specific_attribute_names( Classname ) ->

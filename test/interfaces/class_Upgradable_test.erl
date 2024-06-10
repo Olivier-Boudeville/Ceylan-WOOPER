@@ -44,7 +44,7 @@ See the class_Upgradable module.
 %       ERLANG_COMPILER_EXTRA_OPTS="-Denable_upgraded_test_class"
 
 
-% Shorthands:
+% Type shorthands:
 
 -type bin_string() :: text_utils:bin_string().
 -type instance_pid() :: wooper:instance_pid().
@@ -175,7 +175,7 @@ run() ->
 		  InstancesToUpdate ] ),
 
 	UpFreezeInfos = class_Upgradable:freeze_instances( InstancesToUpdate,
-							TargetVersion, ExtraData ),
+		TargetVersion, ExtraData ),
 
 	test_facilities:display( "Upgrade freeze information received: ~p.",
 							 [ UpFreezeInfos ] ),

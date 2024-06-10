@@ -49,10 +49,11 @@ context).
 
 
 
-% @doc Starts the WOOPER services.
-%
-% Note: RestartType and StartArgs at least currently ignored.
-%
+-doc """
+Starts the WOOPER services.
+
+Note: RestartType and StartArgs at least currently ignored.
+""".
 -spec start( application:start_type(), StartArgs :: term() ) -> { 'ok', pid() }
 		| { 'ok', pid(), State :: term() } | { 'error', Reason :: term() }.
 start( RestartType, StartArgs ) ->
@@ -77,7 +78,7 @@ start( RestartType, StartArgs ) ->
 
 
 
-% @doc Stops the WOOPER services.
+-doc "Stops the WOOPER services.".
 -spec stop( State :: term() ) -> void().
 stop( State ) ->
 
