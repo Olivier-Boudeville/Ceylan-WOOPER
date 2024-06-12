@@ -46,11 +46,14 @@ Tests the support of **multiple constructors**.
 -include("wooper.hrl").
 
 
+% Local types:
+
 -type name() :: text_utils:ustring().
 -type gender() :: atom().
 
 
-% @doc Constructs an instance from two construction parameters.
+
+-doc "Constructs an instance from two construction parameters.".
 -spec construct( wooper:state(), name(), gender() ) -> wooper:state().
 construct( State, Name, Gender ) ->
 	% No mother class.
@@ -58,10 +61,11 @@ construct( State, Name, Gender ) ->
 
 
 
-% @doc Constructs an instance from a single construction parameter.
-%
-% Of course multiple clauses may exist:
-%
+-doc """
+Constructs an instance from a single construction parameter.
+
+Of course multiple clauses may exist:
+""".
 -spec construct( wooper:state(), name() ) -> wooper:state().
 construct( State, Name="Murdock" ) ->
 	% No mother class.
@@ -72,7 +76,8 @@ construct( State, Name ) ->
 	setAttributes( State, [ { name, Name }, { gender, unknown } ] ).
 
 
-% @doc Simplest possible signature:
+
+-doc "Simplest possible signature.".
 -spec construct( wooper:state() ) -> wooper:state().
 construct( State ) ->
 	% No mother class.
@@ -80,7 +85,7 @@ construct( State ) ->
 
 
 
-% @doc Overriding the default destructor:
+-doc "Overriding the default destructor.".
 -spec destruct( wooper:state() ) -> wooper:state().
 destruct( State ) ->
 	io:format( "  I am ~ts, and I am just destructed.~n", [ ?getAttr(name) ] ),
@@ -91,13 +96,13 @@ destruct( State ) ->
 % Method implementations.
 
 
-% @doc Returns the name of this instance.
+-doc "Returns the name of this instance.".
 -spec getName( wooper:state() ) -> const_request_return( name() ).
 getName( State ) ->
 	wooper:const_return_result( ?getAttr(name) ).
 
 
-% @doc Returns the gender of this instance.
+-doc "Returns the gender of this instance.".
 -spec getGender( wooper:state() ) -> const_request_return( gender() ).
 getGender( State ) ->
 	wooper:const_return_result( ?getAttr(gender) ).

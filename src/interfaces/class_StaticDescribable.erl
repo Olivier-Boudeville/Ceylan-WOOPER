@@ -60,8 +60,8 @@ This is the static counterpart of class_Describable.
 						   ] ).
 
 
+-doc "The PID of an instance implementing the StaticDescribable interface.".
 -type static_describable_pid() :: pid().
-% The PID of an instance implementing the StaticDescribable interface.
 
 
 -export_type([ static_describable_pid/0 ]).
@@ -75,7 +75,8 @@ This is the static counterpart of class_Describable.
 -include_lib("wooper/include/wooper.hrl").
 
 
-% Shorthands:
+
+% Type shorthands:
 
 -type ustring() :: text_utils:ustring().
 
@@ -85,9 +86,9 @@ This is the static counterpart of class_Describable.
 
 
 
-% @doc Constructs a static describable instance, based on the specified
-% description.
-%
+-doc """
+Constructs a static describable instance, based on the specified description.
+""".
 -spec construct( wooper:state(), any_description() ) -> wooper:state().
 construct( State, Description ) ->
 	DescState = class_Describable:construct( State ),
@@ -102,7 +103,7 @@ construct( State, Description ) ->
 % Methods section.
 
 
-% @doc Returns the description of this Describable.
+-doc "Returns the description of this Describable.".
 -spec getDescription( wooper:state() ) -> const_request_return( description() ).
 getDescription( State ) ->
 
@@ -119,7 +120,7 @@ getDescription( State ) ->
 
 
 
-% @doc Sets the description of this Describable.
+-doc "Sets the description of this Describable.".
 -spec setDescription( wooper:state(), user_description() ) -> oneway_return().
 setDescription( State, NewUserDescription ) ->
 	NewBinDesc = text_utils:ensure_binary( NewUserDescription ),
@@ -136,24 +137,25 @@ setDescription( State, NewUserDescription ) ->
 % whether or not it implements this Describable interface.
 
 
-% @doc Tells whether the corresponding instance implements the Describable
-% interface.
-%
-% (exported helper)
-%
+-doc """
+Tells whether the corresponding instance implements the Describable interface.
+
+(exported helper)
+""".
 -spec is_describable( wooper:state() ) -> boolean().
 is_describable( State ) ->
 	hasAttribute( State, wooper_describable_description ).
 
 
 
-% @doc Returns any description available for the corresponding instance.
-%
-% This function is designed to apply to any WOOPER instance, whether it is a
-% Describable one or not.
-%
-% (exported helper)
-%
+-doc """
+Returns any description available for the corresponding instance.
+
+This function is designed to apply to any WOOPER instance, whether it is a
+Describable one or not.
+
+(exported helper)
+""".
 -spec get_maybe_description( wooper:state() ) -> option( description() ).
 get_maybe_description( State ) ->
 	% Allowed, as the type of this attribute does not include the 'undefined'
@@ -163,11 +165,12 @@ get_maybe_description( State ) ->
 
 
 
-% @doc Returns a textual element of description of the corresponding instance,
-% should it implement the Describable interface.
-%
-% (exported helper)
-%
+-doc """
+Returns a textual element of description of the corresponding instance, should
+it implement the Describable interface.
+
+(exported helper)
+""".
 -spec to_maybe_string( wooper:state() ) -> option( ustring() ).
 to_maybe_string( State ) ->
 	case ?getMaybeAttr(wooper_describable_description) of

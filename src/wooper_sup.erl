@@ -51,7 +51,8 @@ WOOPER class manager (which implements the gen_server behaviour).
 -define( wooper_supervisor_name, ?MODULE ).
 
 
-% @doc Starts and links the WOOPER root supervisor.
+
+-doc "Starts and links the WOOPER root supervisor.".
 -spec start_link() -> supervisor:startlink_ret().
 start_link() ->
 
@@ -63,7 +64,7 @@ start_link() ->
 
 
 
-% @doc Callback to initialise this supervisor.
+-doc "Callback to initialise this supervisor.".
 -spec init( 'undefined' ) -> { 'ok',
 		{ supervisor:sup_flags(), [ supervisor:child_spec() ] } } | 'ignore'.
 init( Args=undefined ) ->
@@ -100,6 +101,5 @@ init( Args=undefined ) ->
 		modules => [ wooper_class_manager ] },
 
 	ChildrenSpec = [ ClassManagerChildSpec ],
-
 
 	{ ok, { SupSettings, ChildrenSpec } }.

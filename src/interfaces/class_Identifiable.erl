@@ -59,11 +59,13 @@ WOOPER instance, whether or not it has this trait or not.
 						   ] ).
 
 
+-doc "Designates the identifiers used by identifiable instances.".
 -type id() :: id_utils:id().
-% Designates the identifiers used by identifiable instances.
 
+
+
+-doc "The PID of an instance implementing the identifiable interface.".
 -type identifiable_pid() :: pid().
-% The PID of an instance implementing the identifiable interface.
 
 
 -export_type([ id/0, identifiable_pid/0 ]).
@@ -78,9 +80,9 @@ WOOPER instance, whether or not it has this trait or not.
 
 
 
-% @doc Constructs an identifiable instance, whose identifier is the specified
-% one.
-%
+-doc """
+Constructs an identifiable instance, whose identifier is the specified one.
+""".
 -spec construct( wooper:state(), id() ) -> wooper:state().
 construct( State, Identifier ) ->
 	setAttribute( State, wooper_identifiable_id, Identifier ).
@@ -90,25 +92,28 @@ construct( State, Identifier ) ->
 % Methods section.
 
 
-% @doc Returns the identifier of this Identifiable.
+
+-doc "Returns the identifier of this Identifiable.".
 -spec getIdentifier( wooper:state() ) -> const_request_return( id() ).
 getIdentifier( State ) ->
 	wooper:const_return_result( ?getAttr(wooper_identifiable_id) ).
 
 
 
-% @doc Sets the identifier of this Identifiable.
+-doc "Sets the identifier of this Identifiable.".
 -spec setIdentifier( wooper:state(), id() ) -> oneway_return().
 setIdentifier( State, Identifier ) ->
 	wooper:return_state(
 		setAttribute( State, wooper_identifiable_id, Identifier ) ).
 
 
-% @doc Compares the identifier of this Identifiable with the one of the
-% specified Identifiable: returns whether these identifiers are equal.
-%
-% Note that comparing an identifiable with itself will deadlock it.
-%
+
+-doc """
+Compares the identifier of this Identifiable with the one of the specified
+Identifiable: returns whether these identifiers are equal.
+
+Note that comparing an identifiable with itself will deadlock it.
+""".
 -spec compareWith( wooper:state(), identifiable_pid()  ) ->
 						const_request_return( boolean() ).
 compareWith( State, IdentifiablePid ) ->
@@ -130,15 +135,17 @@ compareWith( State, IdentifiablePid ) ->
 
 
 
+
 % Static section.
 
 
-% @doc Tells whether the two specified identifiable instances have the same
-% identifier.
-%
-% If yes, presumably they are expected to be the same, even if their PIDs are
-% not directly compared.
-%
+
+-doc """
+Tells whether the two specified identifiable instances have the same identifier.
+
+If yes, presumably they are expected to be the same, even if their PIDs are not
+directly compared.
+""".
 -spec compare( identifiable_pid(), identifiable_pid() ) ->
 							static_return( boolean() ).
 compare( FirstIdPid, SecondIdPid ) ->
@@ -172,23 +179,25 @@ compare( FirstIdPid, SecondIdPid ) ->
 % Section for helper functions (not methods).
 
 
-% @doc Tells whether the corresponding instance implements the Identifiable
-% interface.
-%
-% (exported helper)
-%
+-doc """
+Tells whether the corresponding instance implements the Identifiable interface.
+
+(exported helper)
+""".
 -spec is_identifiable( wooper:state() ) -> boolean().
 is_identifiable( State ) ->
 	hasAttribute( State, wooper_identifiable_id ).
 
 
-% @doc Returns any identifier available for this instance.
-%
-% This function is designed to apply to any WOOPER instance, whether it is a
-% Identifiable one or not.
-%
-% (exported helper)
-%
+
+-doc """
+Returns any identifier available for this instance.
+
+This function is designed to apply to any WOOPER instance, whether it is a
+Identifiable one or not.
+
+(exported helper)
+""".
 -spec get_maybe_identifier( wooper:state() ) -> option( id() ).
 get_maybe_identifier( State ) ->
 	% Allowed, as the type of this attribute does not include the 'undefined'

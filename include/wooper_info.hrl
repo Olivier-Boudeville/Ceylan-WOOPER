@@ -26,7 +26,7 @@
 % Creation date: 2007.
 
 
-% @doc Describes a **member attribute** of the state of a given class: stores
+% Describes a **member attribute** of the state of a given class: stores
 % all class-level information (i.e. metadata) regarding this attribute.
 %
 -record( attribute_info, {
@@ -57,7 +57,7 @@
 
 
 
-% @doc Stores and centralises WOOPER-level information gathered about a given
+% Stores and centralises WOOPER-level information gathered about a given
 % request.
 %
 % This record is to strictly supersede the Myriad-level function_info one.
@@ -108,8 +108,8 @@
 
 
 
-% @doc Stores and centralises WOOPER-level information gathered about a given
-% oneway method.
+% Stores and centralises WOOPER-level information gathered about a given oneway
+% method.
 %
 % This record is to strictly supersede the Myriad-level function_info one.
 %
@@ -161,8 +161,8 @@
 
 
 
-% @doc Stores and centralises WOOPER-level information gathered about a given
-% static method.
+% Stores and centralises WOOPER-level information gathered about a given static
+% method.
 %
 % This record is to strictly supersede the Myriad-level function_info one.
 %
@@ -212,13 +212,7 @@
 
 
 
--type class_entry() :: option( { wooper:classname(), ast_info:located_form() } ).
-% Description of the class name.
-
-
-
-% @doc Stores and centralises WOOPER-level information gathered about a given
-% class.
+% Stores and centralises WOOPER-level information gathered about a given class.
 %
 % This record is to strictly supersede the Myriad-level module_info one.
 %
@@ -228,7 +222,7 @@
 -record( class_info, {
 
 	% Name of that class:
-	class :: class_entry(),
+	class :: wooper_info:class_entry(),
 
 
 	% Ordered list of the superclasses of this class:

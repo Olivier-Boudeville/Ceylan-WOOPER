@@ -39,8 +39,8 @@ been loaded), code-wise and also state-wise.
 
 For that, a concreate Upgradable child class should (besides inheriting from
 this interface):
- - implement a relevant get_version/1 static method, whose signature is:
-		 -spec get_version() -> static_return(any_version()).
+ - implement a relevant get_version/1 static method, whose signature is: `-spec
+   get_version() -> static_return(any_version()).`
  - possibly override its {up,down}gradeVersion/4 member methods
 
 See also class_Upgradable_test.erl and the support of the
@@ -102,47 +102,64 @@ do_soft_purge/2 in erts_code_purger.erl for that).
 						   ] ).
 
 
+
+-doc "The PID of an instance implementing the Upgradable interface.".
 -type upgradable_pid() :: pid().
-% The PID of an instance implementing the Upgradable interface.
 
 
+
+-doc """
+Any extra data (akin to release-specific information) of use when performing a
+version change.
+""".
 -type extra_data() :: any().
-% Any extra data (akin to release-specific information) of use when performing a
-% version change.
 
 
 % Note: for messages, we cannot describe values like [V1, V2] as being of type
 % [T1(), T2()], so we use [T1() | T2()] instead.
 
 
+-doc """
+Information about an instance after it applied a freeze request.
+""".
 -type freeze_info() :: { classname(), instance_pid() }.
-% Information about an instance after it applied a freeze request.
 
 
+
+-doc """
+Message sent back to the sender of a 'freezeUntilVersionChange' special message.
+
+This message may be interpreted as a oneway call.
+""".
 -type freeze_notification() :: { 'onInstanceFrozen', freeze_info() }.
-% Message sent back to the sender of a 'freezeUntilVersionChange' special
-% message.
-%
-% This message may be interpreted as a oneway call.
 
 
+
+-doc """
+A report sent by an instance that succeeded in updating itself to the specified
+version.
+""".
 -type update_success_report() :: { classname(), instance_pid(), any_version() }.
-% A report sent by an instance that succeeded in updating itself to the
-% specified version.
 
 
+
+-doc """
+A report sent by an instance that failed in updating itself and ended up in the
+specified version (most probably its pre-update one).
+""".
 -type update_failure_report() ::
 		{ error_reason(), classname(), instance_pid(), any_version() }.
-% A report sent by an instance that failed in updating itself and ended up in
-% the specified version (most probably its pre-update one).
 
 
+
+-doc """
+Outcome of an instance update, which may be an upgrade or a downgrade.
+
+This is a message (possibly interpreted as a oneway call) sent back to the
+caller by an instance having being requested to update.
+""".
 -type update_outcome() :: { 'onUpdateSuccess', update_success_report() }
 						| { 'onUpdateFailure', update_failure_report() }.
-% Outcome of an instance update, which may be an upgrade or a downgrade.
-%
-% This is a message (possibly interpreted as a oneway call) sent back to the
-% caller by an instance having being requested to update.
 
 
 -export_type([ upgradable_pid/0, extra_data/0,
@@ -246,7 +263,8 @@ do_soft_purge/2 in erts_code_purger.erl for that).
 % define such as static method.
 
 
-% Shorthands:
+
+% Type shorthands:
 
 -type any_version() :: basic_utils:any_version().
 -type base_status() :: basic_utils:base_status().
@@ -259,10 +277,12 @@ do_soft_purge/2 in erts_code_purger.erl for that).
 -type define() :: code_utils:define().
 
 
-% @doc Constructs an upgradable instance.
-%
-% The corresponding version is determined statically.
-%
+
+-doc """
+Constructs an upgradable instance.
+
+The corresponding version is determined statically.
+""".
 -spec construct( wooper:state() ) -> wooper:state().
 construct( State ) ->
 	% Traceable trait now optional:
@@ -279,7 +299,7 @@ construct( State ) ->
 % Methods section.
 
 
-% @doc Returns the current version of this Upgradable.
+-doc "Returns the current version of this Upgradable.".
 -spec getVersion( wooper:state() ) -> const_request_return( any_version() ).
 getVersion( State ) ->
 
@@ -290,25 +310,27 @@ getVersion( State ) ->
 
 
 
-% @doc Upgrades this instance (thus to a more recent version) both in terms of
-% code and state, taking into account any specified extra data.
-%
-% So performs an actual state upgrade between the two specified versions; in the
-% general case this may involve adding/removing attributes, changing their value
-% and/or type.
-%
-% This implementation, meant to be overridden, does mostly nothing.
-%
-% It is strongly recommended that, as done by default, an instance requested to
-% perform such update is in a frozen state (either explicitly created, or only
-% obtained by construction, for example if not being scheduled/triggered anymore
-% by some manager), lest it receives method calls between the overall class
-% update and the processing of the actual version change.
-%
-% So this request should not be called directly, but whereas being already
-% frozen in the context of a prior freezeUntilVersionChange special call.
-% See also manage_version_change/4.
-%
+-doc """
+Upgrades this instance (thus to a more recent version) both in terms of code and
+state, taking into account any specified extra data.
+
+So performs an actual state upgrade between the two specified versions; in the
+general case this may involve adding/removing attributes, changing their value
+and/or type.
+
+This implementation, meant to be overridden, does mostly nothing.
+
+It is strongly recommended that, as done by default, an instance requested to
+perform such update is in a frozen state (either explicitly created, or only
+obtained by construction, for example if not being scheduled/triggered anymore
+by some manager), lest it receives method calls between the overall class update
+and the processing of the actual version change.
+
+So this request should not be called directly, but whereas being already frozen
+in the context of a prior freezeUntilVersionChange special call.
+
+See also manage_version_change/4.
+""".
 -spec upgradeVersion( wooper:state(), any_version(), any_version(),
 			option( extra_data() ) ) -> request_return( base_outcome() ).
 upgradeVersion( State, OriginalVersion, TargetVersion, MaybeExtraData ) ->
@@ -343,25 +365,27 @@ upgradeVersion( State, OriginalVersion, TargetVersion, MaybeExtraData ) ->
 
 
 
-% @doc Downgrades this instance (thus to a less recent version) both in terms of
-% code and state, taking into account any specified extra data.
-%
-% So performs an actual state downgrade between the two specified versions; in
-% the general case this may involve adding/removing attributes, changing their
-% value and/or type.
-%
-% This implementation, meant to be overridden, does mostly nothing.
-%
-% It is strongly recommended that, as done by default, an instance requested to
-% perform such update is in a frozen state (either explicitly created, or only
-% obtained by construction, for example if not being scheduled/triggered anymore
-% by some manager), lest it receives method calls between the overall class
-% update and the processing of the actual version change.
-%
-% So this request should not be called directly, but whereas being already
-% frozen in the context of a prior freezeUntilVersionChange special call.
-% See also manage_version_change/4.
-%
+-doc """
+Downgrades this instance (thus to a less recent version) both in terms of code
+and state, taking into account any specified extra data.
+
+So performs an actual state downgrade between the two specified versions; in the
+general case this may involve adding/removing attributes, changing their value
+and/or type.
+
+This implementation, meant to be overridden, does mostly nothing.
+
+It is strongly recommended that, as done by default, an instance requested to
+perform such update is in a frozen state (either explicitly created, or only
+obtained by construction, for example if not being scheduled/triggered anymore
+by some manager), lest it receives method calls between the overall class update
+and the processing of the actual version change.
+
+So this request should not be called directly, but whereas being already frozen
+in the context of a prior freezeUntilVersionChange special call.
+
+See also manage_version_change/4.
+""".
 -spec downgradeVersion( wooper:state(), any_version(), any_version(),
 			option( extra_data() ) ) -> request_return( base_outcome() ).
 downgradeVersion( State, OriginalVersion, TargetVersion, MaybeExtraData ) ->
@@ -390,7 +414,6 @@ downgradeVersion( State, OriginalVersion, TargetVersion, MaybeExtraData ) ->
 
 		end ),
 
-
 	% In this default implementation, the state remains const:
 	DowngradedState = State,
 
@@ -402,10 +425,11 @@ downgradeVersion( State, OriginalVersion, TargetVersion, MaybeExtraData ) ->
 % Static section.
 
 
-% @doc Returns the version of that class (that corresponds to this module).
-%
-% Each version of a class should define its own version of this static method.
-%
+-doc """
+Returns the version of that class (that corresponds to this module).
+
+Each version of a class should define its own version of this static method.
+""".
 -spec get_version() -> static_return( any_version() ).
 get_version() ->
 	% Each concrete Upgradable class is typically to return its own define:
@@ -413,16 +437,16 @@ get_version() ->
 
 
 
-% @doc Freezes (synchronously) the specified instances, so that they are ready
-% for an update of their class to the specified version, with no extra data
-% specified.
-%
-% Returns a list (in no particular order) of freeze information, i.e. the
-% classname of each frozen instance, associated to its PID.
-%
-% This implementation bypasses the WOOPER main loop (directly collecting
-% messages, instead of interpreting them as oneway calls).
-%
+-doc """
+Freezes (synchronously) the specified instances, so that they are ready for an
+update of their class to the specified version, with no extra data specified.
+
+Returns a list (in no particular order) of freeze information, i.e. the
+classname of each frozen instance, associated to its PID.
+
+This implementation bypasses the WOOPER main loop (directly collecting messages,
+instead of interpreting them as oneway calls).
+""".
 -spec freeze_instances( [ instance_pid() ], any_version() ) ->
 								static_return( [ freeze_info() ] ).
 freeze_instances( InstancePids, TargetVersion ) ->
@@ -434,16 +458,16 @@ freeze_instances( InstancePids, TargetVersion ) ->
 
 
 
-% @doc Freezes (synchronously) the specified instances, so that they are ready
-% for an update of their class to the specified version, with the specified
-% extra data.
-%
-% Returns a list (in no particular order) of the classname of each frozen
-% instance, associated to its PID.
-%
-% This implementation bypasses the WOOPER main loop (directly collecting
-% messages, instead of interpreting them as oneway calls).
-%
+-doc """
+Freezes (synchronously) the specified instances, so that they are ready for an
+update of their class to the specified version, with the specified extra data.
+
+Returns a list (in no particular order) of the classname of each frozen
+instance, associated to its PID.
+
+This implementation bypasses the WOOPER main loop (directly collecting messages,
+instead of interpreting them as oneway calls).
+""".
 -spec freeze_instances( [ instance_pid() ], any_version(),
 			option( extra_data() ) ) -> static_return( [ freeze_info() ] ).
 freeze_instances( InstancePids, TargetVersion, MaybeExtraData ) ->
@@ -472,29 +496,28 @@ freeze_instances( InstancePids, TargetVersion, MaybeExtraData ) ->
 
 
 
-% @doc Updates (globally) the specified class, by recompiling it, purging its
-% current implementation, and reloading it.
-%
-% So operates at the class level, with no direct interaction with instances, not
-% selecting any particular version (the one of the updated class will just
-% apply). Typically all instances of that class have been already frozen (see
-% the freeze_instances/{2,3} static methods and the freezeUntilVersionChange
-% special call), waiting for the new code to be available and adapt to it.
-%
-% ForceRecompilation tells whether the class module shall be forcibly
-% recompiled; useful for example if wanting to apply specific compilation
-% options.
-%
-% KillAnyLingeringProcess tells whether any process (probably an instance)
-% lingering on the old code shall be killed, or if the update shall just be
-% considered as having failed.
-%
-% The first soft-purge will succeed even if an instance (e.g. agent C in
-% class_Upgradable_test) was not updated, yet the next module reloading will
-% fail, as the class will *not* be updated. If ignoring that failure, the old
-% code will attempt to operate on newer instance states, which of course should
-% not be done.
-%
+-doc """
+Updates (globally) the specified class, by recompiling it, purging its current
+implementation, and reloading it.
+
+So operates at the class level, with no direct interaction with instances, not
+selecting any particular version (the one of the updated class will just
+apply). Typically all instances of that class have been already frozen (see the
+freeze_instances/{2,3} static methods and the freezeUntilVersionChange special
+call), waiting for the new code to be available and adapt to it.
+
+ForceRecompilation tells whether the class module shall be forcibly recompiled;
+useful for example if wanting to apply specific compilation options.
+
+KillAnyLingeringProcess tells whether any process (probably an instance)
+lingering on the old code shall be killed, or if the update shall just be
+considered as having failed.
+
+The first soft-purge will succeed even if an instance (e.g. agent C in
+class_Upgradable_test) was not updated, yet the next module reloading will fail,
+as the class will *not* be updated. If ignoring that failure, the old code will
+attempt to operate on newer instance states, which of course should not be done.
+""".
 -spec update_class( classname(), boolean(), [ define() ], boolean() ) ->
 									static_return( base_status() ).
 update_class( Classname, ForceRecompilation, Defines,
@@ -523,12 +546,13 @@ update_class( Classname, ForceRecompilation, Defines,
 
 
 
-% @doc Requests the specified instance to update themselves (asynchronously)
-% against their new current (expected to have been updated) class.
-%
-% These instances are expected to have been frozen beforehand (see
-% request_instances_to_update/1).
-%
+-doc """
+Requests the specified instance to update themselves (asynchronously) against
+their new current (expected to have been updated) class.
+
+These instances are expected to have been frozen beforehand (see
+request_instances_to_update/1).
+""".
 -spec request_instances_to_update( [ instance_pid() ] ) -> static_return(
 		  { [ update_success_report() ], [ update_failure_report() ] } ).
 request_instances_to_update( Instances ) ->
@@ -548,14 +572,14 @@ request_instances_to_update( Instances ) ->
 % Section for helper functions (not methods).
 
 
-% @doc Takes in charge the instance-side part of the version update protocol:
-% freezes until the class has been updated, and then applies the corresponding
-% instance-specific state changes.
-%
-% Sends back to the caller first a freeze_notification() message, then, once
-% requested to update and having attempted to do so, an update_outcome()
-% message.
-%
+-doc """
+Takes in charge the instance-side part of the version update protocol: freezes
+until the class has been updated, and then applies the corresponding
+instance-specific state changes.
+
+Sends back to the caller first a freeze_notification() message, then, once
+requested to update and having attempted to do so, an update_outcome() message.
+""".
 -spec manage_version_change( any_version(), extra_data(), pid(),
 							 wooper:state() ) -> 'deleted'. % no_return().
 manage_version_change( TargetVersion, MaybeExtraData, CallerPid, State ) ->
@@ -698,11 +722,10 @@ manage_version_change( TargetVersion, MaybeExtraData, CallerPid, State ) ->
 
 
 
-% @doc Collects the specified number of freeze information messages.
+-doc "Collects the specified number of freeze information messages.".
 -spec collect_freeze_acks( count() ) -> [ freeze_info() ].
 collect_freeze_acks( InstCount ) ->
 	collect_freeze_acks( InstCount, _Acc=[] ).
-
 
 
 % (helper)
@@ -721,17 +744,19 @@ collect_freeze_acks( InstCount, Acc ) ->
 
 
 
-% @doc Returns the current version of this upgradable version.
-%
-% (exported helper, defined for convenience)
-%
+-doc """
+Returns the current version of this upgradable version.
+
+(exported helper, defined for convenience)
+
+""".
 -spec get_version( wooper:state() ) -> any_version().
 get_version( State ) ->
 	basic_utils:check_not_undefined( get_maybe_version( State ) ).
 
 
 
-% @doc Returns a textual description of this instance.
+-doc "Returns a textual description of this instance.".
 -spec to_string( wooper:state() ) -> ustring().
 to_string( State ) ->
 	text_utils:format( "upgradable instance ~ts",
@@ -740,16 +765,15 @@ to_string( State ) ->
 
 
 
-
 % The following helper functions can be used in the context of any class,
 % whether or not it implements this Upgradable interface.
 
 
-% @doc Tells whether the corresponding instance implements the Upgradable
-% interface.
-%
-% (exported helper)
-%
+-doc """
+Tells whether the corresponding instance implements the Upgradable interface.
+
+(exported helper)
+""".
 -spec is_upgradable( wooper:state() ) -> boolean().
 is_upgradable( State ) ->
 	% Previously instance-level:
@@ -760,13 +784,14 @@ is_upgradable( State ) ->
 
 
 
-% @doc Returns any version available for the corresponding instance.
-%
-% This function is designed to apply to any WOOPER instance, whether it is a
-% Upgradable one or not.
-%
-% (exported helper)
-%
+-doc """
+Returns any version available for the corresponding instance.
+
+This function is designed to apply to any WOOPER instance, whether it is a
+Upgradable one or not.
+
+(exported helper)
+""".
 -spec get_maybe_version( wooper:state() ) -> option( any_version() ).
 get_maybe_version( State ) ->
 
@@ -785,11 +810,12 @@ get_maybe_version( State ) ->
 
 
 
-% @doc Returns a textual element of description of the corresponding instance,
-% should it implement the Upgradable interface.
-%
-% (exported helper)
-%
+-doc """
+Returns a textual element of description of the corresponding instance, should
+it implement the Upgradable interface.
+
+(exported helper)
+""".
 -spec to_maybe_string( wooper:state() ) -> option( ustring() ).
 to_maybe_string( State ) ->
 	case get_maybe_version( State ) of
@@ -805,13 +831,15 @@ to_maybe_string( State ) ->
 
 
 
+
 % Section for purely internal helpers.
 
 
-% Purges and reloads the specified class, expected to be already recompiled.
-%
-% (helper)
-%
+-doc """
+Purges and reloads the specified class, expected to be already recompiled.
+
+(helper)
+""".
 -spec purge_and_reload_class( classname(), boolean() ) -> base_status().
 purge_and_reload_class( Classname, KillAnyLingeringProcess ) ->
 
@@ -860,10 +888,11 @@ purge_and_reload_class( Classname, KillAnyLingeringProcess ) ->
 
 
 
-% Reloads the specified class, expected to be already recompiled and purged.
-%
-% (helper)
-%
+-doc """
+Reloads the specified class, expected to be already recompiled and purged.
+
+(helper)
+""".
 -spec reload_class( classname() ) -> base_status().
 reload_class( Classname ) ->
 

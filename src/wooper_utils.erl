@@ -79,7 +79,7 @@ Module containing some **extra facilities** for WOOPER users and internal use.
 -include("wooper_defines_exports.hrl").
 
 
-% Shorthands:
+% Type shorthands:
 
 -type three_digit_version() :: basic_utils:three_digit_version().
 
@@ -89,13 +89,15 @@ Module containing some **extra facilities** for WOOPER users and internal use.
 
 % Version-related functions.
 
-% @doc Returns the version of the WOOPER library being used.
+
+-doc "Returns the version of the WOOPER library being used.".
 -spec get_wooper_version() -> three_digit_version().
 get_wooper_version() ->
 	basic_utils:parse_version( get_wooper_version_string() ).
 
 
-% @doc Returns the version of the WOOPER library being used, as a string.
+
+-doc "Returns the version of the WOOPER library being used, as a string.".
 -spec get_wooper_version_string() -> ustring().
 get_wooper_version_string() ->
 	% As defined (uniquely) in GNUmakevars.inc:
@@ -103,12 +105,13 @@ get_wooper_version_string() ->
 
 
 
-% @doc Deduces the Erlang equivalent name, according to the WOOPER conventions,
-% of a class that is actually implemented in Python and whose name follows the
-% PEP8 convention.
-%
-% For example 'MyFoobarExample' resulting in 'class_MyFoobarExample'.
-%
+-doc """
+Deduces the Erlang equivalent name, according to the WOOPER conventions, of a
+class that is actually implemented in Python and whose name follows the PEP8
+convention.
+
+For example 'MyFoobarExample' resulting in 'class_MyFoobarExample'.
+""".
 -spec pep8_class_to_wooper_class(
 		python_utils:pep8_classname() | ustring() ) -> wooper:classname().
 pep8_class_to_wooper_class( Classname ) when is_atom( Classname ) ->
@@ -119,11 +122,12 @@ pep8_class_to_wooper_class( ClassnameStr ) ->
 
 
 
-% @doc Deduces the Python equivalent name, according to the PEP8 convention, of
-% an Erlang class whose name follows the WOOPER conventions.
-%
-% For example "class_MyFoobarExample" resulting in "MyFoobarExample".
-%
+-doc """
+Deduces the Python equivalent name, according to the PEP8 convention, of an
+Erlang class whose name follows the WOOPER conventions.
+
+For example "class_MyFoobarExample" resulting in "MyFoobarExample".
+""".
 -spec wooper_class_to_pep8_class( wooper:classname() | ustring() ) ->
 										python_utils:pep8_classname().
 wooper_class_to_pep8_class( Classname ) when is_atom( Classname ) ->
@@ -143,11 +147,12 @@ wooper_class_to_pep8_class( ClassnameString ) ->
 
 
 
-% @doc Deduces the Erlang equivalent name, according to the WOOPER conventions,
-% of a class that is actually implemented in Java.
-%
-% For example 'MyFoobarExample' resulting in 'class_MyFoobarExample'.
-%
+-doc """
+Deduces the Erlang equivalent name, according to the WOOPER conventions, of a
+class that is actually implemented in Java.
+
+For example 'MyFoobarExample' resulting in 'class_MyFoobarExample'.
+""".
 -spec java_class_to_wooper_class(
 		java_utils:java_classname() | ustring() ) -> wooper:classname().
 java_class_to_wooper_class( Classname ) when is_atom( Classname ) ->
@@ -158,11 +163,12 @@ java_class_to_wooper_class( ClassnameStr ) ->
 
 
 
-% @doc Deduces the Java equivalent name of an Erlang class whose name follows
-% the WOOPER conventions.
-%
-% For example "class_MyFoobarExample" resulting in "MyFoobarExample".
-%
+-doc """
+Deduces the Java equivalent name of an Erlang class whose name follows the
+WOOPER conventions.
+
+For example "class_MyFoobarExample" resulting in "MyFoobarExample".
+""".
 -spec wooper_class_to_java_class( wooper:classname() ) ->
 										java_utils:java_string_classname().
 wooper_class_to_java_class( Classname ) when is_atom( Classname ) ->
@@ -181,16 +187,17 @@ wooper_class_to_java_class( Classname ) when is_atom( Classname ) ->
 
 
 
-% @doc Returns (as atoms) the Java package (if any) and class that correspond to
-% the specified WOOPER classname.
-%
-% So for example a WOOPER classname equal to
-% 'class_BigPackage__MyPackage__MyExample' is to be translated into: {
-% 'bigpackage.mypackage', 'MyExample' }, while for 'class_MyExample' we have {
-% undefined,  MyExample } returned.
-%
-% Note: no Java package shall be named 'undefined'.
-%
+-doc """
+Returns (as atoms) the Java package (if any) and class that correspond to the
+specified WOOPER classname.
+
+So for example a WOOPER classname equal to
+'class_BigPackage__MyPackage__MyExample' is to be translated into: {
+'bigpackage.mypackage', 'MyExample' }, while for 'class_MyExample' we have {
+undefined, MyExample } returned.
+
+Note: no Java package shall be named 'undefined'.
+""".
 -spec get_java_package_and_class_for( wooper:classname() ) ->
 		java_utils:java_fully_qualified_classname().
 get_java_package_and_class_for( WOOPERClassname ) ->
@@ -230,10 +237,11 @@ get_java_package_and_class_for( WOOPERClassname ) ->
 
 
 
-% @doc Converts a simple type specified in CamelCase (e.g. 'apple' or
-% 'travelling_salesman') into its corresponding WOOPER classname (e.g.
-% 'class_Apple' of 'class_TravellingSalesman').
-%
+-doc """
+Converts a simple type specified in CamelCase (e.g. 'apple' or
+'travelling_salesman') into its corresponding WOOPER classname (e.g.
+'class_Apple' of 'class_TravellingSalesman').
+""".
 -spec camelcase_type_to_wooper_class( camelcase_type() ) -> wooper:classname().
 camelcase_type_to_wooper_class( CamelcaseType ) ->
 
@@ -258,9 +266,10 @@ camelcase_type_to_wooper_class( CamelcaseType ) ->
 
 
 
-% @doc Converts a WOOPER classname (e.g. 'class_Apple') into its corresponding
-% simple type in CamelCase (e.g. 'apple').
-%
+-doc """
+Converts a WOOPER classname (e.g. 'class_Apple') into its corresponding simple
+type in CamelCase (e.g. 'apple').
+""".
 -spec wooper_class_to_camelcase_type( wooper:classname() ) -> camelcase_type().
 wooper_class_to_camelcase_type( WOOPERClassname ) ->
 
@@ -279,9 +288,9 @@ wooper_class_to_camelcase_type( WOOPERClassname ) ->
 
 
 
-% @doc Starts WOOPER for a testing possibly involving an OTP-based startup
-% procedure.
-%
+-doc """
+Starts WOOPER for a testing possibly involving an OTP-based startup procedure.
+""".
 -spec start_for_test() -> void().
 
 -if( ?wooper_enable_otp_integration =:= true ).
@@ -306,9 +315,10 @@ start_for_test() ->
 
 
 
-% @doc Starts WOOPER for an application launch possibly involving an OTP-based
-% startup procedure.
-%
+-doc """
+Starts WOOPER for an application launch possibly involving an OTP-based startup
+procedure.
+""".
 -spec start_for_app() -> void().
 
 -if( ?wooper_enable_otp_integration =:= true ).
@@ -333,9 +343,10 @@ start_for_app() ->
 
 
 
-% @doc Returns the key (as a term) associated to specified classname in the
-% persistent_term registry.
-%
+-doc """
+Returns the key (as a term) associated to specified classname in the
+persistent_term registry.
+""".
 -spec get_persistent_key_for( wooper:classname() ) -> term().
 get_persistent_key_for( Classname ) ->
 	% Could be instead {wooper, Classname} should clashes be feared:

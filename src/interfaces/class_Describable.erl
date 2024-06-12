@@ -39,7 +39,6 @@ This interface provides also exported functions designed so that they can be
 applied to any WOOPER instance, whether or not it supports this trait.
 
 See class_StaticDescribable, for instances that can be described statically.
--module(class_Describable).
 """.
 
 
@@ -55,22 +54,25 @@ See class_StaticDescribable, for instances that can be described statically.
 % No interface-specific attribute to declare.
 
 
+-doc "A user-provided description of interest.".
 -type user_description() :: ustring().
-% A user-provided description of interest.
 
+
+-doc "The internal description of interest.".
 -type description() :: bin_string().
-% The internal description of interest.
 
+
+-doc "A description of interest, as any string.".
 -type any_description() :: any_string().
-% A description of interest, as any string.
 
 
+-doc "The PID of an instance implementing the Describable interface.".
 -type describable_pid() :: pid().
-% The PID of an instance implementing the Describable interface.
 
 
 -export_type([ user_description/0, description/0, any_description/0,
 			   describable_pid/0 ]).
+
 
 
 % All Describable classes must define and export such an helper function:
@@ -92,7 +94,7 @@ See class_StaticDescribable, for instances that can be described statically.
 % implementing the class itself, typically for its traces.
 
 
-% Shorthands:
+% Type shorthands:
 
 -type ustring() :: text_utils:ustring().
 -type bin_string() :: text_utils:bin_string().
@@ -100,7 +102,7 @@ See class_StaticDescribable, for instances that can be described statically.
 
 
 
-% @doc Constructs a describable instance.
+-doc "Constructs a describable instance.".
 -spec construct( wooper:state() ) -> wooper:state().
 construct( State ) ->
 	State.
@@ -113,7 +115,7 @@ construct( State ) ->
 % Methods section.
 
 
-% @doc Returns the description of this Describable.
+-doc "Returns the description of this Describable.".
 -spec getDescription( wooper:state() ) -> const_request_return( description() ).
 getDescription( State=#state_holder{ actual_class=Classname } ) ->
 
@@ -128,10 +130,11 @@ getDescription( State=#state_holder{ actual_class=Classname } ) ->
 % Section for helper functions (not methods).
 
 
-% @doc Returns a textual description of this instance.
-%
-% (exported helper, meant to be defined per child class of class_Describable)
-%
+-doc """
+Returns a textual description of this instance.
+
+(exported helper, meant to be defined per child class of class_Describable)
+""".
 -spec to_string( wooper:state() ) -> ustring().
 to_string( _State ) ->
 	"Describable instance".
@@ -142,11 +145,11 @@ to_string( _State ) ->
 % whether or not it implements this Describable interface.
 
 
-% @doc Tells whether the corresponding instance implements the Describable
-% interface.
-%
-% (exported helper)
-%
+-doc """
+Tells whether the corresponding instance implements the Describable interface.
+
+(exported helper)
+""".
 -spec is_describable( wooper:state() ) -> boolean().
 is_describable( State ) ->
 	% We cannot rely on a specific attribute being defined or not to determine
@@ -156,13 +159,14 @@ is_describable( State ) ->
 
 
 
-% @doc Returns any description available for the corresponding instance.
-%
-% This function is designed to apply to any WOOPER instance, whether it is a
-% Describable one or not.
-%
-% (exported helper)
-%
+-doc """
+Returns any description available for the corresponding instance.
+
+This function is designed to apply to any WOOPER instance, whether it is a
+Describable one or not.
+
+(exported helper)
+""".
 -spec get_maybe_description( wooper:state() ) -> option( description() ).
 get_maybe_description( State ) ->
 	case is_describable( State ) of
@@ -177,11 +181,12 @@ get_maybe_description( State ) ->
 
 
 
-% @doc Returns a textual element of description of the corresponding instance,
-% should it implement the Describable interface.
-%
-% (exported helper)
-%
+-doc """
+Returns a textual element of description of the corresponding instance, should
+it implement the Describable interface.
+
+(exported helper)
+""".
 -spec to_maybe_string( wooper:state() ) -> option( ustring() ).
 to_maybe_string( State ) ->
 	case get_maybe_description( State ) of

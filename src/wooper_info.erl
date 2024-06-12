@@ -44,6 +44,15 @@ Centralisation of **class-level information**.
 -include("wooper_info.hrl").
 
 
+
+-doc """
+Stores and centralises WOOPER-level information gathered about a given class.
+
+This record is to strictly supersede the Myriad-level module_info one.
+
+See also: the (superseded here) {module,function}_info counterpart Myriad
+records, defined in ast_info.hrl.
+""".
 -type class_info() :: #class_info{}.
 
 
@@ -78,7 +87,12 @@ Centralisation of **class-level information**.
 	  attribute_qualifiers(), attribute_description() }.
 
 
+-doc """
+Describes a **member attribute** of the state of a given class: stores all
+class-level information (i.e. metadata) regarding this attribute.
+""".
 -type attribute_info() :: #attribute_info{}.
+
 
 
 -doc """
@@ -98,10 +112,45 @@ ones, not parse ones).
 -type located_method_spec() :: { ast_location(), method_spec() }.
 
 
+
+-doc """
+Stores and centralises WOOPER-level information gathered about a given request.
+
+This record is to strictly supersede the Myriad-level function_info one.
+
+See also: this counterpart function_info Myriad record, defined in ast_info.hrl.
+""".
 -type request_info() :: #request_info{}.
+
+
+
+-doc """
+Stores and centralises WOOPER-level information gathered about a given oneway
+method.
+
+This record is to strictly supersede the Myriad-level function_info one.
+
+See also: the function_info counterpart Myriad record, defined in ast_info.hrl.
+""".
 -type oneway_info() :: #oneway_info{}.
+
+
+
+-doc """
+Stores and centralises WOOPER-level information gathered about a given static
+method.
+
+This record is to strictly supersede the Myriad-level function_info one.
+
+See also: the function_info counterpart Myriad record, defined in ast_info.hrl.
+""".
 -type static_info() :: #static_info{}.
 
+
+
+-doc "Description of the class name.".
+-type class_entry() :: 
+		option( { wooper:classname(), ast_info:located_form() } ).
 
 
 

@@ -49,7 +49,7 @@ A test of WOOPER **attribute management**.
 
 
 
-% @doc Constructs a test instance.
+-doc "Constructs a test instance.".
 -spec construct( wooper:state() ) -> wooper:state().
 construct( State ) ->
 	% Class-specific attributes:
@@ -57,7 +57,7 @@ construct( State ) ->
 
 
 
-% @doc The request defined to trigger a test.
+-doc "The request defined to trigger a test.".
 -spec test( wooper:state() ) -> request_return( 'test_ok' ).
 test( State ) ->
 
@@ -129,9 +129,9 @@ not_crashing_examples( State ) ->
 
 
 
-% @doc Usually operations are commented-out as we do not want to fail on
-% purpose.
-%
+-doc """
+Usually operations are commented-out as we do not want to fail on purpose.
+""".
 -spec crashing_examples( wooper:state() ) -> const_request_return( test_ok ).
 crashing_examples( State ) ->
 

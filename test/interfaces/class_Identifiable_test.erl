@@ -37,7 +37,8 @@ See the class_Identifiable module.
 -export([ run/0 ]).
 
 
-% @doc Runs the tests.
+
+-doc "Runs the tests.".
 -spec run() -> no_return().
 run() ->
 

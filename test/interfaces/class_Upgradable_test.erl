@@ -51,7 +51,7 @@ See the class_Upgradable module.
 
 
 
-% Tells whether the test module has old code.
+-doc "Tells whether the test module has old code.".
 -spec check_old_code() -> void().
 check_old_code() ->
 	Mod = class_TestUpgradable,
@@ -60,9 +60,10 @@ check_old_code() ->
 
 
 
-% Returns a description of the specified instance, as the TestUpgradable class
-% implements the Describable interface.
-%
+-doc """
+Returns a description of the specified instance, as the TestUpgradable class
+implements the Describable interface.
+""".
 -spec get_description( instance_pid() ) -> bin_string().
 get_description( IPid ) ->
 
@@ -77,7 +78,7 @@ get_description( IPid ) ->
 
 
 
-% @doc Runs the tests.
+-doc "Runs the tests.".
 -spec run() -> no_return().
 run() ->
 

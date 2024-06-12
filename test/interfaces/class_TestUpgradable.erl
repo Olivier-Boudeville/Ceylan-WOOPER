@@ -84,8 +84,7 @@ whether enable_upgraded_test_class has been defined (then 1.2.4) or not (1.2.3).
 
 
 
-
-% Shorthands:
+% Type shorthands:
 
 -type ustring() :: text_utils:ustring().
 
@@ -96,10 +95,11 @@ whether enable_upgraded_test_class has been defined (then 1.2.4) or not (1.2.3).
 
 
 
-% @doc Constructs a test upgradable instance.
-%
-% The corresponding version is determined statically.
+-doc """
+Constructs a test upgradable instance.
 
+The corresponding version is determined statically.
+""".
 -ifndef(enable_upgraded_test_class).
 
 % Version 1.2.3:
@@ -135,12 +135,14 @@ construct( State, Name, Age ) ->
 
 
 
+
 % Methods section.
 
 
-% @doc Upgrades this instance (thus to a more recent version) both in terms of
-% code and state, taking into account any specified extra data.
-%
+-doc """
+Upgrades this instance (thus to a more recent version) both in terms of code and
+state, taking into account any specified extra data.
+""".
 -spec upgradeVersion( wooper:state(), any_version(), any_version(),
 			option( extra_data() ) ) -> request_return( base_outcome() ).
 % Only these very specific settings are supported:
@@ -188,9 +190,10 @@ upgradeVersion( State, OriginalVersion={1,2,3}, TargetVersion={1,2,4},
 
 
 
-% @doc Downgrades this instance (thus to a less recent version) both in terms of
-% code and state, taking into account any specified extra data.
-%
+-doc """
+Downgrades this instance (thus to a less recent version) both in terms of code
+and state, taking into account any specified extra data.
+""".
 -spec downgradeVersion( wooper:state(), any_version(), any_version(),
 			option( extra_data() ) ) -> request_return( base_outcome() ).
 downgradeVersion( State, OriginalVersion={1,2,4}, TargetVersion={1,2,3},
@@ -240,10 +243,11 @@ downgradeVersion( State, OriginalVersion={1,2,4}, TargetVersion={1,2,3},
 % Static section.
 
 
-% @doc Returns the version of that class (that corresponds to this module).
-%
-% Each version of a class should define its own version of this static method.
-%
+-doc """
+Returns the version of that class (that corresponds to this module).
+
+Each version of a class should define its own version of this static method.
+""".
 -spec get_version() -> static_return( any_version() ).
 get_version() ->
 	% Each concrete Upgradable class is typically to return its own define:
@@ -252,7 +256,7 @@ get_version() ->
 
 
 
-% @doc Returns a textual description of this instance.
+-doc "Returns a textual description of this instance.".
 -spec to_string( wooper:state() ) -> ustring().
 
 -ifndef(enable_upgraded_test_class).
