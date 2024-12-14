@@ -25,14 +25,12 @@
 % Author: Olivier Boudeville [olivier (dot) boudeville (at) esperide (dot) com]
 % Creation date: Wednesday, December 24, 2014.
 
-
 -module(wooper_class_management).
 
 -moduledoc """
 Module centralising, on behalf of the WOOPER parse transform, the support for
 **classes, inheritance**, etc.
 """.
-
 
 
 -export([ check_classname/1, manage_classname/2, manage_superclasses/1 ]).
@@ -48,7 +46,10 @@ Module centralising, on behalf of the WOOPER parse transform, the support for
 
 % Type shorthands:
 
+-type module_entry() :: ast_info:module_entry().
+
 -type class_info() :: wooper_info:class_info().
+
 
 
 
