@@ -1,4 +1,4 @@
 [{<<"myriad">>,
   {git,"https://github.com/Olivier-Boudeville/Ceylan-Myriad.git",
-       {ref,"b3377452ac03012682c8119a7a04c25e1417b3a6"}},
+       {ref,"5d89beccf498b5f3a6b65fd9bc25c4beda6510e5"}},
   0}].
