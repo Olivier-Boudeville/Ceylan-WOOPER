@@ -258,7 +258,7 @@ camelcase_type_to_wooper_class( CamelcaseType ) ->
 
 	% Underscores removed:
 	CamelCapElems = [ text_utils:uppercase_initial_letter( E )
-				|| E <- text_utils:split( TypeString, _Delimiters=[ $_ ] ) ],
+		|| E <- text_utils:split( TypeString, _Delimiter=$_ ) ],
 
 	ClassString = "class_" ++ lists:flatten( CamelCapElems ),
 
@@ -278,7 +278,8 @@ wooper_class_to_camelcase_type( WOOPERClassname ) ->
 
 		"class_" ++ Suffix ->
 			Elems = [ text_utils:to_lowercase( E )
-						|| E <- text_utils:split_camel_case( Suffix ) ],
+				|| E <- text_utils:split_camel_case( Suffix ) ],
+
 			text_utils:string_to_atom( text_utils:join( _Sep="_", Elems ) );
 
 		Invalid ->
