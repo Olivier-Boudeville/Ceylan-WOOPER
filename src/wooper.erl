@@ -202,9 +202,20 @@ virtual table.
 
 
 
+% A request is typically:
+%
+% -spec my_request :: fun( wooper:state(), Arg1 :: method_argument(),
+%    Arg2 :: method_argument(), ... ) -> request_return( T ).
+
+
 -doc "Name of a request method.".
 -type request_name() :: method_name().
 
+
+% A oneway is typically:
+%
+% -spec my_oneway :: fun( wooper:state(), Arg1 :: method_argument(),
+%    Arg2 :: method_argument(), ... ) -> oneway_return().
 
 
 -doc "Name of a oneway method.".
@@ -292,6 +303,10 @@ clearer).
 -type construction_parameters() :: [ construction_parameter() ].
 
 
+-doc """
+Describes the outcome of a set of requests: either all succeeded, or some failed
+(that are then specified).
+""".
 -type requests_outcome() :: 'success' | { 'failure', [ pid() ] }.
 
 
@@ -301,7 +316,14 @@ clearer).
 
 % To describe all kinds of results:
 
+-doc """
+Just an internal convenience type (not to be mixed up with the lot more
+essential request_return/1 type).
+""".
 -type request_result( T ) :: T.
+
+
+-doc "Convenience type to designate the result of the execution of a request.".
 -type request_result() :: request_result( any() ).
 
 -type static_result( T ) :: T.
@@ -312,13 +334,43 @@ clearer).
 
 % For method specs:
 
+-doc """
+To specify the type of the actual value of interest returned by a (non-const)
+request.
+""".
 -type request_return( T ) :: { state(), request_result( T ) }.
+
+
+-doc """
+To specify the type of the actual value of interest returned by a const request.
+""".
 -type const_request_return( T ) :: request_return( T ).
 
+
+-doc "To specify the return type of a (non-const) oneway.".
 -type oneway_return() :: state().
+
+
+-doc "To specify the return type of a const oneway.".
 -type const_oneway_return() :: void().
 
+
+-doc """
+To specify the type of the actual value of interest returned by a static method.
+""".
 -type static_return( T ) :: static_result( T ).
+
+
+-doc "To specify that a static method does not return any value of use.".
+% Must be any():
+-type static_void_return() :: %static_return( 'wooper_void_return' ).
+							  static_return( any() ).
+
+
+-doc "To specify that a static method is not expected to return at all.".
+-type static_no_return() :: no_return().
+
+
 
 % Constness irrelevant for static methods.
 
@@ -341,7 +393,7 @@ clearer).
 		'const'.
 
 
--doc "PID of a WOOPER instance.".
+-doc "Designates the PID of a WOOPER instance.".
 -type instance_pid() :: pid().
 
 
@@ -404,7 +456,7 @@ one).
 
 			   request_return/1, const_request_return/1,
 			   oneway_return/0, const_oneway_return/0,
-			   static_return/1,
+			   static_return/1, static_void_return/0, static_no_return/0,
 
 			   attribute_name/0, attribute_value/0, attribute_entry/0,
 			   attribute_type/0, attribute_qualifier/0,
