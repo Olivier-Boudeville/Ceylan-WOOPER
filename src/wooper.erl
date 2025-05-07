@@ -246,8 +246,12 @@ virtual table.
 -type method_argument() :: any().
 
 
--doc "Standalone (non-list) arguments may also be specified in calls.".
--type method_arguments() :: method_argument() | [ method_argument() ].
+-doc """
+Arguments of a method.
+
+Standalone (non-list) arguments may also be specified in calls.
+""".
+-type method_arguments() :: maybe_list( method_argument() ).
 
 
 
@@ -266,15 +270,25 @@ virtual table.
 
 
 
--doc "The qualifiers applying to a method.".
+-doc """
+The qualifiers applying to a method.
+
+Now we recommend using directly [method_qualifier()] instead (deemed clearer).
+""".
 -type method_qualifiers() :: [ method_qualifier() ].
 
 
 
--doc "Special case of construction parameters.".
--type construction_parameter() :: method_argument().
+-doc "A parameter used to construct an instance.".
+-type construction_parameter() :: any().
 
 
+-doc """
+Parameters used to construct an instance.".
+
+Now we recommend using directly [construction_parameter()] instead (deemed
+clearer).
+""".
 -type construction_parameters() :: [ construction_parameter() ].
 
 
@@ -405,6 +419,8 @@ one).
 -type exception_class() :: basic_utils:exception_class().
 -type exception_term() :: basic_utils:exception_term().
 -type exit_reason() :: basic_utils:exit_reason().
+
+-type maybe_list(T) :: list_utils:maybe_list(T).
 
 -type ustring() :: text_utils:ustring().
 -type format_string() :: text_utils:format_string().
