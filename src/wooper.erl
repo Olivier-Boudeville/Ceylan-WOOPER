@@ -976,11 +976,11 @@ overlapping of their processing), and returns the ones that failed to report on
 time that they were executed.
 
 More precisely, for each of the specified instances, sends the specified oneway
-(expecting one of the specified arguments to contain the PID of the caller
-process so that the instance can send back an answer) and waits for an
-acknowledgement thereof (as {AckTerm, InstancePid}}), then proceeds to the next
+(expecting one of its specified arguments to contain the PID of the caller
+process, so that the instance can send back an answer) and waits for an
+acknowledgement thereof (as `{AckTerm, InstancePid}`), then proceeds to the next
 instance. Returns an (ordered, according to the input one) list of the PIDs of
-the instances that failed to answer on time, based on specified time-out.
+the instances that failed to answer on time, based on the specified time-out.
 """.
 -spec send_acknowledged_oneway_in_turn( oneway_name(), method_arguments(),
 		[ instance_pid() ], time_out(), ack_term() ) -> [ instance_pid() ].

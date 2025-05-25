@@ -162,7 +162,7 @@ swapInAttribute( State=#state_holder{ attribute_table=AttrTable },
 Tells whether the specified attribute exists.
 
 Note: the best practise is certainly to set all possible attributes from the
-constructor, either to an appropriate value or to 'undefined', instead of having
+constructor, either to an appropriate value or to `undefined`, instead of having
 instances with or without a given attribute.
 
 Note: not expected to be ever used by user code, as, except when relying on
@@ -178,15 +178,15 @@ hasAttribute( State, AttributeName ) ->
 
 
 -doc """
-Returns the value associated to the specified named-designated attribute, if
+Returns the value associated to the specified name-designated attribute, if
 found, otherwise triggers a case clause error.
 
 Note: not used very frequently verbatim, as either the attribute value can be
-obtained with the getAttr/1 macro, using the original state, named as 'State'
+obtained with the `getAttr/1` macro, using the original state, named as `State`
 (as externally defined) or the value is already bound by design to an available
 variable.
 
-See also: the getAttr/1 shorthand.
+See also: the `getAttr/1` macro shorthand.
 """.
 -spec getAttribute( wooper:state(), attribute_name() ) -> attribute_value().
 getAttribute( State, AttributeName ) ->
@@ -196,19 +196,14 @@ getAttribute( State, AttributeName ) ->
 
 
 -doc """
-Returns the value associated to each of the specified named-designated
-attributes (if found, otherwise triggers a case clause error), in the order of
-their specification.
+Returns the value associated to each of the specified name-designated attributes
+(if found, otherwise triggers a case clause error), in the order of their
+specification.
 
 For example: `[MyCount, MyAge, MyIdeas] = getAttribute(SomeState, [count, age,
 ideas])`.
 
-Note: not used very frequently verbatim, as either the attributes can be
-obtained with the getAttr/1 macro, using the original state, named as 'State'
-(as externally defined) or the values are already bound by design to available
-variables.
-
-See also: the getAttr/1 shorthand.
+See also: the `getAttrList/1` macro shorthand.
 """.
 -spec getAttributes( wooper:state(), [ attribute_name() ] ) ->
 							[ attribute_value() ].
@@ -220,12 +215,12 @@ getAttributes( State, AttributeNameList ) ->
 
 -doc """
 Returns the value, if any, associated to the specified named-designated
-attribute, if found, otherwise returns 'undefined'.
+attribute, if found, otherwise returns `undefined`.
 
 Note that an ambiguity exists if the attribute value belongs to a type that
-comprises the 'undefined' atom, in the sense that an attribute set to a value
+comprises the `undefined` atom, in the sense that an attribute set to a value
 equal to 'undefined' cannot be then discriminated from an attribute not set at
-all. For example, instead of a maybe-type, use then a safe_maybe-type.
+all. For example, instead of a option-type, use then a safe_option-type.
 
 Useful only in specific contexts, like when preferring composition over
 inheritance, where an attribute may not be even defined.
@@ -252,7 +247,7 @@ Returns an updated state not having anymore the specified attribute.
 No error is triggered if the specified attribute was not existing.
 
 Note: this operation is not recommended, as attributes should always be
-defined. Better keep it defined, but set it to 'undefined'.
+defined. Better keep it defined, but set to `undefined`.
 """.
 -spec removeAttribute( wooper:state(), attribute_name() ) -> wooper:state().
 removeAttribute( State, AttributeName ) ->
