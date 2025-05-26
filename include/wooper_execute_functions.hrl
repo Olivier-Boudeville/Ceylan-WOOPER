@@ -58,10 +58,10 @@ Allows to call synchronously from the code of a given class its actual
 overridden methods (requests, here), including from child classes.
 
 Example: If in some start method of an EngineVehicle class one wants to call the
-(possibly overridden by, say, a class Car) startEngine/1 request, then
-executeRequest/2 should be used: `MyVehicle ! {startEngine..` would not be
-synchronous, startEngine(State) would call EngineVehicle:startEngine/1 instead
-of Car:startEngine/1 when called from a Car instance, and of course
+(possibly overridden by, say, a class Car) `startEngine/1` request, then
+`executeRequest/2` should be used: `MyVehicle ! {startEngine, ...` would not be
+synchronous, `startEngine(State)` would call `EngineVehicle:startEngine/1`
+instead of `Car:startEngine/1` when called from a Car instance, and of course
 EngineVehicle should know nothing from its Car child class.
 
 Returns an updated state and a result.
@@ -113,7 +113,7 @@ calling implicitly any overridden version of the method.
 Allows to call synchronously from the code of a given class its actual
 overridden methods (requests, here), including from child classes.
 
-See executeRequest/2.
+See `executeRequest/2`.
 
 Returns only a result.
 """.
@@ -136,7 +136,7 @@ overridden version of the method.
 Allows to call synchronously from the code of a given class its actual
 overridden methods (requests, here), including from child classes.
 
-See executeRequest/2.
+See `executeRequest/2`.
 
 Returns an updated state and a result.
 """.
@@ -202,7 +202,7 @@ any overridden version of the method.
 Allows to call synchronously from the code of a given class its actual
 overridden methods (const requests, here), including from child classes.
 
-Ssee executeRequest/2.
+Ssee `executeRequest/2`.
 
 Returns only a result.
 """.
@@ -271,7 +271,7 @@ been defined by the specified parent class of the current instance.
 Allows to call synchronously from the code of a given class a version defined
 through its inheritance tree.
 
-See executeRequest/2.
+See `executeRequest/2`.
 
 Returns only a result.
 """.
@@ -289,16 +289,15 @@ executeConstRequestAs( State, ParentClassname, RequestAtom ) ->
 
 
 -doc """
-Executes the version of the specified request, as it has been defined by
-the specified parent class of the current instance.
+Executes the version of the specified request, as it has been defined by the
+specified parent class of the current instance.
 
 Allows to call synchronously from the code of a given class a version defined
 through its inheritance tree.
 
-See executeRequest/2.
+See `executeRequest/2`.
 
 Returns an updated state and a result.
-%
 """.
 -spec executeRequestAs( wooper:state(), classname(), request_name(),
 		method_arguments() ) -> { wooper:state(), method_internal_result() }.
@@ -357,7 +356,7 @@ the specified parent class of the current instance.
 Allows to call synchronously from the code of a given class a version defined
 through its inheritance tree.
 
-See executeRequest/2.
+See `executeRequest/2`.
 
 Returns only a result.
 """.
@@ -387,10 +386,10 @@ Allows to call synchronously from the code of a given class its actual
 overridden methods (oneways, here), including from child classes.
 
 Example: If in some start method of an EngineVehicle class one wants to call the
-(possibly overridden by, say, a class Car) startEngine/1 oneway, then
-executeOneway/2 should be used: `MyVehicle ! startEngine` would not be
-synchronous, startEngine(State) would call EngineVehicle:startEngine/1 instead
-of Car:startEngine/1 when called from a Car instance, and of course
+(possibly overridden by, say, a class Car) `startEngine/1` oneway, then
+`executeOneway/2` should be used: `MyVehicle ! startEngine` would not be
+synchronous, `startEngine(State)` would call `EngineVehicle:startEngine/1`
+instead of `Car:startEngine/1` when called from a Car instance, and of course
 EngineVehicle should know nothing from its Car child class.
 
 Returns an updated state.
@@ -438,7 +437,7 @@ calling implicitly any overridden version of the method.
 Allows to call synchronously from the code of a given class its actual
 overridden methods (oneways, here), including from child classes.
 
-See executeOneway/2.
+See `executeOneway/2`.
 
 Const oneways return nothing.
 """.
@@ -459,7 +458,7 @@ overridden version of the method.
 Allows to call synchronously from the code of a given class its actual
 overridden methods (oneways, here), including from child classes.
 
-See executeOneway/2.
+See `executeOneway/2`.
 
 Returns an updated state.
 """.
@@ -523,7 +522,7 @@ any overridden version of the method.
 Allows to call synchronously from the code of a given class its actual
 overridden methods (oneways, here), including from child classes.
 
-See executeOneway/2.
+See `executeOneway/2`.
 
 Const oneways return nothing.
 """.
@@ -545,7 +544,7 @@ defined by the specified parent class of the current instance.
 Allows to call synchronously from the code of a given class a version defined
 through its inheritance tree.
 
-See executeOneway/2.
+See `executeOneway/2`.
 
 Returns an updated state.
 """.
@@ -591,7 +590,7 @@ any overridden version of the method.
 Allows to call synchronously from the code of a given class its actual
 overridden methods (oneways, here), including from child classes.
 
-See executeOneway/2.
+See `executeOneway/2`.
 
 Const oneways return nothing.
 """.
@@ -613,7 +612,7 @@ specified parent class of the current instance.
 Allows to call synchronously from the code of a given class a version defined
 through its inheritance tree.
 
-See executeOneway/2.
+See `executeOneway/2`.
 
 Returns an updated state.
 """.
@@ -673,7 +672,7 @@ the specified parent class of the current instance.
 Allows to call synchronously from the code of a given class a version defined
 through its inheritance tree.
 
-See executeOneway/2.
+See `executeOneway/2`.
 
 Const oneways return nothing.
 """.
