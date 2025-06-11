@@ -145,8 +145,8 @@ If the method fails, it will fail according to its nature:
 - if it is a oneway, the instance process will exit on error
 
 If it does not fail but returns an unexpected result (i.e. not a tuple beginning
-with the atom 'return'), an error tuple beginning with the atom
-'wooper_method_faulty_return' is returned with an unchanged state.
+with the atom `return`), an error tuple beginning with the atom
+`wooper_method_faulty_return` is returned with an unchanged state.
 
 If its execution succeeds, then `{wooper_result,Result}` is returned (with
 Result being the actual result of the method call) with an updated state.
@@ -207,10 +207,11 @@ wooper_execute_method( MethodAtom, Parameters, State )
 
 				_ ->
 
-					% This is a request, returns the state and an error term,
-					% and rely on the calling function (e.g. wooper_main_loop)
-					% to crash *after* having performed any relevant action
-					% (e.g. send back a relevant answer):
+					% This is a request, returns the state and an error term;
+					% rely on the calling function (e.g. wooper_main_loop, which
+					% uses a try/catch) to crash *after* having performed any
+					% relevant action (e.g. logging and sending back a relevant
+					% answer):
 					%
 					wooper:log_error(
 						"request ~ts:~ts/~B not found, parameters were:~n~p~n",
@@ -245,8 +246,8 @@ If the method fails, it will fail according to its nature:
 - if it is a oneway, the instance process will exit on error
 
 If it does not fail but returns an unexpected result (i.e. not a tuple beginning
-with the atom 'return'), an error tuple beginning with the atom
-'wooper_method_faulty_return' is returned with an unchanged state.
+with the atom `return`), an error tuple beginning with the atom
+`wooper_method_faulty_return` is returned with an unchanged state.
 
 If its execution succeeds, then `{wooper_result,Result}` is returned (with
 Result being the actual result of the method call) with an updated state.
