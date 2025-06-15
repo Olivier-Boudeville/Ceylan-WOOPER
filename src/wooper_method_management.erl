@@ -55,6 +55,13 @@ management**.
 		  function_to_oneway_info/2, oneway_to_function_info/2,
 		  function_to_static_info/2, static_to_function_info/2,
 
+          is_valid_method_call/1,
+          is_valid_request_call/1, is_valid_base_request_call/1,
+          is_valid_oneway_call/1,
+
+          is_valid_method_name/1,
+          is_valid_request_name/1, is_valid_oneway_name/1,
+
 		  format_log/2 ]).
 
 
@@ -87,7 +94,7 @@ may be temporarily not identified in terms of nature)
 
 
 
-% Shorthands:
+% Type shorthands:
 
 -type location() :: ast_base:form_location().
 -type file_loc() :: ast_base:file_loc().
@@ -122,6 +129,7 @@ may be temporarily not identified in terms of nature)
 -type oneway_table() :: wooper_info:oneway_table().
 -type static_table() :: wooper_info:static_table().
 -type method_qualifiers() :: wooper:method_qualifiers().
+
 
 
 % Comment to disable logging (too detailed, almost untractable even to display):
@@ -2848,6 +2856,92 @@ methods_to_functions( RequestTable, OnewayTable, StaticTable,
 			|| { StId, StInfo } <- StaticPairs ],
 
 	table:add_new_entries( StaticAsFunPairs, WithOnewaysFunTable ).
+
+
+
+-doc """
+Tells whether the specified term is a valid method call.
+
+Refer to the `wooper:method_call/0` type.
+""".
+-spec is_valid_method_call( term() ) -> boolean().
+is_valid_method_call( Term ) ->
+    is_valid_request_call( Term ) orelse is_valid_oneway_call( Term ).
+
+
+-doc """
+Tells whether the specified term is a valid request call.
+
+Refer to the `wooper:request_call/0` type.
+""".
+-spec is_valid_request_call( term() ) -> boolean().
+% No constraint on arguments exist ([any()] | any()):
+is_valid_request_call( _T={ ReqName, _ReqArgs, ReqSenderPid } ) ->
+    is_valid_method_name( ReqName ) andalso is_pid( ReqSenderPid );
+
+is_valid_request_call( _T ) ->
+    false.
+
+
+-doc """
+Tells whether the specified term is a valid base request call.
+
+Refer to the `wooper:base_request_call/0` type.
+""".
+-spec is_valid_base_request_call( term() ) -> boolean().
+% No constraint on arguments exist ([any()] | any()):
+is_valid_base_request_call( _T={ ReqName, _ReqArgs } ) ->
+    is_valid_method_name( ReqName );
+
+is_valid_base_request_call( _T ) ->
+    false.
+
+
+-doc """
+Tells whether the specified term is a valid oneway call.
+
+Refer to the `wooper:oneway_call/0` type.
+""".
+-spec is_valid_oneway_call( term() ) -> boolean().
+% No constraint on arguments exist ([any()] | any()):
+is_valid_oneway_call( _T={ OnwName, _OwnArgs } ) ->
+    is_valid_method_name( OnwName );
+
+is_valid_oneway_call( _T=OnwName ) ->
+    is_valid_method_name( OnwName ).
+
+
+% No is_valid_static_call/1 function would make sense, as calling a static
+% method is just calling an (unrestricted) function of a module.
+
+
+-doc "Tells whether the specified term is a valid method name.".
+-spec is_valid_method_name( term() ) -> boolean().
+is_valid_method_name( Name ) when is_atom( Name ) ->
+    true;
+
+is_valid_method_name( _Name ) ->
+    false.
+
+
+
+-doc "Tells whether the specified term is a valid request name.".
+-spec is_valid_request_name( term() ) -> boolean().
+is_valid_request_name( Name ) when is_atom( Name ) ->
+    true;
+
+is_valid_request_name( _Name ) ->
+    false.
+
+
+
+-doc "Tells whether the specified term is a valid oneway name.".
+-spec is_valid_oneway_name( term() ) -> boolean().
+is_valid_oneway_name( Name ) when is_atom( Name ) ->
+    true;
+
+is_valid_oneway_name( _Name ) ->
+    false.
 
 
 
