@@ -208,7 +208,7 @@ virtual table.
 %    Arg2 :: method_argument(), ... ) -> request_return( T ).
 
 
--doc "Name of a request method.".
+-doc "The name of a request method.".
 -type request_name() :: method_name().
 
 
@@ -218,12 +218,12 @@ virtual table.
 %    Arg2 :: method_argument(), ... ) -> oneway_return().
 
 
--doc "Name of a oneway method.".
+-doc "The name of a oneway method.".
 -type oneway_name()  :: method_name().
 
 
 
--doc "Name of a static method.".
+-doc "The name of a static method.".
 -type static_name()  :: method_name().
 
 
@@ -418,8 +418,26 @@ instance (clearer that just pid()).
 -type caller_pid() :: pid().
 
 
+-doc "A term corresponding to the message sent in order to trigger a method.".
+-type method_call() :: request_call() | oneway_call().
+
+
+-doc "A term corresponding to the message sent in order to trigger a request.".
 -type request_call() :: { request_name(), method_arguments(), caller_pid() }.
+
+
+-doc """
+A term corresponding to base information in order to describe a request.
+
+Useful to describe a potential request, to be triggered just by adding the
+caller PID.
+""".
+-type base_request_call() :: { request_name(), method_arguments() }.
+
+
+-doc "A term corresponding to the message sent in order to trigger a oneway.".
 -type oneway_call()  :: { oneway_name(), method_arguments() } | oneway_name().
+
 
 
 % Otherwise wooper_execute_method_as/4 is unused:
@@ -461,7 +479,9 @@ one).
 			   attribute_name/0, attribute_value/0, attribute_entry/0,
 			   attribute_type/0, attribute_qualifier/0,
 			   instance_pid/0, passive_instance/0,
-			   caller_pid/0, request_call/0, oneway_call/0,
+			   caller_pid/0,
+               method_call/0, request_call/0, base_request_call/0,
+               oneway_call/0,
 			   state/0, function_export_set/0 ]).
 
 
