@@ -79,7 +79,7 @@ executeRequest( State, RequestAtom ) when is_record( State, state_holder )
 										   _ArgumentList=[] );
 
 executeRequest( State, RequestAtomError )
-						when is_record( State, state_holder ) ->
+                                        when is_record( State, state_holder ) ->
 
 	wooper:log_error( "when executing local request: '~p' is not an atom.",
 					  [ RequestAtomError ], State ),

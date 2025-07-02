@@ -361,7 +361,7 @@ wooper_lookup_method( State, MethodAtom, Arity ) ->
 -doc """
 Executes the specified method, as the specified class.
 
-Exactly as wooper_execute_method/3, except that the target module (class) is
+Exactly as `wooper_execute_method/3`, except that the target module (class) is
 directly specified, instead of being determined from the instance virtual table.
 
 (helper)

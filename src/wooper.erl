@@ -29,8 +29,6 @@
 
 -moduledoc """
 Module containing some **general facilities for WOOPER class developers**.
-
-Better placed in a standalone module than duplicated in each class.
 """.
 
 
@@ -183,21 +181,21 @@ Better placed in a standalone module than duplicated in each class.
 
 
 -doc """
-An atom prefixed with 'class_'; could be basic_utils:module_name() as well.
+An atom prefixed with `class_`; could be `basic_utils:module_name/0` as well.
 """.
 -type classname() :: atom().
 
 
 
 -doc """
-The key in the persistent_term registry corresponding to a class, to fetch its
+The key in the `persistent_term` registry corresponding to a class, to fetch its
 virtual table.
 """.
 -type class_key() :: term().
 
 
 
--doc "A method name (e.g. 'setColor').".
+-doc "A method name (e.g. `setColor`).".
 -type method_name() :: meta_utils:function_name().
 
 
@@ -284,7 +282,7 @@ Standalone (non-list) arguments may also be specified in calls.
 -doc """
 The qualifiers applying to a method.
 
-Now we recommend using directly [method_qualifier()] instead (deemed clearer).
+Now we recommend using directly `[method_qualifier()]` instead (deemed clearer).
 """.
 -type method_qualifiers() :: [ method_qualifier() ].
 
@@ -297,7 +295,7 @@ Now we recommend using directly [method_qualifier()] instead (deemed clearer).
 -doc """
 Parameters used to construct an instance.".
 
-Now we recommend using directly [construction_parameter()] instead (deemed
+Now we recommend using directly `[construction_parameter()]` instead (deemed
 clearer).
 """.
 -type construction_parameters() :: [ construction_parameter() ].
@@ -318,7 +316,7 @@ Describes the outcome of a set of requests: either all succeeded, or some failed
 
 -doc """
 Just an internal convenience type (not to be mixed up with the lot more
-essential request_return/1 type).
+essential `request_return/1` type).
 """.
 -type request_result( T ) :: T.
 
@@ -413,7 +411,7 @@ symbol to ensure that a request was synchronously executed).
 
 -doc """
 PID of a process (not necessarily a WOOPER instance) interacting with such an
-instance (clearer that just pid()).
+instance (clearer that just `pid/0`).
 """.
 -type caller_pid() :: pid().
 
@@ -451,7 +449,7 @@ caller PID.
 
 
 -doc """
-Allows to record the functions exported by a module (typically the 'wooper'
+Allows to record the functions exported by a module (typically the `wooper`
 one).
 """.
 -type function_export_set() :: set_utils:set( meta_utils:function_id() ).
@@ -668,8 +666,6 @@ execute_request_waiter( TargetInstancePID, RequestName, RequestArgs ) ->
 Sends the specified request to the specified instance and waits indefinitively
 for its specified, expected returned value (supposing none is already waiting
 among the received messages) that is usually an atom.
-
-(helper)
 """.
 -spec execute_request( instance_pid(), request_name(), method_arguments(),
 					   method_internal_result() ) -> void().
@@ -942,7 +938,6 @@ each of the specified target instances.
 No waiting/receiving of the request results performed here.
 
 (helper)
-
 """.
 -spec send_requests( request_name(), method_arguments(), [ instance_pid() ] ) ->
 						void().
@@ -1083,7 +1078,7 @@ requested instances, unless the specified time-out is exceeded (specified as
 integer milliseconds or as the 'infinity' atom).
 
 Allows to trigger requests (supposingly returning all the same, specified
-term)in parallel yet being able to wait synchronously for them, and know which,
+term) in parallel yet being able to wait synchronously for them, and know which,
 if any, did not answer.
 
 (helper)
@@ -1284,7 +1279,7 @@ Sends directly the specified series of requests (based on their respective names
 and arguments) to the specified (single) target instance.
 
 Request answers not specifically managed by this function, see
-obtain_results_for_request_series/2 to manage requests and results in one go.
+`obtain_results_for_request_series/2` to manage requests and results in one go.
 
 (helper)
 """.
@@ -1779,8 +1774,8 @@ execute_oneway( PassiveInstance, OnewayName )
 
 
 -doc """
-Executes the specified oneway on the specified passive instance, with specified
-arguments
+Executes the specified oneway on the specified passive instance, with the
+specified arguments.
 """.
 -spec execute_oneway( instance_pid(), oneway_name(), method_arguments() ) ->
 							void();
@@ -1824,11 +1819,7 @@ execute_oneway( PassiveInstance, OnewayName, OnewayArg )
 % Helpers.
 
 
--doc """
-Returns the state of a blank WOOPER instance of the specified class.
-
-(helper)
-""".
+-doc "Returns the state of a blank WOOPER instance of the specified class.".
 -spec get_blank_state( classname() ) -> wooper:state().
 get_blank_state( Classname ) ->
 
@@ -1852,14 +1843,12 @@ get_blank_state( Classname ) ->
 
 
 -doc """
-WOOPER default EXIT message handler; called if trapping EXIT signals.
+WOOPER default `EXIT` message handler; called if trapping EXIT signals.
 
-It can be overridden by defining or inheriting the onWOOPERExitReceived/3
+It can be overridden by defining or inheriting the `onWOOPERExitReceived/3`
 oneway.
 
 Returns an updated state.
-
-(helper)
 """.
 -spec default_exit_handler( basic_utils:pid_or_port(), exit_reason(),
 							wooper:state() ) -> wooper:state().
@@ -1874,15 +1863,13 @@ default_exit_handler( PidOrPort, ExitReason, State ) ->
 
 
 -doc """
-WOOPER default DOWN handler, for process monitors.
+WOOPER default `DOWN` handler, for process monitors.
 
-It can be overridden by defining or inheriting the onWOOPERDownNotified/5
+It can be overridden by defining or inheriting the `onWOOPERDownNotified/5`
 oneway.
 
-Note: not to be mixed up with the default_node_down_handler/3 /
-onWOOPERNodeDisconnection/3 pair (which is node-related).
-
-(helper)
+Note: not to be mixed up with the `default_node_down_handler/3` /
+`onWOOPERNodeDisconnection/3` pair (which is node-related).
 """.
 -spec default_down_handler( monitor_utils:monitor_reference(),
 	monitor_utils:monitored_element_type(), monitor_utils:monitored_element(),
@@ -1908,12 +1895,10 @@ default_down_handler( MonitorReference, MonitoredType, MonitoredElement,
 -doc """
 WOOPER default node up handler.
 
-It can be overridden by defining or inheriting the onWOOPERNodeConnection/3
+It can be overridden by defining or inheriting the `onWOOPERNodeConnection/3`
 oneway.
 
 Returns an updated state.
-
-(helper)
 """.
 -spec default_node_up_handler( atom_node_name(), monitor_node_info(),
 							   wooper:state() ) -> wooper:state().
@@ -1931,13 +1916,13 @@ default_node_up_handler( Node, MonitorNodeInfo, State ) ->
 -doc """
 WOOPER default node down handler.
 
-It can be overridden by defining or inheriting the onWOOPERNodeDisconnection/3
+It can be overridden by defining or inheriting the `onWOOPERNodeDisconnection/3`
 oneway.
 
 Returns an updated state.
 
-Note: not to be mixed up with the default_down_handler/5 /
-onWOOPERDownNotified/5 pair (which is process-related).
+Note: not to be mixed up with the `default_down_handler/5` /
+`onWOOPERDownNotified/5` pair (which is process-related).
 """.
 -spec default_node_down_handler( atom_node_name(), monitor_node_info(),
 								 wooper:state() ) -> wooper:state().
@@ -1960,8 +1945,6 @@ Note: the key could be directly guessed by the instance; the interest here is
 mostly for synchronisation (to ensure that a suitable entry for the current
 class exists in the persistent_term registry, otherwise race conditions could
 happen).
-
-(helper)
 """.
 -spec retrieve_virtual_table_key( classname() ) -> class_key().
 
@@ -2001,11 +1984,7 @@ retrieve_virtual_table_key( Classname ) ->
 
 
 
--doc """
-Triggers the specified construction error (notify and throw).
-
-(helper)
-""".
+-doc "Triggers the specified construction error (notify and throw).".
 -spec trigger_error( exception_class(), exception_term(), classname(),
 			[ method_arguments() ], stack_trace() ) -> no_return().
 trigger_error( _ExceptionClass, _ExceptionTerm=undef, Classname,
@@ -2098,8 +2077,6 @@ get_location_string( Loc, _NextCalls ) ->
 Returns the actual classname of the specified instance.
 
 Can be trusted (reliable in all cases).
-
-(helper)
 """.
 -spec get_classname( wooper:state() ) -> classname().
 get_classname( _State=#state_holder{ actual_class=Classname } ) ->
@@ -2114,7 +2091,7 @@ specified, or of the specified classname.
 Note that:
 - superclasses will be returned breadth-first in the inheritance tree
 - in case of diamond-shaped inheritance, a given superclass may be listed more
-than once (list_utils:uniquify/1 may then be used)
+than once (`list_utils:uniquify/1` may then be used)
 
 For example:
 ```
@@ -2124,8 +2101,8 @@ For example:
 
 Not static to avoid making class modules heavier.
 
-See the get_superclasses/0 static method to list only the direct superclasses of
-the corresponding class.
+See the `get_superclasses/0` static method to list only the direct superclasses
+of the corresponding class.
 """.
 -spec get_all_superclasses( wooper:state() | classname() ) -> [ classname() ].
 get_all_superclasses( _State=#state_holder{ actual_class=Classname } ) ->
@@ -2168,8 +2145,6 @@ check_instance_of( Classname, State ) ->
 -doc """
 Returns the (user-level) attributes known of WOOPER for the specified state
 (that is all attributes except the ones used internally by WOOPER).
-
-(helper)
 """.
 -spec get_attribute_pairs( wooper:state() ) -> [ attribute_entry() ].
 get_attribute_pairs( State ) ->
@@ -2253,7 +2228,7 @@ state_to_string( State ) ->
 -doc """
 Returns the source filename associated to the specified class.
 
-For example get_class_filename('class_Foo') returns simply "class_Foo.erl".
+For example `get_class_filename('class_Foo')` returns simply `"class_Foo.erl"`.
 """.
 -spec get_class_filename( classname() ) -> file_utils:filename().
 get_class_filename( Classname ) ->
@@ -2287,8 +2262,6 @@ get_synchronous_time_out( _IsDebugMode=false ) ->
 -doc """
 Returns a textual representation of the virtual table corresponding to the
 specified state.
-
-(helper)
 """.
 -spec virtual_table_to_string( wooper:state() ) -> ustring().
 virtual_table_to_string( State ) ->
@@ -2312,8 +2285,6 @@ virtual_table_to_string( State ) ->
 -doc """
 Returns a textual representation of this instance, including its state and
 virtual table.
-
-(helper)
 """.
 -spec instance_to_string( wooper:state() ) -> ustring().
 instance_to_string( State ) ->
@@ -2360,8 +2331,8 @@ display_instance( State ) ->
 
 
 -doc """
-Returns all the attributes of this instance, as a list of {AttributeName,
-AttributeValue} pairs.
+Returns all the attributes of this instance, as a list of `{AttributeName,
+AttributeValue}` pairs.
 """.
 -spec get_all_attributes( wooper:state() ) -> [ attribute_entry() ].
 get_all_attributes( State ) ->
@@ -2375,11 +2346,11 @@ Ceylan-WOOPER can be fully usable from then on.
 
 Note:
 
-- the code_utils.beam module of Ceylan-Myriad must be available from the current
+- the `code_utils` module of Ceylan-Myriad must be available from the current
 code path
 
-- the CEYLAN_MYRIAD and CEYLAN_WOOPER environment variables must be defined and
-must point to the respective root directories
+- the `CEYLAN_MYRIAD` and `CEYLAN_WOOPER` environment variables must be defined
+and must point to the respective root directories
 
 - the determined directories are not specifically checked for existence, and are
 added at the end of the code path
@@ -2541,9 +2512,10 @@ the caller, and have the process instance exit.
 		exception_class(), exception_term(), stack_trace(), wooper:state() ) ->
 								no_return().
 on_failed_request( RequestName, ArgumentList, CallerPid, ExceptionClass,
-	ExceptionTerm=undef,
-	_Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
-					| NextCalls ], State ) ->
+        ExceptionTerm=undef,
+        _Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs,
+                                   Loc } | NextCalls ],
+        State ) ->
 
 	Arity = length( ArgumentList ) + 1,
 
@@ -2680,12 +2652,10 @@ on_failed_oneway( OnewayName, ArgumentList, ExceptionClass, ExceptionTerm,
 
 
 -doc """
-Looks up the module defining specified method, and returns a textual prefix
+Looks up the module defining the specified method, and returns a textual prefix
 specifying it, if found.
 
 Used for error management, hence designed not to fail.
-
-(helper)
 """.
 -spec lookup_method_prefix( method_name(), arity(), wooper:state() ) ->
 									ustring().
@@ -2751,8 +2721,6 @@ send_and_listen( InstancePid, RequestName, Arguments ) ->
 -doc """
 Returns the result corresponding to the first pending WOOPER request (possibly
 the latest sent one), or blocks.
-
-(helper)
 """.
 -spec receive_result() -> request_result( any() ).
 receive_result() ->
@@ -2773,13 +2741,11 @@ receive_result() ->
 Deletes (asynchronously: "fire and forget") the WOOPER instance(s) potentially
 stored in the specified attribute list.
 
-Sets the corresponding attribute(s) to 'undefined', returns an updated state.
+Sets the corresponding attribute(s) to `undefined`, returns an updated state.
 
 For example in a destructor: `DeleteState = delete_any_instance_referenced_in([
 first_pid_attr, second_pid_attr], State)` or
 `delete_any_instance_referenced_in(my_pid_attr, State)`.
-
-(helper)
 """.
 -spec delete_any_instance_referenced_in( [ attribute_name() ],
 										 wooper:state() ) -> wooper:state().
@@ -2822,7 +2788,7 @@ Deletes (synchronously, in a parallel yet blocking manner) the WOOPER
 instance(s) potentially stored in specified attribute list (a standalone
 attribute may be specified as well).
 
-Sets the corresponding attribute(s) to 'undefined', returns an updated state.
+Sets the corresponding attribute(s) to `undefined`, returns an updated state.
 
 For example in a destructor: `NewState =
 delete_synchronously_any_instance_referenced_in([first_pid_attr,
@@ -2844,7 +2810,7 @@ time-out) and synchronously, in a parallel yet blocking manner, the WOOPER
 instance(s) potentially stored in the specified attribute list (a standalone
 attribute may be specified as well instead).
 
-Sets the corresponding attribute(s) to 'undefined', returns an updated state.
+Sets the corresponding attribute(s) to `undefined`, returns an updated state.
 
 For example in a destructor: `NewState =
 delete_synchronously_any_instance_referenced_in([first_pid_attr,
@@ -2866,7 +2832,7 @@ synchronous time-out) and synchronously, in a parallel yet blocking manner, the
 WOOPER instance(s) potentially stored in the specified attribute list (a
 standalone attribute may be specified as well instead).
 
-Sets the corresponding attribute(s) to 'undefined', returns an updated state.
+Sets the corresponding attribute(s) to `undefined`, returns an updated state.
 
 For example in a destructor: `NewState =
 delete_synchronously_any_instance_referenced_in([first_pid_attr,
@@ -2968,9 +2934,9 @@ delete_pid_from( [ Attr | T ], DeleteMessage, PreTestLiveliness, State,
 
 
 -doc """
-Deletes specified instance synchronously.
+Deletes the specified instance synchronously.
 
-Will wait forever the effective termination of the specified instance.
+Will wait forever its effective termination.
 """.
 -spec delete_synchronously_instance( instance_pid() ) -> void().
 delete_synchronously_instance( InstancePid ) ->
@@ -3171,7 +3137,7 @@ get_exported_functions_set() ->
 
 -doc """
 Checks that specified attribute is indeed associated to a value equal to
-'undefined'.
+`undefined`.
 """.
 -spec check_undefined( attribute_name(), wooper:state() ) -> void().
 check_undefined( AttributeName, State ) ->
@@ -3201,7 +3167,7 @@ check_undefined( AttributeName, State ) ->
 
 -doc """
 Checks that all specified attributes are indeed associated to a value equal to
-'undefined'.
+`undefined`.
 """.
 -spec check_all_undefined( [ attribute_name() ], wooper:state() ) -> void().
 check_all_undefined( AttributeNames, State ) ->
