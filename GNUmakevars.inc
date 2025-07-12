@@ -136,7 +136,7 @@ endif
 # The uniquely-defined version of this layer, for all uses (including rebar, hex
 # and the code itself, see wooper_utils:get_wooper_version{_string,}/0):
 #
-WOOPER_VERSION := 2.0.31
+WOOPER_VERSION := 2.0.32
 
 
 # PROJECT_VERSION should be defined on a per-project basis.
