@@ -193,8 +193,9 @@ WOOPER_REBAR_BUILD_BASE = $(MYRIAD_REBAR_BUILD_DIR)/lib/wooper
 
 
 # When building WOOPER in an OTP context from its usual (Git) root (e.g. with
-# 'make rebar3-application'), the BEAMs of Myriad are to be found in the OTP
-# build tree - rather than in a supposedly fully-built usual root for Myriad:
+# 'make rebar3-application'), the BEAMs of Myriad (the layer just below it) are
+# to be found in the OTP build tree - rather than in a supposedly fully-built
+# usual root for Myriad:
 #
 # (these information are useful only at compilation-time, in order to locate the
 # needed parse transforms and their dependencies; at runtime, the OTP rules
@@ -341,6 +342,8 @@ endif
 #
 COMPILER_PARSE_TRANSFORM_FOR_WOOPER_CLASSES_OPT = \
 	'+{parse_transform,wooper_parse_transform}'
+
+
 
 
 # For later reuse in the next layer of the software stack:
