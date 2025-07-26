@@ -206,7 +206,7 @@ ideas])`.
 See also: the `getAttrList/1` macro shorthand.
 """.
 -spec getAttributes( wooper:state(), [ attribute_name() ] ) ->
-							[ attribute_value() ].
+                                            [ attribute_value() ].
 getAttributes( State, AttributeNameList ) ->
 	?wooper_table_type:get_values( AttributeNameList,
 								   State#state_holder.attribute_table ).
@@ -226,7 +226,7 @@ Useful only in specific contexts, like when preferring composition over
 inheritance, where an attribute may not be even defined.
 """.
 -spec getMaybeAttribute( wooper:state(), attribute_name() ) ->
-								option( attribute_value() ).
+                                            option( attribute_value() ).
 getMaybeAttribute( State, AttributeName ) ->
 	case ?wooper_table_type:lookup_entry( AttributeName,
 			State#state_holder.attribute_table ) of
