@@ -958,17 +958,19 @@ Note that ``State`` can be used as always, and that even there it is not reporte
 Sender PID
 **********
 
-Requests can access to one more information than oneways: the PID of the caller that sent the request. As WOOPER takes care automatically of sending back the result to the caller, having the request know explicitly the caller is usually not useful, thus the caller PID does not appear explicitly in request signatures, among the actual parameters.
+Requests can access to one more piece of information than oneways: the PID of the caller that sent the request (this PID has to be known of the instance in some way, as the requester expects a result from it).
 
-However WOOPER keeps track of this information, which remains available to requests, and may be useful for some of them.
+As WOOPER takes care automatically of sending back the result to the caller, having the request know explicitly the caller is usually not useful; so the caller PID does not appear explicitly in request signatures, among the actual parameters.
+
+However WOOPER keeps track of this information, which remains available to requests, and may be useful to some of them.
 
 From a request body, the caller PID can indeed be retrieved by using the ``getSender/0`` macro, which is automatically managed by WOOPER:
 
 .. code:: erlang
 
- giveBirth(State,NumberOfMaleChildren,NumberOfFemaleChildren) ->
+ giveBirth(State, NumberOfMaleChildren, NumberOfFemaleChildren) ->
 	 [..]
-	 CallerPID = ?getSender(),
+	 CallerPid = ?getSender(),
 	 [..]
 
 
@@ -976,21 +978,22 @@ Thus a request has natively access to its caller PID, i.e. with no need to speci
 
 .. code:: erlang
 
- MyCat ! {giveBirth,[2,3,self()],self()}
+ MyCat ! {giveBirth, [2,3,self()], self()}
 
-one can rely on only:
+one can rely simply on a more satisfactory:
 
 .. code:: erlang
 
- MyCat ! {giveBirth,[2,3],self()}
+ MyCat ! {giveBirth, [2,3], self()}
 
 
-while still letting the possibility for the called request (here ``giveBirth/3``, for a state and two parameters) to access the caller PID thanks to the ``getSender/0`` macro, and maybe store it for a later use or do anything appropriate with it.
+while still letting the possibility for the called request (here ``giveBirth/3``, for a state and two parameters) to access the caller PID thanks to its ``getSender/0`` macro, and maybe store it for a later use, or do anything appropriate with it.
 
 Note that:
 
 - having to handle explicitly the caller PID is rather uncommon, as WOOPER takes care automatically of the sending of the result back to the caller
 - the ``getSender/0`` macro should only be used for requests, as of course the sender PID has no meaning in the case of oneways; if that macro is called nevertheless from a oneway, then it returns the atom ``undefined``.
+
 
 
 Failsafe Request Calls
@@ -1835,6 +1838,40 @@ The less usual cases where a value must be read from a state variable that is *n
 
 
 
+The ``getAttributes/2`` function
+********************************
+
+In order to obtain the values of, this time, an (ordered) **list** of attributes, one may use the ``getAttributes/2`` function.
+
+
+Its type specification is:
+
+.. code:: erlang
+
+ -spec getAttributes( wooper:state(), [ attribute_name() ] ) ->
+											[ attribute_value() ].
+
+
+For example:
+
+.. code:: erlang
+
+  [MyCount, MyAge, MyIdeas] = getAttribute(SomeState,
+	  [count, age, ideas]).
+
+
+
+The ``getAttrList/1`` macro
+***************************
+
+As for ``getAttr/1``, quite often, when having to retrieve the value of attributes from a state variable, that variable will be named ``State``, notably when using directly the original state specified in the method declaration.
+
+In this case, in order to obtain from such a state, in a single operation, the value of multiple attributes, the ``getAttrList/1`` *macro* can be used: ``?getAttrList([count, age, ideas])`` expands (literally) as ``getAttributes(State, [count, age, ideas])``, and is a tad shorter.
+
+Refer to the ``getAttr/1`` macro for further details.
+
+
+
 The ``getMaybeAttribute/2`` function
 ************************************
 
@@ -1845,12 +1882,12 @@ Its type specification is:
 .. code:: erlang
 
  -spec getMaybeAttribute(wooper:state(), attribute_name()) ->
-		  maybe({'value', attribute_value()}).
+		  option({'value', attribute_value()}).
 
 
 Note that:
 
-- thanks to Myriad, ``maybe(T) :: T | 'undefined'``
+- thanks to Myriad, ``option(T) :: T | 'undefined'`` (knowing that ``maybe`` is now a keyword reserved by Erlang)
 - the ``value`` atom tag is used to discriminate a non-existing attribute from one whose value is ``undefined``
 
 For example:
@@ -1881,7 +1918,7 @@ Like the ``getAttribute/2`` function has the ``getAttr/1`` macro, to the ``getMa
 
 This macro should be used *only* if the attribute of interest cannot have the ``undefined`` value, as this macro returns directly the value ``V`` obtained (if any), instead of its ``{value,V}`` tagged version [#]_.
 
-.. [#] Indeed, for convenience, this macro returns values of type ``maybe(attribute_value())`` (not of the ``maybe({'value', attribute_value()})`` type, thus an attribute set to the ``undefined`` value could not be discriminated from a non-defined attribute).
+.. [#] Indeed, for convenience, this macro returns values of type ``option(attribute_value())`` (not of the ``option({'value', attribute_value()})`` type, thus an attribute set to the ``undefined`` value could not be discriminated from a non-defined attribute).
 
 
 For example, to return the value of a possibly-defined attribute named ``my_description``, whose value is known to never be equal to ``undefined`` (for example because it is a string in all cases):
@@ -2275,7 +2312,7 @@ WOOPER also provides a few `general-purpose interfaces <https://github.com/Olivi
   ..
   .. An instance of the Foobar class would then be deemed Describable iff its ``my_description``  member variable would be set to a non-null pointer. Doing so may be considered more flexible than for example having Foobar be a child class of a Describable interface (as (1) this eliminates a use of multiple inheritance, and (2) allows some instances of Foobar to be Describable, whereas others not).
   ..
-  .. In WOOPER this *could* translate to defining an attribute named ``my_description`` whose value would be of type ``maybe(description())`` [#]_.
+  .. In WOOPER this *could* translate to defining an attribute named ``my_description`` whose value would be of type ``option(description())`` [#]_.
   ..
   .. .. [#] Whatever the ``description()`` type may be - provided, for disambiguation, that it does not include the ``undefined`` atom.
   ..
@@ -2332,7 +2369,7 @@ WOOPER also provides a few `general-purpose interfaces <https://github.com/Olivi
   ..  %
   ..  % (exported helper)
   ..  %
-  ..  -spec get_maybe_description(wooper:state()) -> maybe(description()).
+  ..  -spec get_maybe_description(wooper:state()) -> option(description()).
   ..  get_maybe_description(State) ->
   ..    % As here the description() type does not include the 'undefined' atom:
   ..    ?getMaybeAttr(my_description).
@@ -3443,7 +3480,7 @@ No **warning** should be tolerated in code using WOOPER, as we *never* found use
 
 .. With the hashtable-based version of WOOPER,
 
-All **attributes** of an instance should better be defined **from the constructor**, instead of being dynamically added during the life of the instance; otherwise the methods would have to deal with some attributes that may, or may not, be defined; if no proper value exists for an attribute at the creation of an instance, then its value should just be set to the atom ``undefined``; its type should then go from ``T()`` to ``maybe(T())``.
+All **attributes** of an instance should better be defined **from the constructor**, instead of being dynamically added during the life of the instance; otherwise the methods would have to deal with some attributes that may, or may not, be defined; if no proper value exists for an attribute at the creation of an instance, then its value should just be set to the atom ``undefined``; its type should then go from ``T()`` to ``option(T())``.
 
 **Class-specific attributes** should be specified (using the ``class_attributes`` define), as doing so brings up much useful information to the developer/maintainer.
 
@@ -3991,7 +4028,7 @@ WOOPER is the second level of a software stack beginning with Erlang and then My
 
 If the initial versions of WOOPER were mostly based on macros and headers, newer ones rely on the Erlang way of doing metaprogramming, namely parse-transforms.
 
-More precisely, the sources of a user-defined class are transformed by the standard Erlang toolchain (``erlc`` compiler) into an AST (*Abstract Syntax Tree*), which is first transformed by WOOPER (e.g. to generate the new operators, to export any destructor, etc.) and then by Myriad (e.g. to support newer types such as ``void/0``, ``maybe/1`` or ``table/2``), which also provides much of the AST transformation support.
+More precisely, the sources of a user-defined class are transformed by the standard Erlang toolchain (``erlc`` compiler) into an AST (*Abstract Syntax Tree*), which is first transformed by WOOPER (e.g. to generate the new operators, to export any destructor, etc.) and then by Myriad (e.g. to support newer types such as ``void/0``, ``option/1`` or ``table/2``), which also provides much of the AST transformation support.
 
 
 
