@@ -29,6 +29,9 @@
 
 -moduledoc """
 Testing the **management of the methods** of a class.
+
+See also the ``class_MethodTester`` module, the implementation of the test
+instances used here.
 """.
 
 
@@ -45,7 +48,7 @@ run() ->
 
 	test_facilities:display( "Running method test." ),
 
-	TestedPid = class_MethodTester:new_link(),
+	TestedPid = class_MethodTester:new_link( _Id=1 ),
 
 	test_facilities:display( "Instance ~p created, calling first request.",
 							 [ TestedPid ] ),
@@ -108,5 +111,20 @@ run() ->
 	test_facilities:display( "Test success." ),
 
 	wooper:delete_synchronously_instance( TestedPid ),
+
+    TesterPids = [ class_MethodTester:new_link( Id )
+                    || Id <- lists:seq( 1, 5 ) ],
+
+    PidOfTesterOfId2 = list_utils:get_element_at( TesterPids, _Index=2 ),
+
+
+    % The class_MethodTester instance of identifier 2 is designed to answer too
+    % late:
+    %
+    % (tests also the order of results)
+    { _MaybeResults=[ 1, undefined, 3, 4, 5 ],
+      _TimedOutInstances=[ PidOfTesterOfId2 ] } =
+        wooper:execute_concurrent_request( TesterPids, _RequestName=getId,
+                                           _RequestArgs=[], _TimeOutMs=1000 ),
 
 	test_facilities:stop().

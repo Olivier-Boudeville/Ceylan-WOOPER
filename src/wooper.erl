@@ -61,6 +61,10 @@ Module containing some **general facilities for WOOPER class developers**.
 
 		  obtain_results_for_requests/3,
 
+          forge_concurrent_result/1, forge_concurrent_result/2,
+          execute_concurrent_request/2, execute_concurrent_request/3,
+          execute_concurrent_request/4, execute_concurrent_request/5,
+
 		  send_request_series/2, obtain_results_for_request_series/2,
 
 		  send_and_listen/3, receive_result/0 ]).
@@ -305,7 +309,7 @@ clearer).
 Describes the outcome of a set of requests: either all succeeded, or some failed
 (that are then specified).
 """.
--type requests_outcome() :: 'success' | { 'failure', [ pid() ] }.
+-type requests_outcome() :: 'success' | { 'failure', [ instance_pid() ] }.
 
 
 % To be specified more closely maybe:
@@ -455,8 +459,7 @@ one).
 -type function_export_set() :: set_utils:set( meta_utils:function_id() ).
 
 
-
-% We prefer having it prefixed by wooper:
+% We prefer having these types prefixed by this 'wooper' module:
 -export_type([ classname/0, class_key/0,
 			   method_name/0, request_name/0, oneway_name/0, static_name/0,
 			   method_arity/0,
@@ -480,7 +483,9 @@ one).
 			   caller_pid/0,
                method_call/0, request_call/0, base_request_call/0,
                oneway_call/0,
-			   state/0, function_export_set/0 ]).
+			   state/0, function_export_set/0,
+
+               concurrent_request_tag/0, concurrent_result/0 ]).
 
 
 % Type shorthands:
@@ -504,6 +509,8 @@ one).
 
 % In milliseconds, if finite.
 -type time_out() :: time_utils:time_out().
+
+-type ms_monotonic() :: time_utils:ms_monotonic().
 
 -type monitor_node_info() :: monitor_utils:monitor_node_info().
 
@@ -556,6 +563,58 @@ one).
 % Generally no wooper result expected to be already in the message queue or to
 % be received during these operations.
 
+
+-doc """
+A tag (actually any term, yet generally an atom) used to identify from which
+instance a request result is emanating, in the context of potentially concurrent
+calls made by a given caller.
+
+See also the `wooper_default_concurrent_request_tag` (atom) define.
+""".
+-type concurrent_request_tag() :: term().
+
+
+-doc """
+The result of a concurrent request made with a finite time-out.
+
+Allows to easily determine both what were the request results of the instances
+that responded on time, and which instances (if any) timed-out.
+
+The first list, `MaybeResults`, allows to fetch these obtained results (any
+available request result being placed at the same index in that list as the one
+of its instance PID in the caller-supplied target instance list; otherwise, if
+no result was obtained of the corresponding instance, `undefined` can be found
+at this index).
+
+The second list, `TimedOutInstances`, allows to determine whether any time-out
+occurred, and then, if yes, at the level of which of the target instances (no
+specific order is enforced between these PIDs).
+""".
+-type concurrent_outcome() ::
+    { _MaybeResults :: [ option( request_result() ) ],
+      _TimedOutInstances :: [ instance_pid() ] }.
+
+
+-doc """
+The type of actual results to be sent by requests that are designed to be called
+concurrently, so that the caller can determine from which instance each result
+came.
+
+Indeed, instead of just returning a given `Res` result term, such requests that
+are intended to be called in parallel on multiple instances are to return an
+actual result like `{SomeConcurrentReqTag, _MyInstancePid=self(), Res}` (where
+of course all these instances are expected to use the same tag).
+""".
+-type concurrent_result() ::
+    { concurrent_request_tag(), instance_pid(), method_internal_result() }.
+
+
+-doc """
+A table associating to each registered instance any available request result.
+
+Used to wait the results of multiple requests.
+""".
+-type result_table() :: table( instance_pid(), option( request_result() ) ).
 
 
 % A WOOPER request execution (hence a synchronous call) not yielding a result in
@@ -858,8 +917,8 @@ execute_const_oneway( PassiveInstance, OnewayName, OnewayArgs )
 
 -doc """
 Triggers in turn a request on the specified series of instances, sequentially
-(with no overlapping of their processing), and returns their respective, ordered
-results.
+(thus with no overlapping of their processing), and returns their respective,
+ordered results.
 
 No time-out applies: blocks indefinitely if an instance fails to answer.
 """.
@@ -879,10 +938,11 @@ send_request_in_turn( RequestName, RequestArgs, TargetInstancePIDs ) ->
 
 -doc """
 Triggers in turn a request on the specified series of instances, sequentially
-(with no overlapping of their processing), and returns their respective, ordered
-results.
+(thus with no overlapping of their processing), and returns their respective,
+ordered results.
 
-Throws an exception if an instance fails to answer within specified time-out.
+Throws an exception if an instance fails to answer within the specified
+time-out.
 """.
 -spec send_request_in_turn( request_name(), method_arguments(),
 		[ instance_pid() ], time_out() ) -> [ request_result() ].
@@ -903,7 +963,7 @@ send_request_in_turn( _RequestName, _RequestArgs, _TargetInstancePIDs=[],
 	lists:reverse( AccRes );
 
 send_request_in_turn( RequestName, RequestArgs,
-			_TargetInstancePIDs=[ InstancePid | H ], AccRes, Timeout ) ->
+		_TargetInstancePIDs=[ InstancePid | H ], AccRes, Timeout ) ->
 
 	InstancePid ! { RequestName, RequestArgs, self() },
 
@@ -935,12 +995,10 @@ send_request_in_turn( RequestName, RequestArgs,
 Sends (in parallel) the specified request (based on its name and arguments) to
 each of the specified target instances.
 
-No waiting/receiving of the request results performed here.
-
-(helper)
+No waiting/receiving of the request results performed here, just a bulk sending.
 """.
 -spec send_requests( request_name(), method_arguments(), [ instance_pid() ] ) ->
-						void().
+                                        void().
 send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 
 	Request = { RequestName, RequestArgs, self() },
@@ -973,6 +1031,9 @@ Sends (in parallel) the specified request (based on its name and arguments) to
 each of the specified target instances, and waits for their acknowledgement;
 returns whether it succeeded as a whole or if some instances triggered a
 time-out.
+
+No specific result can be obtained, just the acknowledgement that their
+execution succeeded.
 """.
 -spec send_requests_and_wait_acks( request_name(), method_arguments(),
 		[ instance_pid() ], time_out(), ack_term() ) -> requests_outcome().
@@ -986,9 +1047,9 @@ send_requests_and_wait_acks( RequestName, RequestArgs, TargetInstancePIDs,
 
 
 -doc """
-Triggers a oneway on the specified series of instances, sequentially (with no
-overlapping of their processing), and returns the ones that failed to report on
-time that they were executed.
+Triggers a oneway on the specified series of instances, sequentially (thus with
+no overlapping of their processing), and returns the ones that failed to report
+on time that they were executed.
 
 More precisely, for each of the specified instances, sends the specified oneway
 (expecting one of its specified arguments to contain the PID of the caller
@@ -998,7 +1059,7 @@ instance. Returns an (ordered, according to the input one) list of the PIDs of
 the instances that failed to answer on time, based on the specified time-out.
 """.
 -spec send_acknowledged_oneway_in_turn( oneway_name(), method_arguments(),
-		[ instance_pid() ], time_out(), ack_term() ) -> [ instance_pid() ].
+	[ instance_pid() ], time_out(), ack_term() ) -> [ instance_pid() ].
 send_acknowledged_oneway_in_turn( OnewayName, OnewayArgs, TargetInstancePIDs,
 								  Timeout, AckTerm ) ->
 
@@ -1020,7 +1081,8 @@ send_acked_oneway_in_turn_helper( _OnewayCall, _TargetInstancePIDs=[], _Timeout,
 	lists:reverse( FailedAcc );
 
 send_acked_oneway_in_turn_helper( OnewayCall,
-	  _TargetInstancePIDs=[ InstancePid | T ], Timeout, AckTerm, FailedAcc ) ->
+        _TargetInstancePIDs=[ InstancePid | T ], Timeout, AckTerm,
+        FailedAcc ) ->
 
 	%trace_bridge:debug_fmt( "Sending oneway call ~p to ~w, to be acknowledged "
 	%   "with the term '~p'.", [ OnewayCall, InstancePid, AckTerm ] ),
@@ -1046,7 +1108,7 @@ send_acked_oneway_in_turn_helper( OnewayCall,
 
 		trace_bridge:error_fmt( "Ack term '~p' not received for oneway call ~p "
 			"from ~w after a ~ts.", [ AckTerm, OnewayCall,
-			InstancePid, time_utils:time_out_to_string( Timeout ) ] ),
+                InstancePid, time_utils:time_out_to_string( Timeout ) ] ),
 
 		send_acked_oneway_in_turn_helper( OnewayCall, T, Timeout, AckTerm,
 										  [ InstancePid | FailedAcc ] )
@@ -1056,14 +1118,12 @@ send_acked_oneway_in_turn_helper( OnewayCall,
 
 
 -doc """
-Waits for an acknowledgement answer, based on specified term and on the PID of
-each of the specified requested instances, indefinitively (no time-out).
+Waits for an acknowledgement answer, based on the specified term and on the PID
+of each of the specified requested instances, indefinitively (no time-out).
 
 Allows to trigger requests (supposingly returning all the same, specified term)
 in parallel yet being able to wait synchronously for them, and know which, if
 any, did not answer.
-
-(helper)
 """.
 -spec wait_for_request_answers( [ instance_pid() ], ack_term() ) ->
 									requests_outcome().
@@ -1073,15 +1133,13 @@ wait_for_request_answers( RequestedPids, AckTerm ) ->
 
 
 -doc """
-Waits for an acknowledgement answer, based on specified term, from the specified
-requested instances, unless the specified time-out is exceeded (specified as
-integer milliseconds or as the 'infinity' atom).
+Waits for an acknowledgement answer, based on the specified term, from the
+specified requested instances, unless the specified time-out is exceeded
+(specified as integer milliseconds or as the `infinity` atom).
 
 Allows to trigger requests (supposingly returning all the same, specified
 term) in parallel yet being able to wait synchronously for them, and know which,
 if any, did not answer.
-
-(helper)
 """.
 -spec wait_for_request_answers( [ instance_pid() ], time_out(), ack_term() ) ->
 									requests_outcome().
@@ -1098,10 +1156,8 @@ wait_for_request_answers( RequestedPids, Timeout, AckTerm ) ->
 
 
 -doc """
-Waits, until end of time if necessary, for the specified ack term from specified
-processes.
-
-(helper)
+Waits, until end of time if necessary, for the specified ack term from the
+specified processes.
 """.
 wait_indefinitively_for_request_answers( _RequestedPids=[], _AckTerm ) ->
 	success;
@@ -1122,14 +1178,12 @@ wait_indefinitively_for_request_answers( RequestedPids, AckTerm ) ->
 
 
 -doc """
-Waits, until end of time if necessary, for the specified ack term from specified
-processes, based on specified initial timestamp.
-
-(helper)
+Waits, until end of time if necessary, for the specified ack term from the
+specified processes, based on the specified initial timestamp.
 """.
 wait_for_request_answers( RequestedPids, InitialTimestamp, Timeout, AckTerm ) ->
 	wait_for_request_answers( RequestedPids, InitialTimestamp, Timeout,
-							  _DefaultPollDuration=1000, AckTerm ).
+		_PollDuration=?wooper_default_poll_duration, AckTerm ).
 
 
 wait_for_request_answers( _RequestedPids=[], _InitialTimestamp, _Timeout,
@@ -1225,7 +1279,7 @@ wait_for_request_acknowledgements( Count, AckTerm, Timeout ) ->
 Sends the specified request to all specified instances for execution, in
 parallel, and returns the corresponding results, in indiscriminate order.
 
-Note: no specified order is enforced in the result list; hence this helper is
+Note: no specific order is enforced in the result list; hence this helper is
 meant to be used when we can collect each result regardless of its specific
 sender.
 
@@ -1334,6 +1388,326 @@ wait_request_series( WaitCount, Acc ) ->
 
 	end.
 
+
+
+% Subsection for concurrent requests.
+%
+% See method_management_test.erl for a complete test/example thereof.
+
+
+-doc """
+Returns a term, based on the specified actual result, suitable to be returned by
+concurrent requests that rely on the default concurrent request tag.
+""".
+-spec forge_concurrent_result( request_result() ) -> concurrent_result().
+forge_concurrent_result( ActualResult ) ->
+    forge_concurrent_result( ActualResult,
+        _ConcurrentRequestTag=?wooper_default_concurrent_request_tag ).
+
+
+
+-doc """
+Returns a term, based on the specified actual result, suitable to be returned by
+concurrent requests that rely on the specified concurrent request tag.
+""".
+-spec forge_concurrent_result( request_result(), concurrent_request_tag() ) ->
+                                            concurrent_result().
+forge_concurrent_result( ActualResult, ConcurrentRequestTag ) ->
+    { ConcurrentRequestTag, _InstPid=self(), ActualResult }.
+
+
+
+-doc """
+Executes the specified concurrent request (not taking any argument) in parallel
+on each of the specified instances, returning their result in the same order as
+their PIDs.
+
+No time-out is enforced (blocking for ever), and the default concurrent tag
+applies (refer to the wooper_default_concurrent_request_tag atom define).
+
+Returns directly all request results.
+
+Note that a concurrent request is a request returning a `concurrent_result/0`
+result; just sending its actual, raw result instead (hence not relying on
+`forge_concurrent_result/{1,2}`) will yield the current function to block
+indefinitively.
+""".
+-spec execute_concurrent_request( [ instance_pid() ], request_name() ) ->
+                                        [ request_result() ].
+execute_concurrent_request( TargetInstancePids, RequestName ) ->
+    execute_concurrent_request( TargetInstancePids, RequestName,
+                                _RequestArgs=[] ).
+
+
+
+-doc """
+Executes the specified request, with the specified arguments, in parallel on
+each of the specified instances, returning their result in the same order as
+their PIDs.
+
+No time-out is enforced (blocking for ever), and the default concurrent tag
+applies (refer to the wooper_default_concurrent_request_tag atom define).
+
+Returns directly all request results.
+
+Note that a concurrent request is a request returning a `concurrent_result/0`
+result; just sending its actual, raw result instead (hence not relying on
+`forge_concurrent_result/{1,2}`) will yield the current function to block
+indefinitively.
+""".
+-spec execute_concurrent_request( [ instance_pid() ], request_name(),
+                                  method_arguments() ) -> [ request_result() ].
+execute_concurrent_request( TargetInstancePids, RequestName, RequestArgs ) ->
+
+    { AllResults, _EmptyTimedOutInstanceList } = execute_concurrent_request(
+        TargetInstancePids, RequestName, RequestArgs, _TimeOut=infinity ),
+
+    AllResults.
+
+
+-doc """
+Executes the specified request, with the specified arguments, in parallel on
+each of the specified instances, returning the corresponding outcome, i.e. the
+request results (if any) in the same order as their PIDs, together with a list
+of any instances that failed to respond on time.
+
+The specified time-out will be enforced, and the default concurrent tag will be
+used (refer to the wooper_default_concurrent_request_tag atom define).
+
+Note that a concurrent request is a request returning a concurrent_result/0
+result; just sending its actual, raw result instead (hence not relying on
+forge_concurrent_result/{1,2}) will yield the current function to either block
+indefinitively or report only time-outs.
+""".
+-spec execute_concurrent_request( [ instance_pid() ], request_name(),
+    method_arguments(), time_out() ) -> concurrent_outcome().
+execute_concurrent_request( TargetInstancePids, RequestName, RequestArgs,
+                            TimeOut ) ->
+    execute_concurrent_request( TargetInstancePids, RequestName, RequestArgs,
+        TimeOut, _ConcurrentRequestTag=?wooper_default_concurrent_request_tag ).
+
+
+
+-doc """
+Executes the specified request, with the specified arguments, in parallel on
+each of the specified instances, returning the corresponding outcome, i.e. the
+request results (if any) in the same order as their PIDs, together with a list
+of any instances that failed to respond on time.
+
+The specified time-out will be enforced, and the specified concurrent tag will
+be used.
+
+Note that a concurrent request is a request returning a concurrent_result/0
+result; just sending its actual, raw result instead (hence not relying on
+forge_concurrent_result/{1,2}) will yield the current function to either block
+indefinitively or report only time-outs.
+""".
+-spec execute_concurrent_request( [ instance_pid() ], request_name(),
+    method_arguments(), time_out(), concurrent_request_tag() ) ->
+        concurrent_outcome().
+execute_concurrent_request( TargetInstancePids, RequestName, RequestArgs,
+                            _TimeOut=infinity, ConcurrentRequestTag ) ->
+
+    cond_utils:if_defined( wooper_debug_concurrent_requests,
+        trace_utils:debug_fmt( "Executing concurrently the {~ts,~p} request "
+            "on ~B instances (~ts), with no time-out, relying on the '~p' "
+            "concurrent request tag.",
+            [ RequestName, RequestArgs, length( TargetInstancePids ),
+              text_utils:pids_to_short_string( TargetInstancePids ),
+              ConcurrentRequestTag ] ) ),
+
+    send_requests( RequestName, RequestArgs, TargetInstancePids ),
+
+    ResultTable = table:new( [ { InstPid, _MaybeRes=undefined }
+                                    || InstPid <- TargetInstancePids ] ),
+
+    TargetResCount = length( TargetInstancePids ),
+
+    wait_for_concurrent_request_results( TargetInstancePids,
+        _MaybeFinalTimestamp=undefined, ConcurrentRequestTag, ResultTable,
+        _ResCount=0, TargetResCount );
+
+execute_concurrent_request( TargetInstancePids, RequestName, RequestArgs,
+                            TimeOutMs, ConcurrentRequestTag ) ->
+
+    % A 1-second granularity would be too coarse:
+    InitialTimestampMs = time_utils:get_monotonic_time(),
+
+    cond_utils:if_defined( wooper_debug_concurrent_requests,
+        trace_utils:debug_fmt( "Executing concurrently the {~ts,~p} request "
+            "on ~B instances (~ts), based on a ~ts, relying on the '~p' "
+            "concurrent request tag.",
+            [ RequestName, RequestArgs, length( TargetInstancePids ),
+              text_utils:pids_to_short_string( TargetInstancePids ),
+              time_utils:time_out_to_string( TimeOutMs ),
+              ConcurrentRequestTag ] ) ),
+
+    send_requests( RequestName, RequestArgs, TargetInstancePids ),
+
+    FinalTimestampMs = InitialTimestampMs + TimeOutMs,
+
+    ResultTable = table:new( [ { InstPid, _MaybeRes=undefined }
+                                    || InstPid <- TargetInstancePids ] ),
+
+    TargetResCount = length( TargetInstancePids ),
+
+    wait_for_concurrent_request_results( TargetInstancePids, FinalTimestampMs,
+        ConcurrentRequestTag, ResultTable, _ResCount=0, TargetResCount ).
+
+
+
+-doc """
+Waits, based on the specified concurrent tag, for the result of each of the
+specified requested instances, unless any specified time-out is exceeded.
+""".
+-spec wait_for_concurrent_request_results( [ instance_pid() ],
+    option( ms_monotonic() ), concurrent_request_tag(), result_table(),
+    count(), count() ) -> concurrent_outcome().
+% All results received, end of waiting, no time-out:
+wait_for_concurrent_request_results( TargetInstancePids, _FinalTimestampMs,
+        _ConcurrentRequestTag, ResultTable, _ResCount=TargetResCount,
+        TargetResCount ) ->
+    % Creating the final, ordered, complete result/time-out lists:
+    get_concurrent_outcome( ResultTable, TargetInstancePids );
+
+% Still waiting for at least one instance, here with no time-out:
+wait_for_concurrent_request_results( TargetInstancePids,
+        MaybeFinalTimestamp=undefined, ConcurrentRequestTag, ResultTable,
+        ResCount, TargetResCount ) ->
+    receive
+
+        { wooper_result, { ConcurrentRequestTag, InstPid, Res } } ->
+            case table:lookup_entry( _K=InstPid, ResultTable ) of
+
+                key_not_found ->
+                    throw( { unexpected_concurrent_request_result, InstPid,
+                             Res } );
+
+                % Normal case, registering result:
+                { value, undefined } ->
+
+                    cond_utils:if_defined( wooper_debug_concurrent_requests,
+                        trace_utils:debug_fmt(
+                            "Adding for instance ~w result ~p.",
+                            [ InstPid, Res ] ) ),
+
+                    NewResultTable = table:add_entry( InstPid, Res,
+                                                      ResultTable ),
+
+                    wait_for_concurrent_request_results( TargetInstancePids,
+                        MaybeFinalTimestamp, ConcurrentRequestTag,
+                        NewResultTable, ResCount+1, TargetResCount );
+
+
+                { value, AlreadyRes } ->
+                    throw( { multiple_concurrent_request_results, InstPid,
+                             AlreadyRes, Res } )
+
+            end
+
+    end;
+
+% Here with a time-out:
+wait_for_concurrent_request_results( TargetInstancePids, FinalTimestampMs,
+        ConcurrentRequestTag, ResultTable, ResCount, TargetResCount ) ->
+    receive
+
+        { wooper_result, { ConcurrentRequestTag, InstPid, Res } } ->
+            case table:lookup_entry( _K=InstPid, ResultTable ) of
+
+                key_not_found ->
+                    throw( { unexpected_concurrent_request_result, InstPid,
+                             Res } );
+
+                % Normal case, registering result:
+                { value, undefined } ->
+
+                    cond_utils:if_defined( wooper_debug_concurrent_requests,
+                        trace_utils:debug_fmt(
+                            "Adding for instance ~w result ~p.",
+                            [ InstPid, Res ] ) ),
+
+                    NewResultTable = table:add_entry( InstPid, Res,
+                                                      ResultTable ),
+
+                    wait_for_concurrent_request_results( TargetInstancePids,
+                        FinalTimestampMs, ConcurrentRequestTag, NewResultTable,
+                        ResCount+1, TargetResCount );
+
+
+                { value, AlreadyRes } ->
+                    throw( { multiple_concurrent_request_results, InstPid,
+                             AlreadyRes, Res } )
+
+            end
+
+    after ?wooper_default_poll_duration ->
+        case time_utils:get_monotonic_time() of
+
+            % Time-out, returning only a list with partial results:
+            TimestampMs when TimestampMs >= FinalTimestampMs ->
+                get_concurrent_outcome( ResultTable, TargetInstancePids );
+
+            % Still waiting:
+            _NonFinalTimestampMs ->
+
+                cond_utils:if_defined( wooper_debug_concurrent_requests,
+                    trace_utils:debug_fmt( "(still waiting for ~B instance(s))",
+                                           [ TargetResCount - ResCount ] ) ),
+
+                wait_for_concurrent_request_results( TargetInstancePids,
+                    FinalTimestampMs, ConcurrentRequestTag, ResultTable,
+                    ResCount, TargetResCount )
+
+        end
+
+    end.
+
+
+
+-doc """
+Returns the list of obatined results whose indices match the ones in the
+instance list.
+""".
+-spec get_concurrent_outcome( result_table(), [ instance_pid() ] ) ->
+                                        [ option( request_result() ) ].
+get_concurrent_outcome( ResultTable, TargetInstancePids ) ->
+    get_concurrent_outcome( ResultTable, TargetInstancePids, _AccRes=[],
+                            _AccTOInsts=[] ).
+
+
+% (helper)
+get_concurrent_outcome( ResultTable, _TargetInstancePids=[], AccRes,
+                        AccTOInsts ) ->
+
+    Res = lists:reverse( AccRes ),
+
+    cond_utils:if_defined( wooper_debug_concurrent_requests,
+        trace_utils:debug_fmt( "Returning as concurrent results: ~p "
+            "(timed-out instances: ~w).",
+            [ Res, AccTOInsts ] ) ),
+
+    cond_utils:if_defined( wooper_check_concurrent_requests,
+        table:is_empty( ResultTable ) orelse
+            throw( { non_empty_result_table, table:enumerate( ResultTable ) } ),
+        basic_utils:ignore_unused( ResultTable ) ),
+
+    { Res, AccTOInsts };
+
+get_concurrent_outcome( ResultTable, _TargetInstancePids=[ InstPid | T ],
+                        AccRes, AccTOInsts ) ->
+
+    case table:extract_entry( _K=InstPid, ResultTable ) of
+
+        { _MaybeRes=undefined, ShrunkResultTable } ->
+            get_concurrent_outcome( ShrunkResultTable, T,
+                [ undefined | AccRes ], [ InstPid | AccTOInsts ] );
+
+        { Res, ShrunkResultTable } ->
+            get_concurrent_outcome( ShrunkResultTable, T,
+                [ Res | AccRes ], AccTOInsts )
+
+    end.
 
 
 

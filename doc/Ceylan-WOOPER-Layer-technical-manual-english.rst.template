@@ -2938,6 +2938,8 @@ Therefore the implementation we target could be best [#]_ written as:
 Integrated Call APIs
 --------------------
 
+These APIs are provided as an alternative to the direct processing of terms (for passive instances) and/or messages (for active instances).
+
 
 Single Calls
 ............
@@ -2957,22 +2959,30 @@ As for **active instances**, doing the same directly through Erlang base constru
 
 
 
-
 Multi-Calls
 ...........
 
-Sometimes, in the context of *active instances*, it may be more convenient to reason not in terms of single calls, but of multiple calls, with various flavours in the number of callers, callees, method calls involved, parallelism and synchronisation.
+Sometimes, in the context of *active instances*, it may be more convenient to reason not in terms of single calls, but of multiple calls, with various flavours in the number of callers, callees, method calls involved, concurrency and synchronisation.
 
 So the ``wooper`` module provides facilities in order to execute:
 
-- a given **request** **sequentially** on **multiple callees**: ``send_request_in_turn/3`` or, if wanting that a time-out applies, ``send_request_in_turn/4``
-- the same for a **oneway** sending (off-band, through a direct message sending) a user-specified **acknowledgement term** (e.g. a conventional atom): ``send_acknowledged_oneway_in_turn/5``
-- a given **request**, whose only result in a user-specified **acknowledgement term**, in **parallel** on **multiple callees**: ``send_requests_and_wait_acks/4`` or, if wanting that a time-out applies, ``send_requests_and_wait_acks/5``
-- a given **request** in **parallel** on **multiple callees**, obtaining back an **unordered** list of their results: ``obtain_results_for_requests/3``
 - a **series of requests** on a **single** callee: ``send_request_series/2`` (just for the sending) and ``obtain_results_for_request_series/2`` (to include also the collecting of their ordered results)
+- a given **request** **sequentially** on **multiple callees**: ``send_request_in_turn/3`` or, if wanting that a time-out applies, ``send_request_in_turn/4``
+- the same for a **oneway** sending (off-band, through a direct message sending), based on a user-specified **acknowledgement term** (e.g. a conventional atom): ``send_acknowledged_oneway_in_turn/5``
+- a given **request**, whose only result is a user-specified **acknowledgement term**, in **parallel** on **multiple callees**: ``send_requests_and_wait_acks/4`` or, if wanting that a time-out applies, ``send_requests_and_wait_acks/5``
+- a given **request** in **parallel** on **multiple callees**:
+
+  - obtaining back an **unordered** list of their results: ``obtain_results_for_requests/3``
+  - giving full information regarding which callee returned which result, which callee failed to answer before a user-defined time-out: ``execute_concurrent_request/{2,3,4,5}``
+
+This last case relies on the notion of *concurrent requests*, a very general form of concurrent call to multiple callees, with which a request does not return just a raw result but a term of the ``concurrent_result/0`` type.
+
+Such a term (refer to the ``forge_concurrent_result/{1,2}`` functions to best obtain them), by comprising the PID of the callee, a (possibly user-specified) concurrency tag and the actual result of the corresponding unitary call, allows the ``execute_concurrent_request/{2,3,4,5}`` functions to automatically filter the results received in response and associate them to their respective callees while, if a time-out was requested, listing the callees that failed to respond on time.
+
+Refer to the ``method_management_test.erl`` test for a full example of the use of concurrent requests.
 
 
-Many more flavours can be considered (e.g. for active/passive instances, requests or oneways, with or without time-out, synchronisable or not, etc.) and may be supported in the future, on a per-need basis.
+Many more flavours can be considered (e.g. for active/passive instances, requests or oneways, with or without time-out, synchronisable or not, etc.) and may be supported in the future, on a per-need basis (suggestions welcome).
 
 However it may be more convenient to compose any extra multi-call that is needed thanks to the various basic helpers that are provided in the ``wooper`` module in order to send calls or to collect their results. Doing so allows for example to perform interleaving (triggering concurrent calls as soon as possible, collecting their results as late as possible) and maximise the overall parallelism.
 
