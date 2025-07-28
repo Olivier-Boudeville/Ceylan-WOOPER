@@ -61,13 +61,19 @@ Module containing some **general facilities for WOOPER class developers**.
 
 		  obtain_results_for_requests/3,
 
-          forge_concurrent_result/1, forge_concurrent_result/2,
-          execute_concurrent_request/2, execute_concurrent_request/3,
-          execute_concurrent_request/4, execute_concurrent_request/5,
-
 		  send_request_series/2, obtain_results_for_request_series/2,
 
 		  send_and_listen/3, receive_result/0 ]).
+
+
+% For concurrent requests:
+-export([ forge_concurrent_result/1, forge_concurrent_result/2,
+          execute_concurrent_request/2, execute_concurrent_request/3,
+          execute_concurrent_request/4, execute_concurrent_request/5,
+
+          send_concurrent_request/2, send_concurrent_request/3,
+          send_concurrent_request/4, send_concurrent_request/5,
+          wait_for_concurrent_request_results/1 ]).
 
 
 
@@ -485,7 +491,10 @@ one).
                oneway_call/0,
 			   state/0, function_export_set/0,
 
-               concurrent_request_tag/0, concurrent_result/0 ]).
+               concurrent_request_tag/0, concurrent_outcome/0,
+               concurrent_result/0, concurrent_result/1,
+               concurrent_waiting_info/0 ]).
+
 
 
 % Type shorthands:
@@ -564,6 +573,10 @@ one).
 % be received during these operations.
 
 
+
+% Subsection for concurrent requests.
+
+
 -doc """
 A tag (actually any term, yet generally an atom) used to identify from which
 instance a request result is emanating, in the context of potentially concurrent
@@ -595,6 +608,7 @@ specific order is enforced between these PIDs).
       _TimedOutInstances :: [ instance_pid() ] }.
 
 
+
 -doc """
 The type of actual results to be sent by requests that are designed to be called
 concurrently, so that the caller can determine from which instance each result
@@ -605,8 +619,22 @@ are intended to be called in parallel on multiple instances are to return an
 actual result like `{SomeConcurrentReqTag, _MyInstancePid=self(), Res}` (where
 of course all these instances are expected to use the same tag).
 """.
--type concurrent_result() ::
-    { concurrent_request_tag(), instance_pid(), method_internal_result() }.
+-type concurrent_result( R ) :: { concurrent_request_tag(), instance_pid(), R }.
+
+
+-doc "The generic type returned by concurrent requests.".
+-type concurrent_result() :: concurrent_result( method_internal_result() ).
+
+
+-doc """
+A state information to be kept after a concurrent sending, so that its waiting
+can be done asynchronously (i.e. when wanted).
+""".
+-type concurrent_waiting_info() :: { [ instance_pid() ],
+    MaybeFinalTimestamp :: option( ms_monotonic() ), concurrent_request_tag(),
+    result_table(), TargetResCount :: count() }.
+
+
 
 
 -doc """
@@ -1395,6 +1423,8 @@ wait_request_series( WaitCount, Acc ) ->
 % See method_management_test.erl for a complete test/example thereof.
 
 
+% For the implementation of concurrent requests:
+
 -doc """
 Returns a term, based on the specified actual result, suitable to be returned by
 concurrent requests that rely on the default concurrent request tag.
@@ -1403,7 +1433,6 @@ concurrent requests that rely on the default concurrent request tag.
 forge_concurrent_result( ActualResult ) ->
     forge_concurrent_result( ActualResult,
         _ConcurrentRequestTag=?wooper_default_concurrent_request_tag ).
-
 
 
 -doc """
@@ -1415,6 +1444,10 @@ concurrent requests that rely on the specified concurrent request tag.
 forge_concurrent_result( ActualResult, ConcurrentRequestTag ) ->
     { ConcurrentRequestTag, _InstPid=self(), ActualResult }.
 
+
+
+
+% For the execution of concurrent requests:
 
 
 -doc """
@@ -1506,10 +1539,96 @@ indefinitively or report only time-outs.
     method_arguments(), time_out(), concurrent_request_tag() ) ->
         concurrent_outcome().
 execute_concurrent_request( TargetInstancePids, RequestName, RequestArgs,
-                            _TimeOut=infinity, ConcurrentRequestTag ) ->
+                            TimeOut, ConcurrentRequestTag ) ->
+
+    ConcurrentWaitInfo = send_concurrent_request( TargetInstancePids,
+        RequestName, RequestArgs, TimeOut, ConcurrentRequestTag ),
+
+    % No caller-side interleaving here:
+    wait_for_concurrent_request_results( ConcurrentWaitInfo ).
+
+
+
+-doc """
+Sends the messages necessary to just trigger (and not yet wait for) the
+specified concurrent request (here with no argument, no time-out and the default
+concurrent tag) on the specified instances.
+
+Returns a concurrent waiting state suitable for the waiting of the corresponding
+results; refer to `wait_for_concurrent_request_results/1` for that.
+
+Allows to uncouple the request sending from the result receiving and thus
+interleave any caller-side activity in-between, being as concurrent as possible
+overall.
+""".
+-spec send_concurrent_request( [ instance_pid() ], request_name() ) ->
+                                            concurrent_waiting_info().
+send_concurrent_request( TargetInstancePids, RequestName ) ->
+    send_concurrent_request( TargetInstancePids, RequestName,
+                             _RequestArgs=[] ).
+
+
+-doc """
+Sends the messages necessary to just trigger (and not yet wait for) the
+specified concurrent request (here with the specified arguments, no time-out and
+the default concurrent tag) on the specified instances.
+
+Returns a concurrent waiting state suitable for the waiting of the corresponding
+results; refer to `wait_for_concurrent_request_results/1` for that.
+
+Allows to uncouple the request sending from the result receiving and thus
+interleave any caller-side activity in-between, being as concurrent as possible
+overall.
+""".
+-spec send_concurrent_request( [ instance_pid() ], request_name(),
+    method_arguments() ) -> concurrent_waiting_info().
+send_concurrent_request( TargetInstancePids, RequestName, RequestArgs ) ->
+    send_concurrent_request( TargetInstancePids, RequestName, RequestArgs,
+                             _TimeOut=infinity ).
+
+
+
+-doc """
+Sends the messages necessary to just trigger (and not yet wait for) the
+specified concurrent request (here with the specified arguments and time-out,
+and the default concurrent tag) on the specified instances.
+
+Returns a concurrent waiting state suitable for the waiting of the corresponding
+results; refer to `wait_for_concurrent_request_results/1` for that.
+
+Allows to uncouple the request sending from the result receiving and thus
+interleave any caller-side activity in-between, being as concurrent as possible
+overall.
+""".
+-spec send_concurrent_request( [ instance_pid() ], request_name(),
+    method_arguments(), time_out() ) -> concurrent_waiting_info().
+send_concurrent_request( TargetInstancePids, RequestName, RequestArgs,
+                         TimeOut ) ->
+    send_concurrent_request( TargetInstancePids, RequestName, RequestArgs,
+        TimeOut, _ConcurrentRequestTag=?wooper_default_concurrent_request_tag ).
+
+
+
+-doc """
+Sends the messages necessary to just trigger (and not yet wait for) the
+specified concurrent request (here with the specified arguments, time-out and
+concurrent tag) on the specified instances.
+
+Returns a concurrent waiting state suitable for the waiting of the corresponding
+results; refer to `wait_for_concurrent_request_results/1` for that.
+
+Allows to uncouple the request sending from the result receiving and thus
+interleave any caller-side activity in-between, being as concurrent as possible
+overall.
+""".
+-spec send_concurrent_request( [ instance_pid() ], request_name(),
+        method_arguments(), time_out(), concurrent_request_tag() ) ->
+                                            concurrent_waiting_info().
+send_concurrent_request( TargetInstancePids, RequestName, RequestArgs,
+                         _TimeOut=infinity, ConcurrentRequestTag ) ->
 
     cond_utils:if_defined( wooper_debug_concurrent_requests,
-        trace_utils:debug_fmt( "Executing concurrently the {~ts,~p} request "
+        trace_utils:debug_fmt( "Triggering concurrently the {~ts,~p} request "
             "on ~B instances (~ts), with no time-out, relying on the '~p' "
             "concurrent request tag.",
             [ RequestName, RequestArgs, length( TargetInstancePids ),
@@ -1523,18 +1642,17 @@ execute_concurrent_request( TargetInstancePids, RequestName, RequestArgs,
 
     TargetResCount = length( TargetInstancePids ),
 
-    wait_for_concurrent_request_results( TargetInstancePids,
-        _MaybeFinalTimestamp=undefined, ConcurrentRequestTag, ResultTable,
-        _ResCount=0, TargetResCount );
+    { TargetInstancePids, _FinalTimestampMs=undefined, ConcurrentRequestTag,
+      ResultTable, TargetResCount };
 
-execute_concurrent_request( TargetInstancePids, RequestName, RequestArgs,
-                            TimeOutMs, ConcurrentRequestTag ) ->
+send_concurrent_request( TargetInstancePids, RequestName, RequestArgs,
+                         TimeOutMs, ConcurrentRequestTag ) ->
 
     % A 1-second granularity would be too coarse:
     InitialTimestampMs = time_utils:get_monotonic_time(),
 
     cond_utils:if_defined( wooper_debug_concurrent_requests,
-        trace_utils:debug_fmt( "Executing concurrently the {~ts,~p} request "
+        trace_utils:debug_fmt( "Triggering concurrently the {~ts,~p} request "
             "on ~B instances (~ts), based on a ~ts, relying on the '~p' "
             "concurrent request tag.",
             [ RequestName, RequestArgs, length( TargetInstancePids ),
@@ -1551,8 +1669,24 @@ execute_concurrent_request( TargetInstancePids, RequestName, RequestArgs,
 
     TargetResCount = length( TargetInstancePids ),
 
-    wait_for_concurrent_request_results( TargetInstancePids, FinalTimestampMs,
-        ConcurrentRequestTag, ResultTable, _ResCount=0, TargetResCount ).
+    { TargetInstancePids, FinalTimestampMs, ConcurrentRequestTag, ResultTable,
+      TargetResCount }.
+
+
+
+-doc """
+Waits for the results of the corresponding concurrent request calls or for any
+time-out.
+""".
+-spec wait_for_concurrent_request_results( concurrent_waiting_info() ) ->
+                                                concurrent_outcome().
+wait_for_concurrent_request_results( _ConcurrentWaitInfo={ TargetInstancePids,
+        MaybeFinalTimestampMs, ConcurrentRequestTag, ResultTable,
+        TargetResCount } ) ->
+
+    wait_for_concurrent_request_results( TargetInstancePids,
+        MaybeFinalTimestampMs, ConcurrentRequestTag, ResultTable, _ResCount=0,
+        TargetResCount ).
 
 
 

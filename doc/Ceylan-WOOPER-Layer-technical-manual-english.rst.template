@@ -2973,13 +2973,44 @@ So the ``wooper`` module provides facilities in order to execute:
 - a given **request** in **parallel** on **multiple callees**:
 
   - obtaining back an **unordered** list of their results: ``obtain_results_for_requests/3``
-  - giving full information regarding which callee returned which result, which callee failed to answer before a user-defined time-out: ``execute_concurrent_request/{2,3,4,5}``
+  - giving full information regarding which callee returned which result, which callee failed to answer before a user-defined time-out: ``execute_concurrent_request/{2..5}``
 
 This last case relies on the notion of *concurrent requests*, a very general form of concurrent call to multiple callees, with which a request does not return just a raw result but a term of the ``concurrent_result/0`` type.
 
-Such a term (refer to the ``forge_concurrent_result/{1,2}`` functions to best obtain them), by comprising the PID of the callee, a (possibly user-specified) concurrency tag and the actual result of the corresponding unitary call, allows the ``execute_concurrent_request/{2,3,4,5}`` functions to automatically filter the results received in response and associate them to their respective callees while, if a time-out was requested, listing the callees that failed to respond on time.
+Such a term (refer to the ``forge_concurrent_result/{1,2}`` functions to best obtain them), by comprising the PID of the callee, a (possibly user-specified) concurrency tag and the actual result of the corresponding unitary call, allows the ``execute_concurrent_request/{2..5}`` functions to automatically filter the results received in response and associate them to their respective callees while, if a time-out was requested, listing the callees that failed to respond on time.
 
 Refer to the ``method_management_test.erl`` test for a full example of the use of concurrent requests.
+
+Finally, instead of blocking the caller until all concurrent calls are fully resolved, i.e. that the corresponding request messages are sent and then their result counterparts are received (or not, implying a time-out), these two phases can be split so that the caller can **interleave** some processing of its own between them. This is the purpose of respectively the ``send_concurrent_request/{2..5}`` and ``wait_for_concurrent_request_results/1`` function pairs.
+
+A typical example thereof is the following caller-side code:
+
+.. code:: erlang
+
+  [...]
+
+  % Here, the doSomething/1 concurrent request (hence expected to return
+  % a concurrent_result/0 term) does not take any argument, does not set
+  % a time-out, and relies on the default concurrent tag:
+  %
+  ConcurrentWaitInfo = wooper:send_concurrent_request(
+	MyTargetInstancePids, _ReqName=doSomething),
+
+  % Here the caller can interleave any processing of its liking.
+  [...]
+
+  case wooper:wait_for_concurrent_request_results(ConcurrentWaitInfo) of
+
+	% Here all instances answered on time:
+	{Results, _TimedOutInstances=[]} ->
+	  process_as_wanted(Results);
+
+	% Here the partial results have to be dealt with (possibly just throw).
+	{_MaybeResults, TimedOutInstances} ->
+	   [...]
+
+  end.
+
 
 
 Many more flavours can be considered (e.g. for active/passive instances, requests or oneways, with or without time-out, synchronisable or not, etc.) and may be supported in the future, on a per-need basis (suggestions welcome).
