@@ -52,6 +52,10 @@ Test of the **support of methods**.
 -type name() :: text_utils:ustring().
 
 
+% Type shorthand:
+-type concurrent_result( R ) :: wooper:concurrent_result( R ).
+
+
 -doc "Simplest possible signature.".
 -spec construct( wooper:state(), id() ) -> wooper:state().
 construct( State, Id ) ->
@@ -96,7 +100,8 @@ setName( State, Name ) ->
 
 
 -doc "Returns the identifier of this instance.".
--spec getId( wooper:state() ) -> const_request_return( id() ).
+-spec getId( wooper:state() ) ->
+                    const_request_return( concurrent_result( id() ) ).
 getId( State ) ->
     ReportedId = case ?getAttr(id) of
 
