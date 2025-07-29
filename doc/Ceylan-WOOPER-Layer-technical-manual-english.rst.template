@@ -3575,6 +3575,18 @@ We recommend that, as a WOOPER user, one enables its debug mode when developing 
 Then only, once one's code is mature enough, this debug mode may be disabled in order to obtain best performances.
 
 
+
+Instance-Level Inquiries
+------------------------
+
+Distributed systems may be difficult to debug; sometimes one wonders what happens at the level of a given (active) instance.
+
+The ``wooper:get_status/1`` debug function will return whether the process corresponding to the specified instance PID is dead (``no_process`` is returned by this function;  this instance might have already terminated) or alive, in which case it is either not responsive (``not_responsive`` - hence that instance is busy to the point of failing to answer a ping request within a short time) or ``operational`` (a ping answer was received).
+
+The ``wooper:check_operational/1`` debug function will throw an exception iff the active instance corresponding to the specified PID is found not operational.
+
+
+
 "No attribute declaration found" whereas a ``class_attributes`` define exists
 -----------------------------------------------------------------------------
 

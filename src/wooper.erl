@@ -105,6 +105,11 @@ Module containing some **general facilities for WOOPER class developers**.
 -export([ get_all_attributes/1, check_undefined/2, check_all_undefined/2 ]).
 
 
+
+% Debug-related functions:
+-export([ get_status/1, check_operational/1 ]).
+
+
 % Extra features:
 -export([ declare_beam_dirs_for_wooper/0, retrieve_virtual_table_key/1,
 		  get_execution_target/0 ]).
@@ -1031,7 +1036,22 @@ send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 
 	Request = { RequestName, RequestArgs, self() },
 
-	[ InstancePid ! Request || InstancePid <- TargetInstancePIDs ].
+    trace_utils:debug_fmt( "Sending ~w to each instance in ~w.",
+                           [ Request, TargetInstancePIDs ] ),
+
+	[ begin
+
+          cond_utils:if_defined( wooper_debug_concurrent_requests,
+             begin
+                 InstStatus = get_status( InstPid ),
+                 InstStatus =:= operational orelse
+                     throw( { non_operational_instance_for_concurrent_request,
+                              InstPid, InstStatus, Request } )
+             end ),
+
+          InstPid ! Request
+
+      end || InstPid <- TargetInstancePIDs ].
 
 
 
@@ -1680,9 +1700,12 @@ time-out.
 """.
 -spec wait_for_concurrent_request_results( concurrent_waiting_info() ) ->
                                                 concurrent_outcome().
-wait_for_concurrent_request_results( _ConcurrentWaitInfo={ TargetInstancePids,
+wait_for_concurrent_request_results( ConcurrentWaitInfo={ TargetInstancePids,
         MaybeFinalTimestampMs, ConcurrentRequestTag, ResultTable,
         TargetResCount } ) ->
+
+    trace_utils:debug_fmt( "Concurrent waiting information is ~w.",
+                           [ ConcurrentWaitInfo ] ),
 
     wait_for_concurrent_request_results( TargetInstancePids,
         MaybeFinalTimestampMs, ConcurrentRequestTag, ResultTable, _ResCount=0,
@@ -1701,13 +1724,23 @@ specified requested instances, unless any specified time-out is exceeded.
 wait_for_concurrent_request_results( TargetInstancePids, _FinalTimestampMs,
         _ConcurrentRequestTag, ResultTable, _ResCount=TargetResCount,
         TargetResCount ) ->
+
+    trace_utils:debug_fmt( "Returning complete result table ~ts",
+                           [ table:to_string( ResultTable ) ] ),
+
     % Creating the final, ordered, complete result/time-out lists:
     get_concurrent_outcome( ResultTable, TargetInstancePids );
+
 
 % Still waiting for at least one instance, here with no time-out:
 wait_for_concurrent_request_results( TargetInstancePids,
         MaybeFinalTimestamp=undefined, ConcurrentRequestTag, ResultTable,
         ResCount, TargetResCount ) ->
+
+    cond_utils:if_defined( wooper_debug_concurrent_requests,
+        trace_utils:debug_fmt( "Waiting for a concurrent result, being at "
+            "~B/~B.", [ ResCount, TargetResCount ] ) ),
+
     receive
 
         { wooper_result, { ConcurrentRequestTag, InstPid, Res } } ->
@@ -1722,7 +1755,7 @@ wait_for_concurrent_request_results( TargetInstancePids,
 
                     cond_utils:if_defined( wooper_debug_concurrent_requests,
                         trace_utils:debug_fmt(
-                            "Adding for instance ~w result ~p.",
+                            "Storing, from instance ~w, concurrent result ~p.",
                             [ InstPid, Res ] ) ),
 
                     NewResultTable = table:add_entry( InstPid, Res,
@@ -1758,7 +1791,7 @@ wait_for_concurrent_request_results( TargetInstancePids, FinalTimestampMs,
 
                     cond_utils:if_defined( wooper_debug_concurrent_requests,
                         trace_utils:debug_fmt(
-                            "Adding for instance ~w result ~p.",
+                            "Storing, from instance ~w, concurrent result ~p.",
                             [ InstPid, Res ] ) ),
 
                     NewResultTable = table:add_entry( InstPid, Res,
@@ -1780,6 +1813,10 @@ wait_for_concurrent_request_results( TargetInstancePids, FinalTimestampMs,
 
             % Time-out, returning only a list with partial results:
             TimestampMs when TimestampMs >= FinalTimestampMs ->
+
+                trace_utils:debug_fmt( "Returning incomplete result table ~ts",
+                                       [ table:to_string( ResultTable ) ] ),
+
                 get_concurrent_outcome( ResultTable, TargetInstancePids );
 
             % Still waiting:
@@ -2489,6 +2526,68 @@ retrieve_virtual_table_key( Classname ) ->
 	end.
 
 -endif. % wooper_enable_otp_integration
+
+
+
+-doc """
+Returns the current status of the WOOPER active instance corresponding to the
+specified PID.
+
+Mostly for debugging purpose.
+""".
+-spec get_status( instance_pid() ) ->
+    { 'not_pid', term() } % Invalid term specified
+
+  | 'no_process' % No (Erlang) process corresponds to this PID
+                 % (terminated instance?)
+
+    % The instance failed to answer a ping request within a short duration; this
+    % instance must be busy, possibly stuck temporarily or indefinitely in a
+    % processing or in a receive (in constructor, method or destructor)
+    %
+  | 'not_responsive'
+
+    % The corresponding instance seems live and functional:
+  | 'operational'.
+get_status( InstPid ) when is_pid( InstPid ) ->
+    case basic_utils:is_alive( InstPid ) of
+
+        true ->
+            case wooper_class_manager:ping( InstPid ) of
+
+                pong ->
+                    operational;
+
+                pang ->
+                    not_responsive
+
+            end;
+
+        false ->
+            no_process
+
+    end;
+
+get_status( Other ) ->
+    { not_pid, Other }.
+
+
+
+-doc """
+Checks that the WOOPER active instance corresponding to the specified PID is
+operational; throws an exception if not.
+""".
+-spec check_operational( instance_pid() ) -> void().
+check_operational( InstPid ) ->
+    case get_status( InstPid ) of
+
+        operational ->
+            ok;
+
+        Other ->
+            throw( { non_operational_instance, Other } )
+
+    end.
 
 
 
