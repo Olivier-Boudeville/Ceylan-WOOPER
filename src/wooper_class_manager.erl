@@ -727,12 +727,12 @@ loop( Tables ) ->
 Looks-up the specified table: secures it and returns its corresponding key.
 
 If found, returns its key immediately, otherwise constructs it, stores the
-result and returns its key in the persistent_term registry.
+result and returns its key in the `persistent_term` registry.
 
 Allows to synchronise the instances so that they can know for sure that their
 virtual tables are available.
 
-Virtual tables are stored in a ?wooper_table_type.
+Virtual tables are stored in a `?wooper_table_type`.
 
 Returns a pair formed of the new set of virtual tables and of the requested
 table key.
@@ -810,8 +810,8 @@ get_virtual_table_key_for( Module, Tables ) ->
 
 
 -doc """
-Creates recursively (indirectly thanks to update_method_table_with/2) the
-virtual table corresponding to specified module.
+Creates recursively (indirectly thanks to `update_method_table_with/2`) the
+virtual table corresponding to the specified module.
 """.
 -spec create_method_table_for( module_name() ) ->
 						?wooper_table_type:?wooper_table_type().
@@ -826,11 +826,11 @@ create_method_table_for( TargetModule ) ->
 
 
 -doc """
-Updates specified virtual table with the method of specified module (that is
-precomputes the virtual table for the related class).
+Updates the specified virtual table with the method of specified module (that
+is: precomputes the virtual table for the related class).
 
-In case of key collision, the values specified in ?Wooper_Table_Type have
-priority over the ones relative to Module. Hence methods redefined in child
+In case of key collision, the values specified in `?Wooper_Table_Type` have
+priority over the ones relative to `Module`. Hence methods redefined in child
 classes are selected, rather than the ones of the mother class.
 """.
 -spec update_method_table_with( module_name(),
@@ -986,7 +986,7 @@ create_local_method_table_for( Module ) ->
 Pings the specified WOOPER instance, designated by its PID or registered name
 (locally, otherwise, if not found, globally).
 
-Returns pong if it could be successfully ping'ed, otherwise returns pang.
+Returns `pong` if it could be successfully ping'ed, otherwise returns `pang`.
 """.
 -spec ping( naming_utils:registration_name() | wooper:instance_pid() ) ->
 													'pong' | 'pang'.
