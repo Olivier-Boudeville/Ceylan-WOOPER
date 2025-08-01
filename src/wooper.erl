@@ -574,13 +574,17 @@ one).
 
 % Section for communication helpers.
 %
-% Generally no wooper result expected to be already in the message queue or to
-% be received during these operations.
-
+% Generally no WOOPER result is expected to be already in the message queue or
+% to be received during these operations.
+%
+% Note that, as soon as using blocking receives (typically for requests), the
+% design of message exchange patterns shall be carefully devised, as deadlocks
+% are easy to create within concurrent system. Refer to
+% https://wooper.esperide.org/#on-the-avoidance-of-applicative-deadlocks
+% for more details.
 
 
 % Subsection for concurrent requests.
-
 
 -doc """
 A tag (actually any term, yet generally an atom) used to identify from which

@@ -655,6 +655,10 @@ The actual result ``R``, as determined by the method, is sent back as an Erlang 
  [..]
 
 
+Note that, with the use of blocking receives, deadlocks may happen; refer to the `On the Avoidance of Applicative Deadlocks`_ section for more details.
+
+
+
 
 Oneway Methods
 ______________
@@ -1692,7 +1696,7 @@ For example:
 .. code:: erlang
 
  ConstructedState = setAttributes(MyState,
-		  [{age,3},{whisker_color,white}])
+		  [{age,3}, {whisker_color,white}])
 
 will return a new state, exact copy of ``MyState`` but for the listed attributes, set to their respective specified value.
 
@@ -1715,7 +1719,7 @@ For example:
 
 .. code:: erlang
 
- {NewState,PastColor} = swapInAttribute(AState,fur_color,_NewValue=black)
+ {NewState, PastColor} = swapInAttribute(AState, fur_color, _NewValue=black)
 
 
 
@@ -3712,6 +3716,20 @@ You most probably forgot to build the ``myriad`` directory that contains, among 
 Check that you have a ``map_hashtable.beam`` file indeed, and that it can be found from the paths specified to the virtual machine.
 
 Note that the WOOPER code designates this module as the ``table`` one (e.g. ``table:new()``), for a better substituability (this is obtained thanks to a parse-transform provided by ``Ceylan-Myriad``) .
+
+
+
+On the Avoidance of Applicative Deadlocks
+-----------------------------------------
+
+The use of requests - and more generally of any message exchange pattern involving a blocking receive [#]_ - shall be carefully designed, as **applicative deadlocks** are easy to create within concurrent systems.
+
+This may typically happen when an instance I1 sends a request to (at least) another one, I2. If ever I2, in order to process that request, requires information to be obtained (directly or not) from I1, then a request will be sent in turn to I1, and I2 will wait for the corresponding information. However I1 is already waiting for the result of its original request, so is blocked by design and will never answer to that intermediate inquiry. As a result, these instances will remain stuck and unresponsive for ever. This is an example of a (systematic) deadlock, whose origin is the crossing of requests between instances.
+
+Solutions may be to, if applicable, organise the request sending to be done by phases (e.g. I2 sending spontaneously information to I1, which will send its request to I2 only when receiving that information), or to happen in only one direction (one instance - for example I2 - behaving as a server, the others as clients). Another approach is to adopt a fully asynchronous mode of operation (relying for such exchanges on oneways rather than on requests).
+
+.. [#] Relying on receive time-outs is, in the general case, not a suitable workaround, as their duration would be arbitrary and would lead to an application whose behaviour would change under heavy loads.
+
 
 
 
