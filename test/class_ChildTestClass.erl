@@ -56,8 +56,7 @@
 -type age() :: non_neg_integer().
 
 
-% Type shorthands:
-
+% Type shorthand:
 -type ustring() :: text_utils:ustring().
 
 
@@ -186,13 +185,13 @@ triggered by f (sending a message, writing a trace, etc.) happened twice.
 -spec testSingleExecution( wooper:state() ) -> oneway_return().
 testSingleExecution( State ) ->
 	wooper:return_state( setAttribute( side_effect_function( State ),
-		age, 10 ) ).
+                                       age, 10 ) ).
 
 
 test_of_const_req_as( State ) ->
 
 	% Not 50!
-	17 = executeConstRequestAs( State, class_BaseTestClass, someRequest, 10 ),
+	17 = executeConstRequestAs( class_BaseTestClass, State, someRequest, 10 ),
 
 	wooper:const_return().
 

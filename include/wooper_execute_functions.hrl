@@ -225,13 +225,13 @@ defined by the specified parent class of the current instance.
 Allows to call synchronously from the code of a given class a version defined
 through its inheritance tree.
 
-See executeRequest/2.
+See `executeRequest/2`.
 
 Returns an updated state and a result.
 """.
--spec executeRequestAs( wooper:state(), classname(), request_name() ) ->
+-spec executeRequestAs( classname(), wooper:state(), request_name() ) ->
 								{ wooper:state(), method_internal_result() }.
-executeRequestAs( State, ParentClassname, RequestAtom )
+executeRequestAs( ParentClassname, State, RequestAtom )
 		when is_record( State, state_holder ) andalso is_atom( ParentClassname )
 			 andalso is_atom( RequestAtom ) ->
 
@@ -243,17 +243,17 @@ executeRequestAs( State, ParentClassname, RequestAtom )
 		_ArgumentList=[], ParentClassname );
 
 
-executeRequestAs( StateError, ParentClassname, RequestAtom )
+executeRequestAs( ParentClassname, StateError, RequestAtom )
 		when is_atom( ParentClassname ) andalso is_atom( RequestAtom ) ->
 
-	wooper:log_error( "when executing request ~p  as parent "
+	wooper:log_error( "when executing request ~p as parent "
 		"class ~ts: first parameter should be a state, not '~p'.",
 		[ RequestAtom, ParentClassname, StateError ], ?MODULE ),
 
 	throw( { wooper_invalid_request_call, RequestAtom } );
 
 
-executeRequestAs( _State, ParentClassnameError, RequestAtomError ) ->
+executeRequestAs( ParentClassnameError, _State, RequestAtomError ) ->
 
 	wooper:log_error( "when executing request as a parent class: "
 		"'~p' and '~p' should both be atoms.",
@@ -275,15 +275,16 @@ See `executeRequest/2`.
 
 Returns only a result.
 """.
--spec executeConstRequestAs( wooper:state(), classname(), request_name() ) ->
+-spec executeConstRequestAs( classname(), wooper:state(), request_name() ) ->
 								method_internal_result().
-executeConstRequestAs( State, ParentClassname, RequestAtom ) ->
+executeConstRequestAs( ParentClassname, State, RequestAtom ) ->
 
 	% Checks made by the callee; actual constness not checked yet shall derive
 	% from the transformed, corresponding method terminator:
 	%
-	{ _State, Result } = executeRequestAs( State, ParentClassname,
-										   RequestAtom ),
+	{ _State, Result } =
+        executeRequestAs( ParentClassname, State, RequestAtom ),
+
 	Result.
 
 
@@ -299,10 +300,10 @@ See `executeRequest/2`.
 
 Returns an updated state and a result.
 """.
--spec executeRequestAs( wooper:state(), classname(), request_name(),
+-spec executeRequestAs( classname(), wooper:state(), request_name(),
 		method_arguments() ) -> { wooper:state(), method_internal_result() }.
-executeRequestAs( State, Classname, RequestAtom, ArgumentList ) when
-		is_record( State, state_holder ) andalso is_atom( Classname )
+executeRequestAs( ParentClassname, State, RequestAtom, ArgumentList ) when
+		is_atom( ParentClassname ) andalso is_record( State, state_holder )
 		andalso is_atom( RequestAtom ) andalso is_list( ArgumentList ) ->
 
 	%trace_utils:debug_fmt( "executeRequestAs/4 with list: executing ~ts(~w) "
@@ -310,13 +311,14 @@ executeRequestAs( State, Classname, RequestAtom, ArgumentList ) when
 	% State#state_holder.actual_class, Classname ] ),
 
 	wooper_handle_local_request_execution_as( RequestAtom, State,
-											  ArgumentList, Classname );
+											  ArgumentList, ParentClassname );
 
 
 % Here the third parameter is not a list:
-executeRequestAs( State, Classname, RequestAtom, StandaloneArgument ) when
-		is_record( State, state_holder ) andalso is_atom( Classname )
-		andalso is_atom( RequestAtom ) ->
+executeRequestAs( ParentClassname, State, RequestAtom,
+                  StandaloneArgument ) when is_atom( ParentClassname )
+        andalso is_record( State, state_holder )
+        andalso is_atom( RequestAtom ) ->
 
 	%trace_utils:debug_fmt( "executeRequestAs/3 with standalone argument: "
 	%   "executing ~ts(~w) from ~ts with ~ts.",
@@ -324,12 +326,12 @@ executeRequestAs( State, Classname, RequestAtom, StandaloneArgument ) when
 	% Classname ] ),
 
 	wooper_handle_local_request_execution_as( RequestAtom, State,
-		_ArgumentList=[ StandaloneArgument ], Classname );
+		_ArgumentList=[ StandaloneArgument ], ParentClassname );
 
 
 % Error cases below:
-executeRequestAs( StateError, Classname, RequestAtom, _LastArg )
-		when is_atom( Classname ) andalso is_atom( RequestAtom ) ->
+executeRequestAs( ParentClassname, StateError, RequestAtom, _LastArg )
+		when is_atom( ParentClassname ) andalso is_atom( RequestAtom ) ->
 
 	wooper:log_error( "when executing request ~p: "
 		"first parameter should be a state, not '~p'.",
@@ -339,13 +341,14 @@ executeRequestAs( StateError, Classname, RequestAtom, _LastArg )
 
 
 % Catches all remaining errors:
-executeRequestAs( _State, ClassnameError, RequestAtomError, _LastArg ) ->
+executeRequestAs( ParentClassnameError, _State, RequestAtomError, _LastArg ) ->
 
 	wooper:log_error( "when executing request: both '~p' (classname) and "
 		"'~p' (request name) should be atoms.",
-		[ ClassnameError, RequestAtomError ], ?MODULE ),
+		[ ParentClassnameError, RequestAtomError ], ?MODULE ),
 
-	throw( { wooper_invalid_request_call, ClassnameError, RequestAtomError } ).
+	throw( { wooper_invalid_request_call, ParentClassnameError,
+             RequestAtomError } ).
 
 
 
@@ -360,15 +363,16 @@ See `executeRequest/2`.
 
 Returns only a result.
 """.
--spec executeConstRequestAs( wooper:state(), classname(), request_name(),
+-spec executeConstRequestAs( classname(), wooper:state(), request_name(),
 			method_arguments() ) -> method_internal_result().
-executeConstRequestAs( State, Classname, RequestAtom, ArgumentList ) ->
+executeConstRequestAs( ParentClassname, State, RequestAtom, ArgumentList ) ->
 
 	% Checks made by the callee; actual constness not checked yet shall derive
 	% from the transformed, corresponding method terminator:
 	%
-	{ _State, Result } = executeRequestAs( State, Classname, RequestAtom,
-										   ArgumentList ),
+	{ _State, Result } =
+        executeRequestAs( ParentClassname, State, RequestAtom, ArgumentList ),
+
 	Result.
 
 
@@ -548,7 +552,7 @@ See `executeOneway/2`.
 
 Returns an updated state.
 """.
--spec executeOnewayAs( wooper:state(), classname(), oneway_name() ) ->
+-spec executeOnewayAs( classname(), wooper:state(), oneway_name() ) ->
 								wooper:state().
 executeOnewayAs( State, ParentClassname, OnewayAtom )
 		when is_record( State, state_holder ) andalso is_atom( ParentClassname )
@@ -562,7 +566,7 @@ executeOnewayAs( State, ParentClassname, OnewayAtom )
 		_ArgumentList=[], ParentClassname );
 
 
-executeOnewayAs( StateError, ParentClassname, OnewayAtom )
+executeOnewayAs( ParentClassname, StateError, OnewayAtom )
 								when is_record( StateError, state_holder ) ->
 
 	wooper:log_error( "when executing oneway ~p as parent "
@@ -572,7 +576,7 @@ executeOnewayAs( StateError, ParentClassname, OnewayAtom )
 	throw( { wooper_invalid_oneway_call, OnewayAtom } );
 
 
-executeOnewayAs( _StateError, ParentClassnameError, OnewayAtomError ) ->
+executeOnewayAs( ParentClassnameError, _StateError, OnewayAtomError ) ->
 
 	wooper:log_error( "when executing oneway as a parent class: "
 		"'~p' and '~p' should both be atoms.",
@@ -594,14 +598,14 @@ See `executeOneway/2`.
 
 Const oneways return nothing.
 """.
--spec executeConstOnewayAs( wooper:state(), classname(), oneway_name() ) ->
+-spec executeConstOnewayAs( classname(), wooper:state(), oneway_name() ) ->
 								void().
-executeConstOnewayAs( State, Classname, OnewayAtom ) ->
+executeConstOnewayAs( ParentClassname, State, OnewayAtom ) ->
 
 	% Checks made by the callee; actual constness not checked yet shall derive
 	% from the transformed, corresponding method terminator:
 	%
-	_State = executeOnewayAs( State, Classname, OnewayAtom ).
+	_State = executeOnewayAs( ParentClassname, State, OnewayAtom ).
 
 
 
@@ -616,50 +620,51 @@ See `executeOneway/2`.
 
 Returns an updated state.
 """.
--spec executeOnewayAs( wooper:state(), classname(), oneway_name(),
+-spec executeOnewayAs( classname(), wooper:state(), oneway_name(),
 					   method_arguments() ) -> wooper:state().
-executeOnewayAs( State, Classname, OnewayAtom, ArgumentList ) when
-		is_record( State, state_holder ) andalso is_atom( Classname )
+executeOnewayAs( ParentClassname, State, OnewayAtom, ArgumentList ) when
+		is_atom( ParentClassname ) andalso is_record( State, state_holder )
 		andalso is_atom( OnewayAtom ) andalso is_list( ArgumentList ) ->
 
 	%trace_utils:debug_fmt( "executeOneway/4 with list: executing ~ts(~w) "
 	%   "from ~ts with ~ts.",
 	%   [ OnewayAtom, ArgumentList, State#state_holder.actual_class,
-	%     Classname ] ),
+	%     ParentClassname ] ),
 
 	wooper_handle_local_oneway_execution_as( OnewayAtom, State,
-											 ArgumentList, Classname );
+											 ArgumentList, ParentClassname );
 
 
 % Here third parameter is not a list:
-executeOnewayAs( State, Classname, OnewayAtom, StandaloneArgument ) when
-		is_record( State, state_holder ) andalso is_atom( Classname )
+executeOnewayAs( ParentClassname, State, OnewayAtom, StandaloneArgument ) when
+		is_atom( ParentClassname ) andalso is_record( State, state_holder )
 		andalso is_atom( OnewayAtom ) ->
 
 	%trace_utils:debug_fmt( "executeOnewayAs/4 with standalone argument: "
 	%   "executing ~ts(~w) from ~ts with ~ts.",
 	%   [ OnewayAtom, StandaloneArgument, State#state_holder.actual_class,
-	%     Classname ] ),
+	%     ParentClassname ] ),
 
 	wooper_handle_local_oneway_execution_as( OnewayAtom, State,
-		_ArgumentList=[ StandaloneArgument ], Classname );
+		_ArgumentList=[ StandaloneArgument ], ParentClassname );
 
 
-executeOnewayAs( StateError, Classname, OnewayAtom, _LastArg )
-			when is_atom( Classname ) andalso is_atom( OnewayAtom ) ->
+executeOnewayAs( ParentClassname, StateError, OnewayAtom, _LastArg )
+			when is_atom( ParentClassname ) andalso is_atom( OnewayAtom ) ->
 
 	wooper:log_error( "when executing oneway ~p with ~ts: "
 		"first parameter should be a state, not '~p'.",
-		[ OnewayAtom, Classname, StateError ], ?MODULE ),
+		[ OnewayAtom, ParentClassname, StateError ], ?MODULE ),
 
 	throw( { wooper_invalid_oneway_call, OnewayAtom } );
 
 
 % Catches all remaining errors:
-executeOnewayAs( _State, Classname, OnewayAtomError, _LastArg ) ->
+executeOnewayAs( ParentClassname, _State, OnewayAtomError, _LastArg ) ->
 
 	wooper:log_error( "when executing oneway with ~ts: both '~p' "
-		"and '~p' should be atoms.", [ Classname, OnewayAtomError ], ?MODULE ),
+		"and '~p' should be atoms.", [ ParentClassname, OnewayAtomError ],
+        ?MODULE ),
 
 	throw( { wooper_invalid_oneway_call, OnewayAtomError } ).
 
@@ -676,11 +681,12 @@ See `executeOneway/2`.
 
 Const oneways return nothing.
 """.
--spec executeConstOnewayAs( wooper:state(), classname(), oneway_name(),
+-spec executeConstOnewayAs( classname(), wooper:state(), oneway_name(),
 							method_arguments() ) -> void().
-executeConstOnewayAs( State, Classname, OnewayAtom, ArgumentList ) ->
+executeConstOnewayAs( ParentClassname, State, OnewayAtom, ArgumentList ) ->
 
 	% Checks made by the callee; actual constness not checked yet shall derive
 	% from the transformed, corresponding method terminator:
 	%
-	_State = executeOnewayAs( State, Classname, OnewayAtom, ArgumentList ).
+	_State = executeOnewayAs( ParentClassname, State, OnewayAtom,
+                              ArgumentList ).

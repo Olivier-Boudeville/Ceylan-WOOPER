@@ -1229,28 +1229,28 @@ For example, for a request taking more than one parameter, or one list parameter
 
 .. code:: erlang
 
- {NewState,Result} = executeRequest(CurrentState,myRequestName,
-								["hello",42])
+ {NewState,Result} = executeRequest(CurrentState, myRequestName,
+									["hello", 42])
 
 For a request taking exactly one, non-list, parameter:
 
 .. code:: erlang
 
  {NewState,NewCounter} = executeRequest(CurrentState,
-								addToCurrentCounter,78)
+	 addToCurrentCounter, 78)
 
 For a request taking no parameter:
 
 .. code:: erlang
 
- {NewState,Sentence} = executeRequest(CurrentState,getLastSentence)
+ {NewState,Sentence} = executeRequest(CurrentState, getLastSentence)
 
 
 Const requests can be called [#]_ as well, like in:
 
 .. code:: erlang
 
- Color = executeConstRequest(CurrentState,getColor)
+ Color = executeConstRequest(CurrentState, getColor)
 
 
 .. [#] Note that currently WOOPER will not check that a called request is indeed const, and will silently drop any updated state.
@@ -1266,28 +1266,28 @@ For example, a oneway taking more than one parameter, or one list parameter:
 
 .. code:: erlang
 
- NewState = executeOneway(CurrentState,say,[ "hello", 42 ])
+ NewState = executeOneway(CurrentState, say, ["hello", 42])
 
 
 For a oneway taking exactly one (non-list) parameter:
 
 .. code:: erlang
 
- NewState = executeOneway(CurrentState,setAge,78)
+ NewState = executeOneway(CurrentState, setAge, 78)
 
 
 For a oneway taking no parameter:
 
 .. code:: erlang
 
- NewState = executeOneway(CurrentState,declareBirthday)
+ NewState = executeOneway(CurrentState, declareBirthday)
 
 
 Const oneways can also be called [#]_ as well, like in:
 
 .. code:: erlang
 
- executeConstOneway(CurrentState,displayAge)
+ executeConstOneway(CurrentState, displayAge)
 
 
 .. [#] Note that currently WOOPER will not check that a called oneway is indeed const, and will silently drop any updated state.
@@ -1304,13 +1304,13 @@ __________________________________________________
 
 One can specify **explicitly** the class (of course belonging to the inheritance graph of the class at hand) defining the version of the method that one wants to execute, bypassing the inheritance-aware overriding system.
 
-For example, a method needing to call ``setAge/2`` from its body would be expected to use something like: ``AgeState = executeOneway(State,setAge,NewAge)``.
+For example, a method needing to call ``setAge/2`` from its body would be expected to use something like: ``AgeState = executeOneway(State, setAge, NewAge)``.
 
 If ``class_Cat`` overrode ``setAge/2``, any cat instance would then call the overridden ``class_Cat:setAge/2`` method instead of the original ``class_Creature:setAge/2``.
 
 What if our specific method of ``class_Cat`` wanted, for any reason, to call the ``class_Creature`` version of ``setAge/2``, now shadowed by an overridden version of it? In this case a ``execute*As`` function should be used.
 
-These functions, which are ``executeRequestAs/{3,4}`` and ``executeOnewayAs/{3,4}``, behave exactly as the previous ``execute*`` functions, except that they take an additional parameter (to be specified just after the state) that is the name of the mother class (direct or not) having defined the version of the method that we want to execute.
+These functions, which are ``executeRequestAs/{3,4}`` and ``executeOnewayAs/{3,4}``, behave exactly as the previous ``execute*`` functions, except that they take an additional parameter (to be specified initially) that is the name of the mother class (direct or not) having defined the version of the method that we want to execute.
 
 .. Note::
 
@@ -1321,15 +1321,14 @@ In our example, we should thus use simply:
 
 .. code:: erlang
 
- AgeState = executeOnewayAs(State,class_Creature,setAge,NewAge)
+ AgeState = executeOnewayAs(class_Creature, State, setAge, NewAge)
 
 in order to call the ``class_Creature`` version of the ``setAge/2`` oneway.
 
 
 Finally, as one could expect, these functions have their const counterparts, namely: ``executeConstRequestAs/{3,4}`` and ``executeConstOnewayAs/{3,4}``, whose usage offers no surprise, like in::
 
- Color = executeConstRequestAs(MyState,class_Vehicle,
-							   getColorOf,[wheels])
+ Color = executeConstRequestAs(class_Vehicle, MyState, getColorOf, [wheels])
 
 
 
