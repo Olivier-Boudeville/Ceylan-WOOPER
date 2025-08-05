@@ -146,7 +146,7 @@ testExplicitClassSelection( State ) ->
 	% version, we call the class_Creature version instead, which sets the age to
 	% 36 regardless of the specified one:
 	%
-	NewState = executeOnewayAs( State, class_Creature, setAge, 20 ),
+	NewState = executeOnewayAs( class_Creature, State, setAge, 20 ),
 
 	36 = getAttribute( NewState, age ),
 

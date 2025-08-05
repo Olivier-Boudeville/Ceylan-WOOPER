@@ -53,6 +53,12 @@
 %-define( wooper_enable_otp_integration, false ).
 
 
+% The number of milliseconds waited between two pollings made by WOOPER,
+% typically when waiting for messages from multiple senders:
+%
+-define( wooper_default_poll_duration, 200 ).
+
+
 % Number of milliseconds to wait for, in order to be reasonably sure that the
 % warning message could be written to the console, knowing that the operation is
 % asynchronous and thus may not be performed should the VM halt immediately:
@@ -180,6 +186,11 @@
 -endif. % wooper_debug_mode
 
 
+
+% The default value to be used as a tag for request calls that are concurrent
+% (refer to wooper:concurrent_request_tag/0):
+%
+-define( wooper_default_concurrent_request_tag, wooper_concurrent_request_tag ).
 
 
 

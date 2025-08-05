@@ -40,25 +40,32 @@ Test of the **support of methods**.
 -define( superclasses, [] ).
 
 
--define( class_attributes, [ name ] ).
+-define( class_attributes, [ id, name ] ).
 
 
 % Allows to define WOOPER base variables and methods for that class:
 -include("wooper.hrl").
 
 
-% Local type:
+% Local types:
+-type id() :: integer().
 -type name() :: text_utils:ustring().
 
 
--doc "Simplest possible signature.".
--spec construct( wooper:state() ) -> wooper:state().
-construct( State ) ->
+% Type shorthand:
+-type concurrent_result( R ) :: wooper:concurrent_result( R ).
 
-	trace_utils:info( "Construction." ),
+
+-doc "Simplest possible signature.".
+-spec construct( wooper:state(), id() ) -> wooper:state().
+construct( State, Id ) ->
+
+	trace_utils:info_fmt( "Construction of method tester of identifier #~B.",
+                          [ Id ] ),
 
 	% No mother class.
-	setAttribute( State, name, "Terry" ).
+	setAttributes( State, [ { id, Id },
+                            { name, "Terry" } ] ).
 
 
 
@@ -89,6 +96,29 @@ setName( State, Name ) ->
 	trace_utils:info( "setName/2 called." ),
 	NewState = setAttribute( State, name, Name ),
 	wooper:return_state( NewState ).
+
+
+
+-doc "Returns the identifier of this instance.".
+-spec getId( wooper:state() ) ->
+                    const_request_return( concurrent_result( id() ) ).
+getId( State ) ->
+    ReportedId = case ?getAttr(id) of
+
+        2 ->
+            trace_utils:warning(
+                "Tester instance #2 will answer too late (and wrongly)." ),
+            timer:sleep( _Ms=5000 ),
+            -1;
+
+        CorrectId ->
+            trace_utils:info_fmt( "Returning our (correct) identifier, #~B.",
+                                  [ CorrectId ] ),
+            CorrectId
+
+    end,
+
+    wooper:const_return_result( wooper:forge_concurrent_result( ReportedId ) ).
 
 
 

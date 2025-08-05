@@ -71,8 +71,8 @@ is_wooper_debug() ->
 
 % These frequent operations must be as fast as possible:
 %
-% (not recommended functions, i.e. hasAttribute/2 and removeAttribute/2, shall
-% not be inlined)
+% (the functions that are not recommended, i.e. hasAttribute/2 and
+% removeAttribute/2, shall not be inlined)
 %
 -compile( { inline, [ setAttribute/3, setAttributes/2,
 					  swapInAttribute/3,
@@ -142,9 +142,9 @@ with the specified value.
 
 Returns an updated state and the previous value of that attribute.
 
-For example, if the 'color' attribute happened to be previously set to 'red' in
+For example, if the `color` attribute happened to be previously set to `red` in
 SomeState, then: `{NewState, red} = swapInAttribute(SomeState, color, blue)` and
-in NewState 'color' is set to 'blue'.
+in NewState `color` is set to `blue`.
 """.
 -spec swapInAttribute( wooper:state(), attribute_name(), attribute_value() ) ->
 										{ wooper:state(), attribute_value() }.
@@ -206,7 +206,7 @@ ideas])`.
 See also: the `getAttrList/1` macro shorthand.
 """.
 -spec getAttributes( wooper:state(), [ attribute_name() ] ) ->
-							[ attribute_value() ].
+                                            [ attribute_value() ].
 getAttributes( State, AttributeNameList ) ->
 	?wooper_table_type:get_values( AttributeNameList,
 								   State#state_holder.attribute_table ).
@@ -226,7 +226,7 @@ Useful only in specific contexts, like when preferring composition over
 inheritance, where an attribute may not be even defined.
 """.
 -spec getMaybeAttribute( wooper:state(), attribute_name() ) ->
-								option( attribute_value() ).
+                                            option( attribute_value() ).
 getMaybeAttribute( State, AttributeName ) ->
 	case ?wooper_table_type:lookup_entry( AttributeName,
 			State#state_holder.attribute_table ) of

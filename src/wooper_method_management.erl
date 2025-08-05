@@ -468,8 +468,6 @@ raise_no_implementation_error( Classname, FName, FArity, MaybeFileLoc,
 Checks that the method spec (if any) corresponds indeed to the right nature of
 function, that is relies on the right method terminators with the right
 qualifiers, and returns a corresponding pair.
-
-(helper)
 """.
 -spec take_spec_into_account( option( ast_info:located_form() ), function_id(),
 		function_nature(), method_qualifiers(), classname(),
@@ -551,7 +549,8 @@ take_spec_into_account( _LocSpec={ _ASTLoc,
 
 
 -doc """
-Returns a {FunctionNature, Qualifiers} pair deduced from specified clause spec.
+Returns a `{FunctionNature, Qualifiers}` pair deduced from specified clause
+spec.
 """.
 get_info_from_clause_spec( _ClauseSpec={ type, _, 'fun',
 		_Seqs=[ _TypeProductForArgs,
@@ -662,11 +661,7 @@ get_info_from_clause_spec( _ClauseSpec, _FunId, _Classname ) ->
 
 
 
--doc """
-Checks the specified method clause spec.
-
-(helper)
-""".
+-doc "Checks the specified method clause spec.".
 %% For requests:
 % Spec implies non-const request:
 check_clause_spec( { type, _, 'fun', _Seqs=[ _TypeProductForArgs,
@@ -1090,11 +1085,11 @@ function_nature_to_string( Other ) when is_atom( Other ) ->
 
 -doc """
 Checks that, in the specified clauses of specified function (corresponding to a
-request or a oneway), the first parameter is 'State' indeed.
+request or a oneway), the first parameter is `State` indeed.
 
 Note: enforces a very welcome convention, but also complies with the expression
-that the support for example of const_return_result/1 introduces (e.g. {var,
-FileLocCall, 'State'} added in the AST, hence the enforced variable name).
+that the support for example of `const_return_result/1 introduces` (e.g. `{var,
+FileLocCall, State}` added in the AST, hence the enforced variable name).
 """.
 -spec check_state_argument( [ clause_def() ], function_id(), classname() ) ->
 									void().
@@ -2077,7 +2072,7 @@ call_transformer( FileLocCall, FunctionRef, Params,
 %       [ FunctionRef,
 %         ast_transform:ast_transforms_to_string( Transforms ) ] ),
 %
-%	throw( { unexpected_transforms, Transforms } ).
+%   throw( { unexpected_transforms, Transforms } ).
 
 
 
@@ -2091,9 +2086,9 @@ call_transformer( FileLocCall, FunctionRef, Params,
 
 
 -doc """
-Drives the AST transformation of a 'if' construct.
+Drives the AST transformation of a `if` construct.
 
-(see ast_expression:transform_if/3)
+(see `ast_expression:transform_if/3`)
 """.
 -spec if_transformer( file_loc(), [ ast_if_clause() ], ast_transforms() ) ->
 						{ [ ast_expression() ], ast_transforms() }.
@@ -2110,9 +2105,9 @@ if_transformer( FileLoc, IfClauses, Transforms ) ?rec_guard ->
 
 
 -doc """
-Drives the AST transformation of a 'case' construct.
+Drives the AST transformation of a `case` construct.
 
-(see ast_expression:transform_case/4)
+(see `ast_expression:transform_case/4`)
 """.
 -spec case_transformer( file_loc(), ast_expression(), [ ast_case_clause() ],
 			ast_transforms() ) -> { [ ast_expression() ], ast_transforms() }.
@@ -2132,9 +2127,9 @@ case_transformer( FileLoc, TestExpression, CaseClauses,
 
 
 -doc """
-Drives the AST transformation of a 'simple_receive' construct.
+Drives the AST transformation of a `simple_receive` construct.
 
-(see ast_expression:transform_simple_receive/3)
+(see `ast_expression:transform_simple_receive/3`)
 """.
 -spec simple_receive_transformer( file_loc(), [ ast_case_clause() ],
 		ast_transforms() ) -> { [ ast_expression() ], ast_transforms() }.
@@ -2151,9 +2146,9 @@ simple_receive_transformer( FileLoc, ReceiveClauses, Transforms ) ?rec_guard ->
 
 
 -doc """
-Drives the AST transformation of a 'receive_with_after' construct.
+Drives the AST transformation of a `receive_with_after` construct.
 
-(see ast_expression:transform_receive_with_after/5)
+(see `ast_expression:transform_receive_with_after/5`)
 """.
 -spec receive_with_after_transformer( file_loc(), [ ast_case_clause() ],
 		ast_expression(), ast_body(), ast_transforms() ) ->
@@ -2185,7 +2180,7 @@ receive_with_after_transformer( FileLoc, ReceiveClauses, AfterTest, AfterBody,
 
 
 -doc """
-Drives the AST transformation of a 'try' construct.
+Drives the AST transformation of a `try` construct.
 
 Actually it is rather tricky, as a try, in terms of return value, can have 3
 different forms (cf. http://erlang.org/doc/reference_manual/expressions.html):
@@ -2200,7 +2195,7 @@ different forms (cf. http://erlang.org/doc/reference_manual/expressions.html):
 So, here, for (1) EXPR is a possible return value, whereas not for (2) and (3),
 and we have to discriminate among these cases.
 
-(see also ast_expression:transform_try/6)
+(see also `ast_expression:transform_try/6`)
 """.
 -spec try_transformer( file_loc(), ast_body(), [ ast_case_clause() ],
 					   [ ast_case_clause() ], ast_body(), ast_transforms() ) ->
@@ -2256,7 +2251,7 @@ try_transformer( FileLoc, TryBody, TryClauses, CatchClauses, AfterBody,
 
 
 -doc """
-Drives the AST transformation of a 'catch' construct.
+Drives the AST transformation of a `catch` construct.
 
 Note: for catch as an expression, not as a component of try.
 """.
@@ -2289,9 +2284,9 @@ catch_transformer( FileLoc, Expression, Transforms ) ?rec_guard ->
 
 
 -doc """
-Transforms an 'if' clause just for the sake of WOOPER.
+Transforms an `if` clause just for the sake of WOOPER.
 
-(corresponds to ast_clause:transform_if_clause/2)
+(corresponds to `ast_clause:transform_if_clause/2`)
 """.
 if_clause_transformer( _Clause={ 'clause', FileLoc, HeadPatternSequence=[],
 								 GuardSequence, BodyExprs },
@@ -2319,9 +2314,9 @@ if_clause_transformer( _Clause={ 'clause', FileLoc, HeadPatternSequence=[],
 
 
 -doc """
-Transforms a 'case' clause just for the sake of WOOPER.
+Transforms a `case` clause just for the sake of WOOPER.
 
-(corresponds to ast_clause:transform_case_clause/2)
+(corresponds to `ast_clause:transform_case_clause/2`)
 """.
 case_clause_transformer( _Clause={ 'clause', FileLoc, CaseHead=[ _Pattern ],
 								   GuardSequence, BodyExprs },
@@ -2350,9 +2345,9 @@ case_clause_transformer( _Clause={ 'clause', FileLoc, CaseHead=[ _Pattern ],
 
 
 -doc """
-Transforms a 'catch' clause just for the sake of WOOPER.
+Transforms a `catch` clause just for the sake of WOOPER.
 
-(corresponds to ast_clause:transform_catch_clause/2)
+(corresponds to `ast_clause:transform_catch_clause/2`)
 """.
 catch_clause_transformer(
 		_Clause={ 'clause', FileLoc, Throw=[ { throw, _Pattern, _Any } ],
@@ -2408,9 +2403,9 @@ catch_clause_transformer(
 Resets the transformation state, so that new findings can be compared to
 previous knowledge.
 
-Otherwise, for example if having already a 'request' nature found and finding
-afterwards a 'function' expression (i.e. a nature established by default), the
-recorded nature would remain to 'request' and thus the mismatching 'function'
+Otherwise, for example if having already a `request` nature found and finding
+afterwards a `function` expression (i.e. a nature established by default), the
+recorded nature would remain to `request` and thus the mismatching `function`
 clause would not be detected.
 """.
 -spec reset_transformation_state( ast_transforms() ) -> ast_transforms().
@@ -2426,7 +2421,7 @@ Returns an updated transformation state, based on an initial one and one
 returned by a transformation.
 
 Note that the base one provided to the transformation in-between shall have been
-reset (see reset_transformation_state/1).
+reset (see `reset_transformation_state/1`).
 """.
 -spec update_transformation_state( ast_transforms(), ast_transforms(),
 								   file_loc() ) -> ast_transforms().
@@ -2834,7 +2829,7 @@ methods_to_functions( RequestTable, OnewayTable, StaticTable,
 
 	RequestAsFunPairs = [
 		{ ReqId, request_to_function_info( ReqInfo, ExportLoc ) }
-						|| { ReqId, ReqInfo } <- RequestPairs ],
+			|| { ReqId, ReqInfo } <- RequestPairs ],
 
 	WithRequestsFunTable =
 		table:add_new_entries( RequestAsFunPairs, InitFunctionTable ),
@@ -2843,7 +2838,7 @@ methods_to_functions( RequestTable, OnewayTable, StaticTable,
 
 	OnewayAsFunPairs = [
 		{ OnwId, oneway_to_function_info( OnwInfo, ExportLoc ) }
-						|| { OnwId, OnwInfo } <- OnewayPairs ],
+			|| { OnwId, OnwInfo } <- OnewayPairs ],
 
 	WithOnewaysFunTable = table:add_new_entries( OnewayAsFunPairs,
 												 WithRequestsFunTable ),
