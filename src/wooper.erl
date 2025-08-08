@@ -112,7 +112,8 @@ Module containing some **general facilities for WOOPER class developers**.
 
 % Extra features:
 -export([ declare_beam_dirs_for_wooper/0, retrieve_virtual_table_key/1,
-		  get_execution_target/0 ]).
+		  get_execution_target/0,
+          method_name_to_string/1, method_id_to_string/2 ]).
 
 
 
@@ -512,6 +513,7 @@ one).
 -type maybe_list(T) :: list_utils:maybe_list(T).
 
 -type ustring() :: text_utils:ustring().
+-type string_like() :: text_utils:string_like().
 -type format_string() :: text_utils:format_string().
 -type format_values() :: text_utils:format_values().
 
@@ -1040,8 +1042,8 @@ send_requests( RequestName, RequestArgs, TargetInstancePIDs ) ->
 
 	Request = { RequestName, RequestArgs, self() },
 
-    trace_utils:debug_fmt( "Sending ~w to each instance in ~w.",
-                           [ Request, TargetInstancePIDs ] ),
+    %trace_utils:debug_fmt( "Sending ~w to each instance in ~w.",
+    %                       [ Request, TargetInstancePIDs ] ),
 
 	[ begin
 
@@ -2065,7 +2067,7 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 
 		Other ->
-			log_error( "WOOPER error for PID ~w of class ~ts: "
+			log_error( " for PID ~w of class ~ts: "
 				"constructor did not return a state, but returned '~p' "
 				"instead. Construction parameters were:~n~p.",
 				[ self(), Classname, Other, ConstructionParameters ] ),
@@ -2181,7 +2183,7 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 
 
 		Other ->
-			log_error( "WOOPER error for PID ~w of class ~ts: "
+			log_error( " for PID ~w of class ~ts: "
 				"constructor did not return a state, but returned '~p' "
 				"instead. Construction parameters were:~n~p.~n",
 				[ self(), Classname, Other, ConstructionParameters ] ),
@@ -2275,7 +2277,7 @@ construct_passive( Classname, ConstructionParameters ) ->
 			ConstructState;
 
 		Other ->
-			log_error( "WOOPER error when creating a passive instance "
+			log_error( " when creating a passive instance "
 				"of class ~ts: constructor did not return a state, "
 				"but returned '~p' instead. "
 				"Construction parameters were:~n~p",
@@ -2621,9 +2623,8 @@ trigger_error( _ExceptionClass, _ExceptionTerm=undef, Classname,
 
 	LocString = get_location_string( Loc, NextCalls ),
 
-	log_error( "WOOPER error for PID ~w, "
-		"constructor (~ts:construct/~B) failed due to an 'undef' "
-		"call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts",
+	log_error( " for PID ~w, constructor (~ts:construct/~B) failed due to "
+        "an 'undef' call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts",
 		[ self(), Classname, Arity, ModuleName, FunctionName,
 		  UndefArity, Diagnosis, LocString ] ),
 
@@ -2646,8 +2647,8 @@ trigger_error( ExceptionClass, ExceptionTerm, Classname, ConstructionParameters,
 	%   "Stacktrace:~n ~p.",
 	%   [ ExceptionClass, ExceptionTerm, Stacktrace ] ),
 
-	log_error( "WOOPER error for PID ~w, "
-		"constructor (~ts:construct/~B) failed (exception class: ~p):~n~n"
+	log_error( " for PID ~w, constructor (~ts:construct/~B) failed "
+        "(exception class: ~p):~n~n"
 		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first): ~ts~n~n"
 		" - for construction parameters:~n  ~p~n",
@@ -3037,6 +3038,11 @@ log_warning( FormatString, ValueList ) ->
 Reports (as synchronously as possible, in order to avoid losing this
 notification) the specified error to the user, typically by displaying an error
 report on the console (non-halting function, e.g. no exception thrown).
+
+Note that only the "WOOPER error" prefix (with no trailing space) is added, so
+that the caller can either start with a semicolon ("WOOPER error: something") or
+a space ("WOOPER error for instance [...]"). As a consequence, the user message
+shall not begin with an uppercase letter.
 """.
 -spec log_error( ustring() ) -> void().
 log_error( Message ) ->
@@ -3047,7 +3053,7 @@ log_error( Message ) ->
 
 	% Never ellipsing for errors now:
 	%logger:error( text_utils:ellipse( Message, ?ellipse_length ) ++ "\n" ),
-	logger:error( "WOOPER error: ~ts~n", [ Message ] ),
+	logger:error( "WOOPER error~ts~n", [ Message ] ),
 
 	% Wait a bit, as logger (at least former error_logger) seems asynchronous:
 	system_utils:await_output_completion( ?wooper_error_display_waiting ).
@@ -3058,11 +3064,13 @@ log_error( Message ) ->
 Reports (as synchronously as possible, in order to avoid losing this
 notification) the specified error to the user, typically by displaying an error
 report on the console (non-halting function, e.g. no exception thrown).
+
+See `log_error/1` for more details.
 """.
 -spec log_error( format_string(), format_values() ) -> void().
 log_error( FormatString, ValueList ) ->
 
-	Str = text_utils:format( "WOOPER error: " ++ FormatString
+	Str = text_utils:format( "WOOPER error" ++ FormatString
 		++ "~n= END OF WOOPER ERROR REPORT FOR ~w ===",
 							 ValueList ++ [ self() ] ),
 
@@ -3070,8 +3078,12 @@ log_error( FormatString, ValueList ) ->
 	% (this is the case, so commented-out)
 	%trace_bridge:warning( "Echoing WOOPER error: " ++ Str ),
 
-	% Never ellipsing for errors now:
+    % If preferring ellipsing longer error messages (not recommended, to be done
+    % if necessary by the actual logger):
+    %
 	%logger:error( text_utils:ellipse( Str, ?ellipse_length ) ),
+
+	% If never ellipsing for errors:
 	logger:error( Str ),
 
 	% Wait a bit, as logger (at least former error_logger) seems asynchronous:
@@ -3094,11 +3106,11 @@ log_error( FormatString, ValueList, State )
 	io:format( "~n", [] ),
 
 	% Node information would be uselessly distracting:
-	%log_error( "WOOPER error for ~ts instance of PID ~w on node ~ts: "
+	%log_error( " for ~ts instance of PID ~w on node ~ts: "
 	%           ++ FormatString,
 	%           [ State#state_holder.actual_class, self(),
 	%             node() | ValueList ] );
-	log_error( "WOOPER error for ~ts instance of PID ~w: " ++ FormatString,
+	log_error( " for ~ts instance of PID ~w: " ++ FormatString,
 			   [ State#state_holder.actual_class, self() | ValueList ] );
 
 log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
@@ -3106,10 +3118,10 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 	io:format( "~n", [] ),
 
 	% Node information would be uselessly distracting:
-	%log_error( "WOOPER error for instance of PID ~w on node ~ts triggered "
+	%log_error( " for instance of PID ~w on node ~ts triggered "
 	%           "in module ~ts: " ++ FormatString,
 	%           [ self(), ModuleName, node() | ValueList ] ).
-	log_error( "WOOPER error for instance of PID ~w triggered "
+	log_error( " for instance of PID ~w triggered "
 		"in module ~ts: " ++ FormatString,
 		[ self(), ModuleName | ValueList ] ).
 
@@ -3142,7 +3154,7 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ExceptionClass,
 
 	LocString = get_location_string( Loc, NextCalls ),
 
-	log_error( "request ~ts~ts/~B failed due to an 'undef' "
+	log_error( ", request ~ts~ts/~B failed due to an 'undef' "
 		"call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts",
 		[ ModulePrefix, RequestName, Arity, ModuleName, FunctionName,
 		  UndefArity, Diagnosis, LocString ], State ),
@@ -3171,7 +3183,7 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ExceptionClass,
 
 	ModulePrefix = lookup_method_prefix( RequestName, Arity, State ),
 
-	log_error( "request ~ts~ts/~B failed (exception class: ~ts):~n~n"
+	log_error( ", request ~ts~ts/~B failed (exception class: ~ts):~n~n"
 		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first): ~ts~n"
 		" - caller being process ~w~n~n"
@@ -3224,7 +3236,7 @@ on_failed_oneway( OnewayName, ArgumentList, _ExceptionClass,
 
 	LocString = get_location_string( Loc, NextCalls ),
 
-	log_error( "oneway ~ts~ts/~B failed due to an 'undef' "
+	log_error( ", oneway ~ts~ts/~B failed due to an 'undef' "
 		"call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts",
 		[ ModulePrefix, OnewayName, Arity, ModuleName, FunctionName,
 		  UndefArity, Diagnosis, LocString ], State ),
@@ -3244,7 +3256,7 @@ on_failed_oneway( OnewayName, ArgumentList, ExceptionClass, ExceptionTerm,
 	ModulePrefix = lookup_method_prefix( OnewayName, Arity, State ),
 
 	% PID managed by log_error:
-	log_error( "oneway ~ts~ts/~B failed (exception class: ~ts):~n~n"
+	log_error( ", oneway ~ts~ts/~B failed (exception class: ~ts):~n~n"
 		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first): ~ts~n"
 		" - for oneway parameters:~n  ~p~n",
@@ -3783,3 +3795,37 @@ Checks that all specified attributes are indeed associated to a value equal to
 -spec check_all_undefined( [ attribute_name() ], wooper:state() ) -> void().
 check_all_undefined( AttributeNames, State ) ->
 	[ check_undefined( Attr, State ) || Attr <- AttributeNames ].
+
+
+
+-doc """
+Returns the best (clearest, most robust) textual name of the method whose
+(potentially faulty) call is specified.
+""".
+-spec method_name_to_string( any() ) -> string_like().
+method_name_to_string( MethodName ) when is_atom( MethodName ) ->
+    MethodName;
+
+method_name_to_string( InvMethodName ) ->
+    text_utils:format( "of invalid name '~p'", [ InvMethodName ] ).
+
+
+
+
+-doc """
+Returns the best (clearest, most robust) textual identifier of the method whose
+(potentially faulty) call is specified.
+""".
+-spec method_id_to_string( any(), any() ) -> ustring().
+method_id_to_string( MethodName, Args ) when is_atom( MethodName )
+                                   andalso is_list( Args ) ->
+    text_utils:format( "~ts/~B", [ MethodName, length( Args )+1 ] );
+
+method_id_to_string( MethodName, _StandaloneArg )
+                                        when is_atom( MethodName ) ->
+    text_utils:format( "~ts/2", [ MethodName ] );
+
+% If having no argument, no need to call this function.
+
+method_id_to_string( InvMethodName, _Arg ) ->
+    text_utils:format( "of invalid name '~p'", [ InvMethodName ] ).

@@ -106,7 +106,7 @@ also the TextTransformer example in serialisable_test.erl.
 % already updated by an entry transformer), to perform any last change needed
 % before this state is used from then on by a corresponding loaded instance.
 %
-% Finally disabled, as better implemented by the onPostDeserialisation/2 
+% Finally disabled, as better implemented by the onPostDeserialisation/2
 % request.
 % """.
 %-type state_transformer_fun() ::

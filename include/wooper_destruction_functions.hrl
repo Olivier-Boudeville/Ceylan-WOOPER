@@ -82,7 +82,7 @@ wooper_destruct( State ) ->
 					ReturnedState;
 
 				Other ->
-					wooper:log_error( "~nWOOPER error for PID ~w of class ~ts: "
+					wooper:log_error( " for PID ~w of class ~ts: "
 						"user-defined destructor did not return a state, but "
 						"returned '~p' instead.", [ self(), ?MODULE, Other ] ),
 
@@ -184,7 +184,7 @@ trigger_destruct_error( Reason, ErrorTerm, StackTrace, State ) ->
 
 	ActualClassname = wooper:get_classname( State ),
 
-	wooper:log_error( "~nWOOPER error for PID ~w, "
+	wooper:log_error( " for PID ~w, "
 		"destructor (~ts:destruct/1) failed (cause: ~p):~n~n"
 		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first): ~ts~n"

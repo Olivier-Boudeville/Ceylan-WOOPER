@@ -68,7 +68,7 @@ Returns an updated state and a result.
 """.
 -spec executeRequest( wooper:state(), request_name() ) ->
 							{ wooper:state(), method_internal_result() }.
-
+% Legit case:
 executeRequest( State, RequestAtom ) when is_record( State, state_holder )
 										  andalso is_atom( RequestAtom ) ->
 
@@ -78,31 +78,26 @@ executeRequest( State, RequestAtom ) when is_record( State, state_holder )
 	wooper_handle_local_request_execution( RequestAtom, State,
 										   _ArgumentList=[] );
 
+% Invalid request name:
 executeRequest( State, RequestAtomError )
-                                        when is_record( State, state_holder ) ->
+                                    when is_record( State, state_holder ) ->
 
-	wooper:log_error( "when executing local request: '~p' is not an atom.",
-					  [ RequestAtomError ], State ),
+	wooper:log_error( "when executing request locally, its name shall "
+        "be an atom, not:~n ~p", [ RequestAtomError ], State ),
 
-	throw( { wooper_invalid_request_call, RequestAtomError } );
+	throw( { wooper_invalid_request_call,
+             { invalid_request_name, RequestAtomError } } );
 
+% Invalid state:
+executeRequest( StateError, SomeRequestName ) ->
 
-executeRequest( StateError, RequestAtom ) when is_atom( RequestAtom ) ->
+	wooper:log_error( "when executing request ~ts/1 locally, "
+		"first parameter should be a state, not:~n ~p",
+		[ wooper:method_name_to_string( SomeRequestName ), StateError ],
+        ?MODULE ),
 
-	wooper:log_error( "when executing request ~p: "
-		"first parameter should be a state, not '~p'.",
-		[ RequestAtom, StateError ], ?MODULE ),
-
-	throw( { wooper_invalid_request_call, RequestAtom } );
-
-
-executeRequest( StateError, RequestAtomError ) ->
-
-	wooper:log_error( "when executing request: '~p' is not a state and "
-		"'~p' is not an atom.",
-		[ StateError, RequestAtomError ], ?MODULE ),
-
-	throw( { wooper_invalid_request_call, StateError, RequestAtomError } ).
+	throw( { wooper_invalid_request_call,
+             { SomeRequestName, { invalid_state, StateError } } } ).
 
 
 
@@ -142,6 +137,7 @@ Returns an updated state and a result.
 """.
 -spec executeRequest( wooper:state(), request_name(), method_arguments() ) ->
 							{ wooper:state(), method_internal_result() }.
+% Most usual legit case:
 executeRequest( State, RequestAtom, ArgumentList ) when
 		is_record( State, state_holder ) andalso is_atom( RequestAtom )
 		andalso is_list( ArgumentList ) ->
@@ -153,7 +149,7 @@ executeRequest( State, RequestAtom, ArgumentList ) when
 	wooper_handle_local_request_execution( RequestAtom, State, ArgumentList );
 
 
-% Here the third parameter is not a list:
+% Here having a single, standalone argument, to be promoted to list:
 executeRequest( State, RequestAtom, StandaloneArgument ) when
 		is_record( State, state_holder ) andalso is_atom( RequestAtom )->
 
@@ -165,33 +161,27 @@ executeRequest( State, RequestAtom, StandaloneArgument ) when
 		_ArgumentList=[ StandaloneArgument ] );
 
 
-% Catches all errors:
-executeRequest( StateError, RequestAtom, _LastArg )
-							when is_atom( RequestAtom ) ->
-
-	wooper:log_error( "when executing request ~p: "
-		"first parameter should be a state, not '~p'.",
-		[ RequestAtom, StateError ], ?MODULE ),
-
-	throw( { wooper_invalid_request_call, RequestAtom } );
-
-
-executeRequest( State, RequestAtomError, _LastArg )
+% Invalid request name:
+executeRequest( State, RequestAtomError, _ArgMaybeList )
 							when is_record( State, state_holder ) ->
 
-	wooper:log_error( "when executing request: '~p' is not an atom.",
-					  [ RequestAtomError ], State ),
+	wooper:log_error( "when executing request locally, its name shall "
+        "be an atom, not:~n ~p", [ RequestAtomError ], State ),
 
-	throw( { wooper_invalid_request_call, RequestAtomError } );
+	throw( { wooper_invalid_request_call,
+             { invalid_request_name, RequestAtomError } } );
 
 
-executeRequest( StateError, RequestAtomError, _LastArg ) ->
+% At least an invalid state:
+executeRequest( StateError, RequestAtom, ArgMaybeList ) ->
 
-	wooper:log_error( "when executing request: first parameter should "
-		"be a state, not '~p', and '~p' is not an atom.",
-		[ StateError, RequestAtomError ], ?MODULE ),
+	wooper:log_error( "when executing request ~ts locally, "
+		"first parameter should be a state, not:~n ~p",
+		[ wooper:method_id_to_string( RequestAtom, ArgMaybeList ),
+          StateError ], ?MODULE ),
 
-	throw( { wooper_invalid_request_call, RequestAtomError } ).
+	throw( { wooper_invalid_request_call,
+             { RequestAtom, { invalid_state, StateError } } } ).
 
 
 
@@ -208,12 +198,14 @@ Returns only a result.
 """.
 -spec executeConstRequest( wooper:state(), request_name(),
 						   method_arguments() ) -> method_internal_result().
-executeConstRequest( State, RequestAtom, ArgumentList ) ->
+executeConstRequest( State, RequestAtom, ArgumentMaybeList ) ->
 
 	% Checks made by the callee; actual constness not checked yet shall derive
 	% from the transformed, corresponding method terminator:
 	%
-	{ _State, Result } = executeRequest( State, RequestAtom, ArgumentList ),
+	{ _State, Result } =
+        executeRequest( State, RequestAtom, ArgumentMaybeList ),
+
 	Result.
 
 
@@ -231,8 +223,9 @@ Returns an updated state and a result.
 """.
 -spec executeRequestAs( classname(), wooper:state(), request_name() ) ->
 								{ wooper:state(), method_internal_result() }.
+% Legit case:
 executeRequestAs( ParentClassname, State, RequestAtom )
-		when is_record( State, state_holder ) andalso is_atom( ParentClassname )
+		when is_atom( ParentClassname ) andalso is_record( State, state_holder )
 			 andalso is_atom( RequestAtom ) ->
 
 	%trace_utils:debug_fmt( "executeRequestAs/3: executing ~ts() from ~ts "
@@ -242,25 +235,43 @@ executeRequestAs( ParentClassname, State, RequestAtom )
 	wooper_handle_local_request_execution_as( RequestAtom, State,
 		_ArgumentList=[], ParentClassname );
 
+% Invalid request name:
+executeRequestAs( ParentClassname, State, RequestAtomError )
+		when is_atom( ParentClassname )
+             andalso is_record( State, state_holder ) ->
 
-executeRequestAs( ParentClassname, StateError, RequestAtom )
-		when is_atom( ParentClassname ) andalso is_atom( RequestAtom ) ->
+	wooper:log_error( "when executing request locally as ~ts, the request "
+        "name shall be an atom, not:~n ~p",
+        [ ParentClassname, RequestAtomError ], State ),
 
-	wooper:log_error( "when executing request ~p as parent "
-		"class ~ts: first parameter should be a state, not '~p'.",
-		[ RequestAtom, ParentClassname, StateError ], ?MODULE ),
-
-	throw( { wooper_invalid_request_call, RequestAtom } );
+	throw( { wooper_invalid_request_call,
+             { invalid_request_name, RequestAtomError } } );
 
 
-executeRequestAs( ParentClassnameError, _State, RequestAtomError ) ->
+% Invalid state:
+executeRequestAs( ParentClassname, StateError, SomeRequestName )
+		when is_atom( ParentClassname ) ->
 
-	wooper:log_error( "when executing request as a parent class: "
-		"'~p' and '~p' should both be atoms.",
-		[ ParentClassnameError, RequestAtomError ], ?MODULE ),
+	wooper:log_error( "when executing request ~ts/1 locally as ~ts, "
+		"second parameter should be a state, not:~n ~p",
+		[ wooper:method_name_to_string( SomeRequestName ), ParentClassname,
+          StateError ], ?MODULE ),
 
-	throw( { wooper_invalid_request_call, ParentClassnameError,
-			 RequestAtomError } ).
+	throw( { wooper_invalid_request_call,
+             { SomeRequestName, { invalid_state, StateError } } } );
+
+
+% Invalid parent classname:
+executeRequestAs( ParentClassnameError, _State, SomeRequestName ) ->
+
+	wooper:log_error( "when executing request ~ts/1 locally, "
+		"parent classname shall be an atom, not:~n ~p",
+		[ wooper:method_name_to_string( SomeRequestName ),
+            ParentClassnameError ], ?MODULE ),
+
+	throw( { wooper_invalid_request_call, { SomeRequestName,
+            { invalid_parent_classname, ParentClassnameError } } } ).
+
 
 
 
@@ -302,6 +313,7 @@ Returns an updated state and a result.
 """.
 -spec executeRequestAs( classname(), wooper:state(), request_name(),
 		method_arguments() ) -> { wooper:state(), method_internal_result() }.
+% Most usual legit case:
 executeRequestAs( ParentClassname, State, RequestAtom, ArgumentList ) when
 		is_atom( ParentClassname ) andalso is_record( State, state_holder )
 		andalso is_atom( RequestAtom ) andalso is_list( ArgumentList ) ->
@@ -314,7 +326,7 @@ executeRequestAs( ParentClassname, State, RequestAtom, ArgumentList ) when
 											  ArgumentList, ParentClassname );
 
 
-% Here the third parameter is not a list:
+% Here having a single, standalone argument, to be promoted to list:
 executeRequestAs( ParentClassname, State, RequestAtom,
                   StandaloneArgument ) when is_atom( ParentClassname )
         andalso is_record( State, state_holder )
@@ -329,26 +341,42 @@ executeRequestAs( ParentClassname, State, RequestAtom,
 		_ArgumentList=[ StandaloneArgument ], ParentClassname );
 
 
-% Error cases below:
-executeRequestAs( ParentClassname, StateError, RequestAtom, _LastArg )
-		when is_atom( ParentClassname ) andalso is_atom( RequestAtom ) ->
+% Invalid request name:
+executeRequestAs( ParentClassname, State, RequestAtomError, _ArgMaybeList )
+		when is_atom( ParentClassname )
+             andalso is_record( State, state_holder ) ->
 
-	wooper:log_error( "when executing request ~p: "
-		"first parameter should be a state, not '~p'.",
-		[ RequestAtom, StateError ], ?MODULE ),
+	wooper:log_error( "when executing request locally as ~ts, the request "
+        "name shall be an atom, not:~n ~p",
+        [ ParentClassname, RequestAtomError ], State ),
 
-	throw( { wooper_invalid_request_call, RequestAtom } );
+	throw( { wooper_invalid_request_call,
+             { invalid_request_name, RequestAtomError } } );
 
 
-% Catches all remaining errors:
-executeRequestAs( ParentClassnameError, _State, RequestAtomError, _LastArg ) ->
+% Invalid state:
+executeRequestAs( ParentClassname, StateError, RequestAtom, ArgMaybeList )
+        when is_atom( ParentClassname ) ->
 
-	wooper:log_error( "when executing request: both '~p' (classname) and "
-		"'~p' (request name) should be atoms.",
-		[ ParentClassnameError, RequestAtomError ], ?MODULE ),
+	wooper:log_error( "when executing request ~ts locally as ~ts, "
+		"second parameter should be a state, not:~n ~p",
+		[ wooper:method_id_to_string( RequestAtom, ArgMaybeList ),
+          ParentClassname, StateError ], ?MODULE ),
 
-	throw( { wooper_invalid_request_call, ParentClassnameError,
-             RequestAtomError } ).
+	throw( { wooper_invalid_request_call,
+             { RequestAtom, { invalid_state, StateError } } } );
+
+
+% Invalid parent classname:
+executeRequestAs( ParentClassnameError, _State, RequestAtom, ArgMaybeList ) ->
+
+	wooper:log_error( "when executing request ~ts locally, "
+		"parent classname shall be an atom, not:~n ~p",
+		[ wooper:method_id_to_string( RequestAtom, ArgMaybeList ),
+          ParentClassnameError ], ?MODULE ),
+
+	throw( { wooper_invalid_request_call, { RequestAtom,
+            { invalid_parent_classname, ParentClassnameError } } } ).
 
 
 
@@ -365,13 +393,14 @@ Returns only a result.
 """.
 -spec executeConstRequestAs( classname(), wooper:state(), request_name(),
 			method_arguments() ) -> method_internal_result().
-executeConstRequestAs( ParentClassname, State, RequestAtom, ArgumentList ) ->
+executeConstRequestAs( ParentClassname, State, RequestAtom,
+                       MaybeArgumentList ) ->
 
 	% Checks made by the callee; actual constness not checked yet shall derive
 	% from the transformed, corresponding method terminator:
 	%
-	{ _State, Result } =
-        executeRequestAs( ParentClassname, State, RequestAtom, ArgumentList ),
+	{ _State, Result } = executeRequestAs( ParentClassname, State, RequestAtom,
+                                           MaybeArgumentList ),
 
 	Result.
 
@@ -399,6 +428,7 @@ EngineVehicle should know nothing from its Car child class.
 Returns an updated state.
 """.
 -spec executeOneway( wooper:state(), oneway_name() ) -> wooper:state().
+% Legit case:
 executeOneway( State, OnewayAtom ) when is_record( State, state_holder )
 										andalso is_atom( OnewayAtom ) ->
 
@@ -408,29 +438,25 @@ executeOneway( State, OnewayAtom ) when is_record( State, state_holder )
 	wooper_handle_local_oneway_execution( OnewayAtom, State, _ArgumentList=[] );
 
 
-executeOneway( State, OnewayError ) when is_record( State, state_holder ) ->
+% Invalid oneway name:
+executeOneway( State, OnewayAtomError ) when is_record( State, state_holder ) ->
 
-	wooper:log_error( "when executing a oneway: its name should be an atom, "
-					  "not '~p'.", [ OnewayError ], State ),
+	wooper:log_error( "when executing oneway locally, its name shall "
+        "be an atom, not:~n ~p", [ OnewayAtomError ], State ),
 
-	throw( { wooper_invalid_oneway_call, OnewayError } );
+	throw( { wooper_invalid_oneway_call,
+             { invalid_oneway_name, OnewayAtomError } } );
 
+% Invalid state:
+executeOneway( StateError, SomeOnewayName ) ->
 
-executeOneway( StateError, OnewayAtom ) when is_atom( OnewayAtom ) ->
+	wooper:log_error( "when executing oneway ~ts/1 locally, "
+		"first parameter should be a state, not:~n ~p",
+		[ wooper:method_name_to_string( SomeOnewayName ), StateError ],
+        ?MODULE ),
 
-	wooper:log_error( "when executing oneway ~p: "
-		"first parameter should be a state, not '~p'.",
-		[ OnewayAtom, StateError ], ?MODULE ),
-
-	throw( { wooper_invalid_oneway_call, OnewayAtom } );
-
-
-executeOneway( StateError, OnewayError ) ->
-
-	wooper:log_error( "when executing oneway: '~ts' is not a state and "
-		"'~p' is not an atom.", [ StateError, OnewayError ], ?MODULE ),
-
-	throw( { wooper_invalid_oneway_call, OnewayError } ).
+	throw( { wooper_invalid_oneway_call,
+             { SomeOnewayName, { invalid_state, StateError } } } ).
 
 
 
@@ -468,6 +494,7 @@ Returns an updated state.
 """.
 -spec executeOneway( wooper:state(), oneway_name(), method_arguments() ) ->
 								wooper:state().
+% Most usual legit case:
 executeOneway( State, OnewayAtom, ArgumentList ) when
 		is_record( State, state_holder ) andalso is_atom( OnewayAtom )
 		andalso is_list( ArgumentList ) ->
@@ -479,7 +506,7 @@ executeOneway( State, OnewayAtom, ArgumentList ) when
 	wooper_handle_local_oneway_execution( OnewayAtom, State, ArgumentList );
 
 
-% Here third parameter is not a list:
+% Here having a single, standalone argument, to be promoted to list:
 executeOneway( State, OnewayAtom, StandaloneArgument ) when
 		is_record( State, state_holder ) andalso is_atom( OnewayAtom ) ->
 
@@ -490,32 +517,28 @@ executeOneway( State, OnewayAtom, StandaloneArgument ) when
 	wooper_handle_local_oneway_execution( OnewayAtom, State,
 										  [ StandaloneArgument ] );
 
+% Invalid oneway name:
+executeOneway( State, OnewayAtomError, _ArgMaybeList )
+                        when is_record( State, state_holder )  ->
 
-% All errors caught below:
-executeOneway( StateError, OnewayAtom, _LastArg ) when is_atom( OnewayAtom ) ->
+	wooper:log_error( "when executing oneway locally, its name shall "
+        "be an atom, not:~n ~p", [ OnewayAtomError ], State ),
 
-	wooper:log_error( "when executing oneway ~p: "
-		"first parameter should be a state, not '~p'.",
-		[ OnewayAtom, StateError ], ?MODULE ),
-
-	throw( { wooper_invalid_oneway_call, OnewayAtom } );
-
-
-executeOneway( State, OnewayAtomError, _LastArg )
-		when is_record( State, state_holder ) ->
-
-	wooper:log_error( "when executing oneway: '~p' is not an atom.",
-					  [ OnewayAtomError ], State ),
-
-	throw( { wooper_invalid_oneway_call, OnewayAtomError } );
+	throw( { wooper_invalid_oneway_call,
+             { invalid_oneway_name, OnewayAtomError } } );
 
 
-executeOneway( _State, OnewayAtomError, _LastArg ) ->
+% Invalid state:
+executeOneway( StateError, OnewayAtom, ArgMaybeList ) ->
 
-	wooper:log_error( "when executing oneway: '~p' is not an atom.",
-					  [ OnewayAtomError ], ?MODULE ),
+	wooper:log_error( "when executing oneway ~ts locally, "
+		"first parameter should be a state, not:~n ~p",
+		[ wooper:method_id_to_string( OnewayAtom, ArgMaybeList ), StateError ],
+        ?MODULE ),
 
-	throw( { wooper_invalid_oneway_call, OnewayAtomError } ).
+	throw( { wooper_invalid_oneway_call,
+             { OnewayAtom, { invalid_state, StateError } } } ).
+
 
 
 
@@ -532,12 +555,12 @@ Const oneways return nothing.
 """.
 -spec executeConstOneway( wooper:state(), oneway_name(), method_arguments() ) ->
 								void().
-executeConstOneway( State, OnewayAtom, ArgumentList ) ->
+executeConstOneway( State, OnewayAtom, ArgumentMaybeList ) ->
 
 	% Checks made by the callee; actual constness not checked yet shall derive
 	% from the transformed, corresponding method terminator:
 	%
-	_State = executeOneway( State, OnewayAtom, ArgumentList ).
+	_State = executeOneway( State, OnewayAtom, ArgumentMaybeList ).
 
 
 
@@ -554,9 +577,10 @@ Returns an updated state.
 """.
 -spec executeOnewayAs( classname(), wooper:state(), oneway_name() ) ->
 								wooper:state().
-executeOnewayAs( State, ParentClassname, OnewayAtom )
-		when is_record( State, state_holder ) andalso is_atom( ParentClassname )
-			 andalso is_atom( OnewayAtom ) ->
+% Legit case:
+executeOnewayAs( ParentClassname, State, OnewayAtom )
+		when is_atom( ParentClassname ) andalso is_record( State, state_holder )
+             andalso is_atom( OnewayAtom ) ->
 
 	%trace_utils:debug_fmt( "executeOnewayAs/3: executing ~ts() from ~ts "
 	%   "as parent class ~ts.",
@@ -566,24 +590,41 @@ executeOnewayAs( State, ParentClassname, OnewayAtom )
 		_ArgumentList=[], ParentClassname );
 
 
-executeOnewayAs( ParentClassname, StateError, OnewayAtom )
-								when is_record( StateError, state_holder ) ->
+% Invalid oneway name:
+executeOnewayAs( ParentClassname, State, OnewayAtomError )
+		when is_atom( ParentClassname )
+             andalso is_record( State, state_holder ) ->
 
-	wooper:log_error( "when executing oneway ~p as parent "
-		"class ~ts: first parameter should be a state, not '~p'.",
-		[ OnewayAtom, ParentClassname, StateError ], ?MODULE ),
+	wooper:log_error( "when executing oneway locally as ~ts, the oneway name "
+        "shall be an atom, not:~n ~p", [ ParentClassname, OnewayAtomError ],
+        State ),
 
-	throw( { wooper_invalid_oneway_call, OnewayAtom } );
+	throw( { wooper_invalid_oneway_call,
+             { invalid_oneway_name, OnewayAtomError } } );
 
 
-executeOnewayAs( ParentClassnameError, _StateError, OnewayAtomError ) ->
+% Invalid state:
+executeOnewayAs( ParentClassname, StateError, SomeOnewayName )
+		when is_atom( ParentClassname ) ->
 
-	wooper:log_error( "when executing oneway as a parent class: "
-		"'~p' and '~p' should both be atoms.",
-		[ ParentClassnameError, OnewayAtomError ], ?MODULE ),
+	wooper:log_error( "when executing oneway ~ts/1 locally as ~ts, "
+		"second parameter should be a state, not:~n ~p",
+		[ wooper:method_name_to_string( SomeOnewayName ), ParentClassname,
+          StateError ], ?MODULE ),
 
-	throw( { wooper_invalid_oneway_call, ParentClassnameError,
-			 OnewayAtomError } ).
+	throw( { wooper_invalid_oneway_call, SomeOnewayName } );
+
+
+% Invalid parent classname:
+executeOnewayAs( ParentClassnameError, _State, SomeOnewayName ) ->
+
+	wooper:log_error( "when executing oneway ~ts/1 locally, parent "
+        "classname shall be an atom, not:~n ~p",
+        [ wooper:method_name_to_string( SomeOnewayName ),
+          ParentClassnameError ], ?MODULE ),
+
+	throw( { wooper_invalid_oneway_call, { SomeOnewayName,
+            { invalid_parent_classname, ParentClassnameError } } } ).
 
 
 
@@ -622,11 +663,12 @@ Returns an updated state.
 """.
 -spec executeOnewayAs( classname(), wooper:state(), oneway_name(),
 					   method_arguments() ) -> wooper:state().
+% Most usual legit case:
 executeOnewayAs( ParentClassname, State, OnewayAtom, ArgumentList ) when
 		is_atom( ParentClassname ) andalso is_record( State, state_holder )
 		andalso is_atom( OnewayAtom ) andalso is_list( ArgumentList ) ->
 
-	%trace_utils:debug_fmt( "executeOneway/4 with list: executing ~ts(~w) "
+	%trace_utils:debug_fmt( "executeOnewayAs/4 with list: executing ~ts(~w) "
 	%   "from ~ts with ~ts.",
 	%   [ OnewayAtom, ArgumentList, State#state_holder.actual_class,
 	%     ParentClassname ] ),
@@ -635,7 +677,7 @@ executeOnewayAs( ParentClassname, State, OnewayAtom, ArgumentList ) when
 											 ArgumentList, ParentClassname );
 
 
-% Here third parameter is not a list:
+% Here having a single, standalone argument, to be promoted to list:
 executeOnewayAs( ParentClassname, State, OnewayAtom, StandaloneArgument ) when
 		is_atom( ParentClassname ) andalso is_record( State, state_holder )
 		andalso is_atom( OnewayAtom ) ->
@@ -649,24 +691,42 @@ executeOnewayAs( ParentClassname, State, OnewayAtom, StandaloneArgument ) when
 		_ArgumentList=[ StandaloneArgument ], ParentClassname );
 
 
-executeOnewayAs( ParentClassname, StateError, OnewayAtom, _LastArg )
-			when is_atom( ParentClassname ) andalso is_atom( OnewayAtom ) ->
+% Invalid oneway name:
+executeOnewayAs( ParentClassname, State, OnewayAtomError, _ArgMaybeList )
+		when is_atom( ParentClassname )
+             andalso is_record( State, state_holder ) ->
 
-	wooper:log_error( "when executing oneway ~p with ~ts: "
-		"first parameter should be a state, not '~p'.",
-		[ OnewayAtom, ParentClassname, StateError ], ?MODULE ),
+	wooper:log_error( "when executing oneway locally as ~ts, the oneway "
+        "name shall be an atom, not:~n ~p",
+        [ ParentClassname, OnewayAtomError ], State ),
 
-	throw( { wooper_invalid_oneway_call, OnewayAtom } );
+	throw( { wooper_invalid_oneway_call,
+             { invalid_oneway_name, OnewayAtomError } } );
 
 
-% Catches all remaining errors:
-executeOnewayAs( ParentClassname, _State, OnewayAtomError, _LastArg ) ->
+% Invalid state:
+executeOnewayAs( ParentClassname, StateError, OnewayAtom, ArgMaybeList )
+        when is_atom( ParentClassname ) ->
 
-	wooper:log_error( "when executing oneway with ~ts: both '~p' "
-		"and '~p' should be atoms.", [ ParentClassname, OnewayAtomError ],
-        ?MODULE ),
+	wooper:log_error( "when executing oneway ~ts locally as ~ts, "
+		"second parameter should be a state, not:~n ~p",
+		[ wooper:method_id_to_string( OnewayAtom, ArgMaybeList ),
+          ParentClassname, StateError ], ?MODULE ),
 
-	throw( { wooper_invalid_oneway_call, OnewayAtomError } ).
+	throw( { wooper_invalid_oneway_call,
+             { OnewayAtom, { invalid_state, StateError } } } );
+
+
+% Invalid parent classname:
+executeOnewayAs( ParentClassnameError, _State, OnewayAtom, ArgMaybeList ) ->
+
+	wooper:log_error( "when executing oneway ~ts locally, "
+		"parent classname shall be an atom, not:~n ~p",
+		[ wooper:method_id_to_string( OnewayAtom, ArgMaybeList ),
+          ParentClassnameError ], ?MODULE ),
+
+	throw( { wooper_invalid_oneway_call, { OnewayAtom,
+            { invalid_parent_classname, ParentClassnameError } } } ).
 
 
 
@@ -683,10 +743,10 @@ Const oneways return nothing.
 """.
 -spec executeConstOnewayAs( classname(), wooper:state(), oneway_name(),
 							method_arguments() ) -> void().
-executeConstOnewayAs( ParentClassname, State, OnewayAtom, ArgumentList ) ->
+executeConstOnewayAs( ParentClassname, State, OnewayAtom, MaybeArgumentList ) ->
 
 	% Checks made by the callee; actual constness not checked yet shall derive
 	% from the transformed, corresponding method terminator:
 	%
 	_State = executeOnewayAs( ParentClassname, State, OnewayAtom,
-                              ArgumentList ).
+                              MaybeArgumentList ).
