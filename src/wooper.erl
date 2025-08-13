@@ -3097,11 +3097,14 @@ notification) the specified error about the current WOOPER instance (preferably
 thanks to its state, otherwise with the current executed module, so with fewer
 information) to the user, typically by displaying an error report on the console
 (non-halting function, e.g. no exception thrown).
+
+With this arity, the specified format string should directly start with an
+actual character (no space, semi-colon, etc.).
 """.
 -spec log_error( format_string(), format_values(),
 				 wooper:state() | basic_utils:module_name() ) -> void().
 log_error( FormatString, ValueList, State )
-						when is_record( State, state_holder ) ->
+                                        when is_record( State, state_holder ) ->
 
 	io:format( "~n", [] ),
 
@@ -3154,7 +3157,7 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ExceptionClass,
 
 	LocString = get_location_string( Loc, NextCalls ),
 
-	log_error( ", request ~ts~ts/~B failed due to an 'undef' "
+	log_error( "request ~ts~ts/~B failed due to an 'undef' "
 		"call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts",
 		[ ModulePrefix, RequestName, Arity, ModuleName, FunctionName,
 		  UndefArity, Diagnosis, LocString ], State ),
@@ -3183,7 +3186,7 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ExceptionClass,
 
 	ModulePrefix = lookup_method_prefix( RequestName, Arity, State ),
 
-	log_error( ", request ~ts~ts/~B failed (exception class: ~ts):~n~n"
+	log_error( "request ~ts~ts/~B failed (exception class: ~ts):~n~n"
 		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first): ~ts~n"
 		" - caller being process ~w~n~n"
@@ -3236,7 +3239,7 @@ on_failed_oneway( OnewayName, ArgumentList, _ExceptionClass,
 
 	LocString = get_location_string( Loc, NextCalls ),
 
-	log_error( ", oneway ~ts~ts/~B failed due to an 'undef' "
+	log_error( "oneway ~ts~ts/~B failed due to an 'undef' "
 		"call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts",
 		[ ModulePrefix, OnewayName, Arity, ModuleName, FunctionName,
 		  UndefArity, Diagnosis, LocString ], State ),
@@ -3256,7 +3259,7 @@ on_failed_oneway( OnewayName, ArgumentList, ExceptionClass, ExceptionTerm,
 	ModulePrefix = lookup_method_prefix( OnewayName, Arity, State ),
 
 	% PID managed by log_error:
-	log_error( ", oneway ~ts~ts/~B failed (exception class: ~ts):~n~n"
+	log_error( "oneway ~ts~ts/~B failed (exception class: ~ts):~n~n"
 		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first): ~ts~n"
 		" - for oneway parameters:~n  ~p~n",
@@ -3281,7 +3284,7 @@ specifying it, if found.
 Used for error management, hence designed not to fail.
 """.
 -spec lookup_method_prefix( method_name(), arity(), wooper:state() ) ->
-									ustring().
+                                            ustring().
 lookup_method_prefix( MethodAtom, Arity, State ) ->
 
 	try wooper_lookup_method( State, MethodAtom, Arity ) of
