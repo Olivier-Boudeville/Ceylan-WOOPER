@@ -27,9 +27,7 @@
 
 -module(wooper_info).
 
--moduledoc """
-Centralisation of **class-level information**.
-""".
+-moduledoc "Centralisation of **class-level information**.".
 
 
 % Defined now here, as the rebar-based build system would not allow us to define
@@ -48,10 +46,10 @@ Centralisation of **class-level information**.
 -doc """
 Stores and centralises WOOPER-level information gathered about a given class.
 
-This record is to strictly supersede the Myriad-level module_info one.
+This record is to strictly supersede the Myriad-level `module_info` one.
 
-See also: the (superseded here) {module,function}_info counterpart Myriad
-records, defined in ast_info.hrl.
+See also: the (superseded here) `{module,function}_info` counterpart Myriad
+records, defined in `ast_info.hrl`.
 """.
 -type class_info() :: #class_info{}.
 
@@ -116,9 +114,8 @@ ones, not parse ones).
 -doc """
 Stores and centralises WOOPER-level information gathered about a given request.
 
-This record is to strictly supersede the Myriad-level function_info one.
-
-See also: this counterpart function_info Myriad record, defined in ast_info.hrl.
+This record is to strictly supersede the Myriad-level `function_info` one,
+defined in `ast_info.hrl`.
 """.
 -type request_info() :: #request_info{}.
 
@@ -128,9 +125,8 @@ See also: this counterpart function_info Myriad record, defined in ast_info.hrl.
 Stores and centralises WOOPER-level information gathered about a given oneway
 method.
 
-This record is to strictly supersede the Myriad-level function_info one.
-
-See also: the function_info counterpart Myriad record, defined in ast_info.hrl.
+This record is to strictly supersede the Myriad-level `function_info` one,
+defined in `ast_info.hrl`.
 """.
 -type oneway_info() :: #oneway_info{}.
 
@@ -140,16 +136,15 @@ See also: the function_info counterpart Myriad record, defined in ast_info.hrl.
 Stores and centralises WOOPER-level information gathered about a given static
 method.
 
-This record is to strictly supersede the Myriad-level function_info one.
-
-See also: the function_info counterpart Myriad record, defined in ast_info.hrl.
+This record is to strictly supersede the Myriad-level `function_info` one,
+defined in `ast_info.hrl`.
 """.
 -type static_info() :: #static_info{}.
 
 
 
 -doc "Description of the class name.".
--type class_entry() :: 
+-type class_entry() ::
 		option( { wooper:classname(), ast_info:located_form() } ).
 
 
@@ -160,30 +155,30 @@ See also: the function_info counterpart Myriad record, defined in ast_info.hrl.
 -doc """
 Table storing the export declarations for oneway methods.
 
-Quite similar to ast_info:function_export_table().
+Quite similar to `ast_info:function_export_table/0`.
 """.
 -type oneway_export_table() ::
-		table( ast_location(), { line(), [ wooper:oneway_id() ] } ).
+	table( ast_location(), { line(), [ wooper:oneway_id() ] } ).
 
 
 
 -doc """
 Table storing the export declarations for request methods.
 
-Quite similar to ast_info:function_export_table().
+Quite similar to `ast_info:function_export_table/0`.
 """.
 -type request_export_table() ::
-		table( ast_location(), { line(), [ wooper:request_id() ] } ).
+	table( ast_location(), { line(), [ wooper:request_id() ] } ).
 
 
 
 -doc """
 Table storing the export declarations for static methods.
 
-Quite similar to ast_info:function_export_table().
+Quite similar to `ast_info:function_export_table/0`.
 """.
 -type static_export_table() ::
-		table( ast_location(), { line(), [ wooper:static_id() ] } ).
+	table( ast_location(), { line(), [ wooper:static_id() ] } ).
 
 
 
@@ -201,7 +196,7 @@ A table storing information about the constructors involved, regarding a class.
 -doc """
 Table storing reference definitions of oneway methods.
 
-Quite similar to ast_info:function_table().
+Quite similar to `ast_info:function_table/0`.
 """.
 -type oneway_table() :: table( wooper:oneway_id(), oneway_info() ).
 
@@ -210,7 +205,7 @@ Quite similar to ast_info:function_table().
 -doc """
 Table storing reference definitions of request methods.
 
-Quite similar to ast_info:function_table().
+Quite similar to `ast_info:function_table/0`.
 """.
 -type request_table() :: table( wooper:request_id(), request_info() ).
 
@@ -219,7 +214,7 @@ Quite similar to ast_info:function_table().
 -doc """
 Table storing reference definitions of static methods.
 
-Quite similar to ast_info:function_table().
+Quite similar to `ast_info:function_table/0`.
 """.
 -type static_table() :: table( wooper:static_id(), static_info() ).
 
@@ -260,30 +255,37 @@ Quite similar to ast_info:function_table().
 		  get_serialisation_builtins/0 ]).
 
 
+% For the wooper_table_type define:
+-include("wooper_defines_exports.hrl").
+
+
+% Other utilities:
+-export([ implements_method/2 ]).
+
 
 % Type shorthands:
 
 -type ustring() :: text_utils:ustring().
 -type indentation_level() :: text_utils:indentation_level().
 
+-type file_loc() :: ast_base:file_loc().
+
 -type ast_location() :: ast_info:ast_location().
 -type line() :: ast_base:line().
 
 -type function_id() :: meta_utils:function_id().
-
--type attribute_name() :: wooper:attribute_name().
-
 -type clause_def() :: meta_utils:clause_def().
 
--type file_loc() :: ast_base:file_loc().
-
+-type classname() :: wooper:classname().
+-type method_id() :: wooper:method_id().
+-type attribute_name() :: wooper:attribute_name().
 -type attribute_qualifier() :: wooper:attribute_qualifier().
 
 
 
 -doc """
-Returns a new, blank instance of the class_info record, typically to be fed with
-an input AST afterwards.
+Returns a new, blank instance of the `class_info` record, typically to be fed
+with an input AST afterwards.
 """.
 -spec init_class_info() -> class_info().
 init_class_info() ->
@@ -729,7 +731,7 @@ oneways_to_string( OnewayTable, DoIncludeForms, IndentationLevel ) ->
 
 -doc "Returns a textual representation of the specified oneway information.".
 -spec oneway_info_to_string( oneway_info(), boolean(), indentation_level() ) ->
-								   ustring().
+                                                    ustring().
 oneway_info_to_string( #oneway_info{ name=Name,
 									 arity=Arity,
 									 qualifiers=Qualifiers,
@@ -998,3 +1000,16 @@ located_spec_to_string( _LocatedSpec=undefined ) ->
 
 located_spec_to_string( _LocatedSpec ) ->
 	"a type specification".
+
+
+
+% Section for other utilities.
+
+-doc """
+Tells whether the specified, supposedly-existing, class implements the specified
+method.
+""".
+-spec implements_method( classname(), method_id() ) -> boolean().
+implements_method( Classname, MethodId ) ->
+    ClassVTable = wooper_class_manager:get_virtual_table( Classname ),
+    ?wooper_table_type:has_entry( _K=MethodId, ClassVTable ).

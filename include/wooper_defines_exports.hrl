@@ -110,8 +110,6 @@
 %
 -record( state_holder, {
 
-	%virtual_table :: option( ?wooper_table_type:?wooper_table_type() ),
-
 	% Just a key in the persistent_term registry:
 	%virtual_table_key :: wooper:class_key(),
 
@@ -119,17 +117,17 @@
 	% module (parent class) implements it.
 	%
 	% Now directly a reference within the persistent_term registry:
-	virtual_table :: ?wooper_table_type:?wooper_table_type(),
+	virtual_table :: wooper:virtual_table(),
 
 	% Holds the instance-specific attribute-based key/value state:
-	attribute_table :: ?wooper_table_type:?wooper_table_type(),
+	attribute_table :: wooper:attribute_table(),
 
 	% Only means that we know to access the actual class name:
 	%
 	% (otherwise we could not, for example, report in an intermediate
 	% child class the actual class name of a deleted instance)
 	%
-	% To be used, instead of ?MODULE or alike.
+	% To be used instead of ?MODULE or alike.
 	%
 	actual_class :: wooper:classname(),
 

@@ -50,7 +50,7 @@ In a distributed context, there should be exactly one class manager per node.
 The class manager may be launched:
 
 - either after an explicit, OTP-compliant initialisation phase (supervisor,
-gen_server, init/1 callback, etc.)
+gen_server, `init/1` callback, etc.)
 
 - or implicitly, as done before the OTP integration: then done on-demand (as
 soon as a first WOOPER instance is created, hence with no a priori explicit
@@ -63,15 +63,15 @@ initialisation)
 
 % Implementation notes:
 
-% Each WOOPER instance is expected to request (through a get_table_key
+% Each WOOPER instance is expected to request (through a getClassKey
 % "request") this class manager for its virtual table key.
 %
 % When integrating OTP, this class manager became a gen_server (of course it
 % could not be a WOOPER instance itself), rather than as a supervisor_bridge.
 %
-% As such, a get_table_key inquiry could have been implemented as an handle_call
+% As such, a getClassKey inquiry could have been implemented as an handle_call
 % or an handle_info. We preferred the former, so that it could be triggered
-% thanks to our get_table_key/1 function below in a classical OTP way.
+% thanks to our get_class_key/1 function below in a classical OTP way.
 
 
 % So we retrofitted the class manager into a gen_server for (optional) OTP
@@ -84,7 +84,8 @@ initialisation)
 
 % Service API:
 -export([ start/0, start_link/0, start/1, start_link/1,
-		  get_existing_manager/0, get_table_key/1, display/0, stop/0 ]).
+		  get_existing_manager/0, get_class_key/1, get_virtual_table/1,
+          display/0, stop/0 ]).
 
 
 % Non-OTP API:
@@ -117,8 +118,13 @@ initialisation)
 -include_lib("myriad/include/spawn_utils.hrl").
 
 
--doc "State kept by the manager (a table of per-class tables).".
--type state() :: ?wooper_table_type:?wooper_table_type().
+-doc "A table keeping track, for each class, of its virtual table.".
+-type class_table() ::
+    ?wooper_table_type:?wooper_table_type( classname(), virtual_table() ).
+
+
+-doc "State kept by the WOOPER class manager.".
+-type manager_state() :: class_table(). % Just all known virtual tables.
 
 
 
@@ -168,46 +174,47 @@ initialisation)
 
 % Type shorthands:
 
--type module_name() :: basic_utils:module_name().
-
 -type ustring() :: text_utils:ustring().
 
+-type classname() :: wooper:classname().
+-type class_key() :: wooper:class_key().
+-type virtual_table() :: wooper:virtual_table().
 
 
 % Uncomment to activate debug mode:
 %-define(wooper_debug_class_manager,).
 
 
--spec display_state( ?wooper_table_type:?wooper_table_type() ) -> void().
+-spec display_state( manager_state() ) -> void().
 -spec display_table_creation( basic_utils:module_name() ) -> void().
 
 -spec display_msg( ustring() ) -> void().
 -spec display_msg( text_utils:format_string(), text_utils:format_values() ) ->
-						void().
+                                            void().
 
 
 -ifdef(wooper_debug_class_manager).
 
 
 % doc: Displays the manager state.
-display_state( Tables ) ->
+display_state( _State=ClassTable ) ->
 	wooper:log_info( ?log_prefix "Storing now ~B table(s).~n",
-					 [ ?wooper_table_type:size( Tables ) ] ).
+					 [ ?wooper_table_type:size( ClassTable ) ] ).
 
 
 % doc: Displays virtual table information.
-display_table_creation( Module ) ->
+display_table_creation( Classname ) ->
 	wooper:log_info( ?log_prefix "Creating a virtual table "
-					 "for module ~ts.~n", [ Module ] ).
+					 "for class ~ts.~n", [ Classname ] ).
 
 
-% doc: Displays specified log message.
+% doc: Displays the specified log message.
 display_msg( String ) ->
 	Message = text_utils:format( ?log_prefix "~ts~n", [ String ] ),
 	wooper:log_info( Message ).
 
 
-% doc: Displays specified formatted log message.
+% doc: Displays the specified formatted log message.
 display_msg( FormatString, Values ) ->
 	Message = text_utils:format( ?log_prefix ++ FormatString ++ "~n", Values ),
 	wooper:log_info( Message ).
@@ -216,24 +223,17 @@ display_msg( FormatString, Values ) ->
 -else. % wooper_debug_class_manager
 
 
-
 -doc "Displays the manager state.".
-display_state( _Tables ) ->
+display_state( _State=_ClassTable ) ->
 	ok.
-
-
 
 -doc "Displays virtual table information.".
-display_table_creation( _Module ) ->
+display_table_creation( _Classname ) ->
 	ok.
-
-
 
 -doc "Displays the specified log message.".
 display_msg( _String ) ->
 	ok.
-
-
 
 -doc "Displays the specified formatted log message.".
 display_msg( _FormatString, _Values ) ->
@@ -245,7 +245,7 @@ display_msg( _FormatString, _Values ) ->
 
 
 
--doc "Typically returned after a launching described in wooper_sup:init/1.".
+-doc "Typically returned after a launching described in `wooper_sup:init/1`.".
 -type start_return() :: { 'ok', Child :: manager_pid() }.
 
 
@@ -304,7 +304,7 @@ start( MaybeClientPid ) ->
 Starts and links a new, blank, class manager, with possibly a listening client,
 and returns its PID.
 
-(same as start/1 except for the link)
+(same as `start/1` except for the link)
 """.
 -spec start_link( option( pid() ) ) -> start_return().
 start_link( MaybeClientPid ) ->
@@ -327,8 +327,8 @@ start_link( MaybeClientPid ) ->
 
 		% Typically {error,Reason} or ignore:
 		Unexpected ->
-			trace_utils:error_fmt( "The WOOPER class manager could not be "
-								   "created: ~w.", [ Unexpected ] ),
+			trace_bridge:error_fmt( "The WOOPER class manager could not be "
+                                    "created: ~w.", [ Unexpected ] ),
 			throw( { wooper_class_manager_creation_failed, Unexpected } )
 
 	end.
@@ -349,9 +349,12 @@ get_existing_manager() ->
 -doc """
 Returns the key corresponding to the virtual table associated to the specified
 classname.
+
+To be called when knowing that the corresponding class is not already
+registered; otherwise prefer `wooper_utils:get_virtual_table_for/1`.
 """.
--spec get_table_key( wooper:classname() ) -> wooper:class_key().
-get_table_key( Classname ) ->
+-spec get_class_key( classname() ) -> class_key().
+get_class_key( Classname ) ->
 
 	% Rather than specifying the registered name of the class manager
 	% (?wooper_class_manager_name) in the call, we attempt to fetch directly its
@@ -367,12 +370,11 @@ get_table_key( Classname ) ->
 
 	% Still respect the OTP conventions:
 	% Previously the virtual table was fetched as a message:
-	% { ok, Table } =
+	% { ok, Table } = ...
 	%
 	% Then we just fetch the corresponding key in persistent_term:
 	{ ok, ClassPersistentKey } =
-		gen_server:call( ClassManagerPid, { get_table_key, Classname } ),
-	%Table.
+		gen_server:call( ClassManagerPid, { getClassKey, Classname } ),
 
 	% Directly evaluated in the instance process:
 	%persistent_term:get( ClassPersistentKey ).
@@ -383,10 +385,25 @@ get_table_key( Classname ) ->
 
 
 -doc """
+Returns the virtual table (created if needed) corresponding to the specified
+classname.
+""".
+-spec get_virtual_table( classname() ) -> virtual_table().
+get_virtual_table( Classname ) ->
+
+    % As a side effect, ensures that the corresponding virtual table exists:
+    ClassKey = get_class_key( Classname ),
+
+    % So shall be found by design:
+    persistent_term:get( ClassKey ).
+
+
+
+-doc """
 Returns the PID of the WOOPER class manager.
 
-We do the same as get_manager/0 (including w.r.t. to multiple, simultaneous
-launches), but with a gen_server-based procedure:
+We do the same as `get_manager/0` (including w.r.t. to multiple, simultaneous
+launches), but with a gen_server-based procedure.
 
 (note that performing, if possible, an explicit start is better, as it prevents
 simultaneous, clashing launches)
@@ -406,11 +423,11 @@ get_manager_through_otp() ->
 				{ ok, ManagerPid } = start( _MaybeClientPid=undefined ),
 				ManagerPid
 
-			catch _:E ->
+			catch _:_E ->
 
-				trace_utils:debug_fmt( "OTP start of the WOOPER class "
-					"manager failed (~p), assuming simultaneous launches, "
-					"waiting for one to succeed.", [ E ] ),
+				%trace_utils:debug_fmt( "OTP start of the WOOPER class "
+				%   "manager failed (~p), assuming simultaneous launches, "
+				%   "waiting for one to succeed.", [ E ] ),
 
 				% Returning the PID of the winner, whichever it is:
 				get_existing_manager()
@@ -434,8 +451,8 @@ display() ->
 -doc "Stops (the OTP-way) the class manager.".
 -spec stop() -> void().
 stop() ->
-	trace_utils:debug_fmt( "Stopping (OTP) the WOOPER class manager ~p.",
-						   [ self() ] ),
+	trace_bridge:debug_fmt( "Stopping (OTP) the WOOPER class manager ~p.",
+                            [ self() ] ),
 	gen_server:cast( ?wooper_class_manager_name, stop ).
 
 
@@ -451,7 +468,7 @@ Inits the manager (gen_server callback).
 
 (also used by the non-OTP mode of operation)
 """.
--spec init( any() ) -> { 'ok', state() }.
+-spec init( any() ) -> { 'ok', manager_state() }.
 init( _Args=[] ) ->
 
 	display_msg( "Starting (init) WOOPER class manager on node ~ts (PID: ~w).",
@@ -468,22 +485,25 @@ init( _Args=[] ) ->
 	erlang:process_flag( message_queue_data, off_heap ),
 
 	% Infinite time-out:
-	{ ok, get_initial_state() }.
+	{ ok, get_initial_manager_state() }.
 
 
 
 -doc """
 Handles OTP-based call requests (gen_server callback, triggered by
-get_table_key/1 in this module).
+`get_class_key/1` in this module).
+
+Also, as a side effect, ensures that the specified class has its virtual table
+registered.
 """.
-handle_call( { get_table_key, Classname }, _From, _State=Tables ) ->
+handle_call( { getClassKey, Classname }, _From, _State=ClassTable ) ->
 
-	display_msg( "handle_call: get_table_key for ~ts.", [ Classname ] ),
+	display_msg( "handle_call: getClassKey for ~ts.", [ Classname ] ),
 
-	{ NewTables, TargetTableKey } =
-		get_virtual_table_key_for( Classname, Tables ),
+	{ NewClassTable, TargetClassKey } =
+		get_virtual_table_key_for( Classname, ClassTable ),
 
-	{ reply, { ok, TargetTableKey }, _NewState=NewTables }.
+	{ reply, { ok, TargetClassKey }, _NewState=NewClassTable }.
 
 
 
@@ -496,10 +516,10 @@ handle_cast( stop, State ) ->
 
 	{ stop, normal, State };
 
-handle_cast( display, State=Tables ) ->
+handle_cast( display, State=ClassTable ) ->
 
 	wooper:log_info( ?log_prefix "Internal state is: ~ts~n",
-					 [ ?wooper_table_type:to_string( Tables ) ] ),
+					 [ ?wooper_table_type:to_string( ClassTable ) ] ),
 
 	% Const:
 	{ noreply, State }.
@@ -507,41 +527,40 @@ handle_cast( display, State=Tables ) ->
 
 
 -doc "Handles OTP-based info requests (gen_server callback).".
-handle_info( { get_table_key, _Classname, _FromPid }, _State=_Tables ) ->
+handle_info( { getClassKey, _Classname, _FromPid }, _State=_ClassTable ) ->
 
-	trace_utils:error( "WOOPER class manager called according to the "
+	trace_bridge:error( "WOOPER class manager called according to the "
 		"non-OTP conventions, whereas is running as an (OTP) gen_server." ),
 
 	% (for the caller, see wooper:retrieve_virtual_table_key/1)
 
 	throw( otp_integration_mismatch );
 
-
 handle_info( Info, State ) ->
 
-	trace_utils:warning_fmt( "The WOOPER class manager received an unexpected, "
-		"hence ignored, handle_info message:~n  ~p.", [ Info ] ),
+	trace_bridge:warning_fmt( "The WOOPER class manager received an "
+		"unexpected, hence ignored, handle_info message:~n  ~p.", [ Info ] ),
 
 	{ noreply, State }.
 
 
 
 -doc """
-Handles the "terminate" optional callback.
+Handles the `terminate` optional callback.
 """.
+% Catch any normal terminate beforehand, if needed.
 terminate( Reason, _State ) ->
-
-	trace_utils:info_fmt( "WOOPER class manager terminated (reason: ~w).",
-						  [ Reason ] ).
+	trace_bridge:error_fmt( "WOOPER class manager terminated; reason:~n ~p",
+                           [ Reason ] ).
 
 
 
 -doc """
-Handles the optional "code change" callback.
+Handles the optional `code change` callback.
 """.
 code_change( OldVsn, State, Extra ) ->
 
-	trace_utils:info_fmt( "Code change for the WOOPER class manager; "
+	trace_bridge:info_fmt( "Code change for the WOOPER class manager; "
 		"old version is ~w, and extra information is ~w", [ OldVsn, Extra ] ),
 
 	{ ok, State }.
@@ -604,7 +623,7 @@ get_manager() ->
 
 
 
--doc "Initializes the class manager, when launched in a non-OTP way.".
+-doc "Initialises the class manager, when launched in a non-OTP way.".
 -spec init_automatic() -> no_return().
 init_automatic() ->
 
@@ -651,7 +670,7 @@ stop_automatic() ->
 	case naming_utils:is_registered( ?wooper_class_manager_name, local ) of
 
 		not_registered ->
-			trace_utils:warning( "No WOOPER class manager to stop." );
+			trace_bridge:warning( "No WOOPER class manager to stop." );
 
 		ManagerPid ->
 			display_msg( "Stopping WOOPER class manager." ),
@@ -667,10 +686,10 @@ stop_automatic() ->
 
 -doc """
 Returns the initial state of this manager, that is an (initially empty) table of
-per-class tables.
+per-class virtual tables.
 """.
--spec get_initial_state() -> state().
-get_initial_state() ->
+-spec get_initial_manager_state() -> manager_state().
+get_initial_manager_state() ->
 	% Empty class table:
 	?wooper_table_type:new( ?wooper_class_count_upper_bound ).
 
@@ -691,40 +710,48 @@ stop_common() ->
 Handles the manager main loop; serves virtual tables on request (mostly on
 instances creation).
 """.
--spec loop( ?wooper_table_type:?wooper_table_type() ) -> no_return() | 'ok' .
-loop( Tables ) ->
+-spec loop( class_table() ) -> no_return() | 'ok' .
+loop( ClassTable ) ->
 
-	display_state( Tables ),
+	display_state( ClassTable ),
 
 	receive
 
-		{ get_table_key, Classname, Pid } ->
-			{ NewTables, TargetTableKey } =
-				get_virtual_table_key_for( Classname, Tables ),
+		{ getClassKey, Classname, Pid } ->
 
-			Pid ! { wooper_virtual_table_key, TargetTableKey },
-			loop( NewTables );
+			{ NewClassTable, TargetClassKey } =
+				get_virtual_table_key_for( Classname, ClassTable ),
+
+			Pid ! { wooper_class_key, TargetClassKey },
+
+			loop( NewClassTable );
+
 
 		display ->
 			wooper:log_info( ?log_prefix "Internal state is: ~ts~n",
-							 [ ?wooper_table_type:to_string( Tables ) ] ),
-			loop( Tables );
+							 [ ?wooper_table_type:to_string( ClassTable ) ] ),
+			loop( ClassTable );
+
 
 		stop ->
 			unregister( ?wooper_class_manager_name ),
 			stop_common();
 
+
 		Unexpected ->
-			trace_utils:error_fmt( "The WOOPER class manager received an "
+
+			trace_bridge:error_fmt( "The WOOPER class manager received an "
 				"unexpected, thus ignored, message: ~w", [ Unexpected ] ),
-			loop( Tables )
+
+			loop( ClassTable )
 
 	end.
 
 
 
 -doc """
-Looks-up the specified table: secures it and returns its corresponding key.
+Looks-up the specified classname in the specified class table: secures that such
+an entry exists (creating it if needed), and returns its corresponding key.
 
 If found, returns its key immediately, otherwise constructs it, stores the
 result and returns its key in the `persistent_term` registry.
@@ -732,120 +759,103 @@ result and returns its key in the `persistent_term` registry.
 Allows to synchronise the instances so that they can know for sure that their
 virtual tables are available.
 
-Virtual tables are stored in a `?wooper_table_type`.
-
-Returns a pair formed of the new set of virtual tables and of the requested
+Returns a pair formed of the new table of virtual tables and of the requested
 table key.
 """.
--spec get_virtual_table_key_for( module_name(),
-								 ?wooper_table_type:?wooper_table_type() ) ->
-		{ ?wooper_table_type:?wooper_table_type(), wooper:class_key() }.
-get_virtual_table_key_for( Module, Tables ) ->
+-spec get_virtual_table_key_for( classname(), class_table() ) ->
+                                            { class_table(), class_key() }.
+get_virtual_table_key_for( Classname, ClassTable ) ->
 
-	ModuleKey = wooper_utils:get_persistent_key_for( Module ),
+	ClassKey = wooper_utils:get_persistent_key_for( Classname ),
 
-	case ?wooper_table_type:has_entry( Module, Tables ) of
+	case ?wooper_table_type:has_entry( Classname, ClassTable ) of
 
 		true ->
 			% Cache hit, no change in internal data:
-			{ Tables, ModuleKey };
+			{ ClassTable, ClassKey };
 
 		false ->
 
 			% Time to create this virtual table and to store it:
-			display_table_creation( Module ),
+			display_table_creation( Classname ),
 
-			ModuleTable = create_method_table_for( Module ),
+			ClassVirtualTable = create_virtual_table_for( Classname ),
 
 			%trace_utils:debug_fmt( "Persistent registry before addition "
-			%   "of ~ts: ~p", [ Module, persistent_term:info() ] ),
+			%   "of ~ts: ~p", [ Classname, persistent_term:info() ] ),
 
 			% Apparently sufficient to handle from now on a reference:
-			persistent_term:put( ModuleKey, ModuleTable ),
+			persistent_term:put( ClassKey, ClassVirtualTable ),
 
 			%trace_utils:debug_fmt( "Persistent registry after addition "
-			%   "of ~ts: ~p", [ Module, persistent_term:info() ] ),
+			%   "of ~ts: ~p", [ Classname, persistent_term:info() ] ),
 
-			% Not using ModuleTable anymore, switching to following reference
-			% instead:
+			% Not using ClassTable anymore, switching to the following
+			% reference instead (value still being virtual_table()):
 			%
-			ModuleTableRef = persistent_term:get( ModuleKey ),
+			ClassTableRef = persistent_term:get( ClassKey ),
 
 			% Uncomment to report some information about this virtual table:
-			%TableSize = system_utils:get_size( ModuleTableRef ),
+			%TableSize = system_utils:get_size( ClassTableRef ),
 
 			%trace_utils:debug_fmt( "For class '~ts', returning a table whose "
 			%   "size is ~ts (~B bytes): ~ts",
-			%   [ Module, system_utils:interpret_byte_size( TableSize ),
-			%     TableSize, table:to_string( ModuleTableRef ) ] ),
+			%   [ Classname, system_utils:interpret_byte_size( TableSize ),
+			%     TableSize, table:to_string( ClassTableRef ) ] ),
 
 			%trace_utils:debug_fmt( "Virtual table for ~ts: ~ts",
-			%     [ Module, ?wooper_table_type:to_string( ModuleTableRef ) ] ),
+			%   [ Classname, ?wooper_table_type:to_string( ClassTableRef ) ] ),
 
-			% Each class had its virtual table optimised:
-			%OptimisedModuleTable =
-			%    ?wooper_table_type:optimise( ModuleTableRef ),
+            % No need anymore to optimise any table.
 
 			% Here the table could be patched with destruct/1, if defined.
-			ClassTable =
-				?wooper_table_type:add_entry( Module, ModuleTableRef, Tables ),
+			NewClassTable = ?wooper_table_type:add_entry( _K=Classname,
+                _V=ClassTableRef, ClassTable ),
 
 			% And the table of virtual tables was itself optimised each time a
 			% new class was introduced:
 			%
-			{ %?wooper_table_type:optimise( ClassTable ),
-			  ClassTable,
-			  % OptimisedModuleTable }
-
-			  % Used to return that reference (as done in
-			  % https://blog.erlang.org/persistent_term/), yet did not seem to
-			  % lead to instances that are lighter in memory):
-			  %
-			  %ModuleTableRef }
-			  ModuleKey }
+			{ NewClassTable, ClassKey }
 
 	end.
 
 
-
-
 -doc """
-Creates recursively (indirectly thanks to `update_method_table_with/2`) the
-virtual table corresponding to the specified module.
+Creates recursively (indirectly thanks to `update_virtual_table_with/2`) the
+virtual table corresponding to the specified class.
 """.
--spec create_method_table_for( module_name() ) ->
-						?wooper_table_type:?wooper_table_type().
-create_method_table_for( TargetModule ) ->
+-spec create_virtual_table_for( classname() ) -> virtual_table().
+create_virtual_table_for( TargetClassname ) ->
 	lists:foldl(
-		fun( Module, Hashtable ) ->
-			update_method_table_with( Module, Hashtable )
+		fun( Classname, VTable ) ->
+			update_virtual_table_with( Classname, VTable )
 		end,
-		create_local_method_table_for( TargetModule ),
-		TargetModule:get_superclasses() ).
+		create_local_virtual_table_for( TargetClassname ),
+		TargetClassname:get_superclasses() ).
 
 
 
 -doc """
-Updates the specified virtual table with the method of specified module (that
-is: precomputes the virtual table for the related class).
+Updates the specified virtual table with the methods of the specified class
+(that is: precomputes the virtual table for the related class).
 
-In case of key collision, the values specified in `?Wooper_Table_Type` have
-priority over the ones relative to `Module`. Hence methods redefined in child
-classes are selected, rather than the ones of the mother class.
+In case of key collision, the values specified in `VirtualTable` have priority
+over the ones relative to `tClassname`. Hence methods redefined in child classes
+are selected, rather than the ones of the mother class.
 """.
--spec update_method_table_with( module_name(),
-								?wooper_table_type:?wooper_table_type() ) ->
-									?wooper_table_type:?wooper_table_type().
-update_method_table_with( Module, Hashtable ) ->
-	?wooper_table_type:merge( Hashtable, create_method_table_for( Module ) ).
+-spec update_virtual_table_with( classname(), virtual_table() ) ->
+                                                virtual_table().
+update_virtual_table_with( Classname, VirtualTable ) ->
+	?wooper_table_type:merge( VirtualTable,
+                              create_virtual_table_for( Classname ) ).
 
 
 
 -doc """
-Tells whether the function Name/Arity should be registered into the method
-virtual table.
+Tells whether a function `Name/Arity` should be registered into a method virtual
+table.
 """.
-select_function( _,0 )                                                -> false ;
+select_function( _Name, _Arity=0 )                                    -> false ;
 
 select_function( new,_ )                                              -> false ;
 select_function( new_link,_ )                                         -> false ;
@@ -937,48 +947,45 @@ select_function( _, _ )                                               -> true.
 
 
 -doc """
-Returns a table appropriate for method look-up, for the specified module.
+Returns a table appropriate for method look-up, for the specified class.
 """.
--spec create_local_method_table_for( module_name() ) ->
-								?wooper_table_type:?wooper_table_type().
-create_local_method_table_for( Module ) ->
+-spec create_local_virtual_table_for( classname() ) -> virtual_table().
+create_local_virtual_table_for( Classname ) ->
 
-	% Typically if Module is misspelled:
+	% Typically if Classname is misspelled:
 	Exports = try
-				Module:module_info( exports )
+				Classname:module_info( exports )
 			  catch
 
 				error:undef ->
-					trace_utils:error_fmt( "Unable to find a module "
+					trace_bridge:error_fmt( "Unable to find a module "
 						"corresponding to '~ts', knowing that ~ts~n"
 						"Hint: check the BEAM_DIRS make variable and any "
 						"application-level setting that specifies code that "
 						"shall be used or deployed.",
-						[ Module, code_utils:get_code_path_as_string() ] ),
-					throw( { class_not_found, Module } )
+						[ Classname, code_utils:get_code_path_as_string() ] ),
+					throw( { class_not_found, Classname } )
 
 			  end,
 
-	% Filter-out functions that should not be callable via RMI:
+	% Filter-out functions that should not be callable via RMI (Remote Method
+	% Invocation):
+    %
 	lists:foldl(
-
-		% Filter-out functions that should not be callable via RMI:
-		fun( { Name, Arity }, Hashtable ) ->
-			case select_function(  Name, Arity ) of
+		fun( { Name, Arity }, VTable ) ->
+			case select_function( Name, Arity ) of
 
 				true ->
-					?wooper_table_type:add_entry( { Name, Arity }, Module,
-												  Hashtable );
+					?wooper_table_type:add_entry( { Name, Arity }, Classname,
+												  VTable );
 
 				false ->
-					Hashtable
+					VTable
 
 			end
 		end,
-
-		?wooper_table_type:new( ?wooper_method_count_upper_bound ),
-
-		Exports ).
+		_InitVTable=?wooper_table_type:new( ?wooper_method_count_upper_bound ),
+		_List=Exports ).
 
 
 
@@ -1002,6 +1009,7 @@ ping( Target ) when is_pid( Target ) ->
 			pang
 
 	end;
+
 
 ping( Target ) when is_atom( Target ) ->
 

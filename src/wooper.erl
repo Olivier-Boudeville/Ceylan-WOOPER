@@ -463,6 +463,18 @@ caller PID.
 -type state() :: #state_holder{}.
 
 
+-doc """
+Associates to the identifier of a method the classname that implements it.
+""".
+-type virtual_table() :: ?wooper_table_type:?wooper_table_type( method_id(),
+    ParentClassname :: classname() ).
+
+
+-doc "Associates to the name of any attribute its corresponding value.".
+-type attribute_table() :: ?wooper_table_type:?wooper_table_type(
+    attribute_name(), attribute_value() ).
+
+
 
 -doc """
 Allows to record the functions exported by a module (typically the `wooper`
@@ -495,7 +507,9 @@ one).
 			   caller_pid/0,
                method_call/0, request_call/0, base_request_call/0,
                oneway_call/0,
-			   state/0, function_export_set/0,
+
+			   state/0, virtual_table/0, attribute_table/0,
+               function_export_set/0,
 
                concurrent_request_tag/0, concurrent_outcome/0,
                concurrent_result/0, concurrent_result/1,
@@ -2374,12 +2388,12 @@ execute_oneway( PassiveInstance, OnewayName, OnewayArg )
 -spec get_blank_state( classname() ) -> wooper:state().
 get_blank_state( Classname ) ->
 
-	TableKey = retrieve_virtual_table_key( Classname ),
+	ClassKey = retrieve_virtual_table_key( Classname ),
 
 	#state_holder{
 
 		% Here we fetch once for all that table (as a "reference"):
-		virtual_table=persistent_term:get( TableKey ),
+		virtual_table=persistent_term:get( ClassKey ),
 
 		attribute_table=
 			?wooper_table_type:new( ?wooper_attribute_count_upper_bound ),
@@ -2489,12 +2503,12 @@ default_node_down_handler( Node, MonitorNodeInfo, State ) ->
 
 
 -doc """
-Returns the key in persistent_term for the virtual table corresponding to the
+Returns the key in `persistent_term` for the virtual table corresponding to the
 specified class.
 
 Note: the key could be directly guessed by the instance; the interest here is
 mostly for synchronisation (to ensure that a suitable entry for the current
-class exists in the persistent_term registry, otherwise race conditions could
+class exists in the `persistent_term` registry, otherwise race conditions could
 happen).
 """.
 -spec retrieve_virtual_table_key( classname() ) -> class_key().
@@ -2507,7 +2521,7 @@ retrieve_virtual_table_key( Classname ) ->
 	%                        "key for '~ts'.", [ Classname ] ),
 
 	% The OTP way, through a gen_server:call/2:
-	wooper_class_manager:get_table_key( Classname ).
+	wooper_class_manager:get_class_key( Classname ).
 
 
 
@@ -2519,15 +2533,15 @@ retrieve_virtual_table_key( Classname ) ->
 	%   "Retrieving classically (non-OTP way) the virtual table key for '~ts'.",
 	%   [ Classname ] ),
 
-	% For per-instance virtual table: wooper_create_method_table_for(?MODULE).
+	% For per-instance virtual table: wooper_create_virtual_table_for(?MODULE).
 
 	% The non-OTP way:
-	wooper_class_manager:get_manager() ! { get_table_key, Classname, self() },
+	wooper_class_manager:get_manager() ! { getClassKey, Classname, self() },
 	receive
 
-		{ wooper_virtual_table_key, TableKey } ->
+		{ wooper_virtual_table_key, ClassKey } ->
 			%?wooper_table_type:display( Table ),
-			TableKey
+			ClassKey
 
 	end.
 

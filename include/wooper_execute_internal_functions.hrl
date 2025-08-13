@@ -381,36 +381,7 @@ wooper_execute_method_as( ParentClassname, MethodAtom, Parameters, State )
 	% We could use wooper:retrieve_virtual_table_key/1, but we prefer avoiding
 	% such overhead (any message exchange):
 
-	ParentKey = wooper_utils:get_persistent_key_for( ParentClassname ),
-
-	ParentVirtualTable = case persistent_term:get( ParentKey,
-												   _Default=undefined ) of
-
-		% This parent class was not seen yet:
-		undefined ->
-			% A lot more expensive, but necessary and sufficient:
-			_SameParentKey =
-				wooper_class_manager:get_table_key( ParentClassname ),
-
-			% This time shall be good:
-			case persistent_term:get( ParentKey, _Def=undefined ) of
-
-				% Abnormal:
-				undefined ->
-					throw( { no_virtual_table_obtained_for, ParentClassname } );
-
-				VTable ->
-					VTable
-
-			end;
-
-		CachedVTable ->
-			CachedVTable
-
-	end,
-
-	%trace_utils:debug_fmt( "Virtual table obtained for class '~ts':~n ~p",
-	%                       [ ParentClassname, ParentVirtualTable ] ),
+    ParentVirtualTable = wooper_utils:get_virtual_table_for( ParentClassname ),
 
 	Arity = length( Parameters ) +1,
 

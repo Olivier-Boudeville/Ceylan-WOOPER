@@ -30,7 +30,7 @@
 -moduledoc """
 Unit tests for the WOOPER **class manager** implementation.
 
-See the wooper_class_manager.erl tested module.
+See the `wooper_class_manager` tested module.
 """.
 
 
@@ -59,12 +59,12 @@ test_with_otp() ->
 
 	wooper_class_manager:display(),
 
-	TableKey = wooper_class_manager:get_table_key( ?requested_class ),
+	ClassKey = wooper_class_manager:get_class_key( ?requested_class ),
 
 	test_facilities:display( "Table obtained from ~w for '~ts' "
 		"(key: '~p'):~n~ts",
-		[ ManagerPid, ?requested_class, TableKey,
-		  table:to_string( persistent_term:get( TableKey ) ) ] ),
+		[ ManagerPid, ?requested_class, ClassKey,
+		  table:to_string( persistent_term:get( ClassKey ) ) ] ),
 
 	wooper_class_manager:display(),
 
@@ -85,15 +85,16 @@ test_without_otp() ->
 
 	ManagerPid ! display,
 
-	ManagerPid ! { get_table_key, ?requested_class, self() },
+	ManagerPid ! { getClassKey, ?requested_class, self() },
 
 	receive
 
-		{ wooper_virtual_table_key, TableKey } ->
+		{ wooper_class_key, ClassKey } ->
 			test_facilities:display( "Table obtained from ~w for '~ts' "
 				"(key: '~p'):~n~ts",
-				[ ManagerPid, ?requested_class, TableKey,
-				  table:to_string( persistent_term:get( TableKey ) ) ] )
+				[ ManagerPid, ?requested_class, ClassKey,
+                  % Should be ?wooper_table_type:
+				  table:to_string( persistent_term:get( ClassKey ) ) ] )
 
 	end,
 

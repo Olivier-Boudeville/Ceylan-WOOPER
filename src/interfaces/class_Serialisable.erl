@@ -1047,10 +1047,7 @@ embody( #wooper_serialisation_instance_record{
 	% If ever useful:
 	OptimisedAttributeTable = ?wooper_table_type:optimise( AttributeTable ),
 
-
-	VirtualTableKey = wooper:retrieve_virtual_table_key( Classname ),
-
-	VirtualTable = persistent_term:get( VirtualTableKey ),
+	VirtualTable = wooper_utils:get_virtual_table_for( Classname ),
 
 	ForgedState = #state_holder{ virtual_table=VirtualTable,
 								 attribute_table=OptimisedAttributeTable,

@@ -48,8 +48,9 @@ Module centralising, on behalf of the WOOPER parse transform, the support for
 
 -type module_entry() :: ast_info:module_entry().
 
--type class_info() :: wooper_info:class_info().
+-type classname() :: wooper:classname().
 
+-type class_info() :: wooper_info:class_info().
 
 
 
@@ -85,8 +86,8 @@ Module centralising, on behalf of the WOOPER parse transform, the support for
 
 
 
--doc "Ensures that specified name is a legit class name, and returns it.".
--spec check_classname( any() ) -> atom().
+-doc "Ensures that the specified name is a legit class name, and returns it.".
+-spec check_classname( any() ) -> classname().
 check_classname( Name ) when is_atom( Name ) ->
 
 	case text_utils:atom_to_string( Name ) of
@@ -107,7 +108,7 @@ check_classname( Other ) ->
 
 
 -doc """
-Registers the corresponding classname into specified class information.
+Registers the corresponding classname into the specified class information.
 """.
 -spec manage_classname( module_entry(), class_info() ) -> class_info().
 manage_classname( _ModuleEntry=undefined, _ClassInfo ) ->

@@ -64,14 +64,19 @@ Module containing some **extra facilities** for WOOPER users and internal use.
 -export([ start_for_test/0, start_for_app/0 ]).
 
 
-% To determine the key assigned to a given classname as persistent_term:
--export([ get_persistent_key_for/1 ]).
+% To determine the key assigned to a given classname as persistent_term, or its
+% virtual table:
+%
+-export([ get_persistent_key_for/1, get_virtual_table_for/1 ]).
 
 
+% For example 'Apple' or 'TravellingSalesman'.
 -type camelcase_type() :: atom().
-% For example 'apple' or 'travelling_salesman'.
 
--export_type([ camelcase_type/0 ]).
+% For example 'apple' or 'travelling_salesman'.
+-type snakecase_type() :: atom().
+
+-export_type([ camelcase_type/0, snakecase_type/0 ]).
 
 
 
@@ -84,6 +89,10 @@ Module containing some **extra facilities** for WOOPER users and internal use.
 -type three_digit_version() :: basic_utils:three_digit_version().
 
 -type ustring() :: text_utils:ustring().
+
+-type classname() :: wooper:classname().
+
+-type virtual_table() :: wooper:virtual_table().
 
 
 
@@ -110,7 +119,7 @@ Deduces the Erlang equivalent name, according to the WOOPER conventions, of a
 class that is actually implemented in Python and whose name follows the PEP8
 convention.
 
-For example 'MyFoobarExample' resulting in 'class_MyFoobarExample'.
+For example `MyFoobarExample` resulting in `class_MyFoobarExample`.
 """.
 -spec pep8_class_to_wooper_class(
 		python_utils:pep8_classname() | ustring() ) -> wooper:classname().
@@ -126,7 +135,7 @@ pep8_class_to_wooper_class( ClassnameStr ) ->
 Deduces the Python equivalent name, according to the PEP8 convention, of an
 Erlang class whose name follows the WOOPER conventions.
 
-For example "class_MyFoobarExample" resulting in "MyFoobarExample".
+For example `"class_MyFoobarExample"` resulting in `"MyFoobarExample"`.
 """.
 -spec wooper_class_to_pep8_class( wooper:classname() | ustring() ) ->
 										python_utils:pep8_classname().
@@ -151,7 +160,7 @@ wooper_class_to_pep8_class( ClassnameString ) ->
 Deduces the Erlang equivalent name, according to the WOOPER conventions, of a
 class that is actually implemented in Java.
 
-For example 'MyFoobarExample' resulting in 'class_MyFoobarExample'.
+For example `MyFoobarExample` resulting in `class_MyFoobarExample`.
 """.
 -spec java_class_to_wooper_class(
 		java_utils:java_classname() | ustring() ) -> wooper:classname().
@@ -167,7 +176,7 @@ java_class_to_wooper_class( ClassnameStr ) ->
 Deduces the Java equivalent name of an Erlang class whose name follows the
 WOOPER conventions.
 
-For example "class_MyFoobarExample" resulting in "MyFoobarExample".
+For example `"class_MyFoobarExample"` resulting in `"MyFoobarExample"`.
 """.
 -spec wooper_class_to_java_class( wooper:classname() ) ->
 										java_utils:java_string_classname().
@@ -192,11 +201,11 @@ Returns (as atoms) the Java package (if any) and class that correspond to the
 specified WOOPER classname.
 
 So for example a WOOPER classname equal to
-'class_BigPackage__MyPackage__MyExample' is to be translated into: {
-'bigpackage.mypackage', 'MyExample' }, while for 'class_MyExample' we have {
-undefined, MyExample } returned.
+`'class_BigPackage__MyPackage__MyExample'` is to be translated into:
+`{'bigpackage.mypackage', 'MyExample'}`, while for `'class_MyExample'` we have
+`{undefined, MyExample}` returned.
 
-Note: no Java package shall be named 'undefined'.
+Note: no Java package shall be named `undefined`.
 """.
 -spec get_java_package_and_class_for( wooper:classname() ) ->
 		java_utils:java_fully_qualified_classname().
@@ -238,9 +247,9 @@ get_java_package_and_class_for( WOOPERClassname ) ->
 
 
 -doc """
-Converts a simple type specified in CamelCase (e.g. 'apple' or
-'travelling_salesman') into its corresponding WOOPER classname (e.g.
-'class_Apple' of 'class_TravellingSalesman').
+Converts a simple type specified in CamelCase (e.g. `apple` or
+`travelling_salesman`) into its corresponding WOOPER classname (e.g.
+`class_Apple` of `class_TravellingSalesman`).
 """.
 -spec camelcase_type_to_wooper_class( camelcase_type() ) -> wooper:classname().
 camelcase_type_to_wooper_class( CamelcaseType ) ->
@@ -267,8 +276,8 @@ camelcase_type_to_wooper_class( CamelcaseType ) ->
 
 
 -doc """
-Converts a WOOPER classname (e.g. 'class_Apple') into its corresponding simple
-type in CamelCase (e.g. 'apple').
+Converts a WOOPER classname (e.g. `class_Apple`) into its corresponding simple
+type in CamelCase (e.g. `apple`).
 """.
 -spec wooper_class_to_camelcase_type( wooper:classname() ) -> camelcase_type().
 wooper_class_to_camelcase_type( WOOPERClassname ) ->
@@ -345,10 +354,55 @@ start_for_app() ->
 
 
 -doc """
-Returns the key (as a term) associated to specified classname in the
-persistent_term registry.
+Returns the key (as a term) associated to the specified classname in the
+`persistent_term` registry.
 """.
 -spec get_persistent_key_for( wooper:classname() ) -> term().
 get_persistent_key_for( Classname ) ->
-	% Could be instead {wooper, Classname} should clashes be feared:
+	% Could be instead {wooper, Classname}, should clashes be feared:
 	Classname.
+
+
+
+-doc """
+Returns the virtual table corresponding to the specified classname, inducing its
+creation and registration on the fly if needed.
+
+Uses any already-created virtual table for that table, and cheaper than a direct
+call to `wooper_class_manager:get_class_key/1`.
+""".
+-spec get_virtual_table_for( classname() ) -> virtual_table().
+get_virtual_table_for( Classname ) ->
+
+	ClassKey = get_persistent_key_for( Classname ),
+
+	ClassVirtualTable = case persistent_term:get( ClassKey,
+                                                  _Default=undefined ) of
+
+		% This class was not seen yet:
+		undefined ->
+
+			% A lot more expensive, but necessary and sufficient:
+			_SameClassKey = wooper_class_manager:get_class_key( Classname ),
+
+			% This time shall be good:
+			case persistent_term:get( ClassKey, _Def=undefined ) of
+
+				% Abnormal:
+				undefined ->
+					throw( { no_virtual_table_obtained_for, Classname } );
+
+				VTable ->
+					VTable
+
+			end;
+
+		CachedVTable ->
+			CachedVTable
+
+	end,
+
+	%trace_utils:debug_fmt( "Virtual table obtained for class '~ts':~n ~p",
+	%                       [ Classname, ClassVirtualTable ] ),
+
+    ClassVirtualTable.
