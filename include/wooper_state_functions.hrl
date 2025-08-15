@@ -100,7 +100,7 @@ Returns an updated state.
 
 Always succeeds.
 
-See also: setAttributes/3, to set more than one attribute at a time.
+See also `setAttributes/3`, to set more than one attribute at a time.
 """.
 -spec setAttribute( wooper:state(), attribute_name(), attribute_value() ) ->
 						wooper:state().
@@ -124,7 +124,7 @@ Returns an updated state.
 
 Always succeeds.
 
-See also: the setAttribute function.
+See also the `setAttribute/2` function, for a single attribute setting.
 """.
 -spec setAttributes( wooper:state(), [ attribute_entry() ] ) ->
 						wooper:state().
@@ -422,7 +422,7 @@ Several lines compacted into a bit impressive one-liner.
 
 Note: to be used with much caution, as a class may use a type of table unrelated
 to the one used by WOOPER (on the other hand we do not want to force all classes
-to define 'table_type').
+to define `table_type`).
 """.
 -spec addKeyValueToAttribute( wooper:state(), attribute_name(),
 			?wooper_table_type:key(), ?wooper_table_type:value() ) ->
@@ -443,11 +443,11 @@ addKeyValueToAttribute( State, AttributeName, Key, Value ) ->
 
 -doc """
 Removes the head from the specified attribute, supposed to be a list, and
-returns a {NewState, PoppedHead} pair.
+returns a `{NewState, PoppedHead}` pair.
 
-For example, if the attribute 'my_list' contains [5,8,3], executing:
+For example, if the attribute `my_list` contains `[5,8,3]`, executing:
 `{PoppedState, Head} = ?popFromAttribute(State, my_list)` returns a state whose
-my_list attribute is [8,3] and a value Head=5.
+my_list attribute is `[8,3]` and a value `Head=5`.
 
 A case clause is triggered if the attribute did not exist.
 """.
