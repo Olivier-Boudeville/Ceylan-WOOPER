@@ -102,7 +102,8 @@ Module containing some **general facilities for WOOPER class developers**.
 
 
 % Infrequently-called functions for state management:
--export([ get_all_attributes/1, check_undefined/2, check_all_undefined/2 ]).
+-export([ get_all_attributes/1, check_equal/3,
+          check_undefined/2, check_all_undefined/2 ]).
 
 
 
@@ -113,7 +114,7 @@ Module containing some **general facilities for WOOPER class developers**.
 % Extra features:
 -export([ declare_beam_dirs_for_wooper/0, retrieve_virtual_table_key/1,
 		  get_execution_target/0,
-          method_name_to_string/1, method_id_to_string/2 ]).
+          method_name_to_string/1, method_call_to_string/2 ]).
 
 
 
@@ -143,7 +144,7 @@ Module containing some **general facilities for WOOPER class developers**.
 -else. % wooper_debug_mode
 
 % Exported as otherwise reported as unused:
--export([ check_classname_and_arity/2 ]).
+-export([ check_constructor_for/2 ]).
 
 -endif. % wooper_debug_mode
 
@@ -1962,11 +1963,11 @@ create_hosting_process( Node, ToLinkWithPid ) ->
 
 -doc """
 Checks, for the specified classname and construction parameters, that a
-corresponding module exists and that it has the relevant arity.
+corresponding module exists and exports a constructor with the relevant arity.
 """.
--spec check_classname_and_arity( classname(), construction_parameters() ) ->
+-spec check_constructor_for( classname(), construction_parameters() ) ->
 									void().
-check_classname_and_arity( Classname, ConstructionParameters ) ->
+check_constructor_for( Classname, ConstructionParameters ) ->
 
 	% Normally useless, as called by the module itself:
 	code_utils:is_beam_in_path( Classname ) =/= not_found orelse
@@ -2053,7 +2054,7 @@ construct_and_run( Classname, ConstructionParameters ) ->
 			"and the following parameters:~n ~p (in debug mode)",
 			[ Classname, ConstructionParameters ] ) ),
 
-	%check_classname_and_arity( Classname, ConstructionParameters ),
+	%check_constructor_for( Classname, ConstructionParameters ),
 
 	BlankState = get_blank_state( Classname ),
 
@@ -2164,7 +2165,7 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 			"for class ~p and following parameters:~n ~p (in debug mode)",
 			[ Classname, ConstructionParameters ] ) ),
 
-	%check_classname_and_arity( Classname, ConstructionParameters ),
+	%check_constructor_for( Classname, ConstructionParameters ),
 
 	BlankState = get_blank_state( Classname ),
 
@@ -2280,7 +2281,7 @@ construct_passive( Classname, ConstructionParameters ) ->
 			"and parameters ~p.", [ Classname, ConstructionParameters ] ) ),
 
 	cond_utils:if_defined( wooper_debug_mode,
-		check_classname_and_arity( Classname, ConstructionParameters ) ),
+		check_constructor_for( Classname, ConstructionParameters ) ),
 
 	BlankState = get_blank_state( Classname ),
 
@@ -3776,15 +3777,17 @@ get_exported_functions_set() ->
 
 
 -doc """
-Checks that specified attribute is indeed associated to a value equal to
+Checks that the specified attribute is indeed set to a value equal to
 `undefined`.
 """.
--spec check_undefined( attribute_name(), wooper:state() ) -> void().
-check_undefined( AttributeName, State ) ->
+-spec check_equal( attribute_name(), attribute_value(),
+                   wooper:state() ) -> void().
+check_equal( AttributeName, AttributeValue, State ) ->
 
+    % A bit strange to proceed that way:
 	try
 
-		undefined = ?getAttr(AttributeName)
+		AttributeValue = ?getAttr(AttributeName)
 
 	catch
 
@@ -3803,6 +3806,15 @@ check_undefined( AttributeName, State ) ->
 
 	end.
 
+
+
+-doc """
+Checks that the specified attribute is indeed set to a value equal to
+`undefined`.
+""".
+-spec check_undefined( attribute_name(), wooper:state() ) -> void().
+check_undefined( AttributeName, State ) ->
+    check_equal( AttributeName, _AttrValue=undefined, State ).
 
 
 -doc """
@@ -3833,16 +3845,16 @@ method_name_to_string( InvMethodName ) ->
 Returns the best (clearest, most robust) textual identifier of the method whose
 (potentially faulty) call is specified.
 """.
--spec method_id_to_string( any(), any() ) -> ustring().
-method_id_to_string( MethodName, Args ) when is_atom( MethodName )
-                                   andalso is_list( Args ) ->
+-spec method_call_to_string( any(), any() ) -> ustring().
+method_call_to_string( MethodName, Args ) when is_atom( MethodName )
+                                               andalso is_list( Args ) ->
     text_utils:format( "~ts/~B", [ MethodName, length( Args )+1 ] );
 
-method_id_to_string( MethodName, _StandaloneArg )
+method_call_to_string( MethodName, _StandaloneArg )
                                         when is_atom( MethodName ) ->
     text_utils:format( "~ts/2", [ MethodName ] );
 
 % If having no argument, no need to call this function.
 
-method_id_to_string( InvMethodName, _Arg ) ->
+method_call_to_string( InvMethodName, _Arg ) ->
     text_utils:format( "of invalid name '~p'", [ InvMethodName ] ).
