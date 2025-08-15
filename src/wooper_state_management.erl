@@ -484,7 +484,7 @@ filter_type( _Type ) ->
 % TO-DO: check and canonicalise the qualifier spec:
 filter_qualifier( _Qualifier ) ->
 
-	% For example [ const, protected ] is represented as:
+	% For example [const, protected] is represented as:
 	% {cons,_, {atom,_,const}, {cons,_,{atom,_,protected},{nil,_}}}.
 
 	%trace_utils:debug_fmt( "Not translating qualifier ~p.", [ Qualifier ] ),
@@ -553,8 +553,8 @@ convert_to_attribute_info_form( ASTName, ASTType, ASTQualifier,
 
 
 -doc "Vets the specified attribute name.".
-handle_attribute_name( NameForm={ atom, _, _AtomName }, _Classname ) ->
-	NameForm;
+handle_attribute_name( _NameForm={ atom, _, AtomName }, _Classname ) ->
+	AtomName;
 
 handle_attribute_name( _OtherForm, Classname ) ->
 	wooper_internals:raise_usage_error( "invalid name for class attribute.", [],
@@ -581,7 +581,7 @@ handle_attribute_type( TypeForm, _Classname, _AttrName )
 % Probably never triggered:
 handle_attribute_type( _TypeForm, Classname, AttrName ) ->
 	wooper_internals:raise_usage_error(
-		"invalid type for class attribute '~ts'.", [ AttrName ], Classname ).
+		"invalid type for class attribute '~p'.", [ AttrName ], Classname ).
 
 
 
@@ -600,7 +600,7 @@ handle_attribute_qualifiers( Qualifiers={cons,_,_H,_T}, Classname, AttrName ) ->
 
 	% It could be checked that no initial is specified if a const is.
 	[ handle_attribute_qualifier( Q, Classname, AttrName )
-						|| Q <- QualifierList ];
+        || Q <- QualifierList ];
 
 % A single qualifier shall be promoted to a list:
 handle_attribute_qualifiers( Qualifier, Classname, AttrName ) ->
@@ -639,14 +639,16 @@ handle_attribute_qualifier( {atom,_,const}, _Classname, _AttrName ) ->
 
 handle_attribute_qualifier( {atom,_,Other}, Classname, AttrName ) ->
 	wooper_internals:raise_usage_error(
-		"invalid qualifier '~ts' for class attribute '~ts'.",
+		"invalid qualifier '~p' for class attribute '~p'.",
 		[ Other, AttrName ],
 		Classname );
 
 handle_attribute_qualifier( _UnexpectedForm, Classname, AttrName ) ->
-	wooper_internals:raise_usage_error(
-		"invalid qualifier for class attribute '~ts'.", [ AttrName ],
-		Classname ).
+	wooper_internals:raise_usage_error( "invalid qualifier for class "
+        "attribute '~p'.", [ AttrName ], Classname ).
+        % If ever wanting extra, AST-level information:
+        %"attribute '~p'~n (qualifier AST form: '~p')",
+        %[ AttrName, UnexpectedForm ], Classname ).
 
 
 
