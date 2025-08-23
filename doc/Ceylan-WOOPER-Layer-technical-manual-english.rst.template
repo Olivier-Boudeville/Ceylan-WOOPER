@@ -3579,6 +3579,17 @@ Then only, once one's code is mature enough, this debug mode may be disabled in 
 
 
 
+Getting the Most Relevant Error Reports
+---------------------------------------
+
+In terms of settings, WOOPER inherits the ones of Myriad, including regarding error reports; so by default they are only displayed on the console, and in an ellipsed form.
+
+If wanting more detailed (longer but possibly less tractable) / durable (on the console but also in-file) error reports, one's program shall execute, preferably early, ``basic_utils:set_error_report_output(standard_and_file_ellipsed)``, or even ``basic_utils:set_error_report_output(standard_and_file_full)``.
+
+Refer to `this section <https://myriad.esperide.org/#myriad-error-report-support>`_ for more details.
+
+
+
 Instance-Level Inquiries
 ------------------------
 
@@ -3773,7 +3784,7 @@ Refer to the corresponding `Myriad prerequisite section <http://myriad.esperide.
 
 
 
-Using Cutting-Edge GIT
+Using Cutting-Edge Git
 ----------------------
 
 This is the installation method that we use and recommend; the WOOPER ``master`` branch is meant to stick to the latest stable version: we try to ensure that this main line always stays functional (sorry for the pun). Evolutions are to take place in feature branches and to be merged only when ready.
@@ -3912,7 +3923,7 @@ For more details, one may have a look at:
 Testing WOOPER
 --------------
 
-Once `Myriad <https://myriad.esperide.org>`_ and WOOPER itself have been built (for that refer to either `Using Cutting-Edge GIT`_ or `Using Rebar3`_), just run from the root directory of WOOPER:
+Once `Myriad <https://myriad.esperide.org>`_ and WOOPER itself have been built (for that refer to either `Using Cutting-Edge Git`_ or `Using Rebar3`_), just run from the root directory of WOOPER:
 
 .. code:: bash
 
