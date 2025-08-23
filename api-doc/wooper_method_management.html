@@ -132,6 +132,13 @@
 <tr><td valign="top"><a href="#get_info_from_clause_spec-3">get_info_from_clause_spec/3</a></td><td></td></tr>
 <tr><td valign="top"><a href="#get_wooper_transform_table-0">get_wooper_transform_table/0</a></td><td></td></tr>
 <tr><td valign="top"><a href="#if_transformer-3">if_transformer/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#is_valid_base_request_call-1">is_valid_base_request_call/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#is_valid_method_call-1">is_valid_method_call/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#is_valid_method_name-1">is_valid_method_name/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#is_valid_oneway_call-1">is_valid_oneway_call/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#is_valid_oneway_name-1">is_valid_oneway_name/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#is_valid_request_call-1">is_valid_request_call/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#is_valid_request_name-1">is_valid_request_name/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#manage_methods-1">manage_methods/1</a></td><td></td></tr>
 <tr><td valign="top"><a href="#methods_to_functions-5">methods_to_functions/5</a></td><td></td></tr>
 <tr><td valign="top"><a href="#oneway_to_function_info-2">oneway_to_function_info/2</a></td><td></td></tr>
@@ -263,6 +270,48 @@
 <h3 class="function"><a name="if_transformer-3">if_transformer/3</a></h3>
 <div class="spec">
 <p><code>if_transformer(FileLoc::<a href="#type-file_loc" docgen-rel="seetype" docgen-href="#file_loc/0">file_loc()</a>, IfClauses::[<a href="#type-ast_if_clause" docgen-rel="seetype" docgen-href="#ast_if_clause/0">ast_if_clause()</a>], Transforms::<a href="#type-ast_transforms" docgen-rel="seetype" docgen-href="#ast_transforms/0">ast_transforms()</a>) -&gt; {[<a href="#type-ast_expression" docgen-rel="seetype" docgen-href="#ast_expression/0">ast_expression()</a>], <a href="#type-ast_transforms" docgen-rel="seetype" docgen-href="#ast_transforms/0">ast_transforms()</a>}</code><br></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="is_valid_base_request_call-1">is_valid_base_request_call/1</a></h3>
+<div class="spec">
+<p><code>is_valid_base_request_call(T::term()) -&gt; boolean()</code><br></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="is_valid_method_call-1">is_valid_method_call/1</a></h3>
+<div class="spec">
+<p><code>is_valid_method_call(Term::term()) -&gt; boolean()</code><br></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="is_valid_method_name-1">is_valid_method_name/1</a></h3>
+<div class="spec">
+<p><code>is_valid_method_name(Name::term()) -&gt; boolean()</code><br></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="is_valid_oneway_call-1">is_valid_oneway_call/1</a></h3>
+<div class="spec">
+<p><code>is_valid_oneway_call(T::term()) -&gt; boolean()</code><br></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="is_valid_oneway_name-1">is_valid_oneway_name/1</a></h3>
+<div class="spec">
+<p><code>is_valid_oneway_name(Name::term()) -&gt; boolean()</code><br></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="is_valid_request_call-1">is_valid_request_call/1</a></h3>
+<div class="spec">
+<p><code>is_valid_request_call(T::term()) -&gt; boolean()</code><br></p>
+<p> </p>
+</div>
+
+<h3 class="function"><a name="is_valid_request_name-1">is_valid_request_name/1</a></h3>
+<div class="spec">
+<p><code>is_valid_request_name(Name::term()) -&gt; boolean()</code><br></p>
 <p> </p>
 </div>
 
