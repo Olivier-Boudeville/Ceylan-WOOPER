@@ -82,7 +82,7 @@ executeRequest( State, RequestAtom ) when is_record( State, state_holder )
 executeRequest( State, RequestAtomError )
                                     when is_record( State, state_holder ) ->
 
-	wooper:log_error( "when executing request locally, its name shall "
+	wooper:log_error( " when executing request locally, its name shall "
         "be an atom, not:~n ~p", [ RequestAtomError ], State ),
 
 	throw( { wooper_invalid_request_call,
@@ -91,7 +91,7 @@ executeRequest( State, RequestAtomError )
 % Invalid state:
 executeRequest( StateError, SomeRequestName ) ->
 
-	wooper:log_error( "when executing request ~ts/1 locally, "
+	wooper:log_error( " when executing request ~ts/1 locally, "
 		"first parameter should be a state, not:~n ~p",
 		[ wooper:method_name_to_string( SomeRequestName ), StateError ],
         ?MODULE ),
@@ -165,7 +165,7 @@ executeRequest( State, RequestAtom, StandaloneArgument ) when
 executeRequest( State, RequestAtomError, _ArgMaybeList )
 							when is_record( State, state_holder ) ->
 
-	wooper:log_error( "when executing request locally, its name shall "
+	wooper:log_error( " when executing request locally, its name shall "
         "be an atom, not:~n ~p", [ RequestAtomError ], State ),
 
 	throw( { wooper_invalid_request_call,
@@ -175,7 +175,7 @@ executeRequest( State, RequestAtomError, _ArgMaybeList )
 % At least an invalid state:
 executeRequest( StateError, RequestAtom, ArgMaybeList ) ->
 
-	wooper:log_error( "when executing request ~ts locally, "
+	wooper:log_error( " when executing request ~ts locally, "
 		"first parameter should be a state, not:~n ~p",
 		[ wooper:method_call_to_string( RequestAtom, ArgMaybeList ),
           StateError ], ?MODULE ),
@@ -240,7 +240,7 @@ executeRequestAs( ParentClassname, State, RequestAtomError )
 		when is_atom( ParentClassname )
              andalso is_record( State, state_holder ) ->
 
-	wooper:log_error( "when executing request locally as ~ts, the request "
+	wooper:log_error( " when executing request locally as ~ts, the request "
         "name shall be an atom, not:~n ~p",
         [ ParentClassname, RequestAtomError ], State ),
 
@@ -252,7 +252,7 @@ executeRequestAs( ParentClassname, State, RequestAtomError )
 executeRequestAs( ParentClassname, StateError, SomeRequestName )
 		when is_atom( ParentClassname ) ->
 
-	wooper:log_error( "when executing request ~ts/1 locally as ~ts, "
+	wooper:log_error( " when executing request ~ts/1 locally as ~ts, "
 		"second parameter should be a state, not:~n ~p",
 		[ wooper:method_name_to_string( SomeRequestName ), ParentClassname,
           StateError ], ?MODULE ),
@@ -264,7 +264,7 @@ executeRequestAs( ParentClassname, StateError, SomeRequestName )
 % Invalid parent classname:
 executeRequestAs( ParentClassnameError, _State, SomeRequestName ) ->
 
-	wooper:log_error( "when executing request ~ts/1 locally, "
+	wooper:log_error( " when executing request ~ts/1 locally, "
 		"parent classname shall be an atom, not:~n ~p",
 		[ wooper:method_name_to_string( SomeRequestName ),
             ParentClassnameError ], ?MODULE ),
@@ -346,7 +346,7 @@ executeRequestAs( ParentClassname, State, RequestAtomError, _ArgMaybeList )
 		when is_atom( ParentClassname )
              andalso is_record( State, state_holder ) ->
 
-	wooper:log_error( "when executing request locally as ~ts, the request "
+	wooper:log_error( " when executing request locally as ~ts, the request "
         "name shall be an atom, not:~n ~p",
         [ ParentClassname, RequestAtomError ], State ),
 
@@ -358,7 +358,7 @@ executeRequestAs( ParentClassname, State, RequestAtomError, _ArgMaybeList )
 executeRequestAs( ParentClassname, StateError, RequestAtom, ArgMaybeList )
         when is_atom( ParentClassname ) ->
 
-	wooper:log_error( "when executing request ~ts locally as ~ts, "
+	wooper:log_error( " when executing request ~ts locally as ~ts, "
 		"second parameter should be a state, not:~n ~p",
 		[ wooper:method_call_to_string( RequestAtom, ArgMaybeList ),
           ParentClassname, StateError ], ?MODULE ),
@@ -370,7 +370,7 @@ executeRequestAs( ParentClassname, StateError, RequestAtom, ArgMaybeList )
 % Invalid parent classname:
 executeRequestAs( ParentClassnameError, _State, RequestAtom, ArgMaybeList ) ->
 
-	wooper:log_error( "when executing request ~ts locally, "
+	wooper:log_error( " when executing request ~ts locally, "
 		"parent classname shall be an atom, not:~n ~p",
 		[ wooper:method_call_to_string( RequestAtom, ArgMaybeList ),
           ParentClassnameError ], ?MODULE ),
@@ -441,7 +441,7 @@ executeOneway( State, OnewayAtom ) when is_record( State, state_holder )
 % Invalid oneway name:
 executeOneway( State, OnewayAtomError ) when is_record( State, state_holder ) ->
 
-	wooper:log_error( "when executing oneway locally, its name shall "
+	wooper:log_error( " when executing oneway locally, its name shall "
         "be an atom, not:~n ~p", [ OnewayAtomError ], State ),
 
 	throw( { wooper_invalid_oneway_call,
@@ -450,7 +450,7 @@ executeOneway( State, OnewayAtomError ) when is_record( State, state_holder ) ->
 % Invalid state:
 executeOneway( StateError, SomeOnewayName ) ->
 
-	wooper:log_error( "when executing oneway ~ts/1 locally, "
+	wooper:log_error( " when executing oneway ~ts/1 locally, "
 		"first parameter should be a state, not:~n ~p",
 		[ wooper:method_name_to_string( SomeOnewayName ), StateError ],
         ?MODULE ),
@@ -521,7 +521,7 @@ executeOneway( State, OnewayAtom, StandaloneArgument ) when
 executeOneway( State, OnewayAtomError, _ArgMaybeList )
                         when is_record( State, state_holder )  ->
 
-	wooper:log_error( "when executing oneway locally, its name shall "
+	wooper:log_error( " when executing oneway locally, its name shall "
         "be an atom, not:~n ~p", [ OnewayAtomError ], State ),
 
 	throw( { wooper_invalid_oneway_call,
@@ -531,7 +531,7 @@ executeOneway( State, OnewayAtomError, _ArgMaybeList )
 % Invalid state:
 executeOneway( StateError, OnewayAtom, ArgMaybeList ) ->
 
-	wooper:log_error( "when executing oneway ~ts locally, "
+	wooper:log_error( " when executing oneway ~ts locally, "
 		"first parameter should be a state, not:~n ~p",
 		[ wooper:method_call_to_string( OnewayAtom, ArgMaybeList ),
           StateError ],
@@ -596,7 +596,7 @@ executeOnewayAs( ParentClassname, State, OnewayAtomError )
 		when is_atom( ParentClassname )
              andalso is_record( State, state_holder ) ->
 
-	wooper:log_error( "when executing oneway locally as ~ts, the oneway name "
+	wooper:log_error( " when executing oneway locally as ~ts, the oneway name "
         "shall be an atom, not:~n ~p", [ ParentClassname, OnewayAtomError ],
         State ),
 
@@ -608,7 +608,7 @@ executeOnewayAs( ParentClassname, State, OnewayAtomError )
 executeOnewayAs( ParentClassname, StateError, SomeOnewayName )
 		when is_atom( ParentClassname ) ->
 
-	wooper:log_error( "when executing oneway ~ts/1 locally as ~ts, "
+	wooper:log_error( " when executing oneway ~ts/1 locally as ~ts, "
 		"second parameter should be a state, not:~n ~p",
 		[ wooper:method_name_to_string( SomeOnewayName ), ParentClassname,
           StateError ], ?MODULE ),
@@ -619,7 +619,7 @@ executeOnewayAs( ParentClassname, StateError, SomeOnewayName )
 % Invalid parent classname:
 executeOnewayAs( ParentClassnameError, _State, SomeOnewayName ) ->
 
-	wooper:log_error( "when executing oneway ~ts/1 locally, parent "
+	wooper:log_error( " when executing oneway ~ts/1 locally, parent "
         "classname shall be an atom, not:~n ~p",
         [ wooper:method_name_to_string( SomeOnewayName ),
           ParentClassnameError ], ?MODULE ),
@@ -697,7 +697,7 @@ executeOnewayAs( ParentClassname, State, OnewayAtomError, _ArgMaybeList )
 		when is_atom( ParentClassname )
              andalso is_record( State, state_holder ) ->
 
-	wooper:log_error( "when executing oneway locally as ~ts, the oneway "
+	wooper:log_error( " when executing oneway locally as ~ts, the oneway "
         "name shall be an atom, not:~n ~p",
         [ ParentClassname, OnewayAtomError ], State ),
 
@@ -709,7 +709,7 @@ executeOnewayAs( ParentClassname, State, OnewayAtomError, _ArgMaybeList )
 executeOnewayAs( ParentClassname, StateError, OnewayAtom, ArgMaybeList )
         when is_atom( ParentClassname ) ->
 
-	wooper:log_error( "when executing oneway ~ts locally as ~ts, "
+	wooper:log_error( " when executing oneway ~ts locally as ~ts, "
 		"second parameter should be a state, not:~n ~p",
 		[ wooper:method_call_to_string( OnewayAtom, ArgMaybeList ),
           ParentClassname, StateError ], ?MODULE ),
@@ -721,7 +721,7 @@ executeOnewayAs( ParentClassname, StateError, OnewayAtom, ArgMaybeList )
 % Invalid parent classname:
 executeOnewayAs( ParentClassnameError, _State, OnewayAtom, ArgMaybeList ) ->
 
-	wooper:log_error( "when executing oneway ~ts locally, "
+	wooper:log_error( " when executing oneway ~ts locally, "
 		"parent classname shall be an atom, not:~n ~p",
 		[ wooper:method_call_to_string( OnewayAtom, ArgMaybeList ),
           ParentClassnameError ], ?MODULE ),

@@ -523,6 +523,7 @@ one).
 -type count() :: basic_utils:count().
 -type exception_class() :: basic_utils:exception_class().
 -type exception_term() :: basic_utils:exception_term().
+-type error_term() :: basic_utils:error_term().
 -type exit_reason() :: basic_utils:exit_reason().
 
 -type maybe_list(T) :: list_utils:maybe_list(T).
@@ -2662,14 +2663,29 @@ trigger_error( ExceptionClass, ExceptionTerm, Classname, ConstructionParameters,
 	%   "Stacktrace:~n ~p.",
 	%   [ ExceptionClass, ExceptionTerm, Stacktrace ] ),
 
-	log_error( " for PID ~w, constructor (~ts:construct/~B) failed "
-        "(exception class: ~p):~n~n"
+    { StdOutputStackStr, MaybeFileOutputStackStr } =
+        code_utils:interpret_stacktrace_for_error_output( Stacktrace,
+                                                          ExceptionTerm ),
+
+    BaseFmtStr = " for PID ~w, constructor (~ts:construct/~B) failed~ts:~n~n"
 		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first): ~ts~n~n"
 		" - for construction parameters:~n  ~p~n",
-		[ self(), Classname, Arity, ExceptionClass, ExceptionTerm,
-		  code_utils:interpret_stacktrace( Stacktrace, ExceptionTerm ),
-		  ConstructionParameters ] ),
+
+	log_error( BaseFmtStr, [ self(), Classname, Arity,
+        interpret_exception_class( ExceptionClass ),
+        ExceptionTerm, StdOutputStackStr, ConstructionParameters ] ),
+
+    MaybeFileOutputStackStr =:= undefined orelse
+        begin
+
+            FileMsg = text_utils:format( "WOOPER error " ++ BaseFmtStr,
+                [ self(), Classname, Arity, ExceptionClass, ExceptionTerm,
+                  MaybeFileOutputStackStr, ConstructionParameters ] ),
+
+            basic_utils:write_error_on_file( FileMsg )
+
+        end,
 
 	throw( { wooper_constructor_failed, self(), Classname, Arity,
 			 ConstructionParameters, ExceptionTerm } ).
@@ -3066,7 +3082,9 @@ log_error( Message ) ->
 	% (this is the case, so commented-out)
 	%trace_bridge:warning( "Echoing WOOPER error message: " ++ Message ),
 
-	% Never ellipsing for errors now:
+	% Never ellipsing for errors now, especially with Myriad per-channel error
+	% output settings:
+
 	%logger:error( text_utils:ellipse( Message, ?ellipse_length ) ++ "\n" ),
 	logger:error( "WOOPER error~ts~n", [ Message ] ),
 
@@ -3080,13 +3098,15 @@ Reports (as synchronously as possible, in order to avoid losing this
 notification) the specified error to the user, typically by displaying an error
 report on the console (non-halting function, e.g. no exception thrown).
 
+The specified format string should start with a space, semi-colon, etc.
+
 See `log_error/1` for more details.
 """.
 -spec log_error( format_string(), format_values() ) -> void().
 log_error( FormatString, ValueList ) ->
 
 	Str = text_utils:format( "WOOPER error" ++ FormatString
-		++ "~n= END OF WOOPER ERROR REPORT FOR ~w ===",
+		++ "~n=== End of WOOPER error report for ~w ===",
 							 ValueList ++ [ self() ] ),
 
 	% To ensure that the message goes through even in production mode:
@@ -3113,8 +3133,7 @@ thanks to its state, otherwise with the current executed module, so with fewer
 information) to the user, typically by displaying an error report on the console
 (non-halting function, e.g. no exception thrown).
 
-With this arity, the specified format string should directly start with an
-actual character (no space, semi-colon, etc.).
+The specified format string should *not* start with a space, semi-colon, etc.
 """.
 -spec log_error( format_string(), format_values(),
 				 wooper:state() | basic_utils:module_name() ) -> void().
@@ -3128,7 +3147,7 @@ log_error( FormatString, ValueList, State )
 	%           ++ FormatString,
 	%           [ State#state_holder.actual_class, self(),
 	%             node() | ValueList ] );
-	log_error( " for ~ts instance of PID ~w: " ++ FormatString,
+	log_error( " for ~ts instance of PID ~w, as " ++ FormatString,
 			   [ State#state_holder.actual_class, self() | ValueList ] );
 
 log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
@@ -3140,7 +3159,7 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 	%           "in module ~ts: " ++ FormatString,
 	%           [ self(), ModuleName, node() | ValueList ] ).
 	log_error( " for instance of PID ~w triggered "
-		"in module ~ts: " ++ FormatString,
+		"in module ~ts, as " ++ FormatString,
 		[ self(), ModuleName | ValueList ] ).
 
 
@@ -3152,13 +3171,13 @@ the caller, and have the process instance exit.
 -spec on_failed_request( request_name(), method_arguments(), pid(),
 		exception_class(), exception_term(), stack_trace(), wooper:state() ) ->
 								no_return().
-on_failed_request( RequestName, ArgumentList, CallerPid, ExceptionClass,
+on_failed_request( RequestName, Arguments, CallerPid, ExceptionClass,
         ExceptionTerm=undef,
         _Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs,
                                    Loc } | NextCalls ],
         State ) ->
 
-	Arity = length( ArgumentList ) + 1,
+	Arity = length( Arguments ) + 1,
 
 	ModulePrefix = lookup_method_prefix( RequestName, Arity, State ),
 
@@ -3177,7 +3196,7 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ExceptionClass,
 		[ ModulePrefix, RequestName, Arity, ModuleName, FunctionName,
 		  UndefArity, Diagnosis, LocString ], State ),
 
-	% ArgumentList and actual method module not propagated back to the caller:
+	% Arguments and actual method module not propagated back to the caller:
 	ErrorReason = { request_failed, State#state_holder.actual_class,
 					self(), RequestName, { ExceptionClass, ExceptionTerm } },
 
@@ -3194,24 +3213,84 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ExceptionClass,
 	exit( request_failed );
 
 
-on_failed_request( RequestName, ArgumentList, CallerPid, ExceptionClass,
+on_failed_request( RequestName, Arguments, CallerPid, ExceptionClass,
 				   ExceptionTerm, Stacktrace, State ) ->
 
-	Arity = length( ArgumentList ) + 1,
+    ArgCount = length( Arguments ),
+	Arity = ArgCount + 1,
 
 	ModulePrefix = lookup_method_prefix( RequestName, Arity, State ),
 
-	log_error( "request ~ts~ts/~B failed (exception class: ~ts):~n~n"
-		" - with error term:~n  ~p~n~n"
-		" - stack trace was (latest calls first): ~ts~n"
-		" - caller being process ~w~n~n"
-		" - for request parameters:~n  ~p~n",
-		[ ModulePrefix, RequestName, Arity, ExceptionClass, ExceptionTerm,
-		  code_utils:interpret_stacktrace( Stacktrace, ExceptionTerm ),
-		  CallerPid, ArgumentList ],
-		State ),
+    { StdOutputStackStr, MaybeFileOutputStackStr } =
+        code_utils:interpret_stacktrace_for_error_output( Stacktrace,
+                                                          ExceptionTerm ),
 
-	% ArgumentList and actual method module not propagated back to the caller:
+    { MaybeStdErrorEllipseLen, FileErrorOutputChoice } =
+                code_utils:get_error_report_output_ellipsings(),
+
+    ArgStr = case ArgCount of
+
+        0 ->
+            "no specific argument";
+
+        _ ->
+            ArgStrs = code_utils:interpret_arguments( Arguments,
+                                                      MaybeStdErrorEllipseLen ),
+
+            format_arg_interpretations( ArgCount, ArgStrs )
+
+    end,
+
+    % PID managed by log_error:
+    BaseFmtStr = "request ~ts~ts/~B failed~ts:~n~n"
+		" - with error term:~n  ~ts~n~n"
+		" - stack trace was (latest calls first): ~ts~n"
+		" - caller process being ~w~n~n"
+		" - request initially triggered with, beyond the state, ~ts",
+
+    ExceptionClassStr = interpret_exception_class( ExceptionClass ),
+
+    ExceptionTermStr = interpret_error_term( ExceptionTerm,
+                                             MaybeStdErrorEllipseLen ),
+
+	log_error( BaseFmtStr ++ "~n", [ ModulePrefix, RequestName, Arity,
+        ExceptionClassStr, ExceptionTermStr, StdOutputStackStr, CallerPid,
+        ArgStr ], State ),
+
+    FileErrorOutputChoice =:= false orelse
+        begin
+
+            % So error to be written on file (ellipsed or not); a suitable
+            % stacktrace string is already available, now taking care of
+            % argument string; seeing whether ArgStr could be reused would have
+            % little interest:
+
+            { _ForStdErr, FileErrorOutputChoice } =
+                code_utils:get_error_report_output_ellipsings(),
+
+            ArgForFileStr = case ArgCount of
+
+                0 ->
+                    "no specific argument";
+
+                _ ->
+                    ArgForFileStrs = code_utils:interpret_arguments( Arguments,
+                        FileErrorOutputChoice ),
+
+                    format_arg_interpretations( ArgCount, ArgForFileStrs )
+
+            end,
+
+            FileMsg = text_utils:format( "WOOPER error, " ++ BaseFmtStr,
+                [ ModulePrefix, RequestName, Arity, ExceptionClassStr,
+                  ExceptionTermStr, MaybeFileOutputStackStr, CallerPid,
+                  ArgForFileStr ] ),
+
+            basic_utils:write_error_on_file( FileMsg )
+
+        end,
+
+	% Arguments and actual method module not propagated back to the caller:
 	ErrorReason = { request_failed, State#state_holder.actual_class,
 					self(), RequestName, { ExceptionClass, ExceptionTerm } },
 
@@ -3228,19 +3307,18 @@ on_failed_request( RequestName, ArgumentList, CallerPid, ExceptionClass,
 	exit( request_failed ).
 
 
-
 -doc """
 Called by WOOPER whenever a oneway fails, to report it on the console and to the
 caller, and have the process instance exit.
 """.
 -spec on_failed_oneway( oneway_name(), method_arguments(), exception_class(),
 			exception_term(), stack_trace(), wooper:state() ) -> no_return().
-on_failed_oneway( OnewayName, ArgumentList, _ExceptionClass,
+on_failed_oneway( OnewayName, Arguments, _ExceptionClass,
 	_ExceptionTerm=undef,
 	_Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
 					| NextCalls ], State ) ->
 
-	Arity = length( ArgumentList ) + 1,
+	Arity = length( Arguments ) + 1,
 
 	ModulePrefix = lookup_method_prefix( OnewayName, Arity, State ),
 
@@ -3266,22 +3344,84 @@ on_failed_oneway( OnewayName, ArgumentList, _ExceptionClass,
 	%
 	exit( oneway_failed );
 
-on_failed_oneway( OnewayName, ArgumentList, ExceptionClass, ExceptionTerm,
+
+on_failed_oneway( OnewayName, Arguments, ExceptionClass, ExceptionTerm,
 				  Stacktrace, State ) ->
 
-	Arity = length( ArgumentList ) + 1,
+    ArgCount = length( Arguments ),
+	Arity = ArgCount + 1,
 
 	ModulePrefix = lookup_method_prefix( OnewayName, Arity, State ),
 
-	% PID managed by log_error:
-	log_error( "oneway ~ts~ts/~B failed (exception class: ~ts):~n~n"
+    { StdOutputStackStr, MaybeFileOutputStackStr } =
+        code_utils:interpret_stacktrace_for_error_output( Stacktrace,
+                                                          ExceptionTerm ),
+
+    { MaybeStdErrorEllipseLen, FileErrorOutputChoice } =
+                code_utils:get_error_report_output_ellipsings(),
+
+    ArgStr = case ArgCount of
+
+        0 ->
+            "no specific argument";
+
+        _ ->
+            { MaybeStdErrorEllipseLen, _FileErrorOutputChoice } =
+                code_utils:get_error_report_output_ellipsings(),
+
+            ArgStrs = code_utils:interpret_arguments( Arguments,
+                                                      MaybeStdErrorEllipseLen ),
+
+            format_arg_interpretations( ArgCount, ArgStrs )
+
+    end,
+
+    % PID managed by log_error:
+    BaseFmtStr = "oneway ~ts~ts/~B failed~ts:~n~n"
 		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first): ~ts~n"
-		" - for oneway parameters:~n  ~p~n",
-		[ ModulePrefix, OnewayName, Arity, ExceptionClass, ExceptionTerm,
-		  code_utils:interpret_stacktrace( Stacktrace, ExceptionTerm ),
-		  ArgumentList ],
-		State ),
+		" - oneway initially triggered with, beyond the state, ~ts~n",
+
+    ExceptionClassStr = interpret_exception_class( ExceptionClass ),
+
+    ExceptionTermStr = interpret_error_term( ExceptionTerm, StdOutputStackStr ),
+
+	log_error( BaseFmtStr, [ ModulePrefix, OnewayName, Arity,
+        ExceptionClassStr, ExceptionTermStr, StdOutputStackStr, ArgStr ],
+               State ),
+
+    FileErrorOutputChoice =:= false orelse
+        begin
+
+            % So error to be written on file (ellipsed or not); a suitable
+            % stacktrace string is already available, now taking care of
+            % argument string; seeing whether ArgStr could be reused would have
+            % little interest:
+
+            { _ForStdErr, FileErrorOutputChoice } =
+                code_utils:get_error_report_output_ellipsings(),
+
+            ArgForFileStr = case ArgCount of
+
+                0 ->
+                    "no specific argument";
+
+                _ ->
+                    ArgForFileStrs = code_utils:interpret_arguments( Arguments,
+                        FileErrorOutputChoice ),
+
+                    format_arg_interpretations( ArgCount, ArgForFileStrs )
+
+            end,
+
+            FileMsg = text_utils:format( "WOOPER error, " ++ BaseFmtStr,
+                [ ModulePrefix, OnewayName, Arity, ExceptionClassStr,
+                  ExceptionTermStr, MaybeFileOutputStackStr, ArgForFileStr ] ),
+
+            basic_utils:write_error_on_file( FileMsg )
+
+        end,
+
 
 	% No caller to notify, for oneways.
 
@@ -3292,6 +3432,23 @@ on_failed_oneway( OnewayName, ArgumentList, ExceptionClass, ExceptionTerm,
 
 
 
+-doc "Formats the specified method argument interpretations.".
+-spec format_arg_interpretations( count(), [ ustring() ] ) -> ustring().
+format_arg_interpretations( _ArgCount=0, _ArgStrs ) ->
+    "";
+
+format_arg_interpretations( _ArgCount=1, _ArgStrs=[ ArgStr ] ) ->
+    % Intentionally glued:
+    text_utils:format( "a single argument~ts",
+                       [ ArgStr ] );
+
+format_arg_interpretations( ArgCount, ArgStrs ) ->
+    text_utils:format( "the following ~B arguments:~n ~ts",
+        [ ArgCount, code_utils:arguments_to_string( ArgStrs ) ] ).
+
+
+
+
 -doc """
 Looks up the module defining the specified method, and returns a textual prefix
 specifying it, if found.
@@ -3299,7 +3456,7 @@ specifying it, if found.
 Used for error management, hence designed not to fail.
 """.
 -spec lookup_method_prefix( method_name(), arity(), wooper:state() ) ->
-                                            ustring().
+                                                        ustring().
 lookup_method_prefix( MethodAtom, Arity, State ) ->
 
 	try wooper_lookup_method( State, MethodAtom, Arity ) of
@@ -3824,6 +3981,28 @@ Checks that all specified attributes are indeed associated to a value equal to
 -spec check_all_undefined( [ attribute_name() ], wooper:state() ) -> void().
 check_all_undefined( AttributeNames, State ) ->
 	[ check_undefined( Attr, State ) || Attr <- AttributeNames ].
+
+
+
+-doc "Interprets the specified exception class.".
+-spec interpret_exception_class( exception_class() ) -> ustring().
+interpret_exception_class( _ExceptionClass=error ) ->
+    % Silenced as by far the most common (hence not informative enough):
+    "";
+
+interpret_exception_class( ExceptionClass ) ->
+    text_utils:format( " (exception class: ~ts)", [ ExceptionClass ] ).
+
+
+
+-doc "Interprets the specified error term.".
+-spec interpret_error_term( error_term(), option( count() ) ) -> ustring().
+interpret_error_term( ErrorTerm, _MaybeErrorEllipseLen=undefined ) ->
+    text_utils:term_to_string( ErrorTerm );
+
+interpret_error_term( ErrorTerm, ErrorEllipseLen ) ->
+    text_utils:ellipse( interpret_error_term( ErrorTerm,
+        _MaybeErrorEllipseLen=undefined ), ErrorEllipseLen ).
 
 
 

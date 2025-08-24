@@ -1336,10 +1336,13 @@ WOOPER-driven traversal of branching constructs.
 							{ ast_body(), ast_transforms() }.
 body_transformer( Body, Transforms=#ast_transforms{
 							transformed_function_identifier=FunId } ) ->
+
+    StackStr = code_utils:interpret_stacktrace_for_error_output(),
+
 	wooper_internals:raise_usage_error( "standard body transform called when "
 		"traversing the AST of the ~ts/~B function (abnormal); "
 		"body was:~n  ~p;~nCorresponding stacktrace was: ~ts",
-		pair:to_list( FunId ) ++ [ Body, code_utils:interpret_stacktrace() ],
+		pair:to_list( FunId ) ++ [ Body, StackStr ],
 		Transforms, _FileLoc=0 ).
 
 
