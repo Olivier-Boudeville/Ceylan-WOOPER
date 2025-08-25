@@ -3986,7 +3986,7 @@ check_all_undefined( AttributeNames, State ) ->
 
 -doc "Interprets the specified exception class.".
 -spec interpret_exception_class( exception_class() ) -> ustring().
-interpret_exception_class( _ExceptionClass=error ) ->
+interpret_exception_class( _ExceptionClass=throw ) ->
     % Silenced as by far the most common (hence not informative enough):
     "";
 
