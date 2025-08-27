@@ -3,19 +3,19 @@
 
   "apps": [
 
-    {
+	{
 	  "_comment": "The value for the src_dirs entry for this layer can be generated/updated by executing: 'make list-src-dirs' from the root of this layer, and copying them verbatim below (relative paths already correct). The same applies for extra_src_dirs, with 'make list-extra-src-dirs'",
-      "name": "wooper",
-      "dir": "..",
-      "src_dirs": ["./priv/examples", "./src", "./src/interfaces"],
-      "extra_src_dirs": ["test", "test/interfaces"],
-      "include_dirs": [
-        "include"
+	  "name": "wooper",
+	  "dir": "..",
+	  "src_dirs": ["./priv/examples", "./src", "./src/interfaces"],
+	  "extra_src_dirs": ["test", "test/interfaces"],
+	  "include_dirs": [
+		"include"
       ],
 
       "macros": {
-        "myriad_debug_mode": "true",
-        "wooper_debug_mode": "true"
+        "wooper_debug_mode": "true",
+        "myriad_debug_mode": "true"
       }
     },
 
