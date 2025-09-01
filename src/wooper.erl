@@ -3986,10 +3986,15 @@ check_all_undefined( AttributeNames, State ) ->
 
 -doc "Interprets the specified exception class.".
 -spec interpret_exception_class( exception_class() ) -> ustring().
+% Silenced as by far the most common (hence not informative enough):
 interpret_exception_class( _ExceptionClass=throw ) ->
-    % Silenced as by far the most common (hence not informative enough):
     "";
 
+% Same (e.g. for 'case_clause'):
+interpret_exception_class( _ExceptionClass=error ) ->
+    "";
+
+% Only 'exit' ought to remain:
 interpret_exception_class( ExceptionClass ) ->
     text_utils:format( " (exception class: ~ts)", [ ExceptionClass ] ).
 
