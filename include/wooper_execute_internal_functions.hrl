@@ -446,6 +446,48 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 		{ NewState, Result } when is_record( NewState, state_holder ) ->
 			{ NewState, { wooper_result, Result } };
 
+		Faultyreturn={ InvalidState, _Result }  ->
+
+			MethodArity = length( Parameters )+1,
+
+			case State#state_holder.request_sender of
+
+				undefined ->
+
+					% This is a oneway, so log and crash:
+					wooper:log_error( ": oneway ~ts:~ts/~B made a faulty "
+						"return; instead of a state, got:~n ~p~n"
+						"while its parameters were:~n    ~p",
+						[ SelectedModule, MethodAtom, MethodArity, InvalidState,
+						  Parameters ] ),
+
+					throw( { wooper_oneway_faulty_return, self(),
+							 SelectedModule, MethodAtom, MethodArity,
+							 Parameters, Faultyreturn } );
+
+				_ ->
+
+					% This is a request, log and throw, the try/catch clause of
+					% the main loop will intercept it, log and rethrow:
+					%
+                    % Removed as not useful enough:
+                    % "(while result was ~p);" / Result
+					wooper:log_error( ": request ~ts:~ts/~B made a faulty "
+						"return; instead of a state, got:~n ~p~n"
+                        "while its parameters were:~n    ~p",
+						[ SelectedModule, MethodAtom, MethodArity, InvalidState,
+                          Parameters ] ),
+
+					% We do not include anymore 'Other', as it is best kept
+					% internal (and not sent back to the caller):
+					%
+					throw( { wooper_request_faulty_return, self(),
+                             SelectedModule, MethodAtom, MethodArity,
+                             Parameters, Faultyreturn } )
+
+			end;
+
+
 		% Neither a oneway or request result, nor an exception: faulty return.
 		Other ->
 
@@ -482,7 +524,7 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 					%
 					throw( { wooper_request_faulty_return, self(),
 							 SelectedModule, MethodAtom, MethodArity,
-							 Parameters } )
+							 Parameters, Other } )
 
 			end
 
