@@ -39,7 +39,7 @@
 -doc """
 Calls recursively the destructors through the inheritance tree.
 
-Each destructor (destruct/1 function) is purely local to the current module.
+Each destructor (`destruct/1` function) is purely local to the current module.
 
 Initial specified state is always valid (comes from the main loop), but states
 returned by user-defined destructors must be checked in debug mode.
@@ -169,11 +169,7 @@ wooper_destruct( State ) ->
 
 
 
--doc """
-Triggers a destruction-related error.
-
-(helper)
-""".
+-doc "Triggers a destruction-related error.".
 -spec trigger_destruct_error( basic_utils:exception_class(),
 		basic_utils:error_term(), code_utils:stack_trace(), wooper:state() ) ->
 									no_return().
@@ -186,7 +182,7 @@ trigger_destruct_error( Reason, ErrorTerm, StackTrace, State ) ->
 
 	wooper:log_error( " for PID ~w, "
 		"destructor (~ts:destruct/1) failed (cause: ~p):~n~n"
-		" - with error term:~n  ~p~n~n"
+		" - with error term:~n  ~ts~n~n"
 		" - stack trace was (latest calls first): ~ts~n"
 		" - instance state was: ~ts~n~n",
 		[ self(), ActualClassname, Reason, ErrorTerm,
@@ -198,11 +194,7 @@ trigger_destruct_error( Reason, ErrorTerm, StackTrace, State ) ->
 
 
 
--doc """
-Calls recursively the destructor of all direct superclasses.
-
-(helper)
-""".
+-doc "Calls recursively the destructor of all direct superclasses.".
 -spec chain_parent_destructors( wooper:state() ) -> wooper:state().
 chain_parent_destructors( State ) ->
 
