@@ -2618,7 +2618,7 @@ check_operational( InstPid ) ->
 			[ method_arguments() ], stack_trace() ) -> no_return().
 trigger_error( _ExceptionClass, _ExceptionTerm=undef, Classname,
 	   ConstructionParameters,
-	   _Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
+	   Stacktrace=[ _UndefCall={ ModuleName, FunctionName, UndefArgs, Loc }
 						| NextCalls ] ) ->
 
 	%trace_bridge:debug_fmt( "NextCalls: ~p", [ NextCalls ] ),
@@ -2639,10 +2639,17 @@ trigger_error( _ExceptionClass, _ExceptionTerm=undef, Classname,
 
 	LocString = get_location_string( Loc, NextCalls ),
 
+    % Now we show the stacktrace as well, as for example with callbacks even the
+    % location of the original call may be of interest:
+    %
+    StackStr = code_utils:interpret_stacktrace( Stacktrace,
+                                                _MaybeErrorTerm= false ),
+
 	log_error( " for PID ~w, constructor (~ts:construct/~B) failed due to "
-        "an 'undef' call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts",
+        "an 'undef' call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts~n~n"
+        "Stacktrace (latest calls first): ~ts",
 		[ self(), Classname, Arity, ModuleName, FunctionName,
-		  UndefArity, Diagnosis, LocString ] ),
+		  UndefArity, Diagnosis, LocString, StackStr ] ),
 
 	throw( { wooper_constructor_failed, self(), Classname, Arity,
 			 { undef, { ModuleName, FunctionName, UndefArity } } } );
@@ -2652,7 +2659,6 @@ trigger_error( ExceptionClass, ExceptionTerm, Classname, ConstructionParameters,
 			   Stacktrace ) ->
 
 	% Construction failed:
-	% (error term would often be unreadable with ~p)
 
 	Arity = length( ConstructionParameters ) + 1,
 
@@ -2662,6 +2668,12 @@ trigger_error( ExceptionClass, ExceptionTerm, Classname, ConstructionParameters,
 	%trace_bridge:debug_fmt( "ExceptionClass: ~p, ExceptionTerm: ~p, "
 	%   "Stacktrace:~n ~p.",
 	%   [ ExceptionClass, ExceptionTerm, Stacktrace ] ),
+
+    { MaybeStdErrorEllipseLen, _FileErrorOutputChoice } =
+        code_utils:get_error_report_output_ellipsings(),
+
+    ExceptionTermStr = interpret_error_term( ExceptionTerm,
+                                             MaybeStdErrorEllipseLen ),
 
     { StdOutputStackStr, MaybeFileOutputStackStr } =
         code_utils:interpret_stacktrace_for_error_output( Stacktrace,
@@ -2674,8 +2686,9 @@ trigger_error( ExceptionClass, ExceptionTerm, Classname, ConstructionParameters,
 
 	log_error( BaseFmtStr, [ self(), Classname, Arity,
         interpret_exception_class( ExceptionClass ),
-        ExceptionTerm, StdOutputStackStr, ConstructionParameters ] ),
+        ExceptionTermStr, StdOutputStackStr, ConstructionParameters ] ),
 
+    % FileErrorOutputChoice available as well:
     MaybeFileOutputStackStr =:= undefined orelse
         begin
 
@@ -3226,7 +3239,7 @@ on_failed_request( RequestName, Arguments, CallerPid, ExceptionClass,
                                                           ExceptionTerm ),
 
     { MaybeStdErrorEllipseLen, FileErrorOutputChoice } =
-                code_utils:get_error_report_output_ellipsings(),
+        code_utils:get_error_report_output_ellipsings(),
 
     ArgStr = case ArgCount of
 
