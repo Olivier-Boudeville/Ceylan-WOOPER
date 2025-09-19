@@ -227,6 +227,10 @@ may be temporarily not identified in terms of nature)
 % at 'undefined', so we assign it to 'function'.
 
 
+% Of use if needing to investigate:
+%  ?debug_fmt( "Stack: ~ts", [ code_utils:interpret_stacktrace() ] ),
+
+
 
 -doc """
 Extracts the methods found in the specified function table, transforms them, and
@@ -325,15 +329,17 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 	%?debug_fmt( "~p is a ~ts whose qualifiers are ~p.",
 	%   [ FunId, function_nature_to_string( FunNature ), Qualifiers ] ),
 
-
 	NewFunInfo = FunInfo#function_info{ clauses=NewClauses },
+
+    %?debug_fmt( "Function info after terminators for ~p:~n ~p",
+    %            [ FunId, NewFunInfo ] ),
 
 	% Last chance to determine the actual nature of a function reported as
 	% 'throw': it may have a type spec to remove ambiguity; any spec is used
 	% also to check consistency with the guessed elements:
 	%
 	{ FinalNature, FinalQualifiers } = take_spec_into_account( Spec, FunId,
-		FunNature, Qualifiers, Classname, FunInfo ),
+		FunNature, Qualifiers, Classname, NewFunInfo ),
 
 	% Stores the result in the right category and recurses:
 	case FinalNature of
@@ -354,6 +360,9 @@ sort_out_functions( _FunEntries=[ { FunId, FunInfo=#function_info{
 
 			RequestInfo =
 				function_to_request_info( ExportedFunInfo, FinalQualifiers ),
+
+            %?debug_fmt( "Resulting WOOPER request info for ~p:~n ~p",
+            %            [ FunId, RequestInfo ] ),
 
 			NewRequestTable = table:add_new_entry( FunId, RequestInfo,
 												   RequestTable ),
@@ -1084,12 +1093,12 @@ function_nature_to_string( Other ) when is_atom( Other ) ->
 
 
 -doc """
-Checks that, in the specified clauses of specified function (corresponding to a
-request or a oneway), the first parameter is `State` indeed.
+Checks that, in the specified clauses of the specified function (corresponding
+to a request or a oneway), the first parameter is `State` indeed.
 
 Note: enforces a very welcome convention, but also complies with the expression
-that the support for example of `const_return_result/1 introduces` (e.g. `{var,
-FileLocCall, State}` added in the AST, hence the enforced variable name).
+that the support for example of `const_return_result/1` introduces (e.g. `{var,
+FileLocCall, State}` being added in the AST - hence the enforced variable name).
 """.
 -spec check_state_argument( [ clause_def() ], function_id(), classname() ) ->
 									void().
@@ -1177,10 +1186,12 @@ manage_method_terminators( Clauses, FunId, Classname, WOOPERExportSet ) ->
 		transformation_state=
 			get_blank_transformation_state( WOOPERExportSet ) },
 
-	%?debug_fmt( "transforming now ~p.", [ FunId ] ),
+	%?debug_fmt( "Transforming now ~p.", [ FunId ] ),
 
 	{ NewClauses, NewTransforms } =
 		ast_clause:transform_function_clauses( Clauses, Transforms ),
+
+    %?debug_fmt( "New clauses are thus:~n ~p", [ NewClauses ] ),
 
 	% Unless found different, a function is a (plain) function:
 	{ FunNature, Qualifiers } =
@@ -1306,14 +1317,14 @@ The goal is to feed the call-transformer only with relevant expressions.
 """.
 -spec clause_transformer( ast_clause(), ast_transforms() ) ->
 								{ ast_clause(), ast_transforms() }.
-clause_transformer( Clause={ clause, FileLoc, Params, Guards, Body },
+clause_transformer( _Clause={ clause, FileLoc, Params, Guards, Body },
 					Transforms ) ?rec_guard ->
 					%Transforms=#ast_transforms{
 						%transformed_function_identifier=FunId,
 						%transformation_state={ InitialNature,
 						%   InitialQualifiers, WOOPERExportSet } } ) ->
 
-	?debug_fmt( "Transforming for WOOPER clause~n ~p", [ Clause ] ),
+	%?debug_fmt( "Transforming for WOOPER clause~n ~p", [ Clause ] ),
 
 	% No need to reset transformation state, as done by body_transformer/3:
 
@@ -1341,7 +1352,7 @@ body_transformer( Body, Transforms=#ast_transforms{
 
 	wooper_internals:raise_usage_error( "standard body transform called when "
 		"traversing the AST of the ~ts/~B function (abnormal); "
-		"body was:~n  ~p;~nCorresponding stacktrace was: ~ts",
+		"body was:~n  ~p~nCorresponding stacktrace was: ~ts",
 		pair:to_list( FunId ) ++ [ Body, StackStr ],
 		Transforms, _FileLoc=0 ).
 
@@ -1397,8 +1408,8 @@ body_transformer( BodyExprs, Transforms, FileLoc ) ->
 	%
 	[ LastExpr | RevFirstExprs ] = lists:reverse( BodyExprs ),
 
-	?trace_fmt( "Requesting the transformation of last expression~n ~p",
-				[ LastExpr ] ),
+	%?trace_fmt( "Requesting the transformation of the last expression:~n ~p",
+	%			[ LastExpr ] ),
 
 	ResetTransforms = reset_transformation_state( Transforms ),
 
@@ -1413,10 +1424,22 @@ body_transformer( BodyExprs, Transforms, FileLoc ) ->
 	{ NewLastExprs, NewTransforms } =
 		ast_expression:transform_expression( LastExpr, ResetTransforms ),
 
-	NewExprs = case lists:reverse( RevFirstExprs ) ++ NewLastExprs of
+    %?trace_fmt( "New last, transformed expressions are:~n ~p",
+    %            [ NewLastExprs ] ),
+
+    FirstExprs = lists:reverse( RevFirstExprs ),
+
+    % We check here that there is no stray method terminator in the core of the
+    % body (they are only allowed as the last expression), otherwise at runtime
+    % an untransformed_method_terminator exception will be thrown:
+    %
+    % (may slow the build)
+    check_no_method_terminator( FirstExprs ),
+
+	NewExprs = case FirstExprs ++ NewLastExprs of
 
 		% An empty body may happen (e.g. if defining a static method returning
-		% void whilr having no prior expression), which would not be legit:
+		% void while having no prior expression), which would not be legit:
 		%
 		[] ->
 			PlaceholderAtom = wooper_void_return,
@@ -1440,6 +1463,120 @@ body_transformer( BodyExprs, Transforms, FileLoc ) ->
 		UpdatedTransforms#ast_transforms.transformation_state ) ] ),
 
 	{ NewExprs, UpdatedTransforms }.
+
+
+-doc """
+Checks that there is no method terminator call in the specified expressions.
+""".
+-spec check_no_method_terminator( [ ast_expression() ] ) -> void().
+check_no_method_terminator( Exprs ) ->
+
+    ?trace_fmt( "Checking expressions:~n ~p", [ Exprs ] ),
+
+    % We cannot here use a dedicated ast_transforms and a corresponding
+    % RemoteCallTransformFun, as we do not want to return a replacement term but
+    % to stop on error if appropriate, and we want to catch all arities of all
+    % terminators in a single movement.
+
+    % So no:
+
+    %RemoteCallTransformFun = fun
+
+    %  ( FileLocCall,
+    %    FunctionRef={ remote, _, {atom,_,wooper}, {atom,FileLocFun,FunName} },
+    %    Params,
+    %    Transforms ) ->
+    %         ?trace_fmt( "Examining function name '~ts'.", [ FunName ] ),
+    %         % Disallowed regardless of its actual arity:
+    %         case lists:member( FunName, get_terminators() ) of
+
+    %             true ->
+    %                 ast_utils:display_error( "A WOOPER method terminator "
+    %                     "(~ts/~B) was found in the core of a body at ~ts, "
+    %                     "whereas they are only allowed as last expression "
+    %                     "thereof.",
+    %                     [ FunName, length( Params ),
+    %                       ast_utils:file_loc_to_string( FileLocFun ) ] ),
+
+    %                 throw( { unexpected_method_terminator_in_body, FunName,
+    %                          FileLocFun } );
+
+    %             % Preferring restoring term, even if of no real use here:
+    %             false ->
+    %                 SameExpr = { call, FileLocCall, FunctionRef, Params },
+    %                 { [ SameExpr ], Transforms }
+
+    %         end;
+
+    %     % Let other calls flow:
+    %  ( FileLocCall, FunctionRef, Params, Transforms ) ->
+    %         SameExpr = { call, FileLocCall, FunctionRef, Params },
+    %         { [ SameExpr ], Transforms }
+
+    % end,
+
+    % CheckerTransformTable = table:singleton( _Trigger=call,
+    %                                          RemoteCallTransformFun ),
+
+    % Transforms = #ast_transforms{ remote_calls=CheckerTransformTable },
+
+    % _ = ast_expression:transform_expressions( Exprs, Transforms ).
+
+    % But:
+
+    % Trying to speed up this check:
+    Terminators = get_terminators(),
+
+    TermTransformerFun = fun
+
+		( _TargetTerm={ remote, _, {atom,_,wooper}, {atom,FileLocFun,FunName} },
+          _UserData ) ->
+            %?trace_fmt( "Examining function name '~ts'.", [ FunName ] ),
+            % Disallowed regardless of its actual arity:
+            case lists:member( FunName, Terminators ) of
+
+                true ->
+                    wooper_internals:raise_usage_error(
+                        "a WOOPER method terminator (~ts) was found "
+                        "in the core of the function body at ~ts, "
+                        "whereas terminators are only allowed as "
+                        "their last expression.",
+                        [ FunName,
+                          ast_utils:file_loc_to_string( FileLocFun ) ] ),
+
+                    throw( { unexpected_method_terminator_in_body, FunName,
+                             FileLocFun } );
+
+                % We used to prefer restoring the term, yet it was useless and
+                % slowing down this check:
+                %
+                false ->
+                   %{ TargetTerm, undefined }
+                   { _NewTargetTerm=undefined, undefined }
+
+            end;
+
+        % Let other calls flow:
+		( TargetTerm, _UserData ) ->
+            { TargetTerm, undefined }
+
+    end,
+
+    meta_utils:transform_term( _TargetTerm=Exprs, _ConcTypeDesc=tuple,
+                               TermTransformerFun, _UserData=undefined ).
+
+
+
+
+-doc """
+Returns a list of all the pseudo-functions defined for method terminators.
+
+Like in `[...] wooper:return_state_result(MyState, SomeRes)`.
+""".
+get_terminators() ->
+    % Preferably by decreasing likeliness:
+    [ return_state_result, return_state, return_static,
+      const_return_result, const_return, return_static_void ].
 
 
 
@@ -1573,12 +1710,12 @@ call_transformer( FileLocCall,
 					   {atom,_,const_return_result} },
 		Params=[ _ResExpr ],
 		Transforms=#ast_transforms{
-			transformed_function_identifier=FunId,
+			%transformed_function_identifier=FunId,
 			transformation_state={ undefined, [], WOOPERExportSet } } ) ->
 
-	?debug_fmt( "~ts/~B detected as a const request.", pair:to_list( FunId ) ),
+	%?debug_fmt( "~ts/~B detected as a const request.", pair:to_list( FunId ) ),
 
-	% So that wooper:const_return_result(R) becomes simply {S, R}:
+	% So that wooper:const_return_result(R) becomes simply {State, R}:
 	NewExpr = { tuple, FileLocCall,
 				[ { var, FileLocCall, 'State' } | Params ] },
 
@@ -1595,8 +1732,12 @@ call_transformer( FileLocCall, _FunctionRef={ remote, _, {atom,_,wooper},
 												{atom,_,const_return_result} },
 				  Params=[ _ResExpr ],
 				  Transforms=#ast_transforms{
+						%transformed_function_identifier=FunId,
 						transformation_state={ request, _Qualifiers,
 											   _WOOPERExportSet } } ) ->
+
+	%?debug_fmt( "~ts/~B being translated, as a const request.",
+	%            pair:to_list( FunId ) ),
 
 	NewExpr = { tuple, FileLocCall,
 				[ { var, FileLocCall, 'State' } | Params ] },
@@ -2404,7 +2545,7 @@ catch_clause_transformer(
 
 -doc """
 Resets the transformation state, so that new findings can be compared to
-previous knowledge.
+the previous knowledge.
 
 Otherwise, for example if having already a `request` nature found and finding
 afterwards a `function` expression (i.e. a nature established by default), the
