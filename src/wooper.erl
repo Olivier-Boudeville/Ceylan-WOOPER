@@ -3921,6 +3921,8 @@ return_static( _Value ) ->
 -doc "WOOPER terminator for a const request method.".
 -spec const_return_result( any() ) -> no_return().
 const_return_result( _Value ) ->
+	%throw( { untransformed_method_terminator, const_return_result,
+    %         Value } ).
 	throw( { untransformed_method_terminator, const_return_result } ).
 
 
