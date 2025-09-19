@@ -158,6 +158,18 @@ modules).
 -include_lib("myriad/include/ast_info.hrl").
 
 
+% Currently not used:
+-export([ add_function/4, add_request/4, add_oneway/4, add_static_method/4,
+		  get_new_variation_names/0 ]).
+
+
+
+% Implementation notes:
+
+% For log output, even if io:format/{1,2} and ast_utils:display_*/* work, we
+% recommend using trace_utils:*/*.
+
+
 
 % Type shorthands:
 
@@ -179,19 +191,6 @@ modules).
 -type static_table() :: wooper_info:static_table().
 
 -type class_info() :: wooper_info:class_info().
-
-
-
-% Currently not used:
--export([ add_function/4, add_request/4, add_oneway/4, add_static_method/4,
-		  get_new_variation_names/0 ]).
-
-
-
-% Implementation notes:
-
-% For log output, even if io:format/{1,2} and ast_utils:display_*/* work, we
-% recommend using trace_utils:*/*.
 
 
 
@@ -239,6 +238,11 @@ into an Erlang-compliant Abstract Format code.
 """.
 -spec parse_transform( ast(), parse_transform_options() ) -> ast().
 parse_transform( InputAST, Options ) ->
+
+    % Uncomment if not wanting longer AST traces to be ellipsed:
+    %basic_utils:set_error_report_output( standard_full ),
+
+    % Prefer using the logging functions in the next apply_wooper_transform/2.
 
 	%trace_utils:info_fmt( "WOOPER input AST:~n~p~n", [ InputAST ] ),
 
@@ -945,8 +949,8 @@ generate_module_info_from( #class_info{
 
 
 -doc """
-Registers specified functions in specified (function) table, detecting properly
-any clash.
+Registers the specified functions in the specified (function) table, detecting
+properly any clash.
 """.
 -spec register_functions( [ { meta_utils:function_id(), function_info() } ],
 							function_table() ) -> function_table().
