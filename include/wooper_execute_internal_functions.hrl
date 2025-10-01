@@ -162,15 +162,15 @@ and notify any linked or monitoring process.
 
 Note: atom and state checking in guards should be superfluous.
 """.
-wooper_execute_method( MethodAtom, Parameters, State )
-			when is_atom( MethodAtom ) andalso is_list( Parameters )
+wooper_execute_method( MethodAtom, Arguments, State )
+			when is_atom( MethodAtom ) andalso is_list( Arguments )
 				 andalso is_record( State, state_holder ) ->
 
 	%trace_utils:debug_fmt( "wooper_execute_method: looking up ~ts(~w) "
-	%   "from ~ts (A).", [ MethodAtom, Parameters, ?MODULE ] ),
+	%   "from ~ts (A).", [ MethodAtom, Arguments, ?MODULE ] ),
 
 	% +1: take into account the State additional parameter:
-	MethodArity = length( Parameters ) + 1,
+	MethodArity = length( Arguments ) + 1,
 
 	case wooper_lookup_method( State, MethodAtom, MethodArity ) of
 
@@ -178,11 +178,11 @@ wooper_execute_method( MethodAtom, Parameters, State )
 
 			%trace_utils:debug_fmt( "wooper_execute_method: executing "
 			%   "~ts:~ts(~w) from ~ts.",
-			%   [ ?MODULE, MethodAtom, Parameters, LocatedModule ] ),
+			%   [ ?MODULE, MethodAtom, Arguments, LocatedModule ] ),
 
 			% Returns {NewState, PossibleResult}:
 			wooper_effective_method_execution( LocatedModule, MethodAtom,
-											   State, Parameters );
+											   State, Arguments );
 
 
 		key_not_found ->
@@ -199,11 +199,11 @@ wooper_execute_method( MethodAtom, Parameters, State )
 					%
 					wooper:log_error(
 						": oneway ~ts:~ts/~B not found, parameters were:~n~p~n",
-						[ Classname, MethodAtom, MethodArity, Parameters ],
+						[ Classname, MethodAtom, MethodArity, Arguments ],
 						State ),
 
 					throw( { wooper_oneway_not_found, self(),
-							 Classname, MethodAtom, MethodArity, Parameters } );
+							 Classname, MethodAtom, MethodArity, Arguments } );
 
 				_ ->
 
@@ -215,11 +215,11 @@ wooper_execute_method( MethodAtom, Parameters, State )
 					%
 					wooper:log_error( ": request ~ts:~ts/~B not found, "
                         "parameters were:~n~p~n",
-						[ Classname, MethodAtom, MethodArity, Parameters ],
+						[ Classname, MethodAtom, MethodArity, Arguments ],
 						State ),
 
 					throw( { wooper_request_not_found, self(),
-							 Classname, MethodAtom, MethodArity, Parameters } )
+							 Classname, MethodAtom, MethodArity, Arguments } )
 
 
 			% No other term can be returned.
@@ -263,13 +263,13 @@ and notify any linked or monitoring process.
 
 Note: atom and state checking in guards should be superfluous.
 """.
-wooper_execute_method( MethodAtom, Parameters, State ) ->
+wooper_execute_method( MethodAtom, Arguments, State ) ->
 
 	%trace_utils:debug_fmt( "wooper_execute_method: looking up ~ts(~w) "
-	%   "from ~ts (B).", [ MethodAtom, Parameters, ?MODULE ] ),
+	%   "from ~ts (B).", [ MethodAtom, Arguments, ?MODULE ] ),
 
 	% +1: take into account the State additional parameter:
-	MethodArity = length( Parameters ) + 1,
+	MethodArity = length( Arguments ) + 1,
 
 	case wooper_lookup_method( State, MethodAtom, MethodArity ) of
 
@@ -277,10 +277,10 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 
 			%trace_utils:debug_fmt( "wooper_execute_method: executing ~ts:~ts"
 			%   "(~w) from ~ts.",
-			%   [ ?MODULE, MethodAtom, Parameters, LocatedModule ] ),
+			%   [ ?MODULE, MethodAtom, Arguments, LocatedModule ] ),
 
 			wooper_effective_method_execution( LocatedModule, MethodAtom,
-											   State, Parameters );
+											   State, Arguments );
 
 
 		key_not_found ->
@@ -299,10 +299,10 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 					%
 					wooper:log_error(
 						": oneway ~ts:~ts/~B not found, parameters were:~n~p",
-						[ Classname, MethodAtom, MethodArity, Parameters ] ),
+						[ Classname, MethodAtom, MethodArity, Arguments ] ),
 
 					throw( { wooper_oneway_not_found, self(), Classname,
-							 MethodAtom, MethodArity, Parameters } );
+							 MethodAtom, MethodArity, Arguments } );
 
 				_ ->
 
@@ -313,10 +313,10 @@ wooper_execute_method( MethodAtom, Parameters, State ) ->
 					%
 					wooper:log_error( ": request ~ts:~ts/~B not found, "
                         "parameters were:~n~p~n",
-						[ Classname, MethodAtom, MethodArity, Parameters ] ),
+						[ Classname, MethodAtom, MethodArity, Arguments ] ),
 
 					throw( { wooper_request_not_found, self(), Classname,
-							 MethodAtom, MethodArity, Parameters } )
+							 MethodAtom, MethodArity, Arguments } )
 
 			end
 
@@ -366,9 +366,9 @@ directly specified, instead of being determined from the instance virtual table.
 
 (helper)
 """.
-wooper_execute_method_as( ParentClassname, MethodAtom, Parameters, State )
+wooper_execute_method_as( ParentClassname, MethodAtom, Arguments, State )
 		when is_atom( ParentClassname ) andalso is_atom( MethodAtom )
-			 andalso is_list( Parameters )
+			 andalso is_list( Arguments )
 			 andalso is_record( State, state_holder ) ->
 
 	% One check should be added: ParentClassname must be a superclass (direct or
@@ -383,7 +383,7 @@ wooper_execute_method_as( ParentClassname, MethodAtom, Parameters, State )
 
     ParentVirtualTable = wooper_utils:get_virtual_table_for( ParentClassname ),
 
-	Arity = length( Parameters ) +1,
+	Arity = length( Arguments ) + 1,
 
 	ImplementingClassname = case ?wooper_table_type:lookup_entry(
 			{ MethodAtom, Arity }, ParentVirtualTable ) of
@@ -401,7 +401,23 @@ wooper_execute_method_as( ParentClassname, MethodAtom, Parameters, State )
 	end,
 
 	wooper_effective_method_execution( ImplementingClassname, MethodAtom, State,
-									   Parameters ).
+									   Arguments );
+
+
+% At least one invalid argument:
+wooper_execute_method_as( ParentClassname, MethodAtom, Arguments, State ) ->
+
+    is_atom( ParentClassname ) orelse
+        throw( { non_atom_classname, ParentClassname, MethodAtom } ),
+
+    is_atom( MethodAtom ) orelse
+        throw( { non_atom_method_name, MethodAtom } ),
+
+	is_list( Arguments ) orelse
+        throw( { non_list_arguments, Arguments, MethodAtom } ),
+
+    is_record( State, state_holder ) orelse
+        throw( { not_a_state, State, MethodAtom } ).
 
 
 
@@ -428,13 +444,13 @@ to the caller before crashing, if necessary.
 
 
 wooper_effective_method_execution( SelectedModule, MethodAtom, State,
-								   Parameters ) ->
+								   Arguments ) ->
 
 	%trace_utils:debug_fmt( "WOOPER: effective execution of ~ts:~ts/~B",
-	%   [ SelectedModule, MethodAtom, length( Parameters ) + 1 ] ),
+	%   [ SelectedModule, MethodAtom, length( Arguments ) + 1 ] ),
 
 	% Of course the executed method may throw, we let exceptions propagate:
-	case apply( SelectedModule, MethodAtom, [ State | Parameters ] ) of
+	case apply( SelectedModule, MethodAtom, [ State | Arguments ] ) of
 
 		% Void method (no result returned, only a state - thus a oneway):
 		% ?wooper_return_state:
@@ -448,7 +464,7 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 
 		Faultyreturn={ InvalidState, _Result }  ->
 
-			MethodArity = length( Parameters )+1,
+			MethodArity = length( Arguments ) + 1,
 
 			case State#state_holder.request_sender of
 
@@ -459,11 +475,11 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 						"return; instead of a state, got:~n ~p~n"
 						"while its parameters were:~n    ~p",
 						[ SelectedModule, MethodAtom, MethodArity, InvalidState,
-						  Parameters ] ),
+						  Arguments ] ),
 
 					throw( { wooper_oneway_faulty_return, self(),
 							 SelectedModule, MethodAtom, MethodArity,
-							 Parameters, Faultyreturn } );
+							 Arguments, Faultyreturn } );
 
 				_ ->
 
@@ -476,14 +492,14 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 						"return; instead of a state, got:~n ~p~n"
                         "while its parameters were:~n    ~p",
 						[ SelectedModule, MethodAtom, MethodArity, InvalidState,
-                          Parameters ] ),
+                          Arguments ] ),
 
 					% We do not include anymore 'Other', as it is best kept
 					% internal (and not sent back to the caller):
 					%
 					throw( { wooper_request_faulty_return, self(),
                              SelectedModule, MethodAtom, MethodArity,
-                             Parameters, Faultyreturn } )
+                             Arguments, Faultyreturn } )
 
 			end;
 
@@ -491,7 +507,7 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 		% Neither a oneway or request result, nor an exception: faulty return.
 		Other ->
 
-			MethodArity = length( Parameters )+1,
+			MethodArity = length( Arguments ) + 1,
 
 			case State#state_holder.request_sender of
 
@@ -502,11 +518,11 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 						"return, which is:~n  ~p~n"
 						"  while its parameters were:~n    ~p",
 						[ SelectedModule, MethodAtom, MethodArity, Other,
-						  Parameters ] ),
+						  Arguments ] ),
 
 					throw( { wooper_oneway_faulty_return, self(),
 							 SelectedModule, MethodAtom, MethodArity,
-							 Parameters, Other } );
+							 Arguments, Other } );
 
 				_ ->
 
@@ -517,14 +533,14 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 						"return, which is:~n  ~p~n"
 						"  while its parameters were:~n    ~p",
 						[ SelectedModule, MethodAtom, MethodArity, Other,
-						  Parameters ] ),
+						  Arguments ] ),
 
 					% We do not include anymore 'Other', as it is best kept
 					% internal (and not sent back to the caller):
 					%
 					throw( { wooper_request_faulty_return, self(),
 							 SelectedModule, MethodAtom, MethodArity,
-							 Parameters, Other } )
+							 Arguments, Other } )
 
 			end
 
@@ -537,12 +553,12 @@ wooper_effective_method_execution( SelectedModule, MethodAtom, State,
 
 
 wooper_effective_method_execution( SelectedModule, MethodAtom, State,
-								   Parameters ) ->
+								   Arguments ) ->
 
 	%trace_utils:debug_fmt( "WOOPER: effective execution of ~ts:~ts/~B",
-	%   [ SelectedModule, MethodAtom, length( Parameters ) + 1 ] ),
+	%   [ SelectedModule, MethodAtom, length( Arguments ) + 1 ] ),
 
-	case apply( SelectedModule, MethodAtom, [ State | Parameters ] ) of
+	case apply( SelectedModule, MethodAtom, [ State | Arguments ] ) of
 
 		% Method returning a result (and a state of course) - hence a request:
 		% ?wooper_return_state_result:
@@ -590,7 +606,7 @@ intercept exceptions, etc.).
 
 
 % In debug mode, we perform additional checkings:
-wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
+wooper_handle_remote_request_execution( RequestAtom, State, Arguments,
 										CallerPid ) ->
 
 	%trace_utils:debug( "case A" ),
@@ -611,7 +627,7 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 	%
 	RequestState = try
 
-	  wooper_execute_method( RequestAtom, ArgumentList, SenderAwareState ) of
+	  wooper_execute_method( RequestAtom, Arguments, SenderAwareState ) of
 
 		% Most likely case:
 		{ ExecState, Outcome={ wooper_result, _Result } } ->
@@ -625,12 +641,12 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 				"Either the request implementation is incorrect or it is a "
 				"oneway that has been incorrectly called as a request.",
 				[ State#state_holder.actual_class, RequestAtom,
-				  length( ArgumentList )+1, CallerPid, ArgumentList ],
+				  length( Arguments ) + 1, CallerPid, Arguments ],
 							  State ),
 
 			ErrorReason = { request_void_return, self(),
 							State#state_holder.actual_class, RequestAtom,
-							length( ArgumentList )+1, ArgumentList },
+							length( Arguments ) + 1, Arguments },
 
 			CallerPid ! { wooper_error, ErrorReason },
 
@@ -645,7 +661,7 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 		ExceptionClass:ExceptionTerm:Stacktrace ->
 
 			% Reports it (to console and caller), and exits:
-			wooper:on_failed_request( RequestAtom, ArgumentList, CallerPid,
+			wooper:on_failed_request( RequestAtom, Arguments, CallerPid,
 				ExceptionClass, ExceptionTerm, Stacktrace, State )
 
 	end,
@@ -657,7 +673,7 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 
 
 % Not in debug mode, hence minimum checking:
-wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
+wooper_handle_remote_request_execution( RequestAtom, State, Arguments,
 										CallerPid ) ->
 
 	%trace_utils:debug( "case B" ),
@@ -665,7 +681,7 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 	SenderAwareState = State#state_holder{ request_sender=CallerPid },
 
 	% Result assumed to be correct here:
-	RequestState = try wooper_execute_method( RequestAtom, ArgumentList,
+	RequestState = try wooper_execute_method( RequestAtom, Arguments,
 											  SenderAwareState ) of
 
 		{ ExecState, Outcome } ->
@@ -679,7 +695,7 @@ wooper_handle_remote_request_execution( RequestAtom, State, ArgumentList,
 		ExceptionClass:ExceptionTerm:Stacktrace ->
 
 			% Reports it (to console and caller), and exits:
-			wooper:on_failed_request( RequestAtom, ArgumentList, CallerPid,
+			wooper:on_failed_request( RequestAtom, Arguments, CallerPid,
 				ExceptionClass, ExceptionTerm, Stacktrace, State )
 
 	end,
@@ -714,7 +730,7 @@ request_sender, not catching exceptions).
 
 
 % In debug mode, we perform additional checkings:
-wooper_handle_local_request_execution( RequestAtom, State, ArgumentList ) ->
+wooper_handle_local_request_execution( RequestAtom, State, Arguments ) ->
 
 	% Due to nesting, can be licitly 'undefined' or a PID:
 	PreviousRequestSender = State#state_holder.request_sender,
@@ -723,7 +739,7 @@ wooper_handle_local_request_execution( RequestAtom, State, ArgumentList ) ->
 
 	% Not using 'try', as we have to let exceptions propagate:
 	{ RequestState, Result } =
-		wooper_execute_method( RequestAtom, ArgumentList, SenderAwareState ),
+		wooper_execute_method( RequestAtom, Arguments, SenderAwareState ),
 
 	% Forces a crash if instance-side error detected:
 	ActualResult = case Result of
@@ -737,10 +753,10 @@ wooper_handle_local_request_execution( RequestAtom, State, ArgumentList ) ->
 				"its call, it was expected to be a request.~n"
 				"Either the request implementation is incorrect or it is a "
 				"oneway that has been incorrectly called as a request.",
-				[ RequestAtom, length( ArgumentList )+1, ArgumentList ],
+				[ RequestAtom, length( Arguments ) + 1, Arguments ],
 				  State ),
 
-			throw( { oneway_request_mismatch, RequestAtom, ArgumentList } )
+			throw( { oneway_request_mismatch, RequestAtom, Arguments } )
 
 	end,
 
@@ -754,7 +770,7 @@ wooper_handle_local_request_execution( RequestAtom, State, ArgumentList ) ->
 
 
 % Not in debug mode, hence minimum checking:
-wooper_handle_local_request_execution( RequestAtom, State, ArgumentList ) ->
+wooper_handle_local_request_execution( RequestAtom, State, Arguments ) ->
 
 	% Due to nesting, can be licitly 'undefined' or a PID:
 	PreviousRequestSender = State#state_holder.request_sender,
@@ -762,7 +778,7 @@ wooper_handle_local_request_execution( RequestAtom, State, ArgumentList ) ->
 	SenderAwareState = State#state_holder{ request_sender=self() },
 
 	{ RequestState, { wooper_result, ActualResult } } =
-		wooper_execute_method( RequestAtom, ArgumentList, SenderAwareState ),
+		wooper_execute_method( RequestAtom, Arguments, SenderAwareState ),
 
 
 	ReturnedState = RequestState#state_holder{
@@ -797,18 +813,19 @@ Only local calls can select their implementation class.
 -ifdef(wooper_debug_mode).
 
 
-% In debug mode, we perform additional checkings:
-wooper_handle_local_request_execution_as( RequestAtom, State, ArgumentList,
-										  ParentClassname ) ->
-
-	% Due to nesting, can be licitly 'undefined' or a PID:
-	PreviousRequestSender = State#state_holder.request_sender,
+% In debug mode, we perform additional checkings (yet wooper_execute_method_as/4
+% will perform most of them):
+%
+wooper_handle_local_request_execution_as( RequestAtom,
+        % Due to nesting, can be licitly 'undefined' or a PID:
+        State=#state_holder{ request_sender=PreviousRequestSender }, Arguments,
+        ParentClassname ) ->
 
 	SenderAwareState = State#state_holder{ request_sender=self() },
 
 	% Local request, hence no try/catch:
 	{ RequestState, Result } = wooper_execute_method_as( ParentClassname,
-		RequestAtom, ArgumentList, SenderAwareState ),
+		RequestAtom, Arguments, SenderAwareState ),
 
 	ActualResult = case Result of
 
@@ -822,9 +839,9 @@ wooper_handle_local_request_execution_as( RequestAtom, State, ArgumentList,
 				"its call, it was expected to be a request.~n"
 				"Either the request implementation is incorrect or it is a "
 				"oneway that has been incorrectly called as a request.",
-				[ ParentClassname, RequestAtom, length( ArgumentList )+1,
-				  ArgumentList ], State ),
-			throw( { oneway_request_mismatch, RequestAtom, ArgumentList } )
+				[ ParentClassname, RequestAtom, length( Arguments ) + 1,
+				  Arguments ], State ),
+			throw( { oneway_request_mismatch, RequestAtom, Arguments } )
 
 	end,
 
@@ -838,7 +855,7 @@ wooper_handle_local_request_execution_as( RequestAtom, State, ArgumentList,
 
 
 % Not in debug mode, hence minimum checking:
-wooper_handle_local_request_execution_as( RequestAtom, State, ArgumentList,
+wooper_handle_local_request_execution_as( RequestAtom, State, Arguments,
 										  Classname ) ->
 
 	% Due to nesting, can be licitly 'undefined' or a PID:
@@ -847,7 +864,7 @@ wooper_handle_local_request_execution_as( RequestAtom, State, ArgumentList,
 	SenderAwareState = State#state_holder{ request_sender=self() },
 
 	{ RequestState, { wooper_result, ActualResult } } =
-		wooper_execute_method_as( Classname, RequestAtom, ArgumentList,
+		wooper_execute_method_as( Classname, RequestAtom, Arguments,
 								  SenderAwareState ),
 
 	ReturnedState = RequestState#state_holder{
@@ -885,7 +902,9 @@ Executes the specified remotely-triggered oneway, and returns an updated state.
 
 
 % In debug mode, we perform additional checkings:
-wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
+wooper_handle_remote_oneway_execution( OnewayAtom, State, Arguments )
+			when is_atom( OnewayAtom ) andalso is_list( Arguments )
+				 andalso is_record( State, state_holder ) ->
 
 	% We rely here on the property that, in-between two calls, request_sender is
 	% set to 'undefined', so it does not need to be updated for oneways - yet we
@@ -896,7 +915,7 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 	% We intercept exceptions only when called remotely, and in order to
 	% generate better error messages:
 	%
-	OnewayState = try wooper_execute_method( OnewayAtom, ArgumentList,
+	OnewayState = try wooper_execute_method( OnewayAtom, Arguments,
 											 State ) of
 
 		% This is the normal, most likely, expected case:
@@ -916,7 +935,7 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 			%trace_utils:error( "Incorrect, request-like oneway return." ),
 
 			Class = State#state_holder.actual_class,
-			Arity = length( ArgumentList )+1,
+			Arity = length( Arguments ) + 1,
 
 			wooper:log_error( ": method ~ts:~ts/~B, which was called with "
 				"following parameters:~n~p~n returned a result (~p) whereas, "
@@ -924,19 +943,19 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 				"So either the oneway implementation of ~ts:~ts/~B is "
 				"incorrect, or it is actually a request that has been "
 				"incorrectly called as a oneway.",
-				[ Class, OnewayAtom, Arity, ArgumentList,
+				[ Class, OnewayAtom, Arity, Arguments,
 				  UnexpectedResult, Class, OnewayAtom, Arity ], State ),
 
 			% No wooper_error can be returned (caller not known).
 
-			throw( { oneway_request_mismatch, OnewayAtom, ArgumentList } )
+			throw( { oneway_request_mismatch, OnewayAtom, Arguments } )
 
 	catch
 
 		ExceptionClass:ExceptionTerm:StackTrace ->
 
 			% Reports it to console and exits:
-			wooper:on_failed_oneway( OnewayAtom, ArgumentList, ExceptionClass,
+			wooper:on_failed_oneway( OnewayAtom, Arguments, ExceptionClass,
 									 ExceptionTerm, StackTrace, State )
 
 	end,
@@ -952,13 +971,13 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 
 
 % Not in debug mode, hence minimum checking:
-wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
+wooper_handle_remote_oneway_execution( OnewayAtom, State, Arguments ) ->
 
 	% We rely here on the property that, in-between two calls, request_sender is
 	% set to 'undefined', so it does not need to be updated for oneways.
 
 	% Result expected to be 'wooper_method_returns_void' here:
-	OnewayState = try wooper_execute_method( OnewayAtom, ArgumentList,
+	OnewayState = try wooper_execute_method( OnewayAtom, Arguments,
 											 State ) of
 
 		{ ExecState, _Result } ->
@@ -969,7 +988,7 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 		ExceptionClass:ExceptionTerm:Stacktrace ->
 
 			% Reports it to console and exits:
-			wooper:on_failed_oneway( OnewayAtom, ArgumentList, ExceptionClass,
+			wooper:on_failed_oneway( OnewayAtom, Arguments, ExceptionClass,
 									 ExceptionTerm, Stacktrace, State )
 
 	end,
@@ -1000,14 +1019,14 @@ Executes the specified locally-triggered oneway, and returns an updated state.
 
 
 % In debug mode, we perform additional checkings:
-wooper_handle_local_oneway_execution( OnewayAtom, State, ArgumentList ) ->
+wooper_handle_local_oneway_execution( OnewayAtom, State, Arguments ) ->
 
 	% Due to nesting, can be licitly 'undefined' or a PID:
 	PreviousRequestSender = State#state_holder.request_sender,
 
 	SenderAwareState = State#state_holder{ request_sender=undefined },
 
-	case wooper_execute_method( OnewayAtom, ArgumentList, SenderAwareState ) of
+	case wooper_execute_method( OnewayAtom, Arguments, SenderAwareState ) of
 
 		% This is the normal, expected case:
 		{ OnewayState, wooper_method_returns_void } ->
@@ -1025,10 +1044,10 @@ wooper_handle_local_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 				"Either the oneway implementation is incorrect "
 				"or it is a request that has been incorrectly "
 				"called as a oneway.",
-				[ OnewayAtom, length( ArgumentList )+1, ArgumentList,
+				[ OnewayAtom, length( Arguments ) + 1, Arguments,
 				  UnexpectedResult ], State ),
 
-			throw( { oneway_request_mismatch, OnewayAtom, ArgumentList } )
+			throw( { oneway_request_mismatch, OnewayAtom, Arguments } )
 
 	end.
 
@@ -1038,7 +1057,7 @@ wooper_handle_local_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 
 
 % Not in debug mode, hence minimum checking:
-wooper_handle_local_oneway_execution( OnewayAtom, State, ArgumentList ) ->
+wooper_handle_local_oneway_execution( OnewayAtom, State, Arguments ) ->
 
 	% Due to nesting, can be licitly 'undefined' or a PID:
 	PreviousRequestSender = State#state_holder.request_sender,
@@ -1047,7 +1066,7 @@ wooper_handle_local_oneway_execution( OnewayAtom, State, ArgumentList ) ->
 
 	% Result expected to be 'wooper_method_returns_void' here:
 	{ OnewayState, _Result } =
-		wooper_execute_method( OnewayAtom, ArgumentList, SenderAwareState ),
+		wooper_execute_method( OnewayAtom, Arguments, SenderAwareState ),
 
 	OnewayState#state_holder{ request_sender=PreviousRequestSender }.
 
@@ -1068,7 +1087,7 @@ parent class to select its implementation, and returns an updated state.
 
 Only local calls can select their implementation class.
 
-No `when is_list(ArgumentList) -> ...`, as the caller must have ensured that we
+No `when is_list(Arguments) -> ...`, as the caller must have ensured that we
 have already a list.
 """.
 -spec wooper_handle_local_oneway_execution_as( method_name(), wooper:state(),
@@ -1081,17 +1100,18 @@ have already a list.
 -ifdef(wooper_debug_mode).
 
 
-% In debug mode, we perform additional checkings:
-wooper_handle_local_oneway_execution_as( OnewayAtom, State, ArgumentList,
-										 ParentClassname ) ->
-
-	% Due to nesting, can be licitly 'undefined' or a PID:
-	PreviousRequestSender = State#state_holder.request_sender,
+% In debug mode, we perform additional checkings (yet wooper_execute_method_as/4
+% will perform most of them):
+%
+wooper_handle_local_oneway_execution_as( OnewayAtom,
+        % Due to nesting, can be licitly 'undefined' or a PID:
+        State=#state_holder{ request_sender=PreviousRequestSender }, Arguments,
+        ParentClassname ) ->
 
 	SenderAwareState = State#state_holder{ request_sender=undefined },
 
 	case wooper_execute_method_as( ParentClassname, OnewayAtom,
-								   ArgumentList, SenderAwareState ) of
+								   Arguments, SenderAwareState ) of
 
 		% This is the normal, expected case:
 		{ OnewayState, wooper_method_returns_void } ->
@@ -1111,19 +1131,23 @@ wooper_handle_local_oneway_execution_as( OnewayAtom, State, ArgumentList,
 				"Either the oneway implementation is incorrect "
 				"or it is a request that has been incorrectly "
 				"called as a oneway.",
-				[ ParentClassname, OnewayAtom, length( ArgumentList )+1,
-				  ArgumentList, UnexpectedResult ], State ),
+				[ ParentClassname, OnewayAtom, length( Arguments ) + 1,
+				  Arguments, UnexpectedResult ], State ),
 
-			throw( { oneway_request_mismatch, OnewayAtom, ArgumentList } )
+			throw( { oneway_request_mismatch, OnewayAtom, Arguments } )
 
-	end.
+	end;
+
+wooper_handle_local_oneway_execution_as( NotAtom, _State, _Arguments,
+                                         _ParentClassname ) ->
+    throw( { non_atom_classname_for_oneway, NotAtom } ).
 
 
 -else. % wooper_debug_mode
 
 
 % Not in debug mode, hence minimum checking:
-wooper_handle_local_oneway_execution_as( OnewayAtom, State, ArgumentList,
+wooper_handle_local_oneway_execution_as( OnewayAtom, State, Arguments,
 										 ParentClassname ) ->
 
 	% Due to nesting, can be licitly 'undefined' or a PID:
@@ -1133,7 +1157,7 @@ wooper_handle_local_oneway_execution_as( OnewayAtom, State, ArgumentList,
 
 	% Result expected to be 'wooper_method_returns_void' here:
 	{ OnewayState, _Result } = wooper_execute_method_as( ParentClassname,
-		OnewayAtom, ArgumentList, SenderAwareState ),
+		OnewayAtom, Arguments, SenderAwareState ),
 
 	OnewayState#state_holder{ request_sender=PreviousRequestSender }.
 

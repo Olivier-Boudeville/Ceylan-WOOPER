@@ -3172,7 +3172,7 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 	%           "in module ~ts: " ++ FormatString,
 	%           [ self(), ModuleName, node() | ValueList ] ).
 	log_error( " for instance of PID ~w triggered "
-		"in module ~ts, as " ++ FormatString,
+		"in module ~ts, as" ++ FormatString,
 		[ self(), ModuleName | ValueList ] ).
 
 
