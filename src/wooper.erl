@@ -2680,7 +2680,7 @@ trigger_error( ExceptionClass, ExceptionTerm, Classname, ConstructionParameters,
                                                           ExceptionTerm ),
 
     BaseFmtStr = " for PID ~w, constructor (~ts:construct/~B) failed~ts:~n~n"
-		" - with error term:~n  ~ts~n~n"
+		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first): ~ts~n~n"
 		" - for construction parameters:~n  ~p~n",
 
@@ -3256,7 +3256,7 @@ on_failed_request( RequestName, Arguments, CallerPid, ExceptionClass,
 
     % PID managed by log_error:
     BaseFmtStr = "request ~ts~ts/~B failed~ts:~n~n"
-		" - with error term:~n  ~ts~n~n"
+		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first): ~ts~n"
 		" - caller process being ~w~n~n"
 		" - request initially triggered with, beyond the state, ~ts",
@@ -3391,7 +3391,7 @@ on_failed_oneway( OnewayName, Arguments, ExceptionClass, ExceptionTerm,
 
     % PID managed by log_error:
     BaseFmtStr = "oneway ~ts~ts/~B failed~ts:~n~n"
-		" - with error term:~n  ~ts~n~n"
+		" - with error term:~n  ~p~n~n"
 		" - stack trace was (latest calls first): ~ts~n"
 		" - oneway initially triggered with, beyond the state, ~ts~n",
 
