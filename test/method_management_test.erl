@@ -41,76 +41,76 @@ instances used here.
 -spec run() -> no_return().
 run() ->
 
-	test_facilities:start( ?MODULE ),
+    test_facilities:start( ?MODULE ),
 
-	% Allows to support both OTP conventions and ad hoc, automatic ones:
-	wooper_utils:start_for_test(),
+    % Allows to support both OTP conventions and ad hoc, automatic ones:
+    wooper_utils:start_for_test(),
 
-	test_facilities:display( "Running method test." ),
+    test_facilities:display( "Running method test." ),
 
-	TestedPid = class_MethodTester:new_link( _Id=1 ),
+    TestedPid = class_MethodTester:new_link( _Id=1 ),
 
-	test_facilities:display( "Instance ~p created, calling first request.",
-							 [ TestedPid ] ),
+    test_facilities:display( "Instance ~p created, calling first request.",
+                             [ TestedPid ] ),
 
-	TestedPid ! { getName, [], self() },
+    TestedPid ! { getName, [], self() },
 
-	test_facilities:display( "Waiting for first request answer." ),
+    test_facilities:display( "Waiting for first request answer." ),
 
-	receive
+    receive
 
-		{ wooper_result, "Terry" } ->
-			ok;
+        { wooper_result, "Terry" } ->
+            ok;
 
-		Other ->
-			test_facilities:fail( "First getName/2 test failed: ~p.",
-								  [ Other ] )
+        Other ->
+            test_facilities:fail( "First getName/2 test failed: ~p.",
+                                  [ Other ] )
 
-	end,
+    end,
 
-	NewName = "John",
+    NewName = "John",
 
-	test_facilities:display( "Sending oneway." ),
-	TestedPid ! { setName, [ NewName ] },
-
-
-	test_facilities:display( "Calling second request." ),
-	TestedPid ! { getName, [], self() },
-
-	test_facilities:display( "Waiting for second request answer." ),
-
-	receive
-
-		{ wooper_result, NewName } ->
-			ok;
-
-		Another ->
-			test_facilities:fail( "Second getName/2 test failed: ~p.",
-								  [ Another ] )
-
-	end,
-
-	A = 1,
-	B = 5,
-	Expected = A + B + 10,
+    test_facilities:display( "Sending oneway." ),
+    TestedPid ! { setName, [ NewName ] },
 
 
-	test_facilities:display( "Testing indirectly executeConstRequestAs/4." ),
+    test_facilities:display( "Calling second request." ),
+    TestedPid ! { getName, [], self() },
 
-	ChildTestPid = class_ChildTestClass:new_link( 14, female ),
+    test_facilities:display( "Waiting for second request answer." ),
 
-	ChildTestPid ! test_of_const_req_as,
+    receive
+
+        { wooper_result, NewName } ->
+            ok;
+
+        Another ->
+            test_facilities:fail( "Second getName/2 test failed: ~p.",
+                                  [ Another ] )
+
+    end,
+
+    A = 1,
+    B = 5,
+    Expected = A + B + 10,
 
 
-	test_facilities:display( "Calling static method." ),
+    test_facilities:display( "Testing indirectly executeConstRequestAs/4." ),
 
-	Expected = class_MethodTester:get_static_info( A, B ),
+    ChildTestPid = class_ChildTestClass:new_link( 14, female ),
 
-	wooper_void_return = class_MethodTester:test_static_void(),
+    ChildTestPid ! test_of_const_req_as,
 
-	test_facilities:display( "Test success." ),
 
-	wooper:delete_synchronously_instance( TestedPid ),
+    test_facilities:display( "Calling static method." ),
+
+    Expected = class_MethodTester:get_static_info( A, B ),
+
+    wooper_void_return = class_MethodTester:test_static_void(),
+
+    test_facilities:display( "Test success." ),
+
+    wooper:delete_synchronously_instance( TestedPid ),
 
     TesterPids = [ class_MethodTester:new_link( Id )
                     || Id <- lists:seq( 1, 5 ) ],
@@ -127,4 +127,4 @@ run() ->
         wooper:execute_concurrent_request( TesterPids, _RequestName=getId,
                                            _RequestArgs=[], _TimeOutMs=1000 ),
 
-	test_facilities:stop().
+    test_facilities:stop().

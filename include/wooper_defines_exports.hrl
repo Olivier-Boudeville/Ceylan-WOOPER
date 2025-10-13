@@ -110,28 +110,28 @@
 %
 -record( state_holder, {
 
-	% Just a key in the persistent_term registry:
-	%virtual_table_key :: wooper:class_key(),
+    % Just a key in the persistent_term registry:
+    %virtual_table_key :: wooper:class_key(),
 
-	% Class-level table telling, for each method supported by this class, which
-	% module (parent class) implements it.
-	%
-	% Now directly a reference within the persistent_term registry:
-	virtual_table :: wooper:virtual_table(),
+    % Class-level table telling, for each method supported by this class, which
+    % module (parent class) implements it.
+    %
+    % Now directly a reference within the persistent_term registry:
+    virtual_table :: wooper:virtual_table(),
 
-	% Holds the instance-specific attribute-based key/value state:
-	attribute_table :: wooper:attribute_table(),
+    % Holds the instance-specific attribute-based key/value state:
+    attribute_table :: wooper:attribute_table(),
 
-	% Only means that we know to access the actual class name:
-	%
-	% (otherwise we could not, for example, report in an intermediate
-	% child class the actual class name of a deleted instance)
-	%
-	% To be used instead of ?MODULE or alike.
-	%
-	actual_class :: wooper:classname(),
+    % Only means that we know to access the actual class name:
+    %
+    % (otherwise we could not, for example, report in an intermediate
+    % child class the actual class name of a deleted instance)
+    %
+    % To be used instead of ?MODULE or alike.
+    %
+    actual_class :: wooper:classname(),
 
-	request_sender :: option( pid() ) } ).
+    request_sender :: option( pid() ) } ).
 
 
 
@@ -157,29 +157,29 @@
 
 -ifdef(wooper_debug_mode).
 
-	% Uncomment to have all WOOPER recompiled classes output verbosely their
-	% information:
-	% (useful when everything is compiled without this flag and then
-	% uncommenting the flag to recompile only the class(es) to debug)
-	%-define(wooper_log_wanted,).
+    % Uncomment to have all WOOPER recompiled classes output verbosely their
+    % information:
+    % (useful when everything is compiled without this flag and then
+    % uncommenting the flag to recompile only the class(es) to debug)
+    %-define(wooper_log_wanted,).
 
 -ifdef(wooper_log_wanted).
 
-	-define( wooper_log( Msg ), io:format( Msg ) ).
-	-define( wooper_log_format( Msg, Format ), io:format( Msg, Format ) ).
+    -define( wooper_log( Msg ), io:format( Msg ) ).
+    -define( wooper_log_format( Msg, Format ), io:format( Msg, Format ) ).
 
 -else. % wooper_log_wanted
 
-	-define( wooper_log( Msg ), no_wooper_log ).
-	-define( wooper_log_format( Msg, Format ), no_wooper_log ).
+    -define( wooper_log( Msg ), no_wooper_log ).
+    -define( wooper_log_format( Msg, Format ), no_wooper_log ).
 
 -endif. % wooper_log_wanted
 
 
 -else. % wooper_debug_mode
 
-	-define( wooper_log( Msg ), no_wooper_log ).
-	-define( wooper_log_format( Msg, Format ), no_wooper_log ).
+    -define( wooper_log( Msg ), no_wooper_log ).
+    -define( wooper_log_format( Msg, Format ), no_wooper_log ).
 
 -endif. % wooper_debug_mode
 

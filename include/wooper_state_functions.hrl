@@ -58,12 +58,12 @@ Voluntary underspecification, to be able to toggle.
 -ifdef(wooper_debug_mode).
 
 is_wooper_debug() ->
-	true.
+    true.
 
 -else. % wooper_debug_mode
 
 is_wooper_debug() ->
-	false.
+    false.
 
 -endif. % wooper_debug_mode
 
@@ -75,14 +75,14 @@ is_wooper_debug() ->
 % removeAttribute/2, shall not be inlined)
 %
 -compile( { inline, [ setAttribute/3, setAttributes/2,
-					  swapInAttribute/3,
-					  getAttribute/2, getAttributes/2, getMaybeAttribute/2,
-					  addToAttribute/3, subtractFromAttribute/3,
-					  incrementAttribute/2, decrementAttribute/2,
-					  toggleAttribute/2,
-					  appendToAttribute/3, concatToAttribute/3,
-					  deleteFromAttribute/3,
-					  addKeyValueToAttribute/4, popFromAttribute/2 ] } ).
+                      swapInAttribute/3,
+                      getAttribute/2, getAttributes/2, getMaybeAttribute/2,
+                      addToAttribute/3, subtractFromAttribute/3,
+                      incrementAttribute/2, decrementAttribute/2,
+                      toggleAttribute/2,
+                      appendToAttribute/3, concatToAttribute/3,
+                      deleteFromAttribute/3,
+                      addKeyValueToAttribute/4, popFromAttribute/2 ] } ).
 
 
 
@@ -103,13 +103,13 @@ Always succeeds.
 See also `setAttributes/3`, to set more than one attribute at a time.
 """.
 -spec setAttribute( wooper:state(), attribute_name(), attribute_value() ) ->
-						wooper:state().
+                        wooper:state().
 setAttribute( State, AttributeName, AttributeValue ) ->
-	State#state_holder{
-		attribute_table=?wooper_table_type:add_entry(
-			AttributeName,
-			AttributeValue,
-			State#state_holder.attribute_table ) }.
+    State#state_holder{
+        attribute_table=?wooper_table_type:add_entry(
+            AttributeName,
+            AttributeValue,
+            State#state_holder.attribute_table ) }.
 
 
 
@@ -127,12 +127,12 @@ Always succeeds.
 See also the `setAttribute/2` function, for a single attribute setting.
 """.
 -spec setAttributes( wooper:state(), [ attribute_entry() ] ) ->
-						wooper:state().
+                        wooper:state().
 setAttributes( State, ListOfAttributePairs ) ->
-	State#state_holder{
-		attribute_table=?wooper_table_type:add_entries(
-			ListOfAttributePairs,
-			State#state_holder.attribute_table ) }.
+    State#state_holder{
+        attribute_table=?wooper_table_type:add_entries(
+            ListOfAttributePairs,
+            State#state_holder.attribute_table ) }.
 
 
 
@@ -147,14 +147,14 @@ SomeState, then: `{NewState, red} = swapInAttribute(SomeState, color, blue)` and
 in NewState `color` is set to `blue`.
 """.
 -spec swapInAttribute( wooper:state(), attribute_name(), attribute_value() ) ->
-										{ wooper:state(), attribute_value() }.
+                                        { wooper:state(), attribute_value() }.
 swapInAttribute( State=#state_holder{ attribute_table=AttrTable },
-				 AttributeName, NewAttributeValue ) ->
+                 AttributeName, NewAttributeValue ) ->
 
-	{ PreviousValue, NewAttrTable } = ?wooper_table_type:swap_value(
-		AttributeName, NewAttributeValue, AttrTable ),
+    { PreviousValue, NewAttrTable } = ?wooper_table_type:swap_value(
+        AttributeName, NewAttributeValue, AttrTable ),
 
-	{ State#state_holder{ attribute_table=NewAttrTable }, PreviousValue }.
+    { State#state_holder{ attribute_table=NewAttrTable }, PreviousValue }.
 
 
 
@@ -172,8 +172,8 @@ could appear later).
 """.
 -spec hasAttribute( wooper:state(), attribute_name() ) -> boolean().
 hasAttribute( State, AttributeName ) ->
-	?wooper_table_type:has_entry( AttributeName,
-								  State#state_holder.attribute_table ).
+    ?wooper_table_type:has_entry( AttributeName,
+                                  State#state_holder.attribute_table ).
 
 
 
@@ -190,8 +190,8 @@ See also: the `getAttr/1` macro shorthand.
 """.
 -spec getAttribute( wooper:state(), attribute_name() ) -> attribute_value().
 getAttribute( State, AttributeName ) ->
-	?wooper_table_type:get_value( AttributeName,
-								  State#state_holder.attribute_table ).
+    ?wooper_table_type:get_value( AttributeName,
+                                  State#state_holder.attribute_table ).
 
 
 
@@ -208,8 +208,8 @@ See also: the `getAttrList/1` macro shorthand.
 -spec getAttributes( wooper:state(), [ attribute_name() ] ) ->
                                             [ attribute_value() ].
 getAttributes( State, AttributeNameList ) ->
-	?wooper_table_type:get_values( AttributeNameList,
-								   State#state_holder.attribute_table ).
+    ?wooper_table_type:get_values( AttributeNameList,
+                                   State#state_holder.attribute_table ).
 
 
 
@@ -228,16 +228,16 @@ inheritance, where an attribute may not be even defined.
 -spec getMaybeAttribute( wooper:state(), attribute_name() ) ->
                                             option( attribute_value() ).
 getMaybeAttribute( State, AttributeName ) ->
-	case ?wooper_table_type:lookup_entry( AttributeName,
-			State#state_holder.attribute_table ) of
+    case ?wooper_table_type:lookup_entry( AttributeName,
+            State#state_holder.attribute_table ) of
 
-		key_not_found ->
-			undefined;
+        key_not_found ->
+            undefined;
 
-		{ value, V } ->
-			V
+        { value, V } ->
+            V
 
-	end.
+    end.
 
 
 
@@ -251,9 +251,9 @@ defined. Better keep it defined, but set to `undefined`.
 """.
 -spec removeAttribute( wooper:state(), attribute_name() ) -> wooper:state().
 removeAttribute( State, AttributeName ) ->
-	State#state_holder{
-		attribute_table=?wooper_table_type:remove_entry( AttributeName,
-			State#state_holder.attribute_table ) }.
+    State#state_holder{
+        attribute_table=?wooper_table_type:remove_entry( AttributeName,
+            State#state_holder.attribute_table ) }.
 
 
 
@@ -266,13 +266,13 @@ A case clause is triggered if the attribute did not exist, a bad arithm is
 triggered if no addition can be performed on the attribute value.
 """.
 -spec addToAttribute( wooper:state(), attribute_name(), attribute_value() ) ->
-							wooper:state().
+                            wooper:state().
 addToAttribute( State, AttributeName, Value ) ->
-	State#state_holder{
-		attribute_table=?wooper_table_type:add_to_entry(
-			AttributeName,
-			Value,
-			State#state_holder.attribute_table ) }.
+    State#state_holder{
+        attribute_table=?wooper_table_type:add_to_entry(
+            AttributeName,
+            Value,
+            State#state_holder.attribute_table ) }.
 
 
 
@@ -286,13 +286,13 @@ A case clause is triggered if the attribute did not exist, a bad arithm is
 triggered if no subtraction can be performed on the attribute value.
 """.
 -spec subtractFromAttribute( wooper:state(), attribute_name(),
-							 attribute_value() ) -> wooper:state().
+                             attribute_value() ) -> wooper:state().
 subtractFromAttribute( State, AttributeName, Value ) ->
-	State#state_holder{
-		attribute_table=?wooper_table_type:subtract_from_entry(
-			AttributeName,
-			Value,
-			State#state_holder.attribute_table ) }.
+    State#state_holder{
+        attribute_table=?wooper_table_type:subtract_from_entry(
+            AttributeName,
+            Value,
+            State#state_holder.attribute_table ) }.
 
 
 
@@ -306,11 +306,11 @@ triggered if no addition can be performed on the attribute value.
 """.
 -spec incrementAttribute( wooper:state(), attribute_name() ) -> wooper:state().
 incrementAttribute( State, AttributeName ) ->
-	State#state_holder{
-		attribute_table=?wooper_table_type:add_to_entry(
-			AttributeName,
-			_Value=1,
-			State#state_holder.attribute_table ) }.
+    State#state_holder{
+        attribute_table=?wooper_table_type:add_to_entry(
+            AttributeName,
+            _Value=1,
+            State#state_holder.attribute_table ) }.
 
 
 
@@ -324,11 +324,11 @@ triggered if no addition can be performed on the attribute value.
 """.
 -spec decrementAttribute( wooper:state(), attribute_name() ) -> wooper:state().
 decrementAttribute( State, AttributeName ) ->
-	State#state_holder{
-		attribute_table=?wooper_table_type:add_to_entry(
-			AttributeName,
-			_Value=-1,
-			State#state_holder.attribute_table ) }.
+    State#state_holder{
+        attribute_table=?wooper_table_type:add_to_entry(
+            AttributeName,
+            _Value=-1,
+            State#state_holder.attribute_table ) }.
 
 
 
@@ -341,10 +341,10 @@ boolean value.
 """.
 -spec toggleAttribute( wooper:state(), attribute_name() ) -> wooper:state().
 toggleAttribute( State, BooleanAttributeName ) ->
-	State#state_holder{
-		attribute_table=?wooper_table_type:toggle_entry(
-			BooleanAttributeName,
-			State#state_holder.attribute_table ) }.
+    State#state_holder{
+        attribute_table=?wooper_table_type:toggle_entry(
+            BooleanAttributeName,
+            State#state_holder.attribute_table ) }.
 
 
 
@@ -358,13 +358,13 @@ Note: no check is performed to ensure the attribute is a list indeed, and the
 operation will not complain if not.
 """.
 -spec appendToAttribute( wooper:state(), attribute_name(),
-						 attribute_value() ) -> wooper:state().
+                         attribute_value() ) -> wooper:state().
 appendToAttribute( State, AttributeName, Element ) ->
-	State#state_holder{
-		attribute_table=?wooper_table_type:append_to_entry(
-			AttributeName,
-			Element,
-			State#state_holder.attribute_table ) }.
+    State#state_holder{
+        attribute_table=?wooper_table_type:append_to_entry(
+            AttributeName,
+            Element,
+            State#state_holder.attribute_table ) }.
 
 
 
@@ -382,13 +382,13 @@ Note: no check is performed to ensure the attribute is a list indeed, and the
 operation will not complain if not.
 """.
 -spec concatToAttribute( wooper:state(), attribute_name(),
-						 attribute_value() ) -> wooper:state().
+                         attribute_value() ) -> wooper:state().
 concatToAttribute( State, AttributeName, List ) ->
-	State#state_holder{
-		attribute_table=?wooper_table_type:concat_to_entry(
-			AttributeName,
-			List,
-			State#state_holder.attribute_table ) }.
+    State#state_holder{
+        attribute_table=?wooper_table_type:concat_to_entry(
+            AttributeName,
+            List,
+            State#state_holder.attribute_table ) }.
 
 
 
@@ -402,13 +402,13 @@ If the element is not in the specified list, the list will not be modified.
 Returns an updated state.
 """.
 -spec deleteFromAttribute( wooper:state(), attribute_name(),
-						   attribute_value() ) -> wooper:state().
+                           attribute_value() ) -> wooper:state().
 deleteFromAttribute( State, AttributeName, Element ) ->
-	State#state_holder{
-		attribute_table=?wooper_table_type:delete_from_entry(
-			AttributeName,
-			Element,
-			State#state_holder.attribute_table ) }.
+    State#state_holder{
+        attribute_table=?wooper_table_type:delete_from_entry(
+            AttributeName,
+            Element,
+            State#state_holder.attribute_table ) }.
 
 
 
@@ -425,19 +425,19 @@ to the one used by WOOPER (on the other hand we do not want to force all classes
 to define `table_type`).
 """.
 -spec addKeyValueToAttribute( wooper:state(), attribute_name(),
-			?wooper_table_type:key(), ?wooper_table_type:value() ) ->
-									wooper:state().
+            ?wooper_table_type:key(), ?wooper_table_type:value() ) ->
+                                    wooper:state().
 addKeyValueToAttribute( State, AttributeName, Key, Value ) ->
-	State#state_holder{
-		attribute_table=?wooper_table_type:add_entry(
+    State#state_holder{
+        attribute_table=?wooper_table_type:add_entry(
 
-			AttributeName,
+            AttributeName,
 
-			?wooper_table_type:add_entry( Key, Value,
-				?wooper_table_type:get_value( AttributeName,
-					State#state_holder.attribute_table ) ),
+            ?wooper_table_type:add_entry( Key, Value,
+                ?wooper_table_type:get_value( AttributeName,
+                    State#state_holder.attribute_table ) ),
 
-			State#state_holder.attribute_table ) }.
+            State#state_holder.attribute_table ) }.
 
 
 
@@ -452,10 +452,10 @@ my_list attribute is `[8,3]` and a value `Head=5`.
 A case clause is triggered if the attribute did not exist.
 """.
 -spec popFromAttribute( wooper:state(), attribute_name() ) ->
-							{ wooper:state(), attribute_value() }.
+                            { wooper:state(), attribute_value() }.
 popFromAttribute( State, AttributeName ) ->
 
-	{ Head, PoppedAttributeTable } = ?wooper_table_type:pop_from_entry(
-		AttributeName, State#state_holder.attribute_table ),
+    { Head, PoppedAttributeTable } = ?wooper_table_type:pop_from_entry(
+        AttributeName, State#state_holder.attribute_table ),
 
-	{ State#state_holder{ attribute_table=PoppedAttributeTable }, Head }.
+    { State#state_holder{ attribute_table=PoppedAttributeTable }, Head }.

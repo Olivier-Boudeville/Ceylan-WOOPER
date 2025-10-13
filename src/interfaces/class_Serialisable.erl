@@ -61,8 +61,8 @@ applied to any WOOPER instance, whether or not it has this trait or not.
 
 
 -define( class_description,
-		 "Interface to be implemented by all instances able to store their "
-		 "state in, and load it from, a content such as a series of bytes." ).
+         "Interface to be implemented by all instances able to store their "
+         "state in, and load it from, a content such as a series of bytes." ).
 
 
 % No superclasses.
@@ -92,8 +92,8 @@ Note: see meta_utils:transform_term/4, which may be useful in that context, and
 also the TextTransformer example in serialisable_test.erl.
 """.
 -type entry_transformer() ::
-		fun( ( attribute_entry(), user_data() ) ->
-				{ attribute_entry(), user_data() } ).
+        fun( ( attribute_entry(), user_data() ) ->
+                { attribute_entry(), user_data() } ).
 
 
 
@@ -167,8 +167,8 @@ Application-specific markers can also be defined, e.g.
 -define( resilience_marker, foobar_resilience_marker ).
 """.
 -type restoration_marker() :: ?process_restoration_marker
-							| ?file_restoration_marker
-							| ?term_restoration_marker.
+                            | ?file_restoration_marker
+                            | ?term_restoration_marker.
 
 
 
@@ -190,11 +190,11 @@ Can be here anything (e.g. 'undefined') and/or be completly ignored.
 
 
 -export_type([ serialisable_pid/0, entry_transformer/0,
-			   %state_transformer_fun/0,
-			   extra_data/0, instance_record/0,
-			   serialisation/0, bin_serialisation/0,
-			   restoration_marker/0, load_info/0,
-			   user_data/0 ]).
+               %state_transformer_fun/0,
+               extra_data/0, instance_record/0,
+               serialisation/0, bin_serialisation/0,
+               restoration_marker/0, load_info/0,
+               user_data/0 ]).
 
 
 
@@ -344,10 +344,10 @@ Can be here anything (e.g. 'undefined') and/or be completly ignored.
 -spec construct( wooper:state() ) -> wooper:state().
 construct( State ) ->
 
-	% Simplest constructor ever; the fact that it processes nothing and sets no
-	% attribute is of course no reason to not call it from child classes.
+    % Simplest constructor ever; the fact that it processes nothing and sets no
+    % attribute is of course no reason to not call it from child classes.
 
-	State.
+    State.
 
 
 % No need to define a specific destructor.
@@ -375,14 +375,14 @@ with the instance PID (useful to allow to discriminate between serialisations
 performed in parallel).
 """.
 -spec serialise( wooper:state() ) ->
-					request_return( { serialisation(), instance_pid() } ).
+                    request_return( { serialisation(), instance_pid() } ).
 serialise( State ) ->
 
-	{ SerialState, { SerialTerm, _SerialUserData, Self } } =
-		executeRequest( State, serialise,
-			[ _MaybeEntryTransformer=undefined, _UserData=undefined ] ),
+    { SerialState, { SerialTerm, _SerialUserData, Self } } =
+        executeRequest( State, serialise,
+            [ _MaybeEntryTransformer=undefined, _UserData=undefined ] ),
 
-	wooper:return_state_result( SerialState, { SerialTerm, Self } ).
+    wooper:return_state_result( SerialState, { SerialTerm, Self } ).
 
 
 
@@ -393,41 +393,41 @@ updated user data, together with the instance PID (useful to allow to
 discriminate between serialisations performed in parallel).
 """.
 -spec serialise( wooper:state(), option( entry_transformer() ), user_data() ) ->
-		request_return( { serialisation(), user_data(), instance_pid() } ).
+        request_return( { serialisation(), user_data(), instance_pid() } ).
 serialise( State, MaybeEntryTransformer, UserData ) ->
 
-	% We have to discriminate between the states:
-	%  - of the instance itself (*InstanceState), mostly const
-	%  - used by the serialisation (the other states), possibly heavily
-	%  transformed
+    % We have to discriminate between the states:
+    %  - of the instance itself (*InstanceState), mostly const
+    %  - used by the serialisation (the other states), possibly heavily
+    %  transformed
 
-	% May affect the original instance state, if ever needed:
-	{ PreSerialInstanceState, SerialRet } =
-		executeRequest( State, onPreSerialisation, [ UserData ] ),
+    % May affect the original instance state, if ever needed:
+    { PreSerialInstanceState, SerialRet } =
+        executeRequest( State, onPreSerialisation, [ UserData ] ),
 
-	{ SerialReadyState, PreUserData, MaybeExtraData } =
-		case SerialRet of
+    { SerialReadyState, PreUserData, MaybeExtraData } =
+        case SerialRet of
 
-			{ PreSerialState, PreSerialUserData } ->
-				{ PreSerialState, PreSerialUserData, undefined };
+            { PreSerialState, PreSerialUserData } ->
+                { PreSerialState, PreSerialUserData, undefined };
 
-			T={ _PreSerialState, _PreSerialUserData, _MaybeExtraData } ->
-				T
+            T={ _PreSerialState, _PreSerialUserData, _MaybeExtraData } ->
+                T
 
-	end,
+    end,
 
-	% At least generally const, and supporting overriding:
-	{ SerialInstanceState, { SerialTerm, SerialUserData } } =
-		executeRequest( PreSerialInstanceState, performStateSerialisation,
-			[ SerialReadyState, MaybeEntryTransformer, PreUserData,
-			  MaybeExtraData ] ),
+    % At least generally const, and supporting overriding:
+    { SerialInstanceState, { SerialTerm, SerialUserData } } =
+        executeRequest( PreSerialInstanceState, performStateSerialisation,
+            [ SerialReadyState, MaybeEntryTransformer, PreUserData,
+              MaybeExtraData ] ),
 
-	{ PostSerialInstanceState, { PostSerialTerm, PostUserData } } =
-		executeRequest( SerialInstanceState, onPostSerialisation,
-						[ SerialTerm, SerialUserData ] ),
+    { PostSerialInstanceState, { PostSerialTerm, PostUserData } } =
+        executeRequest( SerialInstanceState, onPostSerialisation,
+                        [ SerialTerm, SerialUserData ] ),
 
-	wooper:return_state_result( PostSerialInstanceState,
-		{ PostSerialTerm, PostUserData, self() } ).
+    wooper:return_state_result( PostSerialInstanceState,
+        { PostSerialTerm, PostUserData, self() } ).
 
 
 
@@ -453,16 +453,16 @@ The default implementation of this request is a const, do-nothing one (returning
 an exact copy of the current state); it is meant to be overridden if needed.
 """.
 -spec onPreSerialisation( wooper:state(), user_data() ) ->
-	const_request_return( { wooper:state(), user_data() }
-						| { wooper:state(), user_data(), extra_data() } ).
+    const_request_return( { wooper:state(), user_data() }
+                        | { wooper:state(), user_data(), extra_data() } ).
 onPreSerialisation( State, UserData ) ->
 
-	cond_utils:if_defined( wooper_debug_serialisation,
-		trace_bridge:debug_fmt( "Default pre-serialisation of instance ~w, "
-			"based on user data ~p.", [ self(), UserData ] ) ),
+    cond_utils:if_defined( wooper_debug_serialisation,
+        trace_bridge:debug_fmt( "Default pre-serialisation of instance ~w, "
+            "based on user data ~p.", [ self(), UserData ] ) ),
 
-	% This default version is const:
-	wooper:const_return_result( { State, UserData } ).
+    % This default version is const:
+    wooper:const_return_result( { State, UserData } ).
 
 
 
@@ -472,106 +472,106 @@ serialisation-ready state, using the specified entry transformer (if any), user
 data and any extra data specified.
 """.
 -spec performStateSerialisation( wooper:state(), wooper:state(),
-		option( entry_transformer() ), user_data(), option( extra_data() ) ) ->
-				request_return( { serialisation(), user_data() } ).
+        option( entry_transformer() ), user_data(), option( extra_data() ) ) ->
+                request_return( { serialisation(), user_data() } ).
 performStateSerialisation( State, ToSerialiseState, MaybeEntryTransformer,
-						   UserData, MaybeExtraData ) ->
+                           UserData, MaybeExtraData ) ->
 
-	cond_utils:if_defined( wooper_debug_serialisation,
-		case MaybeEntryTransformer of
+    cond_utils:if_defined( wooper_debug_serialisation,
+        case MaybeEntryTransformer of
 
-			undefined ->
-				trace_bridge:debug_fmt( "Default serialisation of instance ~w, "
-					"with no specific entry transformer.", [ self() ] );
+            undefined ->
+                trace_bridge:debug_fmt( "Default serialisation of instance ~w, "
+                    "with no specific entry transformer.", [ self() ] );
 
-			ET ->
-				trace_bridge:debug_fmt( "Default serialisation of instance ~w, "
-					"based on entry transformer ~p and user data ~p.",
-					[ self(), ET, UserData ] )
+            ET ->
+                trace_bridge:debug_fmt( "Default serialisation of instance ~w, "
+                    "based on entry transformer ~p and user data ~p.",
+                    [ self(), ET, UserData ] )
 
-		end ),
+        end ),
 
-	% Note that the 'request_sender' of the state_holder field is not taken into
-	% account for serialisation, as, by design, there is indeed such a caller
-	% (since serialise/3 is a request), but it is of no interest here.
+    % Note that the 'request_sender' of the state_holder field is not taken into
+    % account for serialisation, as, by design, there is indeed such a caller
+    % (since serialise/3 is a request), but it is of no interest here.
 
-	% There are, for all Erlang processes, some extra information that are
-	% contextual, implicit, like: whether they are linked (and with whom), their
-	% process dictionary, whether they trap exits, etc.; refer to the 'About
-	% serialised elements' section of the implementation notes.
+    % There are, for all Erlang processes, some extra information that are
+    % contextual, implicit, like: whether they are linked (and with whom), their
+    % process dictionary, whether they trap exits, etc.; refer to the 'About
+    % serialised elements' section of the implementation notes.
 
-	% Retrieving all attribute key/value pairs
-	BaseEntries = ?wooper_table_type:enumerate(
-		ToSerialiseState#state_holder.attribute_table ),
-
-
-	%trace_bridge:debug_fmt( "Original entries:~n ~p", [ BaseEntries ] ),
-
-	% So, directly from the instance process, let's add the WOOPER extra
-	% information:
-	%
-	WithRandEntries = case random_utils:get_random_state() of
-
-		undefined ->
-			BaseEntries;
-
-		CurrentRandomState ->
-			RandomAttribute = { ?random_attr_name, CurrentRandomState },
-
-		[ RandomAttribute | BaseEntries]
-
-	end,
+    % Retrieving all attribute key/value pairs
+    BaseEntries = ?wooper_table_type:enumerate(
+        ToSerialiseState#state_holder.attribute_table ),
 
 
-	% Sorting would be useless yet possibly a bit cleaner, with lists:sort/1.
+    %trace_bridge:debug_fmt( "Original entries:~n ~p", [ BaseEntries ] ),
 
-	% Applying any entry transformer on each of them:
-	{ TransformedEntries, ETUserData } = case MaybeEntryTransformer of
+    % So, directly from the instance process, let's add the WOOPER extra
+    % information:
+    %
+    WithRandEntries = case random_utils:get_random_state() of
 
-		undefined ->
-			{ WithRandEntries, UserData };
+        undefined ->
+            BaseEntries;
 
-		EntryTransformer ->
-			lists:foldl( EntryTransformer,
-						 _Acc0={ _ResultingEntries=[], UserData },
-						 _List=WithRandEntries )
+        CurrentRandomState ->
+            RandomAttribute = { ?random_attr_name, CurrentRandomState },
 
-	end,
+        [ RandomAttribute | BaseEntries]
 
-	%trace_bridge:debug_fmt( "Transformed entries: ~n~p",
-	%                        [ TransformedEntries ] ),
+    end,
 
 
-	% Generally not useful, as a prior transformation already recursed in
-	% attribute values in order to replace all transient elements:
-	%
-	cond_utils:if_defined( wooper_check_serialisation,
-		begin
-			%trace_utils:debug( "Checking that no transient term remains." ),
-			[ meta_utils:transform_term( AttrValue,
-				_TypeDescription=undefined,
-				fun wooper_serialisation:check_no_transient/2,
-				_NoTransientUserData={ attribute, AttrName } )
-					|| { AttrName, AttrValue } <- TransformedEntries ]
-		end ),
+    % Sorting would be useless yet possibly a bit cleaner, with lists:sort/1.
 
-	InstanceRecord = #wooper_serialisation_instance_record{
-		class_name=State#state_holder.actual_class,
-		attributes=TransformedEntries,
-		extra_data=MaybeExtraData },
+    % Applying any entry transformer on each of them:
+    { TransformedEntries, ETUserData } = case MaybeEntryTransformer of
 
-	% Most probably a const request; user data generally also useless here:
-	%
-	% ResPair = { SerialisedContent, FinalUserData }
-	{ NewInstanceState, ResPair } =
-		executeRequest( State, serialiseTerm, [ InstanceRecord, ETUserData ] ),
+        undefined ->
+            { WithRandEntries, UserData };
 
-	% NewInstanceState is generally the initial 'State'; we do not want to
-	% continue with any state forged for the serialisation (e.g. with
-	% transformed local processes), we want to continue as we were before the
-	% serialisation!
-	%
-	wooper:return_state_result( NewInstanceState, ResPair ).
+        EntryTransformer ->
+            lists:foldl( EntryTransformer,
+                         _Acc0={ _ResultingEntries=[], UserData },
+                         _List=WithRandEntries )
+
+    end,
+
+    %trace_bridge:debug_fmt( "Transformed entries: ~n~p",
+    %                        [ TransformedEntries ] ),
+
+
+    % Generally not useful, as a prior transformation already recursed in
+    % attribute values in order to replace all transient elements:
+    %
+    cond_utils:if_defined( wooper_check_serialisation,
+        begin
+            %trace_utils:debug( "Checking that no transient term remains." ),
+            [ meta_utils:transform_term( AttrValue,
+                _TypeDescription=undefined,
+                fun wooper_serialisation:check_no_transient/2,
+                _NoTransientUserData={ attribute, AttrName } )
+                    || { AttrName, AttrValue } <- TransformedEntries ]
+        end ),
+
+    InstanceRecord = #wooper_serialisation_instance_record{
+        class_name=State#state_holder.actual_class,
+        attributes=TransformedEntries,
+        extra_data=MaybeExtraData },
+
+    % Most probably a const request; user data generally also useless here:
+    %
+    % ResPair = { SerialisedContent, FinalUserData }
+    { NewInstanceState, ResPair } =
+        executeRequest( State, serialiseTerm, [ InstanceRecord, ETUserData ] ),
+
+    % NewInstanceState is generally the initial 'State'; we do not want to
+    % continue with any state forged for the serialisation (e.g. with
+    % transformed local processes), we want to continue as we were before the
+    % serialisation!
+    %
+    wooper:return_state_result( NewInstanceState, ResPair ).
 
 
 
@@ -586,14 +586,14 @@ Its reciprocal is the deserialise_term/1 static method.
 Precisely this default, specific implementation returns a bin_serialisation().
 """.
 -spec serialiseTerm( wooper:state(), term(), user_data() ) ->
-				const_request_return( { serialisation(), user_data() } ).
+                const_request_return( { serialisation(), user_data() } ).
 serialiseTerm( State, Term, UserData ) ->
 
-	% The 'deterministic' option does not seem crucial here:
-	Bin = term_to_binary( Term,
-						  _Opts=[ { compressed, 9 }, { minor_version, 2 } ] ),
+    % The 'deterministic' option does not seem crucial here:
+    Bin = term_to_binary( Term,
+                          _Opts=[ { compressed, 9 }, { minor_version, 2 } ] ),
 
-	wooper:const_return_result( { Bin, UserData } ).
+    wooper:const_return_result( { Bin, UserData } ).
 
 
 
@@ -617,15 +617,15 @@ Such a hook is to return a state directly suitable for serialisation, for
 example with no transient technical identifiers (like PID, open files, etc.).
 """.
 -spec onPostSerialisation( wooper:state(), serialisation(), user_data() ) ->
-			const_request_return( { serialisation(), user_data() } ).
+            const_request_return( { serialisation(), user_data() } ).
 onPostSerialisation( State, SerialisationTerm, UserData ) ->
 
-	cond_utils:if_defined( wooper_debug_serialisation,
-		trace_bridge:debug_fmt( "Default post-serialisation of instance ~w, "
-			"based on user data ~p.", [ self(), UserData ] ) ),
+    cond_utils:if_defined( wooper_debug_serialisation,
+        trace_bridge:debug_fmt( "Default post-serialisation of instance ~w, "
+            "based on user data ~p.", [ self(), UserData ] ) ),
 
-	% This default version is const:
-	wooper:const_return_result( { SerialisationTerm, UserData } ).
+    % This default version is const:
+    wooper:const_return_result( { SerialisationTerm, UserData } ).
 
 
 
@@ -654,10 +654,10 @@ the creation is triggered, without waiting for it to complete.
 -spec load( serialisation() ) -> static_return( instance_pid() ).
 load( Serialisation ) ->
 
-	InstPid = load( Serialisation, _MaybeEntryTransformer=undefined,
-					_UserData=undefined ),
+    InstPid = load( Serialisation, _MaybeEntryTransformer=undefined,
+                    _UserData=undefined ),
 
-	wooper:return_static( InstPid ).
+    wooper:return_static( InstPid ).
 
 
 
@@ -671,16 +671,16 @@ This creation will be asynchronous: this function returns a legit PID as soon as
 the creation is triggered, without waiting for it to complete.
 """.
 -spec load( serialisation(), option( entry_transformer() ), user_data() ) ->
-											static_return( instance_pid() ).
+                                            static_return( instance_pid() ).
 load( Serialisation, MaybeEntryTransformer, UserData ) ->
 
-	InstPid = ?myriad_spawn(
-		fun() ->
-			deserialise( Serialisation, MaybeEntryTransformer, UserData,
-						 _ListenerPid=undefined )
-		end ),
+    InstPid = ?myriad_spawn(
+        fun() ->
+            deserialise( Serialisation, MaybeEntryTransformer, UserData,
+                         _ListenerPid=undefined )
+        end ),
 
-	wooper:return_static( InstPid ).
+    wooper:return_static( InstPid ).
 
 
 
@@ -697,10 +697,10 @@ the creation is triggered, without waiting for it to complete.
 -spec load_link( serialisation() ) -> static_return( instance_pid() ).
 load_link( Serialisation ) ->
 
-	InstPid = load_link( Serialisation, _MaybeEntryTransformer=undefined,
-						 _UserData=undefined ),
+    InstPid = load_link( Serialisation, _MaybeEntryTransformer=undefined,
+                         _UserData=undefined ),
 
-	wooper:return_static( InstPid ).
+    wooper:return_static( InstPid ).
 
 
 
@@ -715,16 +715,16 @@ This creation will be asynchronous: this function returns a legit PID as soon as
 the creation is triggered, without waiting for it to complete.
 """.
 -spec load_link( serialisation(), option( entry_transformer() ),
-				 user_data() ) -> static_return( instance_pid() ).
+                 user_data() ) -> static_return( instance_pid() ).
 load_link( Serialisation, MaybeEntryTransformer, UserData ) ->
 
-	InstPid = ?myriad_spawn_link(
-		fun() ->
-			deserialise( Serialisation, MaybeEntryTransformer, UserData,
-						 _ListenerPid=undefined )
-		end ),
+    InstPid = ?myriad_spawn_link(
+        fun() ->
+            deserialise( Serialisation, MaybeEntryTransformer, UserData,
+                         _ListenerPid=undefined )
+        end ),
 
-	wooper:return_static( InstPid ).
+    wooper:return_static( InstPid ).
 
 
 
@@ -745,10 +745,10 @@ reports that it is up and running.
 -spec synchronous_load( serialisation() ) -> static_return( load_info() ).
 synchronous_load( Serialisation ) ->
 
-	LoadInfo = synchronous_load( Serialisation,
-		_MaybeEntryTransformer=undefined, _UserData=undefined ),
+    LoadInfo = synchronous_load( Serialisation,
+        _MaybeEntryTransformer=undefined, _UserData=undefined ),
 
-	wooper:return_static( LoadInfo ).
+    wooper:return_static( LoadInfo ).
 
 
 
@@ -762,24 +762,24 @@ This creation is synchronous: the call will return only when the created process
 reports that it is up and running.
 """.
 -spec synchronous_load( serialisation(), option( entry_transformer() ),
-						user_data() ) -> static_return( load_info() ).
+                        user_data() ) -> static_return( load_info() ).
 synchronous_load( Serialisation, MaybeEntryTransformer, UserData ) ->
 
-	CreatorPid = self(),
+    CreatorPid = self(),
 
-	_SpawnedPid = ?myriad_spawn(
-		fun() ->
-			deserialise( Serialisation, MaybeEntryTransformer, UserData,
-						 _ListenerPid=CreatorPid )
-		end ),
+    _SpawnedPid = ?myriad_spawn(
+        fun() ->
+            deserialise( Serialisation, MaybeEntryTransformer, UserData,
+                         _ListenerPid=CreatorPid )
+        end ),
 
-	% Blocks until the spawned process answers:
-	receive
+    % Blocks until the spawned process answers:
+    receive
 
-		{ onDeserialisation, LoadInfo } ->
-			wooper:return_static( LoadInfo )
+        { onDeserialisation, LoadInfo } ->
+            wooper:return_static( LoadInfo )
 
-	end.
+    end.
 
 
 
@@ -795,10 +795,10 @@ reports that it is up and running.
 -spec synchronous_load_link( serialisation() ) -> static_return( load_info() ).
 synchronous_load_link( Serialisation ) ->
 
-	LoadInfo = synchronous_load_link( Serialisation,
-		_MaybeEntryTransformer=undefined, _UserData=undefined ),
+    LoadInfo = synchronous_load_link( Serialisation,
+        _MaybeEntryTransformer=undefined, _UserData=undefined ),
 
-	wooper:return_static( LoadInfo ).
+    wooper:return_static( LoadInfo ).
 
 
 
@@ -813,24 +813,24 @@ This creation is synchronous: the call will return only when the created process
 reports that it is up and running.
 """.
 -spec synchronous_load_link( serialisation(), option( entry_transformer() ),
-							 user_data() ) -> static_return( load_info() ).
+                             user_data() ) -> static_return( load_info() ).
 synchronous_load_link( Serialisation, MaybeEntryTransformer, UserData ) ->
 
-	CreatorPid = self(),
+    CreatorPid = self(),
 
-	_SpawnedPid = ?myriad_spawn_link(
-		fun() ->
-			deserialise( Serialisation, MaybeEntryTransformer, UserData,
-						 _ListenerPid=CreatorPid )
-		end ),
+    _SpawnedPid = ?myriad_spawn_link(
+        fun() ->
+            deserialise( Serialisation, MaybeEntryTransformer, UserData,
+                         _ListenerPid=CreatorPid )
+        end ),
 
-	% Blocks until the spawned process answers:
-	receive
+    % Blocks until the spawned process answers:
+    receive
 
-		{ onDeserialisation, LoadInfo } ->
-			wooper:return_static( LoadInfo )
+        { onDeserialisation, LoadInfo } ->
+            wooper:return_static( LoadInfo )
 
-	end.
+    end.
 
 
 
@@ -845,13 +845,13 @@ This creation is synchronous: the call will return only when the created process
 reports that it is up and running.
 """.
 -spec remote_synchronous_timed_load_link( node_name(), serialisation() ) ->
-										static_return( load_info() ).
+                                        static_return( load_info() ).
 remote_synchronous_timed_load_link( Node, Serialisation ) ->
 
-	LoadInfo = remote_synchronous_timed_load_link( Node, Serialisation,
-		_MaybeEntryTransformer=undefined, _UserData=undefined ),
+    LoadInfo = remote_synchronous_timed_load_link( Node, Serialisation,
+        _MaybeEntryTransformer=undefined, _UserData=undefined ),
 
-	wooper:return_static( LoadInfo ).
+    wooper:return_static( LoadInfo ).
 
 
 
@@ -866,35 +866,35 @@ This creation is synchronous: the call will return only when the created process
 reports that it is up and running.
 """.
 -spec remote_synchronous_timed_load_link( node_name(),
-	serialisation(), option( entry_transformer() ), user_data() ) ->
-												static_return( load_info() ).
+    serialisation(), option( entry_transformer() ), user_data() ) ->
+                                                static_return( load_info() ).
 remote_synchronous_timed_load_link( Node, Serialisation,
-									MaybeEntryTransformer, UserData ) ->
+                                    MaybeEntryTransformer, UserData ) ->
 
-	CreatorPid = self(),
+    CreatorPid = self(),
 
-	SpawnedPid = ?myriad_spawn_link( Node,
-		fun() ->
-			deserialise( Serialisation, MaybeEntryTransformer,
-						 UserData, _ListenerPid=CreatorPid )
-		end ),
+    SpawnedPid = ?myriad_spawn_link( Node,
+        fun() ->
+            deserialise( Serialisation, MaybeEntryTransformer,
+                         UserData, _ListenerPid=CreatorPid )
+        end ),
 
-	% Blocks until the spawned process answers or a time-out occurs:
-	receive
+    % Blocks until the spawned process answers or a time-out occurs:
+    receive
 
-		{ onDeserialisation, LoadInfo } ->
-			wooper:return_static( LoadInfo )
+        { onDeserialisation, LoadInfo } ->
+            wooper:return_static( LoadInfo )
 
-	after ?synchronous_time_out ->
+    after ?synchronous_time_out ->
 
-		% Classname not known;
-		trace_bridge:error_fmt( "(remote_synchronous_timed_load_link: "
-			"throwing time-out on node ~ts for ~ts after ~B milliseconds)",
-			[ Node, SpawnedPid, ?synchronous_time_out ] ),
+        % Classname not known;
+        trace_bridge:error_fmt( "(remote_synchronous_timed_load_link: "
+            "throwing time-out on node ~ts for ~ts after ~B milliseconds)",
+            [ Node, SpawnedPid, ?synchronous_time_out ] ),
 
-		throw( { remote_synchronous_linked_time_out, Node, SpawnedPid } )
+        throw( { remote_synchronous_linked_time_out, Node, SpawnedPid } )
 
-	end.
+    end.
 
 
 % Insert here any extra *load* function needed.
@@ -917,13 +917,13 @@ once (if ever) the instance is up and running. This allows performing the actual
 instance creations in parallel, by waiting sets of concurrent loadings.
 """.
 -spec remote_synchronisable_load_link( node_name(), serialisation() ) ->
-											static_return( instance_pid() ).
+                                            static_return( instance_pid() ).
 remote_synchronisable_load_link( Node, Serialisation ) ->
 
-	InstPid = remote_synchronisable_load_link( Node, Serialisation,
-		_MaybeEntryTransformer=undefined, _UserData=undefined ),
+    InstPid = remote_synchronisable_load_link( Node, Serialisation,
+        _MaybeEntryTransformer=undefined, _UserData=undefined ),
 
-	wooper:return_static( InstPid ).
+    wooper:return_static( InstPid ).
 
 
 
@@ -941,20 +941,20 @@ once (if ever) the instance is up and running. This allows performing the actual
 instance creations in parallel, by waiting sets of concurrent loadings.
 """.
 -spec remote_synchronisable_load_link( node_name(), serialisation(),
-			option( entry_transformer() ), user_data() ) ->
-												static_return( instance_pid() ).
+            option( entry_transformer() ), user_data() ) ->
+                                                static_return( instance_pid() ).
 remote_synchronisable_load_link( Node, Serialisation, MaybeEntryTransformer,
-								 UserData ) ->
+                                 UserData ) ->
 
-	CreatorPid = self(),
+    CreatorPid = self(),
 
-	InstPid = ?myriad_spawn_link( Node,
-		fun() ->
-			deserialise( Serialisation, MaybeEntryTransformer, UserData,
-						 _ListenerPid=CreatorPid )
-		end ),
+    InstPid = ?myriad_spawn_link( Node,
+        fun() ->
+            deserialise( Serialisation, MaybeEntryTransformer, UserData,
+                         _ListenerPid=CreatorPid )
+        end ),
 
-	wooper:return_static( InstPid ).
+    wooper:return_static( InstPid ).
 
 
 
@@ -990,16 +990,16 @@ so we consider here that the process executing this helper is the final hosting
 one, regardless of its past.
 """.
 -spec deserialise( serialisation(), option( entry_transformer() ), user_data(),
-				   option( pid() ) ) -> static_no_return().
+                   option( pid() ) ) -> static_no_return().
 deserialise( Serialisation, MaybeEntryTransformer, UserData,
-			 MaybeListenerPid ) ->
+             MaybeListenerPid ) ->
 
-	DeserialisedTerm = deserialise_term( Serialisation ),
+    DeserialisedTerm = deserialise_term( Serialisation ),
 
-	embody( DeserialisedTerm, MaybeEntryTransformer, UserData,
-			MaybeListenerPid ),
+    embody( DeserialisedTerm, MaybeEntryTransformer, UserData,
+            MaybeListenerPid ),
 
-	wooper:no_return_static() .
+    wooper:no_return_static() .
 
 
 
@@ -1011,79 +1011,79 @@ Introduced to be used in multiple contexts, either directly for a single
 deserialisation, or for a series thereof.
 """.
 -spec embody( term(), option( entry_transformer() ), user_data(),
-					option( pid() ) ) -> static_no_return().
+                    option( pid() ) ) -> static_no_return().
 embody( #wooper_serialisation_instance_record{
-			class_name=Classname,
-			attributes=AttrEntries,
-			extra_data=MaybeExtraData }, MaybeEntryTransformer, UserData,
-		MaybeListenerPid ) ->
+            class_name=Classname,
+            attributes=AttrEntries,
+            extra_data=MaybeExtraData }, MaybeEntryTransformer, UserData,
+        MaybeListenerPid ) ->
 
-	% First we extract the WOOPER extra information (if any) to have it out of
-	% the way:
-	%
-	{ MaybeRandomState, OtherEntries } =
-		list_table:extract_entry_with_default( ?random_attr_name,
-			_Default=undefined, AttrEntries ),
+    % First we extract the WOOPER extra information (if any) to have it out of
+    % the way:
+    %
+    { MaybeRandomState, OtherEntries } =
+        list_table:extract_entry_with_default( ?random_attr_name,
+            _Default=undefined, AttrEntries ),
 
-	{ TransformedEntries, EntryUserData } = case MaybeEntryTransformer of
+    { TransformedEntries, EntryUserData } = case MaybeEntryTransformer of
 
-		undefined ->
-			{ AttrEntries, UserData };
+        undefined ->
+            { AttrEntries, UserData };
 
-		EntryTransformer ->
-			lists:foldl( EntryTransformer,
-						 _Acc0={ _ResultingEntries=[], UserData },
-						 _List=OtherEntries )
+        EntryTransformer ->
+            lists:foldl( EntryTransformer,
+                         _Acc0={ _ResultingEntries=[], UserData },
+                         _List=OtherEntries )
 
-	end,
+    end,
 
-	% Now we have the right attributes enumerated.
+    % Now we have the right attributes enumerated.
 
-	% We need to bypass any constructor here.
+    % We need to bypass any constructor here.
 
-	AttributeTable = ?wooper_table_type:add_entries( TransformedEntries,
-		?wooper_table_type:new() ),
+    AttributeTable = ?wooper_table_type:add_entries( TransformedEntries,
+        ?wooper_table_type:new() ),
 
-	% If ever useful:
-	OptimisedAttributeTable = ?wooper_table_type:optimise( AttributeTable ),
+    % If ever useful:
+    OptimisedAttributeTable = ?wooper_table_type:optimise( AttributeTable ),
 
-	VirtualTable = wooper_utils:get_virtual_table_for( Classname ),
+    VirtualTable = wooper_utils:get_virtual_table_for( Classname ),
 
-	ForgedState = #state_holder{ virtual_table=VirtualTable,
-								 attribute_table=OptimisedAttributeTable,
-								 actual_class=Classname,
-								 request_sender=undefined },
+    ForgedState = #state_holder{ virtual_table=VirtualTable,
+                                 attribute_table=OptimisedAttributeTable,
+                                 actual_class=Classname,
+                                 request_sender=undefined },
 
-	% We could check here that no serialisation marker remains, with a specific
-	% entry transformer and list_restoration_markers/0.
+    % We could check here that no serialisation marker remains, with a specific
+    % entry transformer and list_restoration_markers/0.
 
-	 { FinalState, FinalUserData } =
-		executeRequest( ForgedState, onPostDeserialisation,
-						[ EntryUserData, MaybeExtraData ] ),
+     { FinalState, FinalUserData } =
+        executeRequest( ForgedState, onPostDeserialisation,
+                        [ EntryUserData, MaybeExtraData ] ),
 
 
-	% Sent as soon as available (rather than at the end):
-	MaybeListenerPid =:= undefined orelse
-		begin
-			LoadInfo = { self(), Classname, FinalUserData },
-			MaybeListenerPid ! { onDeserialisation, LoadInfo }
-		end,
+    % Sent as soon as available (rather than at the end):
+    MaybeListenerPid =:= undefined orelse
+        begin
+            LoadInfo = { self(), Classname, FinalUserData },
+            MaybeListenerPid ! { onDeserialisation, LoadInfo }
+        end,
 
-	% Must be restored as well, and preferably in a symmetrical order:
-	MaybeRandomState =:= undefined orelse
-		random_utils:set_random_state( MaybeRandomState ),
+    % Must be restored as well, and preferably in a symmetrical order:
+    MaybeRandomState =:= undefined orelse
+        random_utils:set_random_state( MaybeRandomState ),
 
-	% That's as simple as that!
+    % That's as simple as that!
 
-	Classname:wooper_main_loop( FinalState ),
+    Classname:wooper_main_loop( FinalState ),
 
-	% Never reached anyway:
-	wooper:no_return_static();
+    % Never reached anyway:
+    wooper:no_return_static();
 
 
 embody( OtherDeserialisedTerm, _MaybeEntryTransformer, _UserData,
-		_MaybeListenerPid ) ->
-	throw( { unexpected_deserialised_term, OtherDeserialisedTerm } ).
+        _MaybeListenerPid ) ->
+    throw( { unexpected_deserialised_term, OtherDeserialisedTerm } ).
 
 
 
@@ -1104,28 +1104,28 @@ remaining serialisation content (if any).
 -spec deserialise_term( serialisation() ) -> static_return( term() ).
 deserialise_term( Serialisation ) ->
 
-	% The 'safe' option does not seem relevant here:
-	ReadTerm = cond_utils:if_defined( wooper_check_deserialisation,
-		begin
-			BinSize = system_utils:get_size( Serialisation ),
-			% No ?serialisation_opts to specify here:
-			case binary_to_term( Serialisation, [ used ] ) of
+    % The 'safe' option does not seem relevant here:
+    ReadTerm = cond_utils:if_defined( wooper_check_deserialisation,
+        begin
+            BinSize = system_utils:get_size( Serialisation ),
+            % No ?serialisation_opts to specify here:
+            case binary_to_term( Serialisation, [ used ] ) of
 
-				% Matching:
-				{ Term, BinSize } ->
-					Term;
+                % Matching:
+                { Term, BinSize } ->
+                    Term;
 
-				{ Term, OtherSize } ->
-					throw( { unmatching_deserialised_size, {full,BinSize},
-							 {used,OtherSize}, Term } )
+                { Term, OtherSize } ->
+                    throw( { unmatching_deserialised_size, {full,BinSize},
+                             {used,OtherSize}, Term } )
 
-			end
+            end
 
-		end,
-		% No ?serialisation_opts to specify here:
-		binary_to_term( Serialisation, [] ) ),
+        end,
+        % No ?serialisation_opts to specify here:
+        binary_to_term( Serialisation, [] ) ),
 
-	wooper:return_static( ReadTerm ).
+    wooper:return_static( ReadTerm ).
 
 
 
@@ -1147,14 +1147,14 @@ This is a default, const, do-nothing implementation (returning an exact copy of
 the current state), meant to be overridden if needed.
 """.
 -spec onPostDeserialisation( wooper:state(), user_data() ) ->
-			request_return( user_data() ).
+            request_return( user_data() ).
 onPostDeserialisation( State, UserData ) ->
 
-	% Intentionally non-const:
-	{ PostState, PostUserData } = executeRequest( State,
-		onPostDeserialisation, [ UserData, _MaybeExtraData=undefined ] ),
+    % Intentionally non-const:
+    { PostState, PostUserData } = executeRequest( State,
+        onPostDeserialisation, [ UserData, _MaybeExtraData=undefined ] ),
 
-	wooper:return_state_result( PostState, PostUserData ).
+    wooper:return_state_result( PostState, PostUserData ).
 
 
 
@@ -1170,15 +1170,15 @@ This is a default, const, do-nothing implementation (returning an exact copy of
 the current state), meant to be overridden if needed.
 """.
 -spec onPostDeserialisation( wooper:state(), user_data(),
-			option( extra_data() ) ) -> const_request_return( user_data() ).
+            option( extra_data() ) ) -> const_request_return( user_data() ).
 onPostDeserialisation( State, UserData, _MaybeExtraData ) ->
 
-	cond_utils:if_defined( wooper_debug_serialisation,
-		trace_bridge:debug_fmt( "Default post-deserialisation of instance ~w, "
-			"based on user data ~p and extra data ~p.",
-			[ self(), UserData, MaybeExtraData ] ) ),
+    cond_utils:if_defined( wooper_debug_serialisation,
+        trace_bridge:debug_fmt( "Default post-deserialisation of instance ~w, "
+            "based on user data ~p and extra data ~p.",
+            [ self(), UserData, MaybeExtraData ] ) ),
 
-	wooper:const_return_result( UserData ).
+    wooper:const_return_result( UserData ).
 
 
 
@@ -1191,8 +1191,8 @@ onPostDeserialisation( State, UserData, _MaybeExtraData ) ->
 -doc "Returns a list of the WOOPER built-in restoration markers.".
 -spec list_restoration_markers() -> static_return( [ restoration_marker() ] ).
 list_restoration_markers() ->
-	wooper:return_static( [ ?process_restoration_marker,
-		?file_restoration_marker, ?term_restoration_marker ] ).
+    wooper:return_static( [ ?process_restoration_marker,
+        ?file_restoration_marker, ?term_restoration_marker ] ).
 
 
 
@@ -1202,7 +1202,7 @@ the serialisation/deserialisation processes.
 """.
 -spec get_process_restoration_marker() -> static_return( restoration_marker() ).
 get_process_restoration_marker() ->
-	wooper:return_static( ?process_restoration_marker ).
+    wooper:return_static( ?process_restoration_marker ).
 
 
 
@@ -1212,7 +1212,7 @@ descriptors) that must escape the serialisation/deserialisation processes.
 """.
 -spec get_file_restoration_marker() -> static_return( restoration_marker() ).
 get_file_restoration_marker() ->
-	wooper:return_static( ?file_restoration_marker ).
+    wooper:return_static( ?file_restoration_marker ).
 
 
 
@@ -1223,7 +1223,7 @@ and may be recreated afterwards).
 """.
 -spec get_term_restoration_marker() -> static_return( restoration_marker() ).
 get_term_restoration_marker() ->
-	wooper:return_static( ?term_restoration_marker ).
+    wooper:return_static( ?term_restoration_marker ).
 
 
 
@@ -1238,7 +1238,7 @@ Tells whether the corresponding instance implements the Serialisable interface.
 """.
 -spec is_serialisable( wooper:state() ) -> boolean().
 is_serialisable( State ) ->
-	% We cannot rely on a specific attribute being defined or not to determine
-	% whether Serialisable, so:
-	%
-	lists:member( ?MODULE, wooper:get_all_superclasses( State ) ).
+    % We cannot rely on a specific attribute being defined or not to determine
+    % whether Serialisable, so:
+    %
+    lists:member( ?MODULE, wooper:get_all_superclasses( State ) ).

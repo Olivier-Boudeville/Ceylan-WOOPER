@@ -36,9 +36,9 @@
   {modules, [class_Describable, class_Identifiable, class_Serialisable, class_StaticDescribable, class_Upgradable, wooper, wooper_app, wooper_class_management, wooper_class_manager, wooper_info, wooper_instance_construction, wooper_instance_destruction, wooper_instance_proxy, wooper_internals, wooper_introspection, wooper_method_management, wooper_parse_transform, wooper_parse_utils, wooper_serialisation, wooper_state_management, wooper_sup, wooper_utils]},
 
   {licenses, ["Ceylan-WOOPER is licensed by its author (Olivier Boudeville) under a disjunctive tri-license, giving you the choice of one of the three following sets of free software/open source licensing terms:
-	- the Mozilla Public License (MPL), version 1.1 or later (very close to the former Erlang Public License, except aspects regarding Ericsson and/or the Swedish law)
-	- the GNU General Public License (GPL), version 3.0 or later
-	- the GNU Lesser General Public License (LGPL), version 3.0 or later"]},
+    - the Mozilla Public License (MPL), version 1.1 or later (very close to the former Erlang Public License, except aspects regarding Ericsson and/or the Swedish law)
+    - the GNU General Public License (GPL), version 3.0 or later
+    - the GNU Lesser General Public License (LGPL), version 3.0 or later"]},
 
   % Active application (yet would still work without thanks to automatic launch
   % of the class manager):
@@ -48,7 +48,7 @@
   {mod, {wooper_app, []}},
 
   { links, [ {"Official website", "http://wooper.esperide.org" },
-			 {"Github", "https://github.com/Olivier-Boudeville/Ceylan-WOOPER"} ]}
+             {"Github", "https://github.com/Olivier-Boudeville/Ceylan-WOOPER"} ]}
 
   %{exclude_files, []}
 

@@ -32,12 +32,12 @@
 
 % These methods/functions are defined for all classes:
 -export([ wooper_execute_method/3,
-		  wooper_execute_method_as/4,
+          wooper_execute_method_as/4,
 
-		  wooper_effective_method_execution/4,
+          wooper_effective_method_execution/4,
 
-		  wooper_handle_remote_request_execution/4,
-		  wooper_handle_local_request_execution/3,
+          wooper_handle_remote_request_execution/4,
+          wooper_handle_local_request_execution/3,
 
-		  wooper_handle_remote_oneway_execution/3,
-		  wooper_handle_local_oneway_execution/3 ]).
+          wooper_handle_remote_oneway_execution/3,
+          wooper_handle_local_oneway_execution/3 ]).

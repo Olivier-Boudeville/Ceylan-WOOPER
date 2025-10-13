@@ -53,24 +53,24 @@ See the `wooper_class_manager` tested module.
 -spec test_with_otp() -> void().
 test_with_otp() ->
 
-	test_facilities:display( "Testing the OTP-based mode of operation." ),
+    test_facilities:display( "Testing the OTP-based mode of operation." ),
 
-	ManagerPid = wooper_class_manager:start_link(),
+    ManagerPid = wooper_class_manager:start_link(),
 
-	wooper_class_manager:display(),
+    wooper_class_manager:display(),
 
-	ClassKey = wooper_class_manager:get_class_key( ?requested_class ),
+    ClassKey = wooper_class_manager:get_class_key( ?requested_class ),
 
-	test_facilities:display( "Table obtained from ~w for '~ts' "
-		"(key: '~p'):~n~ts",
-		[ ManagerPid, ?requested_class, ClassKey,
-		  table:to_string( persistent_term:get( ClassKey ) ) ] ),
+    test_facilities:display( "Table obtained from ~w for '~ts' "
+        "(key: '~p'):~n~ts",
+        [ ManagerPid, ?requested_class, ClassKey,
+          table:to_string( persistent_term:get( ClassKey ) ) ] ),
 
-	wooper_class_manager:display(),
+    wooper_class_manager:display(),
 
-	wooper_class_manager:stop(),
+    wooper_class_manager:stop(),
 
-	test_facilities:display( "End of the OTP-based test." ).
+    test_facilities:display( "End of the OTP-based test." ).
 
 
 
@@ -79,30 +79,30 @@ test_with_otp() ->
 -spec test_without_otp() -> void().
 test_without_otp() ->
 
-	test_facilities:display( "Testing the base (non-OTP) mode of operation." ),
+    test_facilities:display( "Testing the base (non-OTP) mode of operation." ),
 
-	ManagerPid = wooper_class_manager:get_manager(),
+    ManagerPid = wooper_class_manager:get_manager(),
 
-	ManagerPid ! display,
+    ManagerPid ! display,
 
-	ManagerPid ! { getClassKey, ?requested_class, self() },
+    ManagerPid ! { getClassKey, ?requested_class, self() },
 
-	receive
+    receive
 
-		{ wooper_class_key, ClassKey } ->
-			test_facilities:display( "Table obtained from ~w for '~ts' "
-				"(key: '~p'):~n~ts",
-				[ ManagerPid, ?requested_class, ClassKey,
+        { wooper_class_key, ClassKey } ->
+            test_facilities:display( "Table obtained from ~w for '~ts' "
+                "(key: '~p'):~n~ts",
+                [ ManagerPid, ?requested_class, ClassKey,
                   % Should be ?wooper_table_type:
-				  table:to_string( persistent_term:get( ClassKey ) ) ] )
+                  table:to_string( persistent_term:get( ClassKey ) ) ] )
 
-	end,
+    end,
 
-	ManagerPid ! display,
+    ManagerPid ! display,
 
-	ManagerPid ! stop,
+    ManagerPid ! stop,
 
-	test_facilities:display( "End of the non-OTP test." ).
+    test_facilities:display( "End of the non-OTP test." ).
 
 
 
@@ -110,16 +110,16 @@ test_without_otp() ->
 -spec run() -> no_return().
 run() ->
 
-	test_facilities:start( ?MODULE ),
+    test_facilities:start( ?MODULE ),
 
-	% Allows to support both OTP conventions and ad hoc, automatic ones:
-	% Not to be done here: wooper_utils:start_for_test(),
+    % Allows to support both OTP conventions and ad hoc, automatic ones:
+    % Not to be done here: wooper_utils:start_for_test(),
 
-	test_with_otp(),
+    test_with_otp(),
 
-	test_without_otp(),
+    test_without_otp(),
 
-	% Probably that, if exit_after_test is set (the default), the test will stop
-	% before the manager itself:
-	%
-	test_facilities:stop().
+    % Probably that, if exit_after_test is set (the default), the test will stop
+    % before the manager itself:
+    %
+    test_facilities:stop().
