@@ -330,15 +330,13 @@ wooper_execute_method( MethodAtom, Arguments, State ) ->
 
 
 -doc """
-Looks-up specified method (Method/Arity, e.g. toString/1) to be found in
-inheritance tree.
+Looks-up the specified method (Method/Arity, e.g. `toString/1`) to be found in
+the inheritance tree of the class of that instance.
 
-Returns either `{'value', Module}` with Module corresponding to the class that
+Returns either `{'value', Module}` with `Module` corresponding to the class that
 implements that method, or `key_not_found`.
 
 Note: uses the pre-built virtual table for this class.
-
-(helper)
 """.
 -spec wooper_lookup_method( wooper:state(), method_name(), arity() ) ->
                                 { 'value', classname() } | 'key_not_found'.
