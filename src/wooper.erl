@@ -132,7 +132,8 @@ Module containing some **general facilities for WOOPER class developers**.
 -export([ log_info/1, log_info/2,
           log_warning/1, log_warning/2,
           log_error/1, log_error/2, log_error/3,
-          on_failed_request/7, on_failed_oneway/6 ]).
+          on_failed_request/7, on_failed_oneway/6,
+          interpret_error_term/2 ]).
 
 
 -ifdef(wooper_debug_mode).
