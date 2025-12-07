@@ -198,8 +198,11 @@ wooper_execute_method( MethodAtom, Arguments, State )
                     % string ("M/A"), the result is displayed as a list:
                     %
                     wooper:log_error(
-                        ": oneway ~ts:~ts/~B not found, parameters were:~n~p~n",
-                        [ Classname, MethodAtom, MethodArity, Arguments ],
+                        % Used to start with ": ", but is not relevant:
+                        "oneway ~ts:~ts/~B was not found; "
+                        "parameters were:~n~p~n~nIt had ~ts",
+                        [ Classname, MethodAtom, MethodArity, Arguments,
+                          wooper_info:list_methods_as_string( State ) ],
                         State ),
 
                     throw( { wooper_oneway_not_found, self(),
@@ -213,9 +216,10 @@ wooper_execute_method( MethodAtom, Arguments, State )
                     % relevant action (e.g. logging and sending back a relevant
                     % answer):
                     %
-                    wooper:log_error( ": request ~ts:~ts/~B not found, "
-                        "parameters were:~n~p~n",
-                        [ Classname, MethodAtom, MethodArity, Arguments ],
+                    wooper:log_error( "request ~ts:~ts/~B was not found; "
+                        "parameters were:~n~p~n~nIt had ~ts",
+                        [ Classname, MethodAtom, MethodArity, Arguments,
+                          wooper_info:list_methods_as_string( State ) ],
                         State ),
 
                     throw( { wooper_request_not_found, self(),
