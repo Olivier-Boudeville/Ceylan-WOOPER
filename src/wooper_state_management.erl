@@ -663,8 +663,11 @@ handle_attribute_description( _DescriptionForm={string,_,Description},
 
 handle_attribute_description( _DescriptionForm, Classname, AttrName ) ->
     wooper_internals:raise_usage_error(
-        "invalid description (not a string) for class attribute '~p'.",
+        "invalid description (not a string) for class attribute '~p'; "
+        "has a type been specified instead?",
         [ AttrName ], Classname ).
+        %"invalid description for class attribute '~p', not a string, "
+        %"but:~n~p", [ AttrName, DescriptionForm ], Classname ).
 
 
 
