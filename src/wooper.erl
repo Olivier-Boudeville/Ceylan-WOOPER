@@ -2682,7 +2682,7 @@ trigger_error( ExceptionClass, ExceptionTerm, Classname, ConstructionParameters,
 
     BaseFmtStr = " for PID ~w, constructor (~ts:construct/~B) failed~ts:~n~n"
         " - with error term:~n  ~ts~n~n"
-        " - stack trace was (latest calls first): ~ts~n~n"
+        " - stack trace was (latest calls first): ~ts~n"
         " - for construction parameters:~n  ~p~n",
 
     log_error( BaseFmtStr, [ self(), Classname, Arity,
