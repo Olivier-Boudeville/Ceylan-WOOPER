@@ -252,7 +252,9 @@ Quite similar to `ast_info:function_table/0`.
 
           get_wooper_builtins/0, get_metadata_builtins/0, get_state_builtins/0,
           get_execution_builtins/0, get_inner_builtins/0, get_helper_builtins/0,
-          get_serialisation_builtins/0 ]).
+          get_serialisation_builtins/0,
+
+          list_methods/1, list_methods_as_string/1 ]).
 
 
 % For the wooper_table_type define:
@@ -962,6 +964,33 @@ get_serialisation_builtins() ->
       { post_serialise_hook, 3 },
 
       { pre_deserialise_hook, 2 } ].
+
+
+
+-doc """
+Returns a sorted list, in no particular order, of all method identifiers
+supported by the instance whose state is specified.
+""".
+-spec list_methods( wooper:state() ) -> [ method_id() ].
+list_methods( State ) ->
+    ?wooper_table_type:keys( State#state_holder.virtual_table ).
+
+
+-doc """
+Returns a textual description of all (sorted) method identifiers supported by
+the instance whose state is specified.
+
+Typically to be prefixed with `"The "` or `"the "`.
+""".
+-spec list_methods_as_string( wooper:state() ) -> ustring().
+list_methods_as_string( State ) ->
+    MethodIds = lists:sort( list_methods( State ) ),
+    text_utils:format( "~B supported methods (alphabetically) are: ~ts",
+        [ length( MethodIds ),
+          text_utils:strings_to_string(
+            [ ast_info:function_id_to_string( Mid ) || Mid <- MethodIds ] ) ] ).
+
+
 
 
 
