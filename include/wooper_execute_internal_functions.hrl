@@ -637,7 +637,7 @@ wooper_handle_remote_request_execution( RequestAtom, State, Arguments,
             ExecState;
 
         { _ExecState, wooper_method_returns_void } ->
-            wooper:log_error( ": method ~ts:~ts/~B, which was called (by ~w) "
+            wooper:log_error( "method ~ts:~ts/~B, which was called (by ~w) "
                 "with parameters ~p, did not return a result whereas, "
                 "according to its call, it was expected to be a request.~n"
                 "Either the request implementation is incorrect or it is a "
@@ -750,7 +750,7 @@ wooper_handle_local_request_execution( RequestAtom, State, Arguments ) ->
             R;
 
         wooper_method_returns_void ->
-            wooper:log_error( ": method ~ts/~B, which was called with "
+            wooper:log_error( "method ~ts/~B, which was called with "
                 "parameters ~p, did not return a result whereas, according to "
                 "its call, it was expected to be a request.~n"
                 "Either the request implementation is incorrect or it is a "
@@ -835,7 +835,7 @@ wooper_handle_local_request_execution_as( RequestAtom,
             R;
 
         wooper_method_returns_void ->
-            wooper:log_error( ": method explicitly called as ~ts:~ts/~B, "
+            wooper:log_error( "method explicitly called as ~ts:~ts/~B, "
                 "which was called with parameters ~p, "
                 "did not return a result whereas, according to "
                 "its call, it was expected to be a request.~n"
@@ -939,7 +939,7 @@ wooper_handle_remote_oneway_execution( OnewayAtom, State, Arguments )
             Class = State#state_holder.actual_class,
             Arity = length( Arguments ) + 1,
 
-            wooper:log_error( ": method ~ts:~ts/~B, which was called with "
+            wooper:log_error( "method ~ts:~ts/~B, which was called with "
                 "following parameters:~n~p~n returned a result (~p) whereas, "
                 "according to its call, it was expected to be a oneway.~n"
                 "So either the oneway implementation of ~ts:~ts/~B is "
@@ -1040,7 +1040,7 @@ wooper_handle_local_oneway_execution( OnewayAtom, State, Arguments ) ->
         % This is a oneway/request mismatch apparently:
         { _OnewayState, { wooper_result, UnexpectedResult } } ->
 
-            wooper:log_error( ": method ~ts/~B, which was called with "
+            wooper:log_error( "method ~ts/~B, which was called with "
                 "parameters ~p, returned a result (~p) whereas, according to "
                 "its call, it was expected to be a oneway.~n"
                 "Either the oneway implementation is incorrect "
@@ -1126,7 +1126,7 @@ wooper_handle_local_oneway_execution_as( OnewayAtom,
 
         % This is a oneway/request mismatch apparently:
         { _OnewayState, { wooper_result, UnexpectedResult } } ->
-            wooper:log_error( ": method explicitly called as ~ts:~ts/~B, "
+            wooper:log_error( "method explicitly called as ~ts:~ts/~B, "
                 "which was called with parameters ~p, "
                 "returned a result (~p) whereas, according to "
                 "its call, it was expected to be a oneway.~n"
