@@ -1,4 +1,4 @@
-% Copyright (C) 2012-2025 Olivier Boudeville
+% Copyright (C) 2012-2026 Olivier Boudeville
 %
 % This file is part of the Ceylan-WOOPER library.
 %
@@ -3695,8 +3695,8 @@ delete_synchronously_any_instance_referenced_in( Attribute, PreTestLiveliness,
 Sends delete messages to all PIDs found in the specified list of attributes, and
 returns a list of the corresponding attributes and of their PID.
 
-If PreTestLiveliness is true, checks first that the process is not already dead,
-to avoid waiting for a synchronous time-out.
+If `PreTestLiveliness` is `true`, checks first that the process is not already
+dead, to avoid waiting for a synchronous time-out.
 """.
 delete_pid_from( Attributes, PreTestLiveliness, State ) ->
 
