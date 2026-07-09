@@ -11,7 +11,7 @@
 
 -moduledoc """
 Testing the implementation of the **serialisation of WOOPER instances**, that is
- of the default implementation of the Serialisable interface.
+ of the default implementation of the `Serialisable` interface.
 """.
 
 

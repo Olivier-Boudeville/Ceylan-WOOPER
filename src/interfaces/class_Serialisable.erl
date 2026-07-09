@@ -11,7 +11,7 @@
 % Mozilla Public License, version 1.1 or later.
 %
 % This library is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% but WITHOUT ANY WARRANTY; without even d'undefined'the implied warranty of
 % MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 % GNU Lesser General Public License and the GNU General Public License
 % for more details.
@@ -40,11 +40,11 @@ Such an interface is an abstract mother class from which all serialisable
 instances must derive.
 
 They may override the serialisation/deserialisation mechanisms (e.g. to target
-extra serialisation formats thanks to the serialiseTerm/2 request and the
+extra serialisation formats thanks to the `serialiseTerm/2` request and the
 deserialise_term/1 static method) or, more frequently, they may introduce
 class-specific operations before and/or after serialisation and/or
 deserialisation, through the overriding of the base, do-nothing
-on{Pre,Post}Serialisation/2 and onPostDeserialisation/2 requests (a.k.a. OOP
+`on{Pre,Post}Serialisation/2` and `onPostDeserialisation/2` requests (a.k.a. OOP
 "hooks").
 
 Operations can be further specialised by providing a custom entry transformer,
@@ -86,10 +86,10 @@ Any function that is able to transform entries of the state of an instance.
 An entry transformer may be used for a smarter serialisation (e.g. PID-aware),
 in which case this function could be a functor holding a bijective table in
 charge of converting PIDs in entries into stable identifiers (e.g. see
-class_Identifiable).
+`class_Identifiable`).
 
-Note: see meta_utils:transform_term/4, which may be useful in that context, and
-also the TextTransformer example in serialisable_test.erl.
+Note: see `meta_utils:transform_term/4`, which may be useful in that context,
+and also the TextTransformer example in `serialisable_test.erl`.
 """.
 -type entry_transformer() ::
         fun( ( attribute_entry(), user_data() ) ->
@@ -106,7 +106,7 @@ also the TextTransformer example in serialisable_test.erl.
 % already updated by an entry transformer), to perform any last change needed
 % before this state is used from then on by a corresponding loaded instance.
 %
-% Finally disabled, as better implemented by the onPostDeserialisation/2
+% Finally disabled, as better implemented by the `onPostDeserialisation/2`
 % request.
 % """.
 %-type state_transformer_fun() ::
@@ -141,7 +141,7 @@ corresponding instance.
 
 -doc """
 Designates the final serialisation form of an instance, which may or may not be
-a binary (e.g. our default bin_serialisation/0 versus, say, a JSON-based
+a binary (e.g. our default `bin_serialisation/0` versus, say, a JSON-based
 serialisation term).
 """.
 -type serialisation() :: bin_serialisation() | term().
@@ -164,7 +164,7 @@ entries, may replace transient values (refer to the 'About serialised elements'
 section) so that serialisation terms are context-free.
 
 Application-specific markers can also be defined, e.g.
--define( resilience_marker, foobar_resilience_marker ).
+`-define( resilience_marker, foobar_resilience_marker ).`.
 """.
 -type restoration_marker() :: ?process_restoration_marker
                             | ?file_restoration_marker
@@ -184,7 +184,7 @@ asynchronous loadings only have a PID to return first.
 -doc """
 Any user-specified data that can be used when (de)serialising.
 
-Can be here anything (e.g. 'undefined') and/or be completly ignored.
+Can be here anything (e.g. `undefined`) and/or be completly ignored.
 """.
 -type user_data() :: basic_utils:user_data().
 
@@ -340,7 +340,7 @@ Can be here anything (e.g. 'undefined') and/or be completly ignored.
 
 
 
--doc "Constructs a Serialisable instance.".
+-doc "Constructs a `Serialisable` instance.".
 -spec construct( wooper:state() ) -> wooper:state().
 construct( State ) ->
 
@@ -510,7 +510,7 @@ performStateSerialisation( State, ToSerialiseState, MaybeEntryTransformer,
     % So, directly from the instance process, let's add the WOOPER extra
     % information:
     %
-    WithRandEntries = case random_utils:get_random_state() of
+    WithRandEntries = case random_utils:get_maybe_random_state() of
 
         undefined ->
             BaseEntries;
@@ -581,7 +581,7 @@ serialisation.
 
 Of course other forms of serialisation could be introduced at this level.
 
-Its reciprocal is the deserialise_term/1 static method.
+Its reciprocal is the `deserialise_term/1` static method.
 
 Precisely this default, specific implementation returns a bin_serialisation().
 """.
@@ -912,7 +912,7 @@ Returns the PID of the created instance; the loading information message will be
 received later by the calling process.
 
 This creation is asynchronous (the PID is directly returned), however a
-{onDeserialisation, LoadInfo} message will be received by the calling process
+`{onDeserialisation, LoadInfo}` message will be received by the calling process
 once (if ever) the instance is up and running. This allows performing the actual
 instance creations in parallel, by waiting sets of concurrent loadings.
 """.
@@ -936,7 +936,7 @@ Returns the PID of the created instance; the loading information message will be
 received later by the calling process.
 
 This creation is asynchronous (the PID is directly returned), however a
-{onDeserialisation, LoadInfo} message will be received by the calling process
+`{onDeserialisation, LoadInfo}` message will be received by the calling process
 once (if ever) the instance is up and running. This allows performing the actual
 instance creations in parallel, by waiting sets of concurrent loadings.
 """.
@@ -962,7 +962,7 @@ remote_synchronisable_load_link( Node, Serialisation, MaybeEntryTransformer,
 Deserialises the specified instance from the specified serialised form to obtain
 its corresponding state, using any specified entry transformer and any user data
 for that, before executing the class-specific, possibly overridden
-onPostDeserialisation/2 request, then having the currently executing, caller
+`onPostDeserialisation/2` request, then having the currently executing, caller
 process embody this instance from then on, and for good.
 
 Does not return, as the WOOPER main loop will manage, from then on, this just
@@ -971,15 +971,15 @@ deserialised instance.
 (spawn helper; any listener process may not even be a WOOPER instance)
 
 No pre-deserialisation function parameter (which could be a reciprocal of the
-onPostSerialisation/2 request) is supported here, as any transformation can be
+`onPostSerialisation/2` request) is supported here, as any transformation can be
 done on the serialisation term before calling this static method, and a
 pre-deserialisation transformation that would be done here could not be
 class-specific anyway (since the classname is not even known at this point); one
-should rely on the onPostDeserialisation/2 request instead for that. This
+should rely on the `onPostDeserialisation/2` request instead for that. This
 (possibly overridden) method is called *after* any entry transformer, for
 symmetry reasons.
 
-If a listener PID is specified, a {'onDeserialisation', load_info()} message
+If a listener PID is specified, a `{'onDeserialisation', load_info()}` message
 will be sent to the corresponding process, as soon as this information becomes
 available (no guarantee that afterwards this instance does not fail, even in the
 final parts of its deserialisation).
@@ -1164,7 +1164,7 @@ deserialisation and the application of any entry transformer), operating on the
 resulting instance state, possibly based on any user-specified data and
 persisted extra data.
 
-Refer to onPostDeserialisation/2 for further details.
+Refer to `onPostDeserialisation/2` for further details.
 
 This is a default, const, do-nothing implementation (returning an exact copy of
 the current state), meant to be overridden if needed.
@@ -1232,7 +1232,8 @@ get_term_restoration_marker() ->
 
 
 -doc """
-Tells whether the corresponding instance implements the Serialisable interface.
+Tells whether the corresponding instance implements the `Serialisable`
+interface.
 
 (exported helper)
 """.
