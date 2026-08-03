@@ -274,9 +274,9 @@ Examples of this kind of systems are multi-agent simulations. If they often need
 
 The example_ mentioned through the current guide is an illustration [#]_ of the interacting lives of numerous animals of various species. Obviously, they have to share behaviours (e.g. all ovoviviparous beings may lay eggs, all creatures can live and die, all have an age, etc.), which cannot be mapped easily (read: automatically) to Erlang concepts without adding some generic constructs.
 
-.. [#] This example is not a *simulation*, it is just a multi-agent system. For real, massive, discrete-time simulations of complex systems in Erlang (using WOOPER), one may refer to `Sim-Diasca <https://github.com/Olivier-Boudeville-EDF/Sim-Diasca>`_ instead (a free software discrete-time simulation engine).
+.. [#] This example is not a *simulation*, it is just a multi-agent system. For real, massive, discrete-time simulations of complex systems in Erlang (using WOOPER), one may refer to `Sim-Diasca <https://github.com/EDF-Lab/Sim-Diasca>`_ instead (a free software discrete-time simulation engine).
 
-.. one may refer to `Sim-Diasca <http://www.sim-diasca.com>`_ instead (a free software simulation engine).
+.. one may refer to `Sim-Diasca <http://sim-diasca.com>`_ instead (a free software simulation engine).
 
 WOOPER, which stands for *Wrapper for OOP in Erlang*, is a lightweight yet effective (performance-wise, but also regarding the user-side  developing efforts) means of making these constructs available, notably in terms of state management and multiple inheritance.
 
@@ -2204,7 +2204,7 @@ This may happen when, like in `the WOOPER example <#wooper-example>`_ presented 
 - various child classes derive from it (e.g. ``class_Mammal`` and a ``class_OvoviviparousBeing`` may derive from ``class_Creature`` for obvious reasons)
 - a more concrete class (e.g. ``class_Platypus``) has to derive from at least two of these child classes (since a platypus happens to be both a mammal and an ovoviviparous being)
 
-.. [#] For example, it might be the case with `class_TraceEmitter <https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/class_TraceEmitter.erl>`_ if relying on `Ceylan-Traces <https://traces.esperide.org/>`_, or `class_Actor <https://github.com/Olivier-Boudeville-EDF/Sim-Diasca/blob/main/sim-diasca/src/core/services/scheduling/class_Actor.erl>`_ if using `Sim-Diasca <https://github.com/Olivier-Boudeville-EDF/Sim-Diasca>`_, as such base classes are rather ubiquitous in their respective contexts.
+.. [#] For example, it might be the case with `class_TraceEmitter <https://github.com/Olivier-Boudeville/Ceylan-Traces/blob/master/src/class_TraceEmitter.erl>`_ if relying on `Ceylan-Traces <https://traces.esperide.org/>`_, or `class_Actor <https://github.com/EDF-Lab/Sim-Diasca/blob/main/sim-diasca/src/core/services/scheduling/class_Actor.erl>`_ if using `Sim-Diasca <https://github.com/EDF-Lab/Sim-Diasca>`_, as such base classes are rather ubiquitous in their respective contexts.
 
 Then the concrete class will end up deriving more than once from the same root class (here: ``class_Platypus`` will derive indirectly from ``class_Creature`` twice).
 
@@ -4297,7 +4297,7 @@ Sources, Inspirations & Alternate Solutions
 
 - **Concurrent Programming in Erlang**, Joe Armstrong, Robert Virding, Claes Wikström et Mike Williams. Chapter 18, page 299: Object-oriented Programming. This book describes a simple way of implementing multiple inheritance, without virtual table, at the expense of a (probably slow) systematic method look-up (at each method call). No specific state management is supported
 
-- Chris Rathman's `approach <http://www.angelfire.com/tx4/cus/shapes/erlang.html>`_ to life cycle management and polymorphism ; inheritance not supported
+- Chris Rathman's `approach <http://www.angelfire.com/tx4/cus/shapes/erlang.html>`_ (a dead link at the time of this writing) to life cycle management and polymorphism ; inheritance not supported
 
 - `ECT <http://www.erlang-factory.com/upload/presentations/162/ECT.pdf>`_, an Object-Oriented Extension to Erlang, very promising yet apparently not maintained anymore
 
