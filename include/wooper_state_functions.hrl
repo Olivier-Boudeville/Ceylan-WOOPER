@@ -72,17 +72,17 @@ is_wooper_debug() ->
 % These frequent operations must be as fast as possible:
 %
 % (the functions that are not recommended, i.e. hasAttribute/2 and
-% removeAttribute/2, shall not be inlined)
+% removeAttribute/2, shall not be inlined; same for the less commonly used,
+% i.e. swapInAttribute/3, deleteFromAttribute/3)
 %
 -compile( { inline, [ setAttribute/3, setAttributes/2,
-                      swapInAttribute/3,
                       getAttribute/2, getAttributes/2, getMaybeAttribute/2,
                       addToAttribute/3, subtractFromAttribute/3,
                       incrementAttribute/2, decrementAttribute/2,
                       toggleAttribute/2,
                       appendToAttribute/3, concatToAttribute/3,
-                      deleteFromAttribute/3,
-                      addKeyValueToAttribute/4, popFromAttribute/2 ] } ).
+                      deleteExistingFromAttribute/3,
+                      popFromAttribute/2, addKeyValueToAttribute/4 ] } ).
 
 
 
@@ -333,7 +333,7 @@ decrementAttribute( State, AttributeName ) ->
 
 
 -doc """
-Returns an updated state in which specified boolean attribute is toggled: if
+Returns an updated state in which the specified boolean attribute is toggled: if
 true will be false, if false will be true.
 
 A case clause is triggered if the attribute does not exist or it is not a
@@ -349,19 +349,20 @@ toggleAttribute( State, BooleanAttributeName ) ->
 
 
 -doc """
-Appends the specified element to specified attribute, supposed to be a list. A
-case clause is triggered if the attribute did not exist.
+Appends the specified element to the specified attribute, supposed to be a
+list. An exception is thrown if the attribute did not exist.
 
 Returns an updated state.
 
-Note: no check is performed to ensure the attribute is a list indeed, and the
-operation will not complain if not.
+Note: no check is performed to ensure that the attribute is already a list
+indeed, and the cons (`[|]`) operation will not complain if not, creating then
+an improper list.
 """.
 -spec appendToAttribute( wooper:state(), attribute_name(),
                          attribute_value() ) -> wooper:state().
 appendToAttribute( State, AttributeName, Element ) ->
     State#state_holder{
-        attribute_table=?wooper_table_type:append_to_entry(
+        attribute_table=?wooper_table_type:append_to_existing_entry(
             AttributeName,
             Element,
             State#state_holder.attribute_table ) }.
@@ -369,25 +370,20 @@ appendToAttribute( State, AttributeName, Element ) ->
 
 
 -doc """
-Concatenes (on the left) the specified prefix list to specified attribute,
-supposed to be a list as well. A case clause is triggered if the attribute did
-not exist.
+Concatenes (appends) on the left the specified prefix list to the specified
+attribute, supposed to be a list as well.
 
-If that attribute is not already defined, it will be created and associated to
-the specified list (as if beforehand it was associated to an empty list).
+A case clause is triggered if the attribute did not exist.
 
 Returns an updated state.
-
-Note: no check is performed to ensure the attribute is a list indeed, and the
-operation will not complain if not.
 """.
--spec concatToAttribute( wooper:state(), attribute_name(),
-                         attribute_value() ) -> wooper:state().
-concatToAttribute( State, AttributeName, List ) ->
+-spec concatToAttribute( wooper:state(), attribute_name(), list() ) ->
+                                            wooper:state().
+concatToAttribute( State, AttributeName, ListToConcat ) ->
     State#state_holder{
-        attribute_table=?wooper_table_type:concat_to_entry(
+        attribute_table=?wooper_table_type:concat_to_existing_entry(
             AttributeName,
-            List,
+            ListToConcat,
             State#state_holder.attribute_table ) }.
 
 
@@ -409,6 +405,47 @@ deleteFromAttribute( State, AttributeName, Element ) ->
             AttributeName,
             Element,
             State#state_holder.attribute_table ) }.
+
+
+
+-doc """
+Deletes the first match of the specified element from the specified attribute,
+supposed to be a list.
+
+An exception is thrown if the attribute does not exist, or if the element is not
+in the specified list.
+
+Returns an updated state.
+""".
+-spec deleteExistingFromAttribute( wooper:state(), attribute_name(),
+                                   attribute_value() ) -> wooper:state().
+deleteExistingFromAttribute( State, AttributeName, Element ) ->
+    State#state_holder{
+        attribute_table=?wooper_table_type:delete_existing_from_entry(
+            AttributeName,
+            Element,
+            State#state_holder.attribute_table ) }.
+
+
+
+-doc """
+Removes the head from the specified attribute, supposed to be a list, and
+returns a `{NewState, PoppedHead}` pair.
+
+For example, if the attribute `my_list` contains `[5,8,3]`, executing:
+`{PoppedState, Head} = ?popFromAttribute(State, my_list)` returns a state whose
+my_list attribute is `[8,3]` and a value `Head=5`.
+
+A case clause is triggered if the attribute did not exist.
+""".
+-spec popFromAttribute( wooper:state(), attribute_name() ) ->
+                            { wooper:state(), attribute_value() }.
+popFromAttribute( State, AttributeName ) ->
+
+    { Head, PoppedAttributeTable } = ?wooper_table_type:pop_from_entry(
+        AttributeName, State#state_holder.attribute_table ),
+
+    { State#state_holder{ attribute_table=PoppedAttributeTable }, Head }.
 
 
 
@@ -438,24 +475,3 @@ addKeyValueToAttribute( State, AttributeName, Key, Value ) ->
                     State#state_holder.attribute_table ) ),
 
             State#state_holder.attribute_table ) }.
-
-
-
--doc """
-Removes the head from the specified attribute, supposed to be a list, and
-returns a `{NewState, PoppedHead}` pair.
-
-For example, if the attribute `my_list` contains `[5,8,3]`, executing:
-`{PoppedState, Head} = ?popFromAttribute(State, my_list)` returns a state whose
-my_list attribute is `[8,3]` and a value `Head=5`.
-
-A case clause is triggered if the attribute did not exist.
-""".
--spec popFromAttribute( wooper:state(), attribute_name() ) ->
-                            { wooper:state(), attribute_value() }.
-popFromAttribute( State, AttributeName ) ->
-
-    { Head, PoppedAttributeTable } = ?wooper_table_type:pop_from_entry(
-        AttributeName, State#state_holder.attribute_table ),
-
-    { State#state_holder{ attribute_table=PoppedAttributeTable }, Head }.

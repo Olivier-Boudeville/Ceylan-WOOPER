@@ -1973,6 +1973,24 @@ If the attribute exists, but no addition can be performed on it (i.e. if it is m
 .. comment- if it exists but no addition can be performed on it (meaningless for the type of the current value), will trigger ``{badarith,[{hashtable,addToEntry,3},..``.
 
 
+The ``incrementAttribute/2`` function
+*************************************
+
+Corresponds to a call to ``addToAttribute/3`` with an added number equal to 1.
+
+.. code:: erlang
+
+ -spec incrementAttribute(wooper:state(), attribute_name()) ->
+								wooper:state().
+
+For example:
+
+.. code:: erlang
+
+ MyState = incrementAttribute(FirstState, a_numerical_attribute)
+
+
+
 
 The ``subtractFromAttribute/3`` function
 ****************************************
@@ -2006,6 +2024,23 @@ If the attribute exists, but no subtraction can be performed on it (meaningless 
 
 .. comment - if it exists but no addition can be performed on it (meaningless for the type of the current value), will trigger ``{badarith,[{hashtable,subtractFromEntry,3},..``.
 
+
+
+The ``decrementAttribute/2`` function
+*************************************
+
+Corresponds to a ``subtractFromAttribute/3`` call with a subtracted number equal to 1.
+
+.. code:: erlang
+
+ -spec decrementAttribute(wooper:state(), attribute_name()) ->
+								wooper:state().
+
+For example:
+
+.. code:: erlang
+
+ MyState = decrementAttribute(FirstState, a_numerical_attribute)
 
 
 
@@ -2066,6 +2101,26 @@ Calling ``appendToAttribute/3`` on a non-existing attribute will trigger a a ``b
 
 
 
+The ``concatToAttribute/3`` function
+************************************
+
+When having an attribute whose value is a list, concatenes (appends) on the left the specified prefix list to it.
+
+Its type specification is:
+
+.. code:: erlang
+
+ -spec concatToAttribute(wooper:state(), attribute_name(), list()) ->
+								wooper:state().
+
+
+For example, if the ``my_list_attribute`` attribute was already set to ``[see_you, goodbye]`` in ``State``, then after ``NewState = concatToAttribute(State, my_list_attribute, [hello, foo])``, the ``my_list_attribute`` attribute defined in ``NewState`` will be equal to ``[hello, foo, see_you, goodbye]``, all other attributes being unchanged.
+
+Calling ``concatToAttribute/3`` on a non-existing attribute will create it and associate it to the specified prefix list.
+
+
+
+
 The ``deleteFromAttribute/3`` function
 **************************************
 
@@ -2092,6 +2147,23 @@ Calling ``deleteFromAttribute/3`` on a non-existing attribute will trigger a ``b
 .. comment - if the target attribute does not exist, will trigger ``{{badmatch,undefined},[{hashtable,deleteFromEntry,3},..``.
 
 .. comment - if it exists but is not already a list, it will trigger ``{function_clause,[{lists,delete,[..,..]},{hashtable,deleteFromEntry,3}``.
+
+
+
+The ``deleteExistingFromAttribute/3`` function
+**********************************************
+
+When having an attribute whose value is a list, deletes the first match of the specified element from the attribute list.
+
+
+Its type specification is:
+
+.. code:: erlang
+
+ -spec deleteExistingFromAttribute(wooper:state(), attribute_name(), term()) ->
+								wooper:state().
+
+Like ``deleteFromAttribute/3``, except that the specified element must be found in the specified list attribute value, otherwise an exception is thrown.
 
 
 

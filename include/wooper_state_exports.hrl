@@ -44,6 +44,7 @@
           appendToAttribute/3,
           concatToAttribute/3,
           deleteFromAttribute/3,
+          deleteExistingFromAttribute/3,
           addKeyValueToAttribute/4,
           popFromAttribute/2 ]).
 
