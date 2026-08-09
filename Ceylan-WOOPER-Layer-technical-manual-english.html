@@ -29,7 +29,7 @@
 </tr>
 <tr class="field"><th class="field-name">Creation date:</th><td class="field-body">Sunday, August 17, 2008</td>
 </tr>
-<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Monday, August 3, 2026</td>
+<tr class="field"><th class="field-name">Lastly updated:</th><td class="field-body">Sunday, August 9, 2026</td>
 </tr>
 <tr class="field"><th class="field-name">Version:</th><td class="field-body">2.0.32</td>
 </tr>
@@ -1536,6 +1536,18 @@ Color = executeConstRequestAs(class_Vehicle, MyState, getColorOf, [wheels])
 <p>Calling <tt class="docutils literal">addToAttribute/3</tt> on a non-existing attribute will trigger a runtime error (<tt class="docutils literal">{key_not_found, AttributeName}</tt>).</p>
 <p>If the attribute exists, but no addition can be performed on it (i.e. if it is meaningless for the type of the current value), a <tt class="docutils literal">badarith</tt> runtime error will be issued.</p>
 </div>
+<div class="section" id="the-incrementattribute-2-function">
+<h5>The <tt class="docutils literal">incrementAttribute/2</tt> function</h5>
+<p>Corresponds to a call to <tt class="docutils literal">addToAttribute/3</tt> with an added number equal to 1.</p>
+<pre class="code erlang literal-block">
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">incrementAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+                               </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">().</span>
+</pre>
+<p>For example:</p>
+<pre class="code erlang literal-block">
+<span class="nv">MyState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">incrementAttribute</span><span class="p">(</span><span class="nv">FirstState</span><span class="p">,</span><span class="w"> </span><span class="n">a_numerical_attribute</span><span class="p">)</span>
+</pre>
+</div>
 <div class="section" id="the-subtractfromattribute-3-function">
 <h5>The <tt class="docutils literal">subtractFromAttribute/3</tt> function</h5>
 <p>When having a numerical attribute, <tt class="docutils literal">subtractFromAttribute/3</tt> subtracts the specified number (i.e. integer or float) from the attribute.</p>
@@ -1551,6 +1563,18 @@ Color = executeConstRequestAs(class_Vehicle, MyState, getColorOf, [wheels])
 <p>In <tt class="docutils literal">MyState</tt>, the value of attribute <tt class="docutils literal">a_numerical_attribute</tt> is decreased of 7, compared to the one in <tt class="docutils literal">FirstState</tt>.</p>
 <p>Calling <tt class="docutils literal">subtractFromAttribute/3</tt> on a non-existing attribute will trigger a runtime error (<tt class="docutils literal">{key_not_found, AttributeName}</tt>).
 If the attribute exists, but no subtraction can be performed on it (meaningless for the type of the current value), a <tt class="docutils literal">badarith</tt> runtime error will be issued.</p>
+</div>
+<div class="section" id="the-decrementattribute-2-function">
+<h5>The <tt class="docutils literal">decrementAttribute/2</tt> function</h5>
+<p>Corresponds to a <tt class="docutils literal">subtractFromAttribute/3</tt> call with a subtracted number equal to 1.</p>
+<pre class="code erlang literal-block">
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">decrementAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+                               </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">().</span>
+</pre>
+<p>For example:</p>
+<pre class="code erlang literal-block">
+<span class="nv">MyState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">decrementAttribute</span><span class="p">(</span><span class="nv">FirstState</span><span class="p">,</span><span class="w"> </span><span class="n">a_numerical_attribute</span><span class="p">)</span>
+</pre>
 </div>
 <div class="section" id="the-toggleattribute-2-function">
 <h5>The <tt class="docutils literal">toggleAttribute/2</tt> function</h5>
@@ -1577,6 +1601,17 @@ If the attribute exists, but no subtraction can be performed on it (meaningless 
 <p>For example, if the <tt class="docutils literal">my_list_attribute</tt> attribute was already set to <tt class="docutils literal">[see_you, goodbye]</tt> in <tt class="docutils literal">State</tt>, then after <tt class="docutils literal">NewState = appendToAttribute(State, my_list_attribute, hello)</tt>, the <tt class="docutils literal">my_list_attribute</tt> attribute defined in <tt class="docutils literal">NewState</tt> will be equal to <tt class="docutils literal">[hello, see_you, goodbye]</tt>, all other attributes being unchanged.</p>
 <p>Calling <tt class="docutils literal">appendToAttribute/3</tt> on a non-existing attribute will trigger a a <tt class="docutils literal">badmatch</tt> runtime error. If the attribute exists, but is not a list, an ill-formed list will be created (e.g. <tt class="docutils literal">[8|false]</tt> when appending 8 to <tt class="docutils literal">false</tt>, which is not a list).</p>
 </div>
+<div class="section" id="the-concattoattribute-3-function">
+<h5>The <tt class="docutils literal">concatToAttribute/3</tt> function</h5>
+<p>When having an attribute whose value is a list, concatenes (appends) on the left the specified prefix list to it.</p>
+<p>Its type specification is:</p>
+<pre class="code erlang literal-block">
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">concatToAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">(),</span><span class="w"> </span><span class="n">list</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+                               </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">().</span>
+</pre>
+<p>For example, if the <tt class="docutils literal">my_list_attribute</tt> attribute was already set to <tt class="docutils literal">[see_you, goodbye]</tt> in <tt class="docutils literal">State</tt>, then after <tt class="docutils literal">NewState = concatToAttribute(State, my_list_attribute, [hello, foo])</tt>, the <tt class="docutils literal">my_list_attribute</tt> attribute defined in <tt class="docutils literal">NewState</tt> will be equal to <tt class="docutils literal">[hello, foo, see_you, goodbye]</tt>, all other attributes being unchanged.</p>
+<p>Calling <tt class="docutils literal">concatToAttribute/3</tt> on a non-existing attribute will create it and associate it to the specified prefix list.</p>
+</div>
 <div class="section" id="the-deletefromattribute-3-function">
 <h5>The <tt class="docutils literal">deleteFromAttribute/3</tt> function</h5>
 <p>When having an attribute whose value is a list, deletes the first match of the specified element from the attribute list.</p>
@@ -1588,6 +1623,16 @@ If the attribute exists, but no subtraction can be performed on it (meaningless 
 <p>For example: <tt class="docutils literal">NewState = deleteFromAttribute(State, my_list_attribute, hello)</tt>, with the value corresponding to the <tt class="docutils literal">my_list_attribute</tt> attribute in <tt class="docutils literal">State</tt> variable being <tt class="docutils literal">[goodbye, hello, cheers, hello, see_you]</tt> should return a state whose <tt class="docutils literal">my_list_attribute</tt> attribute would be equal to <tt class="docutils literal">[goodbye, cheers, hello, see_you]</tt> (firs <tt class="docutils literal">hello</tt> is removed), all other attributes being unchanged.</p>
 <p>If no element in the list matches the specified one, no error will be triggered and the list will be kept as is.</p>
 <p>Calling <tt class="docutils literal">deleteFromAttribute/3</tt> on a non-existing attribute will trigger a <tt class="docutils literal">badmatch</tt> runtime error. If the attribute exists, but is not a list, a <tt class="docutils literal">function_clause</tt> runtime error will be issued.</p>
+</div>
+<div class="section" id="the-deleteexistingfromattribute-3-function">
+<h5>The <tt class="docutils literal">deleteExistingFromAttribute/3</tt> function</h5>
+<p>When having an attribute whose value is a list, deletes the first match of the specified element from the attribute list.</p>
+<p>Its type specification is:</p>
+<pre class="code erlang literal-block">
+<span class="p">-</span><span class="ni">spec</span><span class="w"> </span><span class="n">deleteExistingFromAttribute</span><span class="p">(</span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">(),</span><span class="w"> </span><span class="n">attribute_name</span><span class="p">(),</span><span class="w"> </span><span class="n">term</span><span class="p">())</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+                               </span><span class="nn">wooper</span><span class="p">:</span><span class="nf">state</span><span class="p">().</span>
+</pre>
+<p>Like <tt class="docutils literal">deleteFromAttribute/3</tt>, except that the specified element must be found in the specified list attribute value, otherwise an exception is thrown.</p>
 </div>
 <div class="section" id="the-popfromattribute-2-function">
 <h5>The <tt class="docutils literal">popFromAttribute/2</tt> function</h5>
