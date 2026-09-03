@@ -151,8 +151,8 @@ initialisation)
 -define( log_prefix, "[WOOPER class manager] " ).
 
 
-% In seconds:
--define( registration_time_out, 5 ).
+% In milliseconds:
+-define( registration_time_out, 5000 ).
 
 
 
