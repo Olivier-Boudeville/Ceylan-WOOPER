@@ -32,8 +32,7 @@ Module containing some **extra facilities** for WOOPER users and internal use.
 """.
 
 
-
-% Version-related functions.
+% Version-related functions:
 -export([ get_wooper_version/0, get_wooper_version_string/0 ]).
 
 
