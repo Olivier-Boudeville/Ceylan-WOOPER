@@ -101,6 +101,10 @@ Module containing some **general facilities for WOOPER class developers**.
           execute_const_oneway/2, execute_const_oneway/3 ]).
 
 
+% Process-label related helper functions:
+-export([ set_label/1, set_label/2 ]).
+
+
 % Infrequently-called functions for state management:
 -export([ get_all_attributes/1, check_equal/3,
           check_undefined/2, check_all_undefined/2 ]).
@@ -108,7 +112,7 @@ Module containing some **general facilities for WOOPER class developers**.
 
 
 % Debug-related functions:
--export([ get_status/1, check_operational/1 ]).
+-export([ get_instance_info/0, get_status/1, check_operational/1 ]).
 
 
 % Extra features:
@@ -311,7 +315,7 @@ Now we recommend using directly `[method_qualifier()]` instead (deemed clearer).
 
 
 -doc """
-Parameters used to construct an instance.".
+Parameters used to construct an instance.
 
 Now we recommend using directly `[construction_parameter()]` instead (deemed
 clearer).
@@ -530,6 +534,7 @@ one).
 -type maybe_list(T) :: list_utils:maybe_list(T).
 
 -type ustring() :: text_utils:ustring().
+-type any_string() :: text_utils:any_string().
 -type string_like() :: text_utils:string_like().
 -type format_string() :: text_utils:format_string().
 -type format_values() :: text_utils:format_values().
@@ -544,6 +549,8 @@ one).
 -type time_out() :: time_utils:time_out().
 
 -type ms_monotonic() :: time_utils:ms_monotonic().
+
+-type process_label() :: process_utils:process_label().
 
 -type monitor_node_info() :: monitor_utils:monitor_node_info().
 
@@ -2084,10 +2091,11 @@ construct_and_run( Classname, ConstructionParameters ) ->
 
 
         Other ->
-            log_error( " for PID ~w of class ~ts: "
+            log_error( " for ~ts of class ~ts: "
                 "constructor did not return a state, but returned '~p' "
                 "instead. Construction parameters were:~n~p.",
-                [ self(), Classname, Other, ConstructionParameters ] ),
+                [ process_utils:describe(), Classname, Other,
+                  ConstructionParameters ] ),
 
             Arity = length( ConstructionParameters ) + 1,
 
@@ -2200,10 +2208,11 @@ construct_and_run_synchronous( Classname, ConstructionParameters,
 
 
         Other ->
-            log_error( " for PID ~w of class ~ts: "
+            log_error( " for ~ts of class ~ts: "
                 "constructor did not return a state, but returned '~p' "
                 "instead. Construction parameters were:~n~p.~n",
-                [ self(), Classname, Other, ConstructionParameters ] ),
+                [ process_utils:describe(), Classname, Other,
+                  ConstructionParameters ] ),
 
             Arity = length( ConstructionParameters ) + 1,
 
@@ -2552,6 +2561,22 @@ retrieve_virtual_table_key( Classname ) ->
 
 
 
+-doc "Returns information regarding the current instance.".
+-spec get_instance_info() -> pid() | { pid(), process_label() }.
+get_instance_info() ->
+
+    case process_utils:get_label() of
+
+        undefined ->
+            self();
+
+        Label ->
+            { self(), Label }
+
+    end.
+
+
+
 -doc """
 Returns the current status of the WOOPER active instance corresponding to the
 specified PID.
@@ -2593,6 +2618,7 @@ get_status( InstPid ) when is_pid( InstPid ) ->
 
 get_status( Other ) ->
     { not_pid, Other }.
+
 
 
 
@@ -2646,10 +2672,10 @@ trigger_error( _ExceptionClass, _ExceptionTerm=undef, Classname,
     StackStr = code_utils:interpret_stacktrace( Stacktrace,
                                                 _MaybeErrorTerm= false ),
 
-    log_error( " for PID ~w, constructor (~ts:construct/~B) failed due to "
+    log_error( " for ~ts, constructor (~ts:construct/~B) failed due to "
         "an 'undef' call to ~ts:~ts/~B.~nDiagnosis: ~ts~ts~n~n"
         "Stacktrace (latest calls first): ~ts",
-        [ self(), Classname, Arity, ModuleName, FunctionName,
+        [ process_utils:describe(), Classname, Arity, ModuleName, FunctionName,
           UndefArity, Diagnosis, LocString, StackStr ] ),
 
     throw( { wooper_constructor_failed, self(), Classname, Arity,
@@ -2680,12 +2706,12 @@ trigger_error( ExceptionClass, ExceptionTerm, Classname, ConstructionParameters,
         code_utils:interpret_stacktrace_for_error_output( Stacktrace,
                                                           ExceptionTerm ),
 
-    BaseFmtStr = " for PID ~w, constructor (~ts:construct/~B) failed~ts:~n~n"
+    BaseFmtStr = " for ~ts, constructor (~ts:construct/~B) failed~ts:~n~n"
         " - with error term:~n  ~ts~n~n"
         " - stack trace was (latest calls first): ~ts~n"
         " - for construction parameters:~n  ~p~n",
 
-    log_error( BaseFmtStr, [ self(), Classname, Arity,
+    log_error( BaseFmtStr, [ process_utils:describe(), Classname, Arity,
         interpret_exception_class( ExceptionClass ),
         ExceptionTermStr, StdOutputStackStr, ConstructionParameters ] ),
 
@@ -2987,6 +3013,39 @@ display_instance( State ) ->
 
 
 
+% Section for process-label related helper functions.
+%
+% These are not standard methods, just helpers, as they may not be wanted.
+
+
+-doc """
+Sets automatically the process label of the current instance, based on its
+actual class.
+""".
+-spec set_label( wooper:state() ) -> void().
+set_label( State ) ->
+
+    LabelBin = text_utils:bin_format( "~ts instance",
+                                      [ get_classname( State ) ] ),
+
+    process_utils:set_label( LabelBin ).
+
+
+-doc """
+Sets automatically the process label of the current instance, based on its
+actual class and on the specified information string.
+""".
+-spec set_label( any_string(), wooper:state() ) -> void().
+set_label( InfoAnyStr, State ) ->
+
+    % Single quotes would prevent upper layers to rely on them:
+    LabelBin = text_utils:bin_format( "\"~ts\", a ~ts instance",
+                                      [ InfoAnyStr, get_classname( State ) ] ),
+
+    process_utils:set_label( LabelBin ).
+
+
+
 -doc """
 Returns all the attributes of this instance, as a list of `{AttributeName,
 AttributeValue}` pairs.
@@ -3161,8 +3220,9 @@ log_error( FormatString, ValueList, State )
     %           ++ FormatString,
     %           [ State#state_holder.actual_class, self(),
     %             node() | ValueList ] );
-    log_error( " for ~ts instance of PID ~w, as " ++ FormatString,
-               [ State#state_holder.actual_class, self() | ValueList ] );
+    log_error( " for ~ts instance of PID ~w~ts, as " ++ FormatString,
+        [ State#state_holder.actual_class, self(),
+          process_utils:get_label_string() | ValueList ] );
 
 log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
 
@@ -3172,9 +3232,10 @@ log_error( FormatString, ValueList, ModuleName ) when is_atom( ModuleName ) ->
     %log_error( " for instance of PID ~w on node ~ts triggered "
     %           "in module ~ts: " ++ FormatString,
     %           [ self(), ModuleName, node() | ValueList ] ).
-    log_error( " for instance of PID ~w triggered "
+    log_error( " for instance of PID ~w~ts triggered "
         "in module ~ts, as" ++ FormatString,
-        [ self(), ModuleName | ValueList ] ).
+        [ self(), process_utils:get_label_string(), ModuleName | ValueList ] ).
+
 
 
 
@@ -3306,7 +3367,7 @@ on_failed_request( RequestName, Arguments, CallerPid, ExceptionClass,
 
     % Arguments and actual method module not propagated back to the caller:
     ErrorReason = { request_failed, State#state_holder.actual_class,
-                    self(), RequestName, { ExceptionClass, ExceptionTerm } },
+        get_instance_info(), RequestName, { ExceptionClass, ExceptionTerm } },
 
     CallerPid ! { wooper_error, ErrorReason },
 
@@ -3319,6 +3380,7 @@ on_failed_request( RequestName, Arguments, CallerPid, ExceptionClass,
     % linked processes would not be triggered:
     %
     exit( request_failed ).
+
 
 
 -doc """
